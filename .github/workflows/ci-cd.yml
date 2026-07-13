@@ -2,9 +2,9 @@ name: core CI/CD
 
 on:
   push:
-    branches: [main, dev-deploy, dev]
+    branches: [ main, dev-deploy, dev ]
   pull_request:
-    branches: [main, dev-deploy, dev]
+    branches: [ main, dev-deploy, dev ]
 
 jobs:
   build-and-test:
@@ -54,7 +54,7 @@ jobs:
         id: image
         run: |
           ORG_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          echo "full_image=ghcr.io/${ORG_LOWER}/insighton-gateway" >> "$GITHUB_OUTPUT"
+          echo "full_image=ghcr.io/${ORG_LOWER}/insighton-core" >> "$GITHUB_OUTPUT"
 
       - name: Docker Image Build and Push
         uses: docker/build-push-action@v7
@@ -81,7 +81,7 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "scripts/deploy.sh"
-          target: "~/deploy-gateway/"
+          target: "~/deploy-core/"
 
       - name: server ssh rolling deploy
         uses: appleboy/ssh-action@v1.0.3
@@ -96,5 +96,5 @@ jobs:
             rm -rf ~/insighton-config
             git clone https://${{ secrets.PAT_USERNAME }}:${{ secrets.CONFIG_REPO_TOKEN }}@github.com/nhnacademy-aiot3-insighton/InsightOn-config.git ~/insighton-config
 
-            chmod +x ~/deploy-gateway/scripts/deploy.sh
-            ~/deploy-gateway/scripts/deploy.sh "${{ needs.build-and-push.outputs.full_image }}:latest"
+            chmod +x ~/deploy-core/scripts/deploy.sh
+            ~/deploy-core/scripts/deploy.sh "${{ needs.build-and-push.outputs.full_image }}:latest"
