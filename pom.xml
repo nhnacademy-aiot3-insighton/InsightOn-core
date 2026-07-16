@@ -30,7 +30,7 @@
         <java.version>21</java.version>
     </properties>
     <dependencies>
-        <!-- 1. Spring Boot Web Core & Actuator -->
+        <!-- Spring Boot Web Core & Actuator -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -39,8 +39,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
 
-        <!-- 2. Spring Integration 및 최전방 MQTT 인바운드 (수정 완료 💡) -->
+        <!-- Spring Integration 및 최전방 MQTT 인바운드 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-integration</artifactId>
@@ -62,20 +66,20 @@
             <artifactId>spring-integration-amqp</artifactId>
         </dependency>
 
-        <!-- 3. 순수 시계열 센서 데이터 적재를 위한 공식 인플럭스 자바 드라이버 (교체 완료 💡) -->
+        <!-- 순수 시계열 센서 데이터 적재를 위한 공식 인플럭스 자바 드라이버 -->
         <dependency>
             <groupId>com.influxdb</groupId>
             <artifactId>influxdb-client-java</artifactId>
             <version>6.12.0</version>
         </dependency>
 
-        <!-- 4. 비동기 메시지 큐 및 룰 엔진 브로드캐스팅 (RabbitMQ) -->
+        <!-- 비동기 메시지 큐 및 룰 엔진 브로드캐스팅 (RabbitMQ) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-amqp</artifactId>
         </dependency>
 
-        <!-- 5. 관계형 DB 및 초고속 역조회 인프라 (PostgreSQL & Redis) -->
+        <!-- 관계형 DB 및 초고속 역조회 인프라 (PostgreSQL & Redis) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -90,21 +94,21 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- 6. 동적 JSON 파싱 유틸리티 (추가 완료 💡) -->
+        <!-- 동적 JSON 파싱 유틸리티 -->
         <dependency>
             <groupId>com.jayway.jsonpath</groupId>
             <artifactId>json-path</artifactId>
             <version>2.9.0</version>
         </dependency>
 
-        <!-- 7. 개발자 유틸리티 (Lombok) -->
+        <!-- 개발자 유틸리티 (Lombok) -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
 
-        <!-- 8. 테스트 레이어 설정 -->
+        <!-- 테스트 레이어 설정 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -119,6 +123,21 @@
             <groupId>org.springframework.integration</groupId>
             <artifactId>spring-integration-test</artifactId>
             <scope>test</scope>
+        </dependency>
+
+        <!-- QueryDSL (Jakarta) -->
+        <dependency>
+            <groupId>com.querydsl</groupId>
+            <artifactId>querydsl-jpa</artifactId>
+            <version>5.1.0</version>
+            <classifier>jakarta</classifier>
+        </dependency>
+        <dependency>
+            <groupId>com.querydsl</groupId>
+            <artifactId>querydsl-apt</artifactId>
+            <version>5.1.0</version>
+            <classifier>jakarta</classifier>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
@@ -151,6 +170,17 @@
                                 <path>
                                     <groupId>org.projectlombok</groupId>
                                     <artifactId>lombok</artifactId>
+                                </path>
+                                <path>
+                                    <groupId>com.querydsl</groupId>
+                                    <artifactId>querydsl-apt</artifactId>
+                                    <version>5.1.0</version>
+                                    <classifier>jakarta</classifier>
+                                </path>
+                                <path>
+                                    <groupId>jakarta.persistence</groupId>
+                                    <artifactId>jakarta.persistence-api</artifactId>
+                                    <version>3.1.0</version>
                                 </path>
                             </annotationProcessorPaths>
                         </configuration>
