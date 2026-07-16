@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 //@Table(name = "groups")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class GroupsEntity {
+public class Groups {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,7 +39,7 @@ public class GroupsEntity {
      * - PK인 groupId와 자동으로 들어갈 createdAt은 빌더 대상에서 제외하여 객체 오용을 방지합니다.
      */
     @Builder
-    public GroupsEntity(String name, String description, String location, String inviteToken) {
+    public Groups(String name, String description, String location, String inviteToken) {
         this.name = name;
         this.description = description;
         this.location = location;
