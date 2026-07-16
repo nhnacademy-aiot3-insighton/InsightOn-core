@@ -1,7 +1,7 @@
 package com.insighton.core.groups.dto.response;
 
 
-import com.insighton.core.groups.entity.GroupsEntity;
+import com.insighton.core.groups.entity.Groups;
 import lombok.Builder;
 
 import java.time.LocalDateTime;
@@ -30,7 +30,7 @@ public record GroupResponse(
      * @param entity
      * @return
      */
-    public static GroupResponse ofAdmin(GroupsEntity entity){
+    public static GroupResponse ofAdmin(Groups entity){
         return GroupResponse.builder()
                 .groupId(entity.getGroupId())
                 .name(entity.getName())
@@ -47,7 +47,7 @@ public record GroupResponse(
      * @param entity
      * @return
      */
-    public static GroupResponse ofPublic(GroupsEntity entity){
+    public static GroupResponse ofPublic(Groups entity){
         return GroupResponse.builder()
                 .groupId(entity.getGroupId())
                 .name(entity.getName())
