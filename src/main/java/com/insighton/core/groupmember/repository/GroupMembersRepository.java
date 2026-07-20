@@ -22,4 +22,11 @@ public interface GroupMembersRepository extends JpaRepository<GroupMembers, Long
      * @return group 참여 정보
      */
     Optional<GroupMembers> findByGroups_GroupIdAndUserId(Long groupId, Long userId);
+
+    /**
+     * group ID로 Group이 존재하는지 조회
+     * @param groupId 조회할 group ID
+     * @return group의 정보
+     */
+    Optional<GroupMembers> findByGroups_GroupId(Long groupId);
 }
