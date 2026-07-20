@@ -1,12 +1,15 @@
 package com.insighton.core.groups.controller;
 
 import com.insighton.core.groupmember.dto.request.GroupMembersJoinRequest;
+import com.insighton.core.groups.dto.request.GroupsCreateRequest;
+import com.insighton.core.groups.dto.request.GroupsUpdateRequest;
 import com.insighton.core.groups.dto.response.GroupsListResponse;
-import com.insighton.core.service.GroupManagementUseCase;
+import com.insighton.core.groups.service.GroupManagementUseCase;
 import com.insighton.core.groupmember.service.GroupMembersService;
 import com.insighton.core.groups.dto.response.GroupsResponse;
 import com.insighton.core.groups.service.GroupsService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,6 +31,21 @@ public class GroupsController {
          groupsUseCase.joinGroupByToken(request);
 
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 그룹 생성
+     * @param userId login한 user의 ID
+     * @param request 그룹 생성 시 필요한...
+     * @return 성공시 상태 201 반환
+     */
+    @PostMapping("/api/groups/create")
+    public ResponseEntity<Void> createGroup(
+            @RequestHeader("X-USER-ID") Long userId,
+            @RequestBody GroupsCreateRequest request){
+        groupService.createGroup(request, userId);
+
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     /**
@@ -76,8 +94,50 @@ public class GroupsController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * 시스템 관리자용 그룹 리스트 조회
+     * @param userRole login한 user의 role
+     * @param userId 시스템 관리자의 ID
+     * @return 시스템에 생성된 그룹들 리스트
+     */
     @GetMapping("/api/groups/admin/group-list")
-    public ResponseEntity<List<GroupsListResponse>> getGroupList(){
+    public ResponseEntity<List<GroupsListResponse>> getGroupList(
+            @RequestHeader("X-USER-ROLE") String userRole,
+            @RequestHeader("X-USER-ID") Long userId){
+        List<GroupsListResponse> groupsListResponses = groupsUseCase.getGroupList(userRole, userId);
 
+        return ResponseEntity.ok(groupsListResponses);
     }
+
+    /**
+     * 그룹 수정
+     * @param userId login한 user의 ID
+     * @param groupId 수정하려는 Group의 ID
+     * @param request group 수정 요청 정보
+     * @return 성공 시 상태 200 반환
+     */
+    @PutMapping("/api/groups/{group-id}/update")
+    public ResponseEntity<Void> updateGroup(
+            @RequestHeader("X-USER-ID") Long userId,
+            @PathVariable("group-id") Long groupId,
+            @RequestBody GroupsUpdateRequest request){
+        groupsUseCase.updateGroup(request, userId, groupId);
+
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 그룹 삭제
+     * @param groupId 삭제할 그룹의 ID
+     * @return 성공 시 상태 204 반환
+     */
+    @DeleteMapping("/api/groups/{group-id}/delete")
+    public ResponseEntity<Void> deleteGroup(
+            @PathVariable("group-id") Long groupId){
+        groupService.deleteGroup(groupId);
+
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+
 }
