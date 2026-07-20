@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
-public interface GroupRepository extends JpaRepository<Groups, Long> {
+public interface GroupsRepository extends JpaRepository<Groups, Long> {
 
     /**
      * 고유한 초대 토큰(inviteToken)을 기반으로 그룹 엔티티를 조회합니다.

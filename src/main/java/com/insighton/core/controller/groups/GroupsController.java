@@ -1,27 +1,29 @@
 package com.insighton.core.controller.groups;
 
-import com.insighton.core.dto.groupmember.request.GroupMemberJoinRequest;
+import com.insighton.core.dto.groupmember.request.GroupMembersJoinRequest;
+import com.insighton.core.service.GroupManagementUseCase;
 import com.insighton.core.service.groupmember.GroupMembersService;
-import com.insighton.core.dto.groups.response.GroupResponse;
-import com.insighton.core.service.groups.GroupService;
+import com.insighton.core.dto.groups.response.GroupsResponse;
+import com.insighton.core.service.groups.GroupsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-public class GroupController {
-    private final GroupService groupService;
+public class GroupsController {
+    private final GroupsService groupService;
     private final GroupMembersService groupMembersService;
+    private final GroupManagementUseCase groupsUseCase;
 
     /**
      * Auth 서비스에서 호출하는 내부 그룹 가입 API
      * @return 성공 시 상태 200 반환
      */
     @PostMapping("/internal/groups/join-by-token")
-    public ResponseEntity<Void> joinGroupByToken(@RequestBody GroupMemberJoinRequest request){
+    public ResponseEntity<Void> joinGroupByToken(@RequestBody GroupMembersJoinRequest request){
         // 1. inviteToken으로 그룹이 존재하는지 확인하고 가입 시키는 로직 호출
-         groupMembersService.joinGroupByToken(request);
+         groupsUseCase.joinGroupByToken(request);
 
         return ResponseEntity.ok().build();
     }
@@ -33,10 +35,10 @@ public class GroupController {
      * @return 토큰 정보가 포함된 Group 정보
      */
     @GetMapping("/api/groups/{group-id}/")
-    public ResponseEntity<GroupResponse> getGroupAdmin(
+    public ResponseEntity<GroupsResponse> getGroupAdmin(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId){
-        GroupResponse response = groupService.getGroupAdmin(userId, groupId);
+        GroupsResponse response = groupsUseCase.getGroupAdmin(userId, groupId);
         return ResponseEntity.ok(response);
     }
 
@@ -47,10 +49,10 @@ public class GroupController {
      * @return 토큰 정보가 빠진 그룹 조회 정보 반환
      */
     @GetMapping("/api/groups/{group-id}/my-group")
-    public ResponseEntity<GroupResponse> getMyGroup(
+    public ResponseEntity<GroupsResponse> getMyGroup(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId){
-        GroupResponse response = groupService.getMyGroup(userId, groupId);
+        GroupsResponse response = groupsUseCase.getMyGroup(userId, groupId);
 
         return ResponseEntity.ok(response);
     }
@@ -63,11 +65,11 @@ public class GroupController {
      * @return 초대 받은 회사의 정보 반환(token null)
      */
     @GetMapping("/api/groups/{group-id}/preview")
-    public ResponseEntity<GroupResponse> getGroup(
+    public ResponseEntity<GroupsResponse> getGroup(
             @RequestHeader("X-USER-ID")Long userId,
             @PathVariable("group-id") Long groupId,
             @RequestBody String inviteToken){
-        GroupResponse response = groupService.getGroupPreview(inviteToken, userId, groupId);
+        GroupsResponse response = groupService.getGroupPreview(inviteToken, userId, groupId);
 
         return ResponseEntity.ok(response);
     }

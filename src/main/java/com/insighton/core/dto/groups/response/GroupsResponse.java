@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
  * @param createdAt SaaS 테넌트 서비스 최초 가입 및 생성 일시
  */
 @Builder
-public record GroupResponse(
+public record GroupsResponse(
         Long groupId,
         String name,
         String description,
@@ -30,8 +30,8 @@ public record GroupResponse(
      * @param entity
      * @return
      */
-    public static GroupResponse ofAdmin(Groups entity){
-        return GroupResponse.builder()
+    public static GroupsResponse ofAdmin(Groups entity){
+        return GroupsResponse.builder()
                 .groupId(entity.getGroupId())
                 .name(entity.getName())
                 .description(entity.getDescription())
@@ -47,8 +47,8 @@ public record GroupResponse(
      * @param entity
      * @return
      */
-    public static GroupResponse ofPublic(Groups entity){
-        return GroupResponse.builder()
+    public static GroupsResponse ofPublic(Groups entity){
+        return GroupsResponse.builder()
                 .groupId(entity.getGroupId())
                 .name(entity.getName())
                 .description(entity.getDescription())
