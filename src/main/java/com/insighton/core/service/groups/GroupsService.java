@@ -1,25 +1,20 @@
 package com.insighton.core.service.groups;
 
 
-import com.insighton.core.dto.groups.request.GroupCreateRequest;
-import com.insighton.core.dto.groups.response.GroupListResponse;
-import com.insighton.core.dto.groups.response.GroupResponse;
+import com.insighton.core.dto.groups.request.GroupsCreateRequest;
+import com.insighton.core.dto.groups.response.GroupsListResponse;
+import com.insighton.core.dto.groups.response.GroupsResponse;
+import com.insighton.core.entity.groups.Groups;
 
 import java.util.List;
 
-public interface GroupService {
+public interface GroupsService {
     /**
      * 그룹 생성
      * @param request Group 생성 요청 정보
      */
-    void createGroup(GroupCreateRequest request, Long userId);
+    void createGroup(GroupsCreateRequest request, Long userId);
 
-    /**
-     * 관리자용 group 정보 조회
-     * @param userId login한 user의 ID
-     * @return 그룹 정보
-     */
-    GroupResponse getGroupAdmin(Long userId, Long groupId);
 
     /**
      * 일반 사용자의 초대한 그룹 조회용 (초대장 느낌)
@@ -29,15 +24,8 @@ public interface GroupService {
      * @param groupId 내가 지금 보고 있는 group의 ID
      * @return 토큰 값 빼고 group 정보가 들어감
      */
-    GroupResponse getGroupPreview(String inviteToken, Long userId, Long groupId);
+    GroupsResponse getGroupPreview(String inviteToken, Long userId, Long groupId);
 
-    /**
-     * 현재 로그인한 사용자의 소속 그룹 정보 조회
-     * (한 계정당 하나의 그룹만 가입 가능하므로, 로그인 정보 기반으로 해당 그룹 정보를 반환)
-     * @param userId login한 user의 ID
-     * @return token 정보를 제외한 group의 정보
-     */
-    GroupResponse getMyGroup(Long userId, Long groupId);
 
     /**
      * 시스템 관리자가 group List를 조회
@@ -45,7 +33,7 @@ public interface GroupService {
      * @param userId 로그인한 user ID
      * @return GroupList 반환
      */
-    List<GroupListResponse> getGroupList(String userRole, Long userId);
+    List<GroupsListResponse> getGroupList(String userRole, Long userId);
 
     /**
      * 토큰 재발급
@@ -59,4 +47,11 @@ public interface GroupService {
      * @param groupId 그룹 id
      */
     void deleteGroup(Long groupId);
+
+    /**
+     * 초대 토큰으로 group이 존재하는지 확인 (가입용)
+     * @param inviteToken 초대 토큰
+     * @return 존재하는 그룹의 정보를 반환
+     */
+    Groups validateGroupByInviteToken(String inviteToken);
 }
