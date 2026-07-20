@@ -1,6 +1,7 @@
 package com.insighton.core.groups.service.impl;
 
 import com.insighton.core.groups.dto.request.GroupsCreateRequest;
+import com.insighton.core.groups.dto.request.GroupsUpdateRequest;
 import com.insighton.core.groups.dto.response.GroupsListResponse;
 import com.insighton.core.groups.dto.response.GroupsResponse;
 import com.insighton.core.groups.entity.Groups;
@@ -40,6 +41,14 @@ public class GroupsServiceImpl implements GroupsService {
     }
 
     @Override
+    @Transactional
+    public void updateGroup(GroupsUpdateRequest request, Long groupId) {
+        Groups groups = groupFindById(groupId);
+
+        groups.update(request);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public GroupsResponse getGroupPreview(String inviteToken, Long userId, Long groupId) {
         // token으로 대상 그룹 조회 (token이 존재하지 않을 시 exception 던지기)
@@ -71,7 +80,7 @@ public class GroupsServiceImpl implements GroupsService {
     @Transactional
     public void newInviteToken(Long groupId) {
         // 대상 그룹 조회 (없을 시 exception 던지기)
-        Groups groupsEntity = getGroupOrThrow(groupId);
+        Groups groupsEntity = groupFindById(groupId);
 
         // 새로운 12자리 토큰 생성 및 업데이트
         String newToken = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
@@ -83,12 +92,19 @@ public class GroupsServiceImpl implements GroupsService {
     @Transactional
     public void deleteGroup(Long groupId) {
         // 대상 그룹 조회 (없을 시 exception 던지기)
-        Groups groupsEntity = getGroupOrThrow(groupId);
+        Groups groupsEntity = groupFindById(groupId);
 
         groupsRepository.delete(groupsEntity);
     }
 
 
+
+
+    // ==================== 공통 검증 및 조회용 헬퍼 메서드 ====================
+
+    /**
+     * 초대 토큰으로 group이 존재하는지 조회
+     */
     @Override
     public Groups validateGroupByInviteToken(String inviteToken){
         // inviteToken으로 대상 그룹이 존재하는지 확인 및 조회
@@ -96,13 +112,10 @@ public class GroupsServiceImpl implements GroupsService {
                 .orElseThrow(() -> new InviteTokenNotFoundException(inviteToken));
     }
 
-
-    // ==================== 공통 검증 및 조회용 헬퍼 메서드 ====================
-
     /**
-     * 단건 그룹 조회 (존재하지 않을 시 예외 발생)
+     * ID로 그룹이 존재하는지 조회 (존재하지 않을 시 예외 발생)
      */
-    private Groups getGroupOrThrow(Long groupId) {
+    private Groups groupFindById(Long groupId) {
         return groupsRepository.findById(groupId)
                 .orElseThrow(() -> new GroupNotFoundException(groupId));
     }
