@@ -1,6 +1,8 @@
 package com.insighton.core.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
@@ -13,6 +15,8 @@ import java.util.List;
 @Table(name = "device")
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class DeviceEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,7 +28,7 @@ public class DeviceEntity {
 
 //    @ManyToOne
 //    private locationsId locationsId;
-private Long locationsId;
+    private Long locationsId;
 
     @NotNull
     private String deviceEui;
@@ -33,7 +37,17 @@ private Long locationsId;
     @NotNull
     private String type;
 
+    private ZonedDateTime lastSeenAt;
     private ZonedDateTime createdAt;
+
+    public void updateLocation(Long newLocationId){
+        this.locationsId = newLocationId;
+    }
+
+    public void updateLastSeen(){
+        this.lastSeenAt = ZonedDateTime.now();
+    }
+
 
     @OneToMany(mappedBy = "deviceId")// Attribute쪽 Id랑 매핑
     private List<DeviceAttributeEntity> attributeList = new ArrayList<>();

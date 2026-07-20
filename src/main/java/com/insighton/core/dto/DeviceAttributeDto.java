@@ -5,5 +5,4 @@ public record DeviceAttributeDto(
         String displayName,
         String unit,
         String currentValueStr
-) {
-}
+) {}
