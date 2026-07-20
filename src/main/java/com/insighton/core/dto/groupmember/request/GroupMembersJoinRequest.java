@@ -8,7 +8,7 @@ import lombok.Builder;
  * @param userId login한 user의 ID
  */
 @Builder
-public record GroupMemberJoinRequest(
+public record GroupMembersJoinRequest(
         String inviteToken,
         Long userId
 ) {
