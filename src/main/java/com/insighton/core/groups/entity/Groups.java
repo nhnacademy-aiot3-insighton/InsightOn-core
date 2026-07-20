@@ -1,5 +1,6 @@
 package com.insighton.core.groups.entity;
 
+import com.insighton.core.groups.dto.request.GroupsUpdateRequest;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -64,5 +65,11 @@ public class Groups {
             throw new IllegalArgumentException("새로운 초대 토큰은 비어있을 수 없습니다.");
         }
         this.inviteToken = newInviteToken;
+    }
+
+    public void update(GroupsUpdateRequest request){
+        this.name = request.name();
+        this.description = request.description();
+        this.location = request.location();
     }
 }
