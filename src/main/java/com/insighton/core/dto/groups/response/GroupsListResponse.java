@@ -10,7 +10,7 @@ import lombok.Builder;
  * @param location 회사 위치 (지번)
  */
 @Builder
-public record GroupListResponse(
+public record GroupsListResponse(
         Long groupId,
         String name,
         String description,
