@@ -1,6 +1,7 @@
 package com.insighton.core.groups.dto.request;
 
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -9,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
  * @param description 해당 회사 및 사업장에 대한 세부 상세 설명
  * @param location 회사 위치
  */
+@Builder
 public record GroupsCreateRequest(
         @NotNull String name,
         String description,
