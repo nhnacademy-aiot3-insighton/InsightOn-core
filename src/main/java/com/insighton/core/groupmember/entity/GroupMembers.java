@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 public class GroupMembers {
 
     public enum GroupRole{
-        MEMBER, MANAGER, OWNER
+        MEMBER, MANAGER, SUPER_MANAGER
     }
 
     @Id
@@ -60,5 +60,21 @@ public class GroupMembers {
     @PrePersist
     protected void onJoin(){
         this.joinedAt = LocalDateTime.now();
+    }
+
+    public void updateRole(GroupRole newGroupRole){
+        this.groupRole = newGroupRole;
+    }
+
+    public boolean isMember(){
+        return this.groupRole == GroupRole.MEMBER;
+    }
+
+    public boolean isManager(){
+        return this.groupRole == GroupRole.MANAGER;
+    }
+
+    public boolean isSuperManager(){
+        return this.groupRole == GroupRole.SUPER_MANAGER;
     }
 }
