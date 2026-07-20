@@ -2,6 +2,7 @@ package com.insighton.core.groups.service;
 
 
 import com.insighton.core.groups.dto.request.GroupsCreateRequest;
+import com.insighton.core.groups.dto.request.GroupsUpdateRequest;
 import com.insighton.core.groups.dto.response.GroupsListResponse;
 import com.insighton.core.groups.dto.response.GroupsResponse;
 import com.insighton.core.groups.entity.Groups;
@@ -12,15 +13,23 @@ public interface GroupsService {
     /**
      * 그룹 생성
      * @param request Group 생성 요청 정보
+     * @param userId login한 user의 ID
      */
     void createGroup(GroupsCreateRequest request, Long userId);
+
+    /**
+     * 그룹 수정
+     * @param request Group 수정 요청 정보
+     * @param groupId 수정하려는 group의 ID
+     */
+    void updateGroup(GroupsUpdateRequest request, Long groupId);
 
 
     /**
      * 일반 사용자의 초대한 그룹 조회용 (초대장 느낌)
      * 이 초대 토큰은 A 회사의 초대 토큰 입니다 하고 회사 정보를 띄우기.(토큰은 null 값으로 들어감)
      * @param inviteToken 초대 코드
-     * @param userId 로그인한 user의 ID
+     * @param userId login한 user의 ID
      * @param groupId 내가 지금 보고 있는 group의 ID
      * @return 토큰 값 빼고 group 정보가 들어감
      */
@@ -30,7 +39,7 @@ public interface GroupsService {
     /**
      * 시스템 관리자가 group List를 조회
      * @param userRole 로그인한 사용자의 권한...?
-     * @param userId 로그인한 user ID
+     * @param userId login한 user의 ID
      * @return GroupList 반환
      */
     List<GroupsListResponse> getGroupList(String userRole, Long userId);
