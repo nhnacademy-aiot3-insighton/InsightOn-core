@@ -6,6 +6,7 @@ import com.insighton.core.groups.dto.request.GroupsUpdateRequest;
 import com.insighton.core.groups.dto.response.GroupsListResponse;
 import com.insighton.core.groups.service.GroupManagementUseCase;
 import com.insighton.core.groups.dto.response.GroupsResponse;
+import com.insighton.core.groups.service.GroupsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class GroupsController {
     private final GroupManagementUseCase groupsUseCase;
+    private final GroupsService groupsService;
 
     /**
      * Auth 서비스에서 호출하는 내부 그룹 가입 API
@@ -47,21 +49,7 @@ public class GroupsController {
     }
 
     /**
-     * 관리자용 그룹 조회
-     * @param userId login한 user의 ID
-     * @param groupId 내가 속한 group의 ID
-     * @return 토큰 정보가 포함된 Group 정보
-     */
-    @GetMapping("/api/groups/{group-id}/")
-    public ResponseEntity<GroupsResponse> getGroupAdmin(
-            @RequestHeader("X-USER-ID") Long userId,
-            @PathVariable("group-id") Long groupId){
-        GroupsResponse response = groupsUseCase.getGroupAdmin(userId, groupId);
-        return ResponseEntity.ok(response);
-    }
-
-    /**
-     * 내 그룹 정보 조회 (Token 쪽 null)
+     * 내 그룹 정보 조회
      * @param userId login한 user의 ID
      * @param groupId 내가 속한 group의 ID
      * @return 토큰 정보가 빠진 그룹 조회 정보 반환
@@ -102,7 +90,7 @@ public class GroupsController {
     public ResponseEntity<List<GroupsListResponse>> getGroupList(
             @RequestHeader("X-USER-ROLE") String userRole,
             @RequestHeader("X-USER-ID") Long userId){
-        List<GroupsListResponse> groupsListResponses = groupsUseCase.getGroupList(userRole, userId);
+        List<GroupsListResponse> groupsListResponses = groupsService.getGroupList(userRole, userId);
 
         return ResponseEntity.ok(groupsListResponses);
     }
