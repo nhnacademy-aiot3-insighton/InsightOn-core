@@ -1,12 +1,16 @@
-package com.insighton.core.service;
+package com.insighton.core.groups.service;
 
 import com.insighton.core.groupmember.dto.request.GroupMembersJoinRequest;
+import com.insighton.core.groupmember.dto.response.GroupMembersListResponse;
+import com.insighton.core.groups.dto.request.GroupsCreateRequest;
+import com.insighton.core.groups.dto.request.GroupsUpdateRequest;
 import com.insighton.core.groups.dto.response.GroupsListResponse;
 import com.insighton.core.groups.dto.response.GroupsResponse;
 import com.insighton.core.groupmember.entity.GroupMembers;
+import com.insighton.core.groups.entity.Groups;
 import com.insighton.core.groups.exception.NoPermissionException;
 import com.insighton.core.groupmember.service.GroupMembersService;
-import com.insighton.core.groups.service.GroupsService;
+import com.insighton.core.groups.exception.UnAuthorizedAccessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +23,7 @@ public class GroupManagementUseCase {
     private final GroupsService groupService;
     private final GroupMembersService groupMembersService;
 
+    // ====================== Group Controller ======================
 
     /**
      * 그룹 가입
@@ -27,9 +32,37 @@ public class GroupManagementUseCase {
     @Transactional
     public void joinGroupByToken(GroupMembersJoinRequest request) {
         // inviteToken으로 대상 그룹이 존재하는지 확인 및 조회
-        groupService.validateGroupByInviteToken(request.inviteToken());
+        Groups groups = groupService.validateGroupByInviteToken(request.inviteToken());
 
-        groupMembersService.joinGroupByToken(request);
+        groupMembersService.joinGroupByToken(groups, request);
+    }
+
+    /**
+     * 그룹 생성 시 SUPER_MANAGER로 등록되는
+     * @param groupsCreateRequest 그룹 생성 요청 정보
+     * @param userId 그룹을 생성하는 user의 ID
+     */
+    @Transactional
+    public void createGroup(GroupsCreateRequest groupsCreateRequest, Long userId){
+        Groups groups = groupService.createGroup(groupsCreateRequest);
+
+        groupMembersService.createGroupMember(groups, userId);
+    }
+
+
+    /**
+     * 그룹 수정
+     * @param request Group 수정 요청 정보
+     * @param userId login한 user의 ID
+     * @param groupId 수정하려는 group의 ID
+     */
+    @Transactional
+    public void updateGroup(GroupsUpdateRequest request, Long userId, Long groupId){
+        if(groupMembersService.isGroupAdmin(groupId, userId)){
+            groupService.updateGroup(request, groupId);
+            return;
+        }
+        throw new UnAuthorizedAccessException(userId);
     }
 
     /**
@@ -43,8 +76,8 @@ public class GroupManagementUseCase {
      */
     @Transactional(readOnly = true)
     public GroupsResponse getGroupPreview(String inviteToken, Long userId, Long groupId) {
-        // 유저가 존재하는지 검증
-        groupMembersService.validateUserExists(userId);
+        // 유저가 존재하는지 검증(다른 그룹에 가입이 안 되어있어야함 )
+        groupMembersService.validateUserNotInAnyGroup(userId);
 
         return groupService.getGroupPreview(inviteToken, userId, groupId);
     }
@@ -61,47 +94,45 @@ public class GroupManagementUseCase {
         GroupMembers members = groupMembersService.validateGroupMembers(groupId, userId);
 
         // 관리자나 그룹 생성자일 때는
-        if (members.getGroupRole() == GroupMembers.GroupRole.MANAGER || members.getGroupRole() == GroupMembers.GroupRole.OWNER) {
-            throw NoPermissionException.forResource(members.getGroupMemberId());
+        if (members.isManager() || members.isSuperManager()) {
+            return GroupsResponse.ofAdmin(members.getGroups());
         }
 
         // 대상 그룹 조회 (없을 시 exception 던지기)
         return GroupsResponse.ofPublic(members.getGroups());
     }
 
-    /**
-     * 관리자용 group 정보 조회
-     * @param userId login한 user의 ID
-     * @return 그룹 정보
-     */
-        @Transactional(readOnly = true)
-    public GroupsResponse getGroupAdmin(Long userId, Long groupId) {
-        GroupMembers members = groupMembersService.validateGroupMembers(groupId, userId);
 
-        // role이 member라면 권한 없음 에러를 던져주기
-        if (members.getGroupRole() == GroupMembers.GroupRole.MEMBER) {
-            throw NoPermissionException.forAdmin(members.getGroupMemberId());
+    /**
+     * 토큰 재발급
+     * @param groupId 재발급 하려는 group의 ID
+     * @param userId 재발급 하려는 user의 ID
+     */
+    @Transactional
+    public void newInviteToken(Long userId, Long groupId){
+        GroupMembers groupMembers = groupMembersService.validateGroupMembers(groupId, userId);
+
+        if(groupMembers.isMember()){
+            throw NoPermissionException.forAdmin(groupMembers.getGroupMemberId());
+        }
+        groupService.newInviteToken(groupId);
+    }
+
+    /**
+     * 그룹 삭제
+     * @param userId 그룺을 삭제할 권한을 가진 userID
+     * @param groupId 삭제될 group ID
+     */
+    @Transactional
+    public void deleteGroup(Long userId, Long groupId){
+        GroupMembers groupMembers = groupMembersService.validateGroupMembers(groupId, userId);
+
+        if(!groupMembers.isSuperManager()){
+            throw NoPermissionException.forAdmin(groupMembers.getGroupMemberId());
         }
 
-        return GroupsResponse.ofAdmin(members.getGroups());
+        groupMembersService.deleteGroupMemberAll(userId, groupId);
+
+        groupService.deleteGroup(groupId);
     }
-
-    /**
-     * 시스템 관리자가 group List를 조회
-     * @param userRole 로그인한 사용자의 권한...?
-     * @param userId 로그인한 user ID
-     * @return GroupList 반환
-     * return 하기 전에 validateUserExists로 검증
-     */
-    @Transactional(readOnly = true)
-    public List<GroupsListResponse> getGroupList(String userRole, Long userId) {
-        // 유저가 존재하는지 검증
-        groupMembersService.validateUserExists(userId);
-
-        return groupService.getGroupList(userRole, userId);
-    }
-
-
-
-
 }
