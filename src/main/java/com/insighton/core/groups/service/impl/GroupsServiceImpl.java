@@ -24,7 +24,7 @@ public class GroupsServiceImpl implements GroupsService {
 
     @Override
     @Transactional
-    public void createGroup(GroupsCreateRequest request, Long userId) {
+    public Groups createGroup(GroupsCreateRequest request) {
         // 초대 토큰 랜덤 발급 (UUID 기반으로 대시(-)를 제외한 32자리 고유문자 생성 후 12자리로 자르기)
         String inviteToken = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
 
@@ -37,7 +37,7 @@ public class GroupsServiceImpl implements GroupsService {
                 .inviteToken(inviteToken)
                 .build();
 
-        groupsRepository.save(group);
+        return groupsRepository.save(group);
     }
 
     @Override
@@ -106,9 +106,10 @@ public class GroupsServiceImpl implements GroupsService {
      * 초대 토큰으로 group이 존재하는지 조회
      */
     @Override
-    public Groups validateGroupByInviteToken(String inviteToken){
+    @Transactional(readOnly = true)
+    public void validateGroupByInviteToken(String inviteToken){
         // inviteToken으로 대상 그룹이 존재하는지 확인 및 조회
-        return groupsRepository.findByInviteToken(inviteToken)
+        groupsRepository.findByInviteToken(inviteToken)
                 .orElseThrow(() -> new InviteTokenNotFoundException(inviteToken));
     }
 
