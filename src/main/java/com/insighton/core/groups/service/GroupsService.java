@@ -13,9 +13,9 @@ public interface GroupsService {
     /**
      * 그룹 생성
      * @param request Group 생성 요청 정보
-     * @param userId login한 user의 ID
+     * @return 방금 만든 group 정보를 반환한다.
      */
-    void createGroup(GroupsCreateRequest request, Long userId);
+    Groups createGroup(GroupsCreateRequest request);
 
     /**
      * 그룹 수정
@@ -59,8 +59,8 @@ public interface GroupsService {
 
     /**
      * 초대 토큰으로 group이 존재하는지 확인 (가입용)
+     *
      * @param inviteToken 초대 토큰
-     * @return 존재하는 그룹의 정보를 반환
      */
-    Groups validateGroupByInviteToken(String inviteToken);
+    void validateGroupByInviteToken(String inviteToken); // Groups 반환하다가 반환값이 아예 안 쓰여서 void로 변경함
 }
