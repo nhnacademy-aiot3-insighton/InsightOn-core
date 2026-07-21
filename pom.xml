@@ -66,20 +66,20 @@
             <artifactId>spring-integration-amqp</artifactId>
         </dependency>
 
-        <!-- 순수 시계열 센서 데이터 적재를 위한 공식 인플럭스 자바 드라이버 -->
+        <!-- 3. 순수 시계열 센서 데이터 적재를 위한 공식 인플럭스 자바 드라이버 (교체 완료 💡) -->
         <dependency>
             <groupId>com.influxdb</groupId>
             <artifactId>influxdb-client-java</artifactId>
             <version>6.12.0</version>
         </dependency>
 
-        <!-- 비동기 메시지 큐 및 룰 엔진 브로드캐스팅 (RabbitMQ) -->
+        <!-- 4. 비동기 메시지 큐 및 룰 엔진 브로드캐스팅 (RabbitMQ) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-amqp</artifactId>
         </dependency>
 
-        <!-- 관계형 DB 및 초고속 역조회 인프라 (PostgreSQL & Redis) -->
+        <!-- 5. 관계형 DB 및 초고속 역조회 인프라 (PostgreSQL & Redis) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
