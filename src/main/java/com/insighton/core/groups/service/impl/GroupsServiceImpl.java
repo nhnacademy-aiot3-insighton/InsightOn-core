@@ -43,6 +43,7 @@ public class GroupsServiceImpl implements GroupsService {
     @Override
     @Transactional
     public void updateGroup(GroupsUpdateRequest request, Long groupId) {
+
         Groups groups = groupFindById(groupId);
 
         groups.update(request);
@@ -107,9 +108,9 @@ public class GroupsServiceImpl implements GroupsService {
      */
     @Override
     @Transactional(readOnly = true)
-    public void validateGroupByInviteToken(String inviteToken){
+    public Groups validateGroupByInviteToken(String inviteToken){
         // inviteToken으로 대상 그룹이 존재하는지 확인 및 조회
-        groupsRepository.findByInviteToken(inviteToken)
+        return groupsRepository.findByInviteToken(inviteToken)
                 .orElseThrow(() -> new InviteTokenNotFoundException(inviteToken));
     }
 
