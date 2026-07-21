@@ -5,9 +5,7 @@ import com.insighton.core.groups.dto.request.GroupsCreateRequest;
 import com.insighton.core.groups.dto.request.GroupsUpdateRequest;
 import com.insighton.core.groups.dto.response.GroupsListResponse;
 import com.insighton.core.groups.service.GroupManagementUseCase;
-import com.insighton.core.groupmember.service.GroupMembersService;
 import com.insighton.core.groups.dto.response.GroupsResponse;
-import com.insighton.core.groups.service.GroupsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +16,6 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 public class GroupsController {
-    private final GroupsService groupService;
     private final GroupManagementUseCase groupsUseCase;
 
     /**
@@ -36,14 +33,15 @@ public class GroupsController {
     /**
      * 그룹 생성
      * @param userId login한 user의 ID
-     * @param request 그룹 생성 시 필요한...
+     * @param groupsCreateRequest 그룹 생성 요청 정보
      * @return 성공시 상태 201 반환
      */
     @PostMapping("/api/groups/create")
     public ResponseEntity<Void> createGroup(
             @RequestHeader("X-USER-ID") Long userId,
-            @RequestBody GroupsCreateRequest request){
-        groupService.createGroup(request, userId);
+            @RequestBody GroupsCreateRequest groupsCreateRequest){
+
+        groupsUseCase.createGroup(groupsCreateRequest, userId);
 
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
@@ -109,6 +107,23 @@ public class GroupsController {
         return ResponseEntity.ok(groupsListResponses);
     }
 
+
+    /**
+     * 토큰 재발급
+     * @param userId 재발급 하려는 user의 ID
+     * @param groupId 재발급 하려는 group의 ID
+     * @return 성공시 상태 200 반환(?)
+     */
+    @PostMapping("/api/groups/{group-id}/invite-token/new")
+    public ResponseEntity<Void> newInviteToken(
+            @RequestHeader("X-USER-ID") Long userId,
+            @PathVariable("group-id") Long groupId){
+        groupsUseCase.newInviteToken(userId, groupId);
+
+        return ResponseEntity.ok().build();
+    }
+
+
     /**
      * 그룹 수정
      * @param userId login한 user의 ID
@@ -129,12 +144,14 @@ public class GroupsController {
     /**
      * 그룹 삭제
      * @param groupId 삭제할 그룹의 ID
+     * @param userId 삭제할 권한을 가진 user ID
      * @return 성공 시 상태 204 반환
      */
     @DeleteMapping("/api/groups/{group-id}/delete")
     public ResponseEntity<Void> deleteGroup(
+            @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId){
-        groupService.deleteGroup(groupId);
+        groupsUseCase.deleteGroup(userId, groupId);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
