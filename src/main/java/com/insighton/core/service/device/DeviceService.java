@@ -1,10 +1,10 @@
-package com.insighton.core.service;
+package com.insighton.core.service.device;
 
-import com.insighton.core.dto.DeviceRequestDto;
-import com.insighton.core.dto.DeviceResponseDto;
-import com.insighton.core.entity.DeviceEntity;
+import com.insighton.core.dto.device.DeviceRequestDto;
+import com.insighton.core.dto.device.DeviceResponseDto;
+import com.insighton.core.entity.device.DeviceEntity;
 import com.insighton.core.error.NoDeviceId;
-import com.insighton.core.repository.DeviceRepository;
+import com.insighton.core.repository.device.DeviceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

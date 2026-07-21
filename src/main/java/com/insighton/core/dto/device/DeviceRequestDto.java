@@ -1,4 +1,4 @@
-package com.insighton.core.dto;
+package com.insighton.core.dto.device;
 
 
 import jakarta.validation.constraints.NotBlank;

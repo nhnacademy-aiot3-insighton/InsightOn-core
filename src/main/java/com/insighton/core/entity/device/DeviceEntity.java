@@ -1,5 +1,6 @@
-package com.insighton.core.entity;
+package com.insighton.core.entity.device;
 
+import com.insighton.core.entity.deviceAttribute.DeviceAttributeEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

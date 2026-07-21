@@ -1,4 +1,4 @@
-package com.insighton.core.dto;
+package com.insighton.core.dto.device;
 
 public record DeviceAttributeDto(
         String metricKey,

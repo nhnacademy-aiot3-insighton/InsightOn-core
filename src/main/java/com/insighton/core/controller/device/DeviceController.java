@@ -1,15 +1,13 @@
-package com.insighton.core.controller;
+package com.insighton.core.controller.device;
 
-
-import com.insighton.core.dto.DeviceRequestDto;
-import com.insighton.core.dto.DeviceResponseDto;
-import com.insighton.core.dto.DeviceUpdateRequest;
-import com.insighton.core.service.DeviceService;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import com.insighton.core.dto.device.DeviceUpdateRequest;
+import com.insighton.core.service.device.DeviceService;
+import com.insighton.core.dto.device.DeviceResponseDto;
+import com.insighton.core.dto.device.DeviceRequestDto;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.http.ResponseEntity;
+import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -25,6 +23,14 @@ public class DeviceController {
         Long deviceId = deviceService.createDevice(requestDto);
         return ResponseEntity.ok(deviceId);
     }
+
+    // 단일 deviceId 검색
+    @GetMapping("/{id}")
+    public ResponseEntity<DeviceResponseDto> getDevice(@PathVariable Long deviceId){
+        DeviceResponseDto responseDto = deviceService.searchDevices(deviceId,null,null,null,null).getFirst();
+        return ResponseEntity.ok(responseDto);
+    }
+
 
     // 통합 조건 검색 API
     @GetMapping("/search")
