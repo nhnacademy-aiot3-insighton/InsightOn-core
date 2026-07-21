@@ -62,5 +62,5 @@ public interface GroupsService {
      *
      * @param inviteToken 초대 토큰
      */
-    void validateGroupByInviteToken(String inviteToken); // Groups 반환하다가 반환값이 아예 안 쓰여서 void로 변경함
+    Groups validateGroupByInviteToken(String inviteToken); // Groups 반환하다가 반환값이 아예 안 쓰여서 void로 변경함
 }
