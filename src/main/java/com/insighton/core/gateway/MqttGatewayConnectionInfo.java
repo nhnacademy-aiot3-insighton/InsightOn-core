@@ -1,5 +1,9 @@
 package com.insighton.core.gateway;
 
+import com.insighton.core.gateway.entity.Gateway;
+import java.util.List;
+import java.util.Map;
+
 /**
  * 게이트웨이 단위 MQTT 접속 정보를 담는 값 객체.
  * {@code gateways.connection_config}(JSONB) 필드를 그대로 옮겨 담은 것으로 Gateway 엔티티 자체는 아니며,
@@ -21,4 +25,19 @@ public record MqttGatewayConnectionInfo (
         String username,
         String password
 ) {
+    public static MqttGatewayConnectionInfo from(Gateway gateway) {
+        Map<String, Object> config = gateway.getConnectionConfig();
+
+        String[] brokerUrls = ((List<?>) config.get("brokersUrls")).stream()
+                .map(String::valueOf)
+                .toArray(String[]::new);
+
+        return new MqttGatewayConnectionInfo(
+                gateway.getGatewayId(),
+                gateway.getGatewayUid(),
+                brokerUrls,
+                (String) config.get("username"),
+                (String) config.get("password")
+        );
+    }
 }
