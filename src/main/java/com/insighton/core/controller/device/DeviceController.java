@@ -26,7 +26,7 @@ public class DeviceController {
 
     // 단일 deviceId 검색
     @GetMapping("/{id}")
-    public ResponseEntity<DeviceResponseDto> getDevice(@PathVariable Long deviceId){
+    public ResponseEntity<DeviceResponseDto> getDevice(@PathVariable("id") Long deviceId){
         DeviceResponseDto responseDto = deviceService.searchDevices(deviceId,null,null,null,null).getFirst();
         return ResponseEntity.ok(responseDto);
     }
