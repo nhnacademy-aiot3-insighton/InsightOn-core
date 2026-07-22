@@ -7,6 +7,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -31,7 +32,7 @@ public class LocationController {
         return ResponseEntity.ok(cities);
     }
 
-    @GetMapping("/select")
+    @PostMapping("/select")
     public ResponseEntity<LocationResponseDto> selectLocation(@RequestBody LocationRequestDto requestDto) {
         LocationResponseDto responseDto = locationService.selectGroupLocation(requestDto);
         return ResponseEntity.ok(responseDto);
