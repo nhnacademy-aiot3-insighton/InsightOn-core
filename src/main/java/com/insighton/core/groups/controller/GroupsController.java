@@ -7,6 +7,7 @@ import com.insighton.core.groups.dto.response.GroupsListResponse;
 import com.insighton.core.groups.service.GroupManagementUseCase;
 import com.insighton.core.groups.dto.response.GroupsResponse;
 import com.insighton.core.groups.service.GroupsService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -71,10 +72,10 @@ public class GroupsController {
      * @return 초대 받은 회사의 정보 반환(token null)
      */
     @GetMapping("/api/groups/{group-id}/preview")
-    public ResponseEntity<GroupsResponse> getGroup(
+    public ResponseEntity<GroupsResponse> getGroupPreview(
             @RequestHeader("X-USER-ID")Long userId,
             @PathVariable("group-id") Long groupId,
-            @RequestBody String inviteToken){
+            @RequestParam String inviteToken){
         GroupsResponse response = groupsUseCase.getGroupPreview(inviteToken, userId, groupId);
 
         return ResponseEntity.ok(response);
@@ -123,7 +124,7 @@ public class GroupsController {
     public ResponseEntity<Void> updateGroup(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
-            @RequestBody GroupsUpdateRequest request){
+            @Valid @RequestBody GroupsUpdateRequest request){
         groupsUseCase.updateGroup(request, userId, groupId);
 
         return ResponseEntity.ok().build();
