@@ -54,7 +54,7 @@ public class GroupsServiceImpl implements GroupsService {
     public GroupsResponse getGroupPreview(String inviteToken, Long userId, Long groupId) {
         // token으로 대상 그룹 조회 (token이 존재하지 않을 시 exception 던지기)
         Groups groupsEntity = groupsRepository.findByInviteToken(inviteToken)
-                .orElseThrow(() -> new InviteTokenNotFoundException(inviteToken));
+                .orElseThrow(InviteTokenNotFoundException::new);
 
         return GroupsResponse.ofPublic(groupsEntity);
     }
@@ -111,7 +111,7 @@ public class GroupsServiceImpl implements GroupsService {
     public Groups validateGroupByInviteToken(String inviteToken){
         // inviteToken으로 대상 그룹이 존재하는지 확인 및 조회
         return groupsRepository.findByInviteToken(inviteToken)
-                .orElseThrow(() -> new InviteTokenNotFoundException(inviteToken));
+                .orElseThrow(InviteTokenNotFoundException::new);
     }
 
     /**
