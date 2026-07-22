@@ -95,10 +95,11 @@ public class GroupMembersServiceImpl implements GroupMembersService {
 
     @Override
     @Transactional
-    public void toggleManagerRole(Long groupId, Long targetUserId, Long adminId) {
+    public void toggleManagerRole(Long groupId, Long targetGroupMemberId, Long adminId) {
         // 1. group id가 존재하는지 확인
         GroupMembers adminMember = validateGroupMembers(groupId, adminId);
-        GroupMembers targetMember = validateGroupMembers(groupId, targetUserId);
+        GroupMembers targetMember = groupMembersRepository.findByGroupMemberIdAndGroups_GroupId(targetGroupMemberId, groupId)
+                .orElseThrow(()-> GroupMemberNotFoundException.byMemberIdAndGroupId(targetGroupMemberId, groupId));
 
         // 2. adminID가 manager나 owner권한을 가진 자인지 확인
         // target의 권한이 member일 경우 member는 권한이 없음
@@ -126,10 +127,11 @@ public class GroupMembersServiceImpl implements GroupMembersService {
 
     @Override
     @Transactional
-    public void kickGroupMember(Long adminId, Long groupId, Long targetId) {
+    public void kickGroupMember(Long adminId, Long groupId, Long targetGroupMemberId) {
 
         GroupMembers admin = validateGroupMembers(groupId, adminId);
-        GroupMembers target = validateGroupMembers(groupId, targetId);
+        GroupMembers target = groupMembersRepository.findByGroupMemberIdAndGroups_GroupId(targetGroupMemberId, groupId)
+                .orElseThrow(()-> GroupMemberNotFoundException.byMemberIdAndGroupId(targetGroupMemberId, groupId));
 
         // 삭제를 시도하는 자가 member 권한이면 아무도 삭제할 수 없음
         if(admin.isMember()){
