@@ -31,7 +31,11 @@
         <spring-cloud.version>2025.0.3</spring-cloud.version>
     </properties>
     <dependencies>
-        <!-- Spring Boot Web Core & Actuator -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>        <!-- Spring Boot Web Core & Actuator -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
