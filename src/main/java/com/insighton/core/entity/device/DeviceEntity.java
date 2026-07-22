@@ -35,7 +35,7 @@ public class DeviceEntity {
     private String deviceEui;
     @NotNull
     private String name;
-    @NotNull
+    @Column(nullable = false)
     private String type;
 
     private ZonedDateTime lastSeenAt;
