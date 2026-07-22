@@ -1,7 +1,6 @@
 package com.insighton.core.groupmember.repository;
 
 import com.insighton.core.groupmember.dto.response.GroupMembersListResponse;
-import com.insighton.core.groupmember.dto.response.GroupMembersResponse;
 import com.insighton.core.groupmember.entity.GroupMembers;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -41,19 +40,13 @@ public interface GroupMembersRepository extends JpaRepository<GroupMembers, Long
      */
     boolean existsByGroups_GroupIdAndUserId(Long groupId, Long userId);
 
-    /**
-     * group memberID로 Group member 상세 조회
-     * @param groupMemberId 조회하고자 하는 groupMember의 ID
-     * @return group member의 정보
-     */
-    GroupMembersResponse findByGroupMemberId(Long groupMemberId);
 
     /**
      * user ID로 groupMember 조회
      * @param userId 조회할 userID
      * @return user 아이디에 대한 groupMember 정보
      */
-    GroupMembers findByUserId(Long userId);
+    Optional<GroupMembers> findByUserId(Long userId);
 
     /**
      * groupID로 찾은 모든 GroupMember들을 삭제
