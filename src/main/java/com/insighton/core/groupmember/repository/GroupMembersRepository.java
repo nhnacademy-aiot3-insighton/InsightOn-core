@@ -67,5 +67,5 @@ public interface GroupMembersRepository extends JpaRepository<GroupMembers, Long
      * @param groupsId 조회하고자 하는 member가 속한 group의 ID
      * @return member 정보 반환
      */
-    GroupMembersResponse findByGroupMemberIdAndGroups_GroupId(Long groupMemberId, Long groupsId);
+    Optional<GroupMembers> findByGroupMemberIdAndGroups_GroupId(Long groupMemberId, Long groupsId);
 }
