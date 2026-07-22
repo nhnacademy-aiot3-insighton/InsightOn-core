@@ -13,7 +13,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "device")
+@Table(name = "device",
+uniqueConstraints = {
+        @UniqueConstraint(name = "UK_device_eui", columnNames = {"deviceEui"})
+})
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -30,8 +33,8 @@ public class DeviceEntity {
 //    @ManyToOne
 //    private locationsId locationsId;
     private Long locationsId;
-
-    @NotNull
+    
+    @Column(name = "device_eui", nullable = false, unique = true)
     private String deviceEui;
     @NotNull
     private String name;
