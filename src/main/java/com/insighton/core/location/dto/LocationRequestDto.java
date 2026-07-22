@@ -1,8 +1,10 @@
 package com.insighton.core.location.dto;
 
+import jakarta.validation.constraints.NotBlank;
+
 public record LocationRequestDto(
-        Long groupId,
-        String step1,
-        String step2
+        @NotBlank Long groupId,
+        @NotBlank String step1,
+        @NotBlank String step2
 ) {
 }
