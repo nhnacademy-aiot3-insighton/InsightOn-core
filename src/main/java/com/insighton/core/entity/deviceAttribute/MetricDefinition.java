@@ -1,6 +1,7 @@
-package com.insighton.core.deviceAttribute.core;
+package com.insighton.core.entity.deviceAttribute;
 
-import com.insighton.core.error.NoMetricKey;
+import com.insighton.core.error.CustomException;
+import com.insighton.core.error.ErrorCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -24,6 +25,6 @@ public enum MetricDefinition {
         return Arrays.stream(values())
                 .filter(m -> m.getMetricKey().equalsIgnoreCase(metricKey))
                 .findFirst()
-                .orElseThrow(() -> new NoMetricKey(metricKey));
+                .orElseThrow(() -> new CustomException(ErrorCode.METRIC_KEY_NOT_FOUND));
     }
 }

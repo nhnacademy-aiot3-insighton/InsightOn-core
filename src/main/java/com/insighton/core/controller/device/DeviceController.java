@@ -10,65 +10,97 @@ import lombok.RequiredArgsConstructor;
 import jakarta.validation.Valid;
 import java.util.List;
 
+/**
+ * IoT 장치(Device) 생성, 조회, 수정, 삭제(CRUD) REST API 컨트롤러.
+ */
 @RestController
 @RequestMapping("/api/devices")
 @RequiredArgsConstructor
 public class DeviceController {
+
     private final DeviceService deviceService;
 
-    // 장치 등록 API
-    // DeviceRequestDto를 받아 장치를 생성하고 생성된 ID를 반환
+    /**
+     * 신규 장치 등록 API
+     *
+     * @param requestDto 등록할 장치 상세 정보 (@Valid를 통해 필드 유효성 검증)
+     * @return 생성된 장치 ID (HTTP 200 OK)
+     */
     @PostMapping
     public ResponseEntity<Long> createDevice(@RequestBody @Valid DeviceRequestDto requestDto){
         Long deviceId = deviceService.createDevice(requestDto);
         return ResponseEntity.ok(deviceId);
     }
 
-    // 단일 deviceId 검색
+    /**
+     * 단일 장치 상세 조회 API
+     *
+     * @param deviceId 조회할 장치 ID
+     * @return 조회된 장치 상세 정보 (HTTP 200 OK)
+     */
     @GetMapping("/{id}")
     public ResponseEntity<DeviceResponseDto> getDevice(@PathVariable("id") Long deviceId){
-        DeviceResponseDto responseDto = deviceService.searchDevices(deviceId,null,null,null,null).getFirst();
+        DeviceResponseDto responseDto = deviceService.searchDevices(deviceId, null, null, null, null).getFirst();
         return ResponseEntity.ok(responseDto);
     }
 
-
-    // 통합 조건 검색 API
+    /**
+     * 통합 조건 검색 API
+     * <p>
+     * ID, EUI, 위치, 게이트웨이, 이름 중 원하는 조건을 선택적 쿼리 파라미터로 전달하여 조건 검색을 실행합니다.
+     *
+     * @param id 장치 ID (선택)
+     * @param eui DevEUI (선택)
+     * @param locationId 위치 ID (선택)
+     * @param gatewayId 게이트웨이 ID (선택)
+     * @param name 장치 이름 (선택)
+     * @return 조건에 일치하는 장치 리스트 (HTTP 200 OK)
+     */
     @GetMapping("/search")
     public ResponseEntity<List<DeviceResponseDto>> search(
-            //@RequestParam(required = false) 선택적으로 입력하도록 허용
             @RequestParam(required = false) Long id,
             @RequestParam(required = false) String eui,
             @RequestParam(required = false) Long locationId,
             @RequestParam(required = false) Long gatewayId,
             @RequestParam(required = false) String name) {
 
-        // 파라미터 조건에 따라 적절한 데이터를 조회하여 반환
         List<DeviceResponseDto> result = deviceService.searchDevices(id, eui, locationId, gatewayId, name);
         return ResponseEntity.ok(result);
     }
 
-    // 장치 위치 이동(수정) API
+    /**
+     * 장치 위치 수정(이동) API
+     *
+     * @param id 수정 대상 장치 ID
+     * @param request 변경할 위치 ID를 담은 DTO
+     * @return 응답 본문 없는 성공 응답 (HTTP 204 No Content)
+     */
     @PatchMapping("/{id}/location")
     public ResponseEntity<Void> updateDeviceLocation(
             @PathVariable Long id,
             @RequestBody DeviceUpdateRequest request){
 
-        // DeviceUpdateRequest에 포함된 위치ID를 추출하여 서비스로 넘김
         deviceService.updateDeviceLocation(id, request.locationId());
-        // return ResponseEntity.noContent().build(); noContent 204설정
-        // build는 응답 데이터를 넣지않고 이대로 포장함
         return ResponseEntity.noContent().build();
     }
 
-
-    // 개별 장지ID 삭제
+    /**
+     * 단일 장치 삭제 API
+     *
+     * @param id 삭제할 장치 ID
+     * @return 응답 본문 없는 성공 응답 (HTTP 204 No Content)
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteDevice(@PathVariable Long id){
         deviceService.deleteDevice(id);
         return ResponseEntity.noContent().build();
     }
 
-    // 전체 삭제
+    /**
+     * 전체 장치 일괄 삭제 API
+     *
+     * @return 응답 본문 없는 성공 응답 (HTTP 204 No Content)
+     */
     @DeleteMapping
     public ResponseEntity<Void> deleteAllDevice(){
         deviceService.deleteAll();
