@@ -19,6 +19,12 @@ public record GatewayResponse(
         OffsetDateTime lastHeartbeatAt,
         OffsetDateTime createdAt
 ) {
+    /**
+     * 게이트웨이 엔터티의 주요 정보를 응답 DTO로 변환한다.
+     *
+     * @param gateway 변환할 게이트웨이 엔터티
+     * @return 게이트웨이 정보가 매핑된 응답 DTO
+     */
     public static GatewayResponse from(Gateway gateway) {
         return new GatewayResponse(
                 gateway.getGatewayId(),

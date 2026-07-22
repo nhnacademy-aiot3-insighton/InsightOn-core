@@ -19,6 +19,12 @@ import org.springframework.stereotype.Component;
 public class MqttPayloadParser {
     private final ObjectMapper objectMapper;
 
+    /**
+     * MQTT 페이로드를 정제된 텔레메트리 패킷으로 변환한다.
+     *
+     * @param payload 바이트 배열 또는 UTF-8 문자열 형식의 MQTT 페이로드
+     * @return 파싱에 성공하면 정제된 텔레메트리 패킷을 포함한 {@code Optional}, 실패하면 빈 {@code Optional}
+     */
     public Optional<CleanTelemetryPacket> parse(Object payload) {
         try {
             byte[] bytes = switch (payload) {

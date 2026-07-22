@@ -37,10 +37,9 @@ public class GatewayHeartbeatTracker {
     }
 
     /**
-     * 현재까지 기록된 전체 게이트웨이의 마지막 수신 시각 스냅샷 반환
-     * 스케줄러가 주기적으로 순회하며 DB 반영/FAULT 판정에 사용
+     * 기록된 모든 게이트웨이의 마지막 패킷 수신 시각을 스냅샷으로 제공한다.
      *
-     * @return 게이트웨이 ID를 키로 하는 마지막 수신 시각 맵의 복사본
+     * @return 게이트웨이 ID를 키로 하고 마지막 수신 시각을 값으로 하는 불변 맵
      */
     public Map<Long, Instant> snapshot() {
         return Map.copyOf(lastSeenAt);

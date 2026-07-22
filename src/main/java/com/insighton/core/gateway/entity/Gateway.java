@@ -59,6 +59,15 @@ public class Gateway {
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
+    /**
+     * 게이트웨이를 생성하고 초기 상태를 정상으로 설정한다.
+     *
+     * @param groupsId 게이트웨이가 속한 그룹의 식별자
+     * @param gatewayUid 게이트웨이의 고유 식별자
+     * @param name 게이트웨이 이름
+     * @param protocolType 게이트웨이가 사용하는 프로토콜 유형
+     * @param connectionConfig 게이트웨이 연결 설정
+     */
     @Builder
     public Gateway(Long groupsId, String gatewayUid, String name, ProtocolType protocolType,
             Map<String, Object> connectionConfig) {
@@ -70,12 +79,22 @@ public class Gateway {
         this.status = GatewayStatus.NORMAL;
     }
 
+    /**
+     * 게이트웨이의 이름, 프로토콜 유형 및 연결 설정을 수정한다.
+     *
+     * @param name 게이트웨이 이름
+     * @param protocolType 게이트웨이 프로토콜 유형
+     * @param connectionConfig 게이트웨이 연결 설정
+     */
     public void update(String name, ProtocolType protocolType, Map<String, Object> connectionConfig) {
         this.name = name;
         this.protocolType = protocolType;
         this.connectionConfig = connectionConfig;
     }
 
+    /**
+     * 엔티티가 처음 저장되기 직전에 생성 시각을 현재 시각으로 설정합니다.
+     */
     @PrePersist
     protected void onCreate() {
         this.createdAt = OffsetDateTime.now();

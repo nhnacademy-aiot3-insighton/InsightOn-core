@@ -20,6 +20,13 @@ public class TelemetryPublisher {
 
     private final RabbitTemplate rabbitTemplate;
 
+    /**
+     * 텔레메트리 이벤트를 RabbitMQ로 발행합니다.
+     *
+     * <p>발행에 실패하면 경고를 기록하고 해당 메시지를 폐기합니다.</p>
+     *
+     * @param event 발행할 텔레메트리 이벤트
+     */
     @Async("telemetryDispatchExecutor")
     public void publish(TelemetryEventMessage event) {
         String routingKey = RabbitConfig.TELEMETRY_ROUTING_KEY_PREFIX + event.groupsId();

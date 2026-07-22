@@ -25,12 +25,10 @@ public class DeviceLookupCacheService {
     //TODO: DeviceRepository 주입
 
     /**
-     * devEui로 기기 캐시 항목을 조회함. Caffeine, Redis, PostgreSQL 순으로 확인하며
-     * 도중에 값을 찾으면 상위 계층에 채워 넣은 뒤 반환함. 어디에도 없으면 빈 Optional을 반환함
-     * (Auto-Provisioning 대상 — 이후 {@link #populate(DeviceCacheEntry)} 호출로 캐시가 채워짐).
+     * 기기 EUI로 캐시된 기기 식별 정보를 조회하고, Redis 조회 결과를 로컬 캐시에 저장합니다.
      *
-     * @param deviceEui 조회할 기기 고유 식별자
-     * @return 조회된 캐시 항목, 완전 미스 시 빈 Optional
+     * @param deviceEui 조회할 기기의 고유 식별자
+     * @return 조회된 캐시 항목이 있으면 해당 값, 조회되지 않으면 빈 {@code Optional}
      */
     public Optional<DeviceCacheEntry> lookup(String deviceEui) {
         DeviceCacheEntry local = deviceEuiLocalCache.getIfPresent(deviceEui);
@@ -53,10 +51,9 @@ public class DeviceLookupCacheService {
     }
 
     /**
-     * 캐시 항목을 Caffeine과 Redis 양쪽에 채워 넣음.
-     * DB 조회로 새로 찾았거나 Auto-Provisioning으로 새 기기가 생성됐을 때 호출함.
+     * 기기 정보를 로컬 캐시와 Redis에 저장합니다.
      *
-     * @param entry 캐시에 채워 넣을 기기 정보
+     * @param entry 저장할 기기 정보
      */
     public void populate(DeviceCacheEntry entry) {
         deviceEuiLocalCache.put(entry.deviceEui(), entry);
@@ -64,9 +61,9 @@ public class DeviceLookupCacheService {
     }
 
     /**
-     * 캐시 항목을 Caffeine과 Redis 양쪽에서 제거함. 기기 정보가 변경/삭제됐을 때 사용함.
+     * 기기의 캐시 항목을 로컬 캐시와 Redis에서 삭제합니다.
      *
-     * @param deviceEui 제거할 기기의 고유 식별자
+     * @param deviceEui 삭제할 기기의 고유 식별자
      */
     public void evict(String deviceEui) {
         deviceEuiLocalCache.invalidate(deviceEui);

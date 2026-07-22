@@ -39,8 +39,9 @@ public class GatewayPacketInboundHandler implements MessageHandler {
     private final TelemetryInfluxWriter influxWriter;
 
     /**
-     * MQTT로부터 수신한 메시지 하나를 처리함.
-     * devEui 조회 성공 여부와 무관하게, 이 flow로 뭔가 도착했다는 사실 자체를 하트비트로 우선 기록함.
+     * MQTT 수신 패킷을 파싱하고 디바이스 컨텍스트에 따라 텔레메트리를 처리한다.
+     * 파싱에 실패하거나 필수 컨텍스트를 확인할 수 없는 패킷은 삭제하며, 미등록 디바이스는
+     * InfluxDB에만 적재하고 등록된 디바이스의 텔레메트리만 RabbitMQ로 발행한다.
      *
      * @param message 수신한 MQTT 메시지
      */

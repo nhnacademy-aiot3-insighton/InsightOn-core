@@ -14,12 +14,11 @@ import org.springframework.stereotype.Component;
 public class MqttClientFactoryProvider {
 
     /**
-     * 게이트웨이 접속 정보를 기반으로 {@link MqttPahoClientFactory}를 생성
-     * clean session은 켜두고, 재연결은 Spring Integration 어댑터에 위임하기 위해 Paho 자동 재연결은 끔.
-     * username/password가 있으면 인증 옵션에 채워 넣음
+     * 게이트웨이 접속 정보에 따라 MQTT 클라이언트 팩토리를 구성한다.
+     * 세션을 정리하도록 설정하고, 자동 재연결은 비활성화하며, 제공된 인증 정보를 적용한다.
      *
-     * @param connectionInfo 게이트웨이별 MQTT 접속 정보
-     * @return 해당 게이트웨이 전용 클라이언트 팩토리
+     * @param connectionInfo 게이트웨이의 MQTT 브로커 및 인증 정보
+     * @return 구성된 MQTT 클라이언트 팩토리
      */
     public MqttPahoClientFactory create(MqttGatewayConnectionInfo connectionInfo) {
         DefaultMqttPahoClientFactory factory = new DefaultMqttPahoClientFactory();

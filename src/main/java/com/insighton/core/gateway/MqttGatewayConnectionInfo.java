@@ -25,6 +25,12 @@ public record MqttGatewayConnectionInfo (
         String username,
         String password
 ) {
+    /**
+     * 게이트웨이의 연결 설정으로 MQTT 접속 정보를 생성합니다.
+     *
+     * @param gateway 연결 설정을 제공하는 게이트웨이
+     * @return 게이트웨이의 MQTT 접속 정보
+     */
     public static MqttGatewayConnectionInfo from(Gateway gateway) {
         Map<String, Object> config = gateway.getConnectionConfig();
 

@@ -26,11 +26,24 @@ public class InfluxConfig {
     @Value("${influx.bucket}")
     private String bucket;
 
+    /**
+     * 주입된 연결 설정을 사용해 InfluxDB 클라이언트를 생성한다.
+     *
+     * @return InfluxDB 연결 클라이언트
+     */
     @Bean(destroyMethod = "close")
     public InfluxDBClient influxDBClient() {
         return InfluxDBClientFactory.create(url, token.toCharArray(), influxOrg, bucket);
     }
 
+    /**
+     * InfluxDB 비동기 배치 쓰기를 위한 {@code WriteApi}를 생성한다.
+     *
+     * <p>배치 쓰기 실패 시 경고를 기록하며 데이터가 드롭될 수 있다.</p>
+     *
+     * @param influxDBClient InfluxDB 연결 클라이언트
+     * @return 비동기 배치 쓰기에 구성된 {@code WriteApi}
+     */
     @Bean(destroyMethod = "close")
     public WriteApi writeApi(InfluxDBClient influxDBClient) {
 

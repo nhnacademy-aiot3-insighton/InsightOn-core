@@ -27,8 +27,8 @@ public class MqttGatewayWarmUpRunner implements ApplicationRunner {
     private final GatewayRepository gatewayRepository;
 
     /**
-     * 애플리케이션 기동 완료 직후 실행되며, MQTT 프로토콜 게이트웨이 목록을 접속정보 캐시에 채우고
-     * {@link DynamicMqttGatewayManager}로 각각의 MQTT 클라이언트를 등록함.
+     * 애플리케이션 시작 시 MQTT 게이트웨이의 연결 정보와 그룹 매핑을 캐시에 저장하고 클라이언트를 등록한다.
+     * 개별 게이트웨이 등록 실패는 해당 게이트웨이에 한정되어 이후 게이트웨이 처리를 계속한다.
      *
      * @param args 애플리케이션 실행 인자
      */

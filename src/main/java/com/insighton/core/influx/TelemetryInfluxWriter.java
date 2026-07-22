@@ -16,6 +16,11 @@ public class TelemetryInfluxWriter {
 
     private final WriteApi writeApi;
 
+    /**
+     * 텔레메트리 측정값을 InfluxDB에 기록하도록 큐에 추가합니다.
+     *
+     * @param measurement InfluxDB에 기록할 텔레메트리 측정값
+     */
     @Async("telemetryDispatchExecutor")
     public void write(DynamicTelemetryMeasurement measurement) {
         try {
