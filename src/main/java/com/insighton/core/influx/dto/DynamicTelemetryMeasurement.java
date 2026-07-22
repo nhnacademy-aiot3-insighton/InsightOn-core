@@ -1,7 +1,5 @@
 package com.insighton.core.influx.dto;
 
-import com.influxdb.annotations.Column;
-import com.influxdb.annotations.Measurement;
 import java.time.Instant;
 import java.util.Map;
 
