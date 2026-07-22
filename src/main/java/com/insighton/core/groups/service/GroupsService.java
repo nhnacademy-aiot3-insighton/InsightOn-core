@@ -29,11 +29,10 @@ public interface GroupsService {
      * 일반 사용자의 초대한 그룹 조회용 (초대장 느낌)
      * 이 초대 토큰은 A 회사의 초대 토큰 입니다 하고 회사 정보를 띄우기.(토큰은 null 값으로 들어감)
      * @param inviteToken 초대 코드
-     * @param userId login한 user의 ID
      * @param groupId 내가 지금 보고 있는 group의 ID
      * @return 토큰 값 빼고 group 정보가 들어감
      */
-    GroupsResponse getGroupPreview(String inviteToken, Long userId, Long groupId);
+    GroupsResponse getGroupPreview(String inviteToken, Long groupId);
 
 
     /**
