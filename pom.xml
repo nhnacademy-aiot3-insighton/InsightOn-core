@@ -31,7 +31,7 @@
         <spring-cloud.version>2025.0.3</spring-cloud.version>
     </properties>
     <dependencies>
-        <!-- 1. Spring Boot Web Core & Actuator -->
+        <!-- Spring Boot Web Core & Actuator -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -40,8 +40,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
 
-        <!-- 2. Spring Integration 및 최전방 MQTT 인바운드 (수정 완료 💡) -->
+        <!-- Spring Integration 및 최전방 MQTT 인바운드 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-integration</artifactId>
@@ -99,21 +103,35 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- 6. 동적 JSON 파싱 유틸리티 (추가 완료 💡) -->
+        <!-- 동적 JSON 파싱 유틸리티 -->
         <dependency>
             <groupId>com.jayway.jsonpath</groupId>
             <artifactId>json-path</artifactId>
             <version>2.9.0</version>
         </dependency>
 
-        <!-- 7. 개발자 유틸리티 (Lombok) -->
+        <!-- devEui 3단계 캐싱(Caffeine → Redis → PostgreSQL)의 로컬 캐시 계층 -->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
+
+        <!-- ChirpStack MQTT 브로커 연결용 Paho 클라이언트 -->
+        <dependency>
+            <groupId>org.eclipse.paho</groupId>
+            <artifactId>org.eclipse.paho.client.mqttv3</artifactId>
+            <version>1.2.5</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- 개발자 유틸리티 (Lombok) -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
 
-        <!-- 8. 테스트 레이어 설정 -->
+        <!-- 테스트 레이어 설정 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -137,6 +155,20 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
+
+        <!-- QueryDSL (Jakarta) -->
+        <dependency>
+            <groupId>com.querydsl</groupId>
+            <artifactId>querydsl-jpa</artifactId>
+            <version>5.1.0</version>
+            <classifier>jakarta</classifier>
+        </dependency>
+        <dependency>
+            <groupId>com.querydsl</groupId>
+            <artifactId>querydsl-apt</artifactId>
+            <version>5.1.0</version>
+            <classifier>jakarta</classifier>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
     <dependencyManagement>
@@ -180,6 +212,17 @@
                                 <path>
                                     <groupId>org.projectlombok</groupId>
                                     <artifactId>lombok</artifactId>
+                                </path>
+                                <path>
+                                    <groupId>com.querydsl</groupId>
+                                    <artifactId>querydsl-apt</artifactId>
+                                    <version>5.1.0</version>
+                                    <classifier>jakarta</classifier>
+                                </path>
+                                <path>
+                                    <groupId>jakarta.persistence</groupId>
+                                    <artifactId>jakarta.persistence-api</artifactId>
+                                    <version>3.1.0</version>
                                 </path>
                             </annotationProcessorPaths>
                         </configuration>
