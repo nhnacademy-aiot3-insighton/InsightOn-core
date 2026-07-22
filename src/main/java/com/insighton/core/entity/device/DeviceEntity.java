@@ -13,10 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "device",
-uniqueConstraints = {
-        @UniqueConstraint(name = "UK_device_eui", columnNames = {"device_eui"})
-})
+@Table(name = "device")
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -38,7 +35,7 @@ public class DeviceEntity {
     private String deviceEui;
     @NotNull
     private String name;
-    @NotNull
+    @Column(nullable = false)
     private String type;
 
     private ZonedDateTime lastSeenAt;
