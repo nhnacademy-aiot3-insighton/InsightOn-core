@@ -8,6 +8,9 @@ import com.insighton.core.gateway.exception.GatewayAccessDeniedException;
 import com.insighton.core.gateway.exception.GatewayNotFoundException;
 import com.insighton.core.gateway.repository.GatewayRepository;
 import com.insighton.core.gateway.service.GatewayService;
+import com.insighton.core.groupmember.entity.GroupMembers;
+import com.insighton.core.groupmember.repository.GroupMembersRepository;
+import com.insighton.core.mqtt.connection.DynamicMqttGatewayManager;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -23,11 +26,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class GatewayServiceImpl implements GatewayService {
 
     private final GatewayRepository gatewayRepository;
+    private final DynamicMqttGatewayManager gatewayManager;
+    private final GroupMembersRepository groupMembersRepository;
 
     @Override
     public GatewayResponse create(Long userId, GatewayCreateRequest request) {
         validateConnectionConfig(request.connectionConfig());
-        requireManagerRole(userId, null);
+        requireManagerRole(userId, request.groupsId());
 
         Gateway newGateway = Gateway.builder()
                 .groupsId(request.groupsId())
@@ -44,17 +49,17 @@ public class GatewayServiceImpl implements GatewayService {
 
     @Override
     public GatewayResponse getById(Long userId, Long gatewayId) {
-        requireManagerRole(userId, null);
-
         Gateway gateway = gatewayRepository.findByGatewayId(gatewayId)
                 .orElseThrow(() -> new GatewayNotFoundException(gatewayId));
+
+        requireGroupMembership(userId, gateway.getGroupsId());
 
         return GatewayResponse.from(gateway);
     }
 
     @Override
     public List<GatewayResponse> getAllByGroupId(Long userId, Long groupId) {
-        requireManagerRole(userId, null);
+        requireGroupMembership(userId, groupId);
 
         return gatewayRepository.findAllByGroupsId(groupId).stream()
                 .map(GatewayResponse::from)
@@ -76,10 +81,11 @@ public class GatewayServiceImpl implements GatewayService {
     @Override
     public void update(Long userId, Long gatewayId, GatewayUpdateRequest request) {
         validateConnectionConfig(request.connectionConfig());
-        requireManagerRole(userId, null);
 
         Gateway gateway = gatewayRepository.findByGatewayId(gatewayId)
                 .orElseThrow(() -> new GatewayNotFoundException(gatewayId));
+
+        requireManagerRole(userId, gateway.getGroupsId());
 
         gateway.update(request.name(), request.protocolType(), request.connectionConfig());
     }
@@ -87,14 +93,13 @@ public class GatewayServiceImpl implements GatewayService {
     @Transactional
     @Override
     public void delete(Long userId, Long gatewayId) {
-        //TODO: feature/mqtt 머지 후 DynamicMqttGatewayManager.unregisterGateway(gatewayId) 호출 추가
-        requireManagerRole(userId, null);
+        Gateway gateway = gatewayRepository.findByGatewayId(gatewayId)
+                .orElseThrow(() -> new GatewayNotFoundException(gatewayId));
 
-        if(!gatewayRepository.existsById(gatewayId)) {
-            throw new GatewayNotFoundException(gatewayId);
-        }
+        requireManagerRole(userId, gateway.getGroupsId());
 
         gatewayRepository.deleteById(gatewayId);
+        gatewayManager.unregisterGateway(gatewayId);
     }
 
     private void validateConnectionConfig(Map<String, Object> connectionConfig) {
@@ -104,7 +109,26 @@ public class GatewayServiceImpl implements GatewayService {
         }
     }
 
-    private void requireManagerRole(Long userId, Long groupId) {
-        //TODO: groupMemberRepository ROLE MANAGER 체크
+
+     // 쓰기(생성/수정/삭제)용 — MANAGER/SUPER_MANAGER만 허용, 호출자 소속 그룹과 대상 그룹이 같은지도 확인
+    private void requireManagerRole(Long userId, Long groupsId) {
+        GroupMembers groupMember = groupMembersRepository.findByUserId(userId)
+                .orElseThrow(() -> new GatewayAccessDeniedException("소속된 그룹이 없습니다."));
+
+        if (!groupMember.getGroups().getGroupId().equals(groupsId)) {
+            throw new GatewayAccessDeniedException("다른 그룹의 리소스입니다.");
+        }
+        if (groupMember.getGroupRole() == GroupMembers.GroupRole.MEMBER) {
+            throw new GatewayAccessDeniedException("게이트웨이 관리 권한이 없습니다.");
+        }
+    }
+
+    // 조회용 — 그룹 소속만 확인, role은 무관(MEMBER도 허용)
+    private void requireGroupMembership(Long userId, Long groupsId) {
+        GroupMembers groupMember = groupMembersRepository.findByUserId(userId)
+                .orElseThrow(() -> new GatewayAccessDeniedException("소속된 그룹이 없습니다."));
+        if (!groupMember.getGroups().getGroupId().equals(groupsId)) {
+            throw new GatewayAccessDeniedException("다른 그룹의 리소스입니다.");
+        }
     }
 }
