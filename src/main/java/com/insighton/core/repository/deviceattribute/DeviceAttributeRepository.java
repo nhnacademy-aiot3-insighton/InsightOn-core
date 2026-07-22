@@ -11,5 +11,6 @@ public interface DeviceAttributeRepository extends JpaRepository<DeviceAttribute
     List<DeviceAttributeEntity> findByDeviceId_DeviceId(Long deviceId);
 
     Optional<DeviceAttributeEntity> findByDeviceId_DeviceIdAndMetricKey(Long deviceId, String metricKey);
+    boolean existsByDeviceId_DeviceIdAndMetricKey(Long deviceId, String metricKey);
 
 }

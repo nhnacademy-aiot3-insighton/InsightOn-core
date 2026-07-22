@@ -1,4 +1,4 @@
-package com.insighton.core.entity.deviceattribute;
+package com.insighton.core.entity.deviceAttribute;
 
 import com.insighton.core.entity.device.DeviceEntity;
 import jakarta.persistence.*;
@@ -31,10 +31,12 @@ public class DeviceAttributeEntity {
 
     @NotNull
     private String metricKey;
-    @NotNull
-    private String displayName;
 
-    private String unit;
+    // enum에 디스플레이와 유닛이 포함되어있음
+//    @NotNull
+//    private String displayName;
+//
+//    private String unit;
 
     private String currentValueStr;
 
