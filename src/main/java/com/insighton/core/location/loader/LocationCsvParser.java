@@ -1,5 +1,6 @@
 package com.insighton.core.location.loader;
 
+import com.insighton.core.exception.LocationNotFoundException;
 import com.insighton.core.location.dto.LocationGridDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -16,6 +17,10 @@ public class LocationCsvParser {
         String[] tokens = line.split(",");
         if (tokens.length < 4) {
             return null;
+        }
+
+        if (tokens[0].isBlank() || tokens[1].isBlank()) {
+            throw new LocationNotFoundException("행정구역이 비어있습니다.");
         }
 
         String step1 = tokens[0].trim();

@@ -35,9 +35,10 @@ public class LocationCsvLoader implements ApplicationRunner {
                 }
 
                 LocationGridDto dto = locationCsvParser.parse(line);
-                if (dto != null) {
-                    inMemoryLocationRegistry.save(dto);
+                if (dto == null) {
+                    throw new IllegalStateException("잘못된 locations.csv 행: " + line);
                 }
+                inMemoryLocationRegistry.save(dto);
             }
         }
     }
