@@ -1,16 +1,15 @@
-package com.insighton.core.common.loader;
+package com.insighton.core.location.loader;
 
 import com.insighton.core.location.dto.LocationGridDto;
-import com.insighton.core.location.repository.InMemoryLocationRegistry;
+import com.insighton.core.location.registry.InMemoryLocationRegistry;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 
 @Component
 @RequiredArgsConstructor

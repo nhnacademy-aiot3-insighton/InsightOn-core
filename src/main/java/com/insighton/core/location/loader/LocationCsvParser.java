@@ -1,4 +1,4 @@
-package com.insighton.core.common.loader;
+package com.insighton.core.location.loader;
 
 import com.insighton.core.location.dto.LocationGridDto;
 import lombok.RequiredArgsConstructor;

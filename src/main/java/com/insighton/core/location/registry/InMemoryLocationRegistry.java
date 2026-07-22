@@ -1,14 +1,17 @@
-package com.insighton.core.location.repository;
+package com.insighton.core.location.registry;
 
 import com.insighton.core.location.dto.LocationGridDto;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import lombok.Getter;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
-
 @Component
 @Getter
-public class InMemoryLocationRegistry implements LocationRepository {
+public class InMemoryLocationRegistry implements LocationRegistry {
 
     private final Map<String, List<String>> stateToCitiesMap = new HashMap<>(); // 1:N 구조관리
     private final Map<String, Map<String, LocationGridDto>> gridCoordinateMap = new HashMap<>(); // 한 번에 격자 데이터까지 도달하게 해줌
