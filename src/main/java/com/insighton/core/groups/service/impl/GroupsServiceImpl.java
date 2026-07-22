@@ -51,9 +51,9 @@ public class GroupsServiceImpl implements GroupsService {
 
     @Override
     @Transactional(readOnly = true)
-    public GroupsResponse getGroupPreview(String inviteToken, Long userId, Long groupId) {
+    public GroupsResponse getGroupPreview(String inviteToken, Long groupId) {
         // token으로 대상 그룹 조회 (token이 존재하지 않을 시 exception 던지기)
-        Groups groupsEntity = groupsRepository.findByInviteToken(inviteToken)
+        Groups groupsEntity = groupsRepository.findByInviteTokenAndGroupId(inviteToken, groupId)
                 .orElseThrow(InviteTokenNotFoundException::new);
 
         return GroupsResponse.ofPublic(groupsEntity);

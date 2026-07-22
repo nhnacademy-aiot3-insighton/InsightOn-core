@@ -138,12 +138,18 @@ public class GroupMembersServiceImpl implements GroupMembersService {
             throw NoPermissionException.forAdmin(admin.getGroupMemberId());
         }
 
+        // 삭제를 시도하는자가 target과 동일인물이면 안됨
+        if(Objects.equals(admin.getUserId(), target.getUserId())){
+            throw new SuperManagerCannotLeaveException(admin.getGroupMemberId());
+        }
+
         // 삭제하려는 자가 manager권한인데 target이 같은 권한이거나 superManager면 삭제할 수 없음
         if(admin.isManager()){
             if(target.isManager() || target.isSuperManager()){
                 throw NoPermissionException.forAdmin(admin.getGroupMemberId());
             }
         }
+
 
         groupMembersRepository.delete(target);
     }

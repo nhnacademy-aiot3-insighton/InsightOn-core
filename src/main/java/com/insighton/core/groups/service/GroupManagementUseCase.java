@@ -79,7 +79,7 @@ public class GroupManagementUseCase {
         // 유저가 존재하는지 검증(다른 그룹에 가입이 안 되어있어야함 )
         groupMembersService.validateUserNotInAnyGroup(userId);
 
-        return groupService.getGroupPreview(inviteToken, userId, groupId);
+        return groupService.getGroupPreview(inviteToken, groupId);
     }
 
     /**
