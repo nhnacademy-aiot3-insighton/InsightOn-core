@@ -1,11 +1,20 @@
 package com.insighton.core.groupmember.exception;
 
 public class GroupMemberNotFoundException extends RuntimeException {
-    public GroupMemberNotFoundException(Long userId, Long groupId) {
-        super("Not found Group Member. User ID: " + userId + "Group ID: " + groupId);
+
+    private GroupMemberNotFoundException(String message) {
+        super(message);
     }
 
-    public GroupMemberNotFoundException(Long userId) {
-        super("Not found Group Member. User ID: " + userId);
+    public static GroupMemberNotFoundException byUserIdAndGroupId(Long userId, Long groupId) {
+        return new GroupMemberNotFoundException("Not found Group Member. User ID: " + userId + ", Group ID: " + groupId);
+    }
+
+    public static GroupMemberNotFoundException byMemberIdAndGroupId(Long groupMemberId, Long groupId) {
+        return new GroupMemberNotFoundException("Not found Group Member. GroupMember ID: " + groupMemberId + ", Group ID: " + groupId);
+    }
+
+    public static GroupMemberNotFoundException byUserId(Long userId) {
+        return new GroupMemberNotFoundException("Not found Group Member. User ID: " + userId);
     }
 }
