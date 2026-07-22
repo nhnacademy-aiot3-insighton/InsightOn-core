@@ -14,6 +14,7 @@ public record DeviceResponseDto(
 ) {
     public boolean isOnline(){
         // 5분전이내에 마지막 통신이 있다면 온라인
-        return lastSeenAt != null && lastSeenAt.isAfter(ZonedDateTime.now().minusMinutes(5));
+        ZonedDateTime now = ZonedDateTime.now();
+        return lastSeenAt != null && !lastSeenAt.isBefore(now.minusMinutes(5));
     }
 }
