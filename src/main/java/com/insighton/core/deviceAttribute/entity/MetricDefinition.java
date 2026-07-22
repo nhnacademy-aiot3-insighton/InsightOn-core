@@ -1,4 +1,4 @@
-package com.insighton.core.entity.deviceAttribute;
+package com.insighton.core.deviceAttribute.entity;
 
 import com.insighton.core.error.CustomException;
 import com.insighton.core.error.ErrorCode;

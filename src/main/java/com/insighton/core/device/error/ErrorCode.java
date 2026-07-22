@@ -1,5 +1,5 @@
 
-package com.insighton.core.error;
+package com.insighton.core.device.error;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

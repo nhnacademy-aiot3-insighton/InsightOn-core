@@ -1,9 +1,9 @@
-package com.insighton.core.controller.device;
+package com.insighton.core.device.controller;
 
-import com.insighton.core.dto.device.DeviceUpdateRequest;
-import com.insighton.core.service.device.DeviceService;
-import com.insighton.core.dto.device.DeviceResponseDto;
-import com.insighton.core.dto.device.DeviceRequestDto;
+import com.insighton.core.device.dto.DeviceUpdateRequest;
+import com.insighton.core.device.service.DeviceService;
+import com.insighton.core.device.dto.DeviceResponseDto;
+import com.insighton.core.device.dto.DeviceRequestDto;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import lombok.RequiredArgsConstructor;

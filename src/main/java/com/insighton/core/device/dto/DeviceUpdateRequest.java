@@ -1,4 +1,4 @@
-package com.insighton.core.dto.device;
+package com.insighton.core.device.dto;
 
 /**
  * 장치 정보 수정 요청 시 사용하는 DTO Record.

@@ -1,7 +1,7 @@
-package com.insighton.core.controller.deviceAttribute;
+package com.insighton.core.deviceAttribute.controller;
 
-import com.insighton.core.dto.deviceattribute.DeviceAttributeDto;
-import com.insighton.core.service.deviceAttribute.DeviceAttributeService;
+import com.insighton.core.deviceAttribute.dto.DeviceAttributeDto;
+import com.insighton.core.deviceAttribute.service.DeviceAttributeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

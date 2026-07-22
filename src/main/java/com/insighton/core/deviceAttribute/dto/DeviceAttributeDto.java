@@ -1,4 +1,4 @@
-package com.insighton.core.dto.deviceattribute;
+package com.insighton.core.deviceAttribute.dto;
 
 /**
  * 대시보드 위젯 및 클라이언트 프론트엔드 동기화용 장치 속성 응답 DTO Record.

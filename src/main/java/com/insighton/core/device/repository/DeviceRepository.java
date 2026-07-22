@@ -1,6 +1,6 @@
-package com.insighton.core.repository.device;
+package com.insighton.core.device.repository;
 
-import com.insighton.core.entity.device.DeviceEntity;
+import com.insighton.core.device.entity.DeviceEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

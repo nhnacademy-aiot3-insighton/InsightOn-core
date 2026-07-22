@@ -1,4 +1,4 @@
-package com.insighton.core.dto.device;
+package com.insighton.core.device.dto;
 
 import java.time.ZonedDateTime;
 

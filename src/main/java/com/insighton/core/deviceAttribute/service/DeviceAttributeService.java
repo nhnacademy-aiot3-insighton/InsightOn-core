@@ -1,12 +1,12 @@
-package com.insighton.core.service.deviceAttribute;
+package com.insighton.core.deviceAttribute.service;
 
-import com.insighton.core.dto.deviceattribute.DeviceAttributeDto;
-import com.insighton.core.entity.deviceAttribute.DeviceAttributeEntity;
-import com.insighton.core.entity.deviceAttribute.MetricDefinition;
-import com.insighton.core.error.CustomException;
-import com.insighton.core.error.ErrorCode;
-import com.insighton.core.repository.device.DeviceRepository;
-import com.insighton.core.repository.deviceattribute.DeviceAttributeRepository;
+import com.insighton.core.deviceAttribute.dto.DeviceAttributeDto;
+import com.insighton.core.deviceAttribute.entity.DeviceAttributeEntity;
+import com.insighton.core.deviceAttribute.entity.MetricDefinition;
+import com.insighton.core.device.repository.DeviceRepository;
+import com.insighton.core.deviceAttribute.error.CustomException;
+import com.insighton.core.deviceAttribute.error.ErrorCode;
+import com.insighton.core.deviceAttribute.repository.DeviceAttributeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

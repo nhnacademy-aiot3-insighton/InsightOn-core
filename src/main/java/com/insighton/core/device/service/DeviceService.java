@@ -1,11 +1,11 @@
-package com.insighton.core.service.device;
+package com.insighton.core.device.service;
 
-import com.insighton.core.dto.device.DeviceRequestDto;
-import com.insighton.core.dto.device.DeviceResponseDto;
-import com.insighton.core.entity.device.DeviceEntity;
-import com.insighton.core.error.CustomException;
-import com.insighton.core.error.ErrorCode;
-import com.insighton.core.repository.device.DeviceRepository;
+import com.insighton.core.device.dto.DeviceRequestDto;
+import com.insighton.core.device.dto.DeviceResponseDto;
+import com.insighton.core.device.entity.DeviceEntity;
+import com.insighton.core.device.error.CustomException;
+import com.insighton.core.device.error.ErrorCode;
+import com.insighton.core.device.repository.DeviceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,7 +52,7 @@ public class DeviceService {
      *
      * @param deviceId 수정 대상 장치 ID
      * @param newLocationId 새로 지정할 위치 ID
-     * @throws NoDeviceId 수정하려는 장치가 DB에 존재하지 않는 경우 발생
+     * @throws CustomException 수정하려는 장치가 DB에 존재하지 않는 경우 발생
      */
     @Transactional
     public void updateDeviceLocation(Long deviceId, Long newLocationId){
