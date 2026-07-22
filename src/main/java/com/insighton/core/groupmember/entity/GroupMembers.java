@@ -30,7 +30,7 @@ public class GroupMembers {
             nullable = false)
     private Groups groups;
 
-    @Column(nullable = false)
+    @Column(unique = true, nullable = false)
     private Long userId;
 
     @Enumerated(EnumType.STRING)
