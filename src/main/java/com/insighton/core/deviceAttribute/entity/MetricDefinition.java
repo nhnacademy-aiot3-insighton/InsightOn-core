@@ -1,7 +1,8 @@
 package com.insighton.core.deviceAttribute.entity;
 
-import com.insighton.core.error.CustomException;
-import com.insighton.core.error.ErrorCode;
+
+import com.insighton.core.deviceAttribute.error.CustomException;
+import com.insighton.core.deviceAttribute.error.ErrorCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
