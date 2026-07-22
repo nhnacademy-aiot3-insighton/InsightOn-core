@@ -1,6 +1,8 @@
 package com.insighton.core.groupmember.service.impl;
 
+import com.insighton.core.groupmember.client.AuthClient;
 import com.insighton.core.groupmember.dto.request.GroupMembersJoinRequest;
+import com.insighton.core.groupmember.dto.response.AuthUserResponse;
 import com.insighton.core.groupmember.dto.response.GroupMembersListResponse;
 import com.insighton.core.groupmember.dto.response.GroupMembersResponse;
 import com.insighton.core.groupmember.entity.GroupMembers;
@@ -15,12 +17,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
 public class GroupMembersServiceImpl implements GroupMembersService {
 
     private final GroupMembersRepository groupMembersRepository;
+    private final AuthClient authClient;
 
     @Override
     @Transactional
@@ -69,13 +73,24 @@ public class GroupMembersServiceImpl implements GroupMembersService {
     @Override
     @Transactional(readOnly = true)
     public GroupMembersResponse getGroupMember(Long userId, Long groupId, Long groupMemberId) {
-        GroupMembers members = validateGroupMembers(groupId, userId);
 
-        if (members.isMember()) {
+        GroupMembers requester = validateGroupMembers(groupId, userId);
+
+        GroupMembers members = groupMembersRepository.findByGroupMemberIdAndGroups_GroupId(groupMemberId, groupId)
+                .orElseThrow(() -> GroupMemberNotFoundException.byMemberIdAndGroupId(groupMemberId, groupId));
+
+        if (requester.isMember()) {
             throw new UnAuthorizedAccessException(userId);
         }
 
-        return groupMembersRepository.findByGroupMemberIdAndGroups_GroupId(groupMemberId, groupId);
+        AuthUserResponse authUserResponse = authClient.getUserName(members.getUserId());
+
+        return GroupMembersResponse.builder()
+                .userId(members.getUserId())
+                .groupRole(members.getGroupRole())
+                .userName(authUserResponse.userName())
+                .joinedAt(members.getJoinedAt())
+                .build();
     }
 
     @Override
@@ -178,7 +193,7 @@ public class GroupMembersServiceImpl implements GroupMembersService {
     @Override
     public GroupMembers validateGroupMembers(Long groupId, Long userId) {
         return groupMembersRepository.findByGroups_GroupIdAndUserId(groupId, userId)
-                .orElseThrow(() -> new GroupMemberNotFoundException(userId, groupId));
+                .orElseThrow(() -> GroupMemberNotFoundException.byUserIdAndGroupId(userId, groupId));
     }
 
     /**
