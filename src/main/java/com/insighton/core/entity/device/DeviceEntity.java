@@ -13,10 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "device",
-uniqueConstraints = {
-        @UniqueConstraint(name = "UK_device_eui", columnNames = {"device_eui"})
-})
+@Table(name = "device")
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
