@@ -1,6 +1,6 @@
 package com.insighton.core.entity.device;
 
-
+//import com.insighton.core.entity.deviceAttribute.DeviceAttributeEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,7 +15,7 @@ import java.util.List;
 @Entity
 @Table(name = "device",
 uniqueConstraints = {
-        @UniqueConstraint(name = "UK_device_eui", columnNames = {"deviceEui"})
+        @UniqueConstraint(name = "UK_device_eui", columnNames = {"device_eui"})
 })
 @Getter
 @NoArgsConstructor
@@ -33,7 +33,7 @@ public class DeviceEntity {
 //    @ManyToOne
 //    private locationsId locationsId;
     private Long locationsId;
-
+    
     @Column(name = "device_eui", nullable = false, unique = true)
     private String deviceEui;
     @NotNull
@@ -52,7 +52,7 @@ public class DeviceEntity {
         this.lastSeenAt = ZonedDateTime.now();
     }
 
+
 //    @OneToMany(mappedBy = "deviceId")// Attribute쪽 Id랑 매핑
 //    private List<DeviceAttributeEntity> attributeList = new ArrayList<>();
-
 }

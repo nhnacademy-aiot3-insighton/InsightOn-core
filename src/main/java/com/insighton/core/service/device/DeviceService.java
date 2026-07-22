@@ -33,6 +33,14 @@ public class DeviceService {
         return deviceRepository.save(deviceEntity).getDeviceId();
     }
 
+    // 단건 기기 조회 전용 메서드 (컨트롤러에서 사용)
+    // 기기가 없으면 500 에러 대신 404를 내보낼 수 있도록 예외를 던집니다.
+    public DeviceResponseDto getDeviceById(Long deviceId) {
+        DeviceEntity deviceEntity = deviceRepository.findById(deviceId)
+                .orElseThrow(() -> new NoDeviceId(deviceId + "번 기기를 찾을 수 없습니다."));
+        return toDto(deviceEntity);
+    }
+
     // 위치 이동 및 수정
     // 수정할 기기 ID로 엔티티를 조회한 후, 엔티티 내부의 변경 메서드를 호출하여 위치ID갱신
     @Transactional
@@ -51,10 +59,13 @@ public class DeviceService {
                 .ifPresent(DeviceEntity::updateLastSeen);
     }
 
-    // deviceId로 기기 삭제
+    // 💡 [수정됨] deviceId로 기기 삭제
+    // 무작정 지우지 않고 DB에 기기가 존재하는지 먼저 검증합니다.
     @Transactional
     public void deleteDevice(Long deviceId){
-        deviceRepository.deleteById(deviceId);
+        DeviceEntity deviceEntity = deviceRepository.findById(deviceId)
+                .orElseThrow(() -> new NoDeviceId(deviceId + "번 기기를 찾을 수 없어 삭제할 수 없습니다."));
+        deviceRepository.delete(deviceEntity);
     }
 
     // 전체 삭제

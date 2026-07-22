@@ -1,6 +1,7 @@
 package com.insighton.core.controller.device;
 
 import com.insighton.core.dto.device.DeviceUpdateRequest;
+import com.insighton.core.error.NoDeviceId;
 import com.insighton.core.service.device.DeviceService;
 import com.insighton.core.dto.device.DeviceResponseDto;
 import com.insighton.core.dto.device.DeviceRequestDto;
@@ -27,7 +28,8 @@ public class DeviceController {
     // 단일 deviceId 검색
     @GetMapping("/{id}")
     public ResponseEntity<DeviceResponseDto> getDevice(@PathVariable("id") Long deviceId){
-        DeviceResponseDto responseDto = deviceService.searchDevices(deviceId,null,null,null,null).getFirst();
+
+        DeviceResponseDto responseDto = deviceService.getDeviceById(deviceId);
         return ResponseEntity.ok(responseDto);
     }
 
