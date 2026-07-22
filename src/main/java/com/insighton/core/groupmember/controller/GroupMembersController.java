@@ -93,14 +93,12 @@ public class GroupMembersController {
      * 그룹 탈퇴
      * @param userId 로그인한 user의 ID
      * @param groupId 떠나려는 group의 ID
-     * @param groupMemberId 로그인한 user의 group member ID
      * @return 성공 시 상태 204 반환
      */
-    @DeleteMapping("/api/groups/{group-id}/members/{group-member-id}/leave-group")
+    @DeleteMapping("/api/groups/{group-id}/members/leave-group")
     public ResponseEntity<Void> deleteGroupMemberAll(
             @RequestHeader("X-USER-ID") Long userId,
-            @PathVariable("group-id") Long groupId,
-            @PathVariable("group-member-id") Long groupMemberId){
+            @PathVariable("group-id") Long groupId){
 
         groupMembersService.leaveGroup(groupId, userId);
 
