@@ -1,13 +1,13 @@
 
 package com.insighton.core.device.service;
 
-import com.insighton.core.dto.DeviceRequestDto;
-import com.insighton.core.dto.DeviceResponseDto;
-import com.insighton.core.entity.DeviceEntity;
-import com.insighton.core.entity.DeviceType;
-import com.insighton.core.error.CustomException;
-import com.insighton.core.repository.DeviceRepository;
-import com.insighton.core.service.DeviceService;
+
+import com.insighton.core.device.dto.DeviceRequestDto;
+import com.insighton.core.device.dto.DeviceResponseDto;
+import com.insighton.core.device.entity.DeviceEntity;
+import com.insighton.core.device.entity.DeviceType;
+import com.insighton.core.device.error.CustomException;
+import com.insighton.core.device.repository.DeviceRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

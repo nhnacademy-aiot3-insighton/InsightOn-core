@@ -1,7 +1,9 @@
 package com.insighton.core.device.repositroy;
 
-import com.insighton.core.entity.DeviceEntity;
-import com.insighton.core.entity.DeviceType;
+
+import com.insighton.core.device.entity.DeviceEntity;
+import com.insighton.core.device.entity.DeviceType;
+import com.insighton.core.device.repository.DeviceRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
