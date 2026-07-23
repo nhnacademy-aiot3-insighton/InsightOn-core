@@ -1,9 +1,12 @@
 package com.insighton.core.service;
 
+
+
 import com.insighton.core.dto.DeviceRequestDto;
 import com.insighton.core.dto.DeviceResponseDto;
 import com.insighton.core.entity.DeviceEntity;
-import com.insighton.core.error.NoDeviceId;
+import com.insighton.core.error.CustomException;
+import com.insighton.core.error.ErrorCode;
 import com.insighton.core.repository.DeviceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -37,7 +40,7 @@ public class DeviceService {
     // 기기가 없으면 500 에러 대신 404를 내보낼 수 있도록 예외를 던집니다.
     public DeviceResponseDto getDeviceById(Long deviceId) {
         DeviceEntity deviceEntity = deviceRepository.findById(deviceId)
-                .orElseThrow(() -> new NoDeviceId(deviceId + "번 기기를 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND));
         return toDto(deviceEntity);
     }
 
@@ -46,7 +49,7 @@ public class DeviceService {
     @Transactional
     public void updateDeviceLocation(Long deviceId, Long newLocationId){
         DeviceEntity deviceEntity = deviceRepository.findById(deviceId)
-                .orElseThrow( () -> new NoDeviceId(deviceId + "찾을 수 없음 "));
+                .orElseThrow( () -> new CustomException(ErrorCode.DEVICE_NOT_FOUND));
         deviceEntity.updateLocation(newLocationId);// 엔티티 내부 메서드
     }
 
@@ -64,7 +67,7 @@ public class DeviceService {
     @Transactional
     public void deleteDevice(Long deviceId){
         DeviceEntity deviceEntity = deviceRepository.findById(deviceId)
-                .orElseThrow(() -> new NoDeviceId(deviceId + "번 기기를 찾을 수 없어 삭제할 수 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND));
         deviceRepository.delete(deviceEntity);
     }
 
