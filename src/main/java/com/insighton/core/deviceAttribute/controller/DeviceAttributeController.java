@@ -1,15 +1,14 @@
 package com.insighton.core.deviceAttribute.controller;
 
+import com.insighton.core.deviceAttribute.dto.ActuatorUpdateRequest;
 import com.insighton.core.deviceAttribute.dto.DeviceAttributeDto;
 import com.insighton.core.deviceAttribute.dto.MetricDefinitionResponse;
 import com.insighton.core.deviceAttribute.entity.MetricDefinition;
 import com.insighton.core.deviceAttribute.service.DeviceAttributeService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -41,4 +40,13 @@ public class DeviceAttributeController {
         return ResponseEntity.ok(definitionResponses);
     }
 
+    // 단일 엑충이터 속성 값 변경 제어 API
+    @PatchMapping("/{metricKey}")
+    public ResponseEntity<Void> updateActuatorValue(
+            @PathVariable("deficeId") Long deviceId,
+            @PathVariable("metricKey") String metricKey,
+            @RequestBody @Valid ActuatorUpdateRequest request){
+        attributeService.updateActuatorValue(deviceId, metricKey, request.value());
+        return ResponseEntity.noContent().build();
+    }
 }
