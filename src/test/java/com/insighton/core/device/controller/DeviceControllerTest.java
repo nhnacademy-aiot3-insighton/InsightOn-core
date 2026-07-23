@@ -1,4 +1,4 @@
-package com.insighton.core.device;
+package com.insighton.core.device.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.insighton.core.dto.DeviceRequestDto;
