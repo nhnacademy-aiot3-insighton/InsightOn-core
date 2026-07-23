@@ -1,10 +1,10 @@
-package com.insighton.core.service.device;
+package com.insighton.core.service;
 
-import com.insighton.core.dto.device.DeviceRequestDto;
-import com.insighton.core.dto.device.DeviceResponseDto;
-import com.insighton.core.entity.device.DeviceEntity;
+import com.insighton.core.dto.DeviceRequestDto;
+import com.insighton.core.dto.DeviceResponseDto;
+import com.insighton.core.entity.DeviceEntity;
 import com.insighton.core.error.NoDeviceId;
-import com.insighton.core.repository.device.DeviceRepository;
+import com.insighton.core.repository.DeviceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +23,7 @@ public class DeviceService {
     @Transactional
     public Long createDevice(DeviceRequestDto request){
         DeviceEntity deviceEntity = DeviceEntity.builder()
-                .name(request.name())
+                .deviceName(request.deviceName()) // name -> deviceName
                 .type(request.type())
                 .deviceEui(request.deviceEui())
                 .gatewaysId(request.gatewayId())
@@ -97,7 +97,7 @@ public class DeviceService {
         }
         // 경우의 수 5: 이름 검색
         else if (name != null) {
-            entities = deviceRepository.findByName(name);
+            entities = deviceRepository.findByDeviceName(name); // name -> deviceName
         }
         else {
             entities = deviceRepository.findAll();
@@ -113,7 +113,7 @@ public class DeviceService {
                 e.getGatewaysId(),
                 e.getLocationsId(),
                 e.getDeviceEui(),
-                e.getName(),
+                e.getDeviceName(), // name -> deviceName
                 e.getType(),
                 e.getCreatedAt(),
                 e.getLastSeenAt());

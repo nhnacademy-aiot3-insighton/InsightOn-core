@@ -1,10 +1,9 @@
-package com.insighton.core.controller.device;
+package com.insighton.core.controller;
 
-import com.insighton.core.dto.device.DeviceUpdateRequest;
-import com.insighton.core.error.NoDeviceId;
-import com.insighton.core.service.device.DeviceService;
-import com.insighton.core.dto.device.DeviceResponseDto;
-import com.insighton.core.dto.device.DeviceRequestDto;
+import com.insighton.core.dto.DeviceUpdateRequest;
+import com.insighton.core.service.DeviceService;
+import com.insighton.core.dto.DeviceResponseDto;
+import com.insighton.core.dto.DeviceRequestDto;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import lombok.RequiredArgsConstructor;
@@ -42,10 +41,10 @@ public class DeviceController {
             @RequestParam(required = false) String eui,
             @RequestParam(required = false) Long locationId,
             @RequestParam(required = false) Long gatewayId,
-            @RequestParam(required = false) String name) {
+            @RequestParam(required = false) String deviceName) { // name -> deviceName
 
         // 파라미터 조건에 따라 적절한 데이터를 조회하여 반환
-        List<DeviceResponseDto> result = deviceService.searchDevices(id, eui, locationId, gatewayId, name);
+        List<DeviceResponseDto> result = deviceService.searchDevices(id, eui, locationId, gatewayId, deviceName);
         return ResponseEntity.ok(result);
     }
 
