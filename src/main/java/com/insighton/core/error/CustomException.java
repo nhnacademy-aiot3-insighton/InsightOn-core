@@ -1,26 +1,25 @@
-
 package com.insighton.core.error;
 
 import lombok.Getter;
-
+import org.springframework.web.server.ResponseStatusException;
 
 /**
- * 도메인/비즈니스 로직 처리 중 발생하는 통합 예외 클래스.
+ * GlobalExceptionHandler 없이도 HTTP 상태 코드를 자동으로 응답해주는 커스텀 예외
  */
 @Getter
-public class CustomException extends RuntimeException {
+public class CustomException extends ResponseStatusException {
 
     private final ErrorCode errorCode;
 
-    // 기본 에러 메시지 사용
+    // 기본 메시지 사용
     public CustomException(ErrorCode errorCode) {
-        super(errorCode.getMessage());
+        super(errorCode.getHttpStatus(), errorCode.getMessage());
         this.errorCode = errorCode;
     }
 
-    // 동적 메시지가 필요한 경우 (예: "1번 기기를 찾을 수 없습니다")
+    // 동적 메시지 사용 (예: "1번 기기를 찾을 수 없습니다")
     public CustomException(ErrorCode errorCode, String customMessage) {
-        super(customMessage);
+        super(errorCode.getHttpStatus(), customMessage);
         this.errorCode = errorCode;
     }
 }
