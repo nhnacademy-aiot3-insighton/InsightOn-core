@@ -24,14 +24,18 @@ public class DeviceEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long deviceId;
 
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "gateways_id")
     private Long gatewaysId;
 
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "locations_id")
     private Long locationsId;
 
     @Column(name = "device_eui", nullable = false, unique = true)
     private String deviceEui;
 
-    // 💡 필드명을 deviceName으로 통일
+    // 필드명을 deviceName으로 통일
     @Column(name = "device_name", nullable = false)
     @NotNull
     private String deviceName;
