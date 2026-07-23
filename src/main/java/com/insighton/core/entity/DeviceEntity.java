@@ -1,6 +1,5 @@
-package com.insighton.core.entity.device;
+package com.insighton.core.entity;
 
-//import com.insighton.core.entity.deviceAttribute.DeviceAttributeEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,36 +8,40 @@ import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
+/**
+ * IoT 장치(Device) 마스터 정보를 관리하는 JPA 엔티티 클래스.
+ */
 @Entity
-@Table(name = "device")
+@Table(name = "devices")
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class DeviceEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long deviceId;
 
-//    @ManyToOne
-//    private gatewaysId gatewaysId;
     private Long gatewaysId;
 
-//    @ManyToOne
-//    private locationsId locationsId;
     private Long locationsId;
-    
+
     @Column(name = "device_eui", nullable = false, unique = true)
     private String deviceEui;
+
+    // 💡 필드명을 deviceName으로 통일
+    @Column(name = "device_name", nullable = false)
     @NotNull
-    private String name;
-    @Column(nullable = false)
-    private String type;
+    private String deviceName;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false)
+    private DeviceType type;
 
     private ZonedDateTime lastSeenAt;
+
     private ZonedDateTime createdAt;
 
     public void updateLocation(Long newLocationId){
@@ -48,8 +51,4 @@ public class DeviceEntity {
     public void updateLastSeen(){
         this.lastSeenAt = ZonedDateTime.now();
     }
-
-
-//    @OneToMany(mappedBy = "deviceId")// Attribute쪽 Id랑 매핑
-//    private List<DeviceAttributeEntity> attributeList = new ArrayList<>();
 }
