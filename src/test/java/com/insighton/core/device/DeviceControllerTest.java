@@ -14,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -21,14 +22,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class DeviceControllerTest {
 
-    @Autowired MockMvc mockMvc;
-    @Autowired ObjectMapper objectMapper; // JSON 변환기
-    @Autowired DeviceRepository deviceRepository;
+    @Autowired
+    MockMvc mockMvc;
+    @Autowired
+    ObjectMapper objectMapper; // JSON 변환기
+    @Autowired
+    DeviceRepository deviceRepository;
 
     @BeforeEach
     void clean() {
         // 매 테스트가 실행되기 전에 DB를 깨끗하게 비웁니다.
-        deviceRepository.deleteAll(); 
+        deviceRepository.deleteAll();
     }
 
     @Test
@@ -37,8 +41,8 @@ class DeviceControllerTest {
         DeviceRequestDto req = new DeviceRequestDto("센서", "SENSOR", "EUI-1", 100L, 1L); //[cite: 12]
 
         mockMvc.perform(post("/api/devices")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(req)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk()); // 200 상태코드 확인
     }
 
@@ -49,8 +53,8 @@ class DeviceControllerTest {
         DeviceRequestDto req = new DeviceRequestDto("", "SENSOR", "EUI-2", null, 1L);
 
         mockMvc.perform(post("/api/devices")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(req)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isBadRequest()); // 400 에러가 뜨면 통과!
     }
 
@@ -75,14 +79,94 @@ class DeviceControllerTest {
         DeviceEntity saved = deviceRepository.save(
                 DeviceEntity.builder().name("센서B").deviceEui("EUI-4").type("SENSOR").locationsId(1L).build()
         );
-        
+
         // 99층(99L)으로 바꾸겠다는 요청 DTO 생성[cite: 14]
         DeviceUpdateRequest req = new DeviceUpdateRequest("센서B", 99L);
 
         // When & Then: 수정 API(PATCH) 호출
         mockMvc.perform(patch("/api/devices/" + saved.getDeviceId() + "/location")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(req)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isNoContent()); // 204 상태코드 확인
+    }
+
+    @Test
+    @DisplayName("5. 단일 기기 조회 성공")
+    void getDevice() throws Exception {
+        // Given: DB에 기기 하나 미리 저장
+        DeviceEntity saved = deviceRepository.save(
+                DeviceEntity.builder().name("센서C").deviceEui("EUI-5").type("SENSOR").build()
+        );
+
+        // When & Then: 저장된 ID로 조회했을 때 이름이 일치하는지 확인
+        mockMvc.perform(get("/api/devices/" + saved.getDeviceId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("센서C"));
+    }
+
+    @Test
+    @DisplayName("6. 존재하지 않는 기기 조회 시 404")
+    void getDevice_notFound() throws Exception {
+        // Given: DB를 비운 상태이므로 999L은 존재하지 않는 ID
+        mockMvc.perform(get("/api/devices/999"))
+                .andExpect(status().isNotFound()); // 404 에러가 뜨면 통과!
+    }
+
+    @Test
+    @DisplayName("7. 장치 삭제 성공")
+    void deleteDevice() throws Exception {   // ← delete() 에서 이름 변경
+        DeviceEntity saved = deviceRepository.save(
+                DeviceEntity.builder().name("센서D").deviceEui("EUI-6").type("SENSOR").build()
+        );
+
+        mockMvc.perform(delete("/api/devices/" + saved.getDeviceId()))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("8. 존재하지 않는 기기 삭제 시 404")
+    void deleteDevice_notFound() throws Exception {   // ← 얘도 이름 변경
+        mockMvc.perform(delete("/api/devices/999"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("9. 전체 삭제 성공")
+    void deleteAllDevices() throws Exception {   // ← deleteAll() 에서 이름 변경
+        deviceRepository.save(DeviceEntity.builder().name("센서E").deviceEui("EUI-7").type("SENSOR").build());
+        deviceRepository.save(DeviceEntity.builder().name("센서F").deviceEui("EUI-8").type("SENSOR").build());
+
+        mockMvc.perform(delete("/api/devices"))
+                .andExpect(status().isNoContent());
+
+        assertThat(deviceRepository.count()).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("10. 게이트웨이 ID로 검색 성공")
+    void search_byGatewayId() throws Exception {
+        // Given
+        deviceRepository.save(
+                DeviceEntity.builder().name("센서G").deviceEui("EUI-9").type("SENSOR").gatewaysId(200L).build()
+        );
+
+        // When & Then
+        mockMvc.perform(get("/api/devices/search").param("gatewayId", "200"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("센서G"));
+    }
+
+    @Test
+    @DisplayName("11. 이름으로 검색 성공")
+    void search_byName() throws Exception {
+        // Given
+        deviceRepository.save(
+                DeviceEntity.builder().name("센서H").deviceEui("EUI-10").type("SENSOR").build()
+        );
+
+        // When & Then
+        mockMvc.perform(get("/api/devices/search").param("name", "센서H"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].deviceEui").value("EUI-10"));
     }
 }
