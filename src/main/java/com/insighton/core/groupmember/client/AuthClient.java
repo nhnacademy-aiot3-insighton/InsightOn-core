@@ -16,7 +16,7 @@ public interface AuthClient {
      * CASE A: Auth 서버가 URL 경로로 ID를 받는 경우
      * Auth 서버 controller가 @GetMapping("/api/users/{user-id}") 형태라면 지금 작성하신 코드가 맞습니다!
 
-     * CASE D: Auth 서버가 Query Parameter로 받는 경우
+     * CASE B: Auth 서버가 Query Parameter로 받는 경우
      * 만약 URL 뒤에 ?userId=1 처럼 붙는 형태라면 @RequestParam("userId")을 쓰셔야 합니다.
 
      * 💡 한 번 더 확인하기!
