@@ -7,7 +7,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
@@ -21,7 +20,7 @@ public class Groups {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long groupId;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "group_name")
     private String name;
 
     @Column(columnDefinition = "TEXT")
@@ -69,7 +68,7 @@ public class Groups {
         this.inviteToken = newInviteToken;
     }
 
-    public void update(GroupsUpdateRequest request){
+    public void update(GroupsUpdateRequest request) {
         this.name = request.name();
         this.description = request.description();
         this.location = request.location();
