@@ -221,7 +221,7 @@ public class GroupManagementUseCase {
             throw NoPermissionException.forAdmin(groupMembers.getGroupMemberId());
         }
 
-        locationService.toggleAutoControlMode(locationId);
+        locationService.toggleAutoControlMode(locationId, groupId);
     }
 
     /**
@@ -242,7 +242,7 @@ public class GroupManagementUseCase {
             throw NoPermissionException.forAdmin(groupMembers.getGroupMemberId());
         }
 
-        locationService.deleteLocation(targetLocationId);
+        locationService.deleteLocation(targetLocationId, groupId);
     }
 
 }
