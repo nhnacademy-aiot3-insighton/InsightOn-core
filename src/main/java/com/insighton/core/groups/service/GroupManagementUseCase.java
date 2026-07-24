@@ -1,16 +1,18 @@
 package com.insighton.core.groups.service;
 
 import com.insighton.core.groupmember.dto.request.GroupMembersJoinRequest;
-import com.insighton.core.groupmember.dto.response.GroupMembersListResponse;
+import com.insighton.core.groupmember.entity.GroupMembers;
+import com.insighton.core.groupmember.service.GroupMembersService;
 import com.insighton.core.groups.dto.request.GroupsCreateRequest;
 import com.insighton.core.groups.dto.request.GroupsUpdateRequest;
-import com.insighton.core.groups.dto.response.GroupsListResponse;
 import com.insighton.core.groups.dto.response.GroupsResponse;
-import com.insighton.core.groupmember.entity.GroupMembers;
 import com.insighton.core.groups.entity.Groups;
 import com.insighton.core.groups.exception.NoPermissionException;
-import com.insighton.core.groupmember.service.GroupMembersService;
 import com.insighton.core.groups.exception.UnAuthorizedAccessException;
+import com.insighton.core.location.dto.request.LocationCreateRequest;
+import com.insighton.core.location.dto.response.LocationListResponse;
+import com.insighton.core.location.dto.response.LocationResponse;
+import com.insighton.core.location.service.LocationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,11 +24,13 @@ import java.util.List;
 public class GroupManagementUseCase {
     private final GroupsService groupService;
     private final GroupMembersService groupMembersService;
+    private final LocationService locationService;
 
     // ====================== Group Controller ======================
 
     /**
      * 그룹 가입
+     *
      * @param request 그룹 가입 요청 DTO
      */
     @Transactional
@@ -39,11 +43,12 @@ public class GroupManagementUseCase {
 
     /**
      * 그룹 생성 시 SUPER_MANAGER로 등록되는
+     *
      * @param groupsCreateRequest 그룹 생성 요청 정보
-     * @param userId 그룹을 생성하는 user의 ID
+     * @param userId              그룹을 생성하는 user의 ID
      */
     @Transactional
-    public void createGroup(GroupsCreateRequest groupsCreateRequest, Long userId){
+    public void createGroup(GroupsCreateRequest groupsCreateRequest, Long userId) {
         Groups groups = groupService.createGroup(groupsCreateRequest);
 
         groupMembersService.createGroupMember(groups, userId);
@@ -52,13 +57,14 @@ public class GroupManagementUseCase {
 
     /**
      * 그룹 수정
+     *
      * @param request Group 수정 요청 정보
-     * @param userId login한 user의 ID
+     * @param userId  login한 user의 ID
      * @param groupId 수정하려는 group의 ID
      */
     @Transactional
-    public void updateGroup(GroupsUpdateRequest request, Long userId, Long groupId){
-        if(groupMembersService.isGroupAdmin(groupId, userId)){
+    public void updateGroup(GroupsUpdateRequest request, Long userId, Long groupId) {
+        if (groupMembersService.isGroupAdmin(groupId, userId)) {
             groupService.updateGroup(request, groupId);
             return;
         }
@@ -68,9 +74,10 @@ public class GroupManagementUseCase {
     /**
      * 일반 사용자의 초대한 그룹 조회용 (초대장 느낌)
      * 이 초대 토큰은 A 회사의 초대 토큰 입니다 하고 회사 정보를 띄우기.(토큰은 null 값으로 들어감)
+     *
      * @param inviteToken 초대 코드
-     * @param userId 로그인한 user의 ID
-     * @param groupId 내가 지금 보고 있는 group의 ID
+     * @param userId      로그인한 user의 ID
+     * @param groupId     내가 지금 보고 있는 group의 ID
      * @return 토큰 값 빼고 group 정보가 들어감
      * return 하기 전에 validateUserExists로 검증
      */
@@ -85,6 +92,7 @@ public class GroupManagementUseCase {
     /**
      * 현재 로그인한 사용자의 소속 그룹 정보 조회
      * (한 계정당 하나의 그룹만 가입 가능하므로, 로그인 정보 기반으로 해당 그룹 정보를 반환)
+     *
      * @param userId login한 user의 ID
      * @return token 정보를 제외한 group의 정보
      */
@@ -105,14 +113,15 @@ public class GroupManagementUseCase {
 
     /**
      * 토큰 재발급
+     *
      * @param groupId 재발급 하려는 group의 ID
-     * @param userId 재발급 하려는 user의 ID
+     * @param userId  재발급 하려는 user의 ID
      */
     @Transactional
-    public void newInviteToken(Long userId, Long groupId){
+    public void newInviteToken(Long userId, Long groupId) {
         GroupMembers groupMembers = groupMembersService.validateGroupMembers(groupId, userId);
 
-        if(groupMembers.isMember()){
+        if (groupMembers.isMember()) {
             throw NoPermissionException.forAdmin(groupMembers.getGroupMemberId());
         }
         groupService.newInviteToken(groupId);
@@ -120,14 +129,15 @@ public class GroupManagementUseCase {
 
     /**
      * 그룹 삭제
-     * @param userId 그룺을 삭제할 권한을 가진 userID
+     *
+     * @param userId  그룺을 삭제할 권한을 가진 userID
      * @param groupId 삭제될 group ID
      */
     @Transactional
-    public void deleteGroup(Long userId, Long groupId){
+    public void deleteGroup(Long userId, Long groupId) {
         GroupMembers groupMembers = groupMembersService.validateGroupMembers(groupId, userId);
 
-        if(!groupMembers.isSuperManager()){
+        if (!groupMembers.isSuperManager()) {
             throw NoPermissionException.forAdmin(groupMembers.getGroupMemberId());
         }
 
@@ -135,4 +145,104 @@ public class GroupManagementUseCase {
 
         groupService.deleteGroup(groupId);
     }
+
+    // ====================== Location Controller ======================
+
+    /**
+     * location 생성
+     *
+     * @param userId  location을 생성하려는 user의 ID
+     * @param groupId location을 만드려는 group ID
+     * @param request location 생성 request
+     */
+    @Transactional
+    public void createLocation(Long userId, Long groupId, LocationCreateRequest request) {
+        // 그룹이 존재하는지 확인하고
+        Groups groups = groupService.groupFindById(groupId);
+
+        // 그룹이 존재한다면 그 그룹 안에 location을 만드려는 사람이 존재하는지 확인하고
+        GroupMembers groupMembers = groupMembersService.validateGroupMembers(groupId, userId);
+
+        // member가 member 권한일 때는 에러를 던지고
+        if (groupMembers.isMember()) {
+            throw NoPermissionException.forAdmin(groupMembers.getGroupMemberId());
+        }
+
+        // 만들기
+        locationService.createLocation(groups, request);
+    }
+
+    /**
+     * location list 조회
+     *
+     * @param userId  list를 조회하는 user의 ID
+     * @param groupId location들이 속해있는 group의 ID
+     * @return location List 반환
+     */
+    @Transactional(readOnly = true)
+    public List<LocationListResponse> getLocationList(Long userId, Long groupId) {
+        // 그룹에 user가 존재하는지 확인
+        groupMembersService.validateGroupMembers(groupId, userId);
+
+        return locationService.getLocationList(groupId);
+    }
+
+    /**
+     * location 상세 정보 조회
+     *
+     * @param userId  location의 상세 정보를 조회하려는 User의 ID
+     * @param groupId location이 속해있는 group의 ID
+     * @return location 상세 정보 반환
+     */
+    @Transactional(readOnly = true)
+    public LocationResponse getLocation(Long userId, Long groupId, Long locationId) {
+        // 그룹에 user가 존재하는지 확인
+        groupMembersService.validateGroupMembers(groupId, userId);
+
+        return locationService.getLocation(groupId, locationId);
+    }
+
+    /**
+     * location mode 수정
+     *
+     * @param userId     정보를 수정하려는 user의 ID
+     * @param groupId    수정하려는 location이 속해있는 group의 ID
+     * @param locationId 수정하려는 location의 ID
+     *                   user의 권한 확인 후 수정
+     */
+    @Transactional
+    public void toggleAutoControlMode(Long userId, Long groupId, Long locationId) {
+
+        // 그룹이 존재한다면 그 그룹 안에 location을 만드려는 사람이 존재하는지 확인하고
+        GroupMembers groupMembers = groupMembersService.validateGroupMembers(groupId, userId);
+
+        // member가 member 권한일 때는 에러를 던지고
+        if (groupMembers.isMember()) {
+            throw NoPermissionException.forAdmin(groupMembers.getGroupMemberId());
+        }
+
+        locationService.toggleAutoControlMode(locationId);
+    }
+
+    /**
+     * location 삭제
+     *
+     * @param userId           삭제하려는 user의 ID
+     * @param groupId          삭제될 location이 속해있는 group ID
+     * @param targetLocationId 삭제될 location ID
+     *                         user의 권한 확인 후 삭제
+     */
+    @Transactional
+    public void deleteLocation(Long userId, Long groupId, Long targetLocationId) {
+        // 그룹이 존재한다면 그 그룹 안에 location을 만드려는 사람이 존재하는지 확인하고
+        GroupMembers groupMembers = groupMembersService.validateGroupMembers(groupId, userId);
+
+        // member가 member 권한일 때는 에러를 던지고
+        if (groupMembers.isMember()) {
+            throw NoPermissionException.forAdmin(groupMembers.getGroupMemberId());
+        }
+
+        locationService.deleteLocation(targetLocationId);
+    }
+
 }
