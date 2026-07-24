@@ -199,7 +199,7 @@ public class GroupManagementUseCase {
         // 그룹에 user가 존재하는지 확인
         groupMembersService.validateGroupMembers(groupId, userId);
 
-        return locationService.getLocation(groupId, locationId);
+        return locationService.getLocation(locationId, groupId);
     }
 
     /**
