@@ -1,32 +1,30 @@
 package com.insighton.core.weather.config;
 
-import java.net.http.HttpClient;
-import java.time.Duration;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.client.reactive.JdkClientHttpConnector;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @Configuration
 public class WeatherClientConfig {
 
-    private final HttpClient httpClient = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofSeconds(5))
-            .build();
+    @Value("${weather.api.kma-base-url}")
+    private String kmaBaseUrl;
+
+    @Value("${weather.api.air-base-url}")
+    private String airBaseUrl;
 
     @Bean
-    public WebClient kmaWebClient() {
-        return WebClient.builder()
-                .baseUrl("https://apihub.kma.go.kr/api/typ01/cgi-bin/url")
-                .clientConnector(new JdkClientHttpConnector(httpClient))
+    public WebClient kmaWebClient(WebClient.Builder builder) {
+        return builder
+                .baseUrl(kmaBaseUrl)
                 .build();
     }
 
     @Bean
-    public WebClient airQualityWebClient() {
-        return WebClient.builder()
-                .baseUrl("https://apis.data.go.kr/B552584/ArpltnInforInqireSvc")
-                .clientConnector(new JdkClientHttpConnector(httpClient))
+    public WebClient airQualityWebClient(WebClient.Builder builder) {
+        return builder
+                .baseUrl(airBaseUrl)
                 .build();
     }
 }
