@@ -1,33 +1,33 @@
 package com.insighton.core.groupmember.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
 import com.insighton.core.groupmember.client.AuthClient;
 import com.insighton.core.groupmember.dto.request.GroupMembersJoinRequest;
 import com.insighton.core.groupmember.dto.response.AuthUserResponse;
 import com.insighton.core.groupmember.dto.response.GroupMembersListResponse;
 import com.insighton.core.groupmember.dto.response.GroupMembersResponse;
 import com.insighton.core.groupmember.entity.GroupMembers;
-import com.insighton.core.groupmember.exception.*;
+import com.insighton.core.groupmember.exception.AlreadyJoinedException;
+import com.insighton.core.groupmember.exception.SuperManagerCannotLeaveException;
 import com.insighton.core.groupmember.repository.GroupMembersRepository;
 import com.insighton.core.groupmember.service.impl.GroupMembersServiceImpl;
 import com.insighton.core.groups.entity.Groups;
 import com.insighton.core.groups.exception.NoPermissionException;
 import com.insighton.core.groups.exception.UnAuthorizedAccessException;
-import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class GroupMembersServiceTest {
@@ -126,7 +126,7 @@ class GroupMembersServiceTest {
         given(target.getUserId()).willReturn(2L);
         given(groupMembersRepository.findByGroups_GroupIdAndUserId(1L, 1L)).willReturn(Optional.of(requester));
         given(groupMembersRepository.findByGroupMemberIdAndGroups_GroupId(1L, 1L)).willReturn(Optional.of(target));
-        given(authClient.getUserName(2L)).willReturn(new AuthUserResponse(2L, "testUser"));
+        given(authClient.getUserResponse(2L)).willReturn(new AuthUserResponse(2L, "testUser", "010-0000-0000"));
 
         // when
         GroupMembersResponse result = groupMembersService.getGroupMember(1L, 1L, 1L);
