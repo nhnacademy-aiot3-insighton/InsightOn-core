@@ -1,19 +1,19 @@
 package com.insighton.core.location.service;
 
 import com.insighton.core.groups.entity.Groups;
-import com.insighton.core.location.dto.request.LocationCreateRequest;
-import com.insighton.core.location.dto.response.LocationListResponse;
-import com.insighton.core.location.dto.response.LocationResponse;
+import com.insighton.core.location.dto.request.LocationsCreateRequest;
+import com.insighton.core.location.dto.response.LocationsListResponse;
+import com.insighton.core.location.dto.response.LocationsResponse;
 
 import java.util.List;
 
-public interface LocationService {
+public interface LocationsService {
     /**
      * location 생성
      *
      * @param request location 생성 request
      */
-    void createLocation(Groups groups, LocationCreateRequest request);
+    void createLocation(Groups groups, LocationsCreateRequest request);
 
     /**
      * location list 조회
@@ -21,7 +21,7 @@ public interface LocationService {
      * @param groupId location들이 속해있는 group의 ID
      * @return location List 반환
      */
-    List<LocationListResponse> getLocationList(Long groupId);
+    List<LocationsListResponse> getLocationList(Long groupId);
 
     /**
      * location 상세 정보 조회
@@ -29,7 +29,7 @@ public interface LocationService {
      * @param groupId location이 속해있는 group의 ID
      * @return location 상세 정보 반환
      */
-    LocationResponse getLocation(Long locationId, Long groupId);
+    LocationsResponse getLocation(Long locationId, Long groupId);
 
     /**
      * mode 변경

@@ -9,10 +9,10 @@ import com.insighton.core.groups.dto.response.GroupsResponse;
 import com.insighton.core.groups.entity.Groups;
 import com.insighton.core.groups.exception.NoPermissionException;
 import com.insighton.core.groups.exception.UnAuthorizedAccessException;
-import com.insighton.core.location.dto.request.LocationCreateRequest;
-import com.insighton.core.location.dto.response.LocationListResponse;
-import com.insighton.core.location.dto.response.LocationResponse;
-import com.insighton.core.location.service.LocationService;
+import com.insighton.core.location.dto.request.LocationsCreateRequest;
+import com.insighton.core.location.dto.response.LocationsListResponse;
+import com.insighton.core.location.dto.response.LocationsResponse;
+import com.insighton.core.location.service.LocationsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +24,7 @@ import java.util.List;
 public class GroupManagementUseCase {
     private final GroupsService groupService;
     private final GroupMembersService groupMembersService;
-    private final LocationService locationService;
+    private final LocationsService locationService;
 
     // ====================== Group Controller ======================
 
@@ -146,7 +146,7 @@ public class GroupManagementUseCase {
         groupService.deleteGroup(groupId);
     }
 
-    // ====================== Location Controller ======================
+    // ====================== Locations Controller ======================
 
     /**
      * location 생성
@@ -156,7 +156,7 @@ public class GroupManagementUseCase {
      * @param request location 생성 request
      */
     @Transactional
-    public void createLocation(Long userId, Long groupId, LocationCreateRequest request) {
+    public void createLocation(Long userId, Long groupId, LocationsCreateRequest request) {
         // 그룹이 존재하는지 확인하고
         Groups groups = groupService.groupFindById(groupId);
 
@@ -180,7 +180,7 @@ public class GroupManagementUseCase {
      * @return location List 반환
      */
     @Transactional(readOnly = true)
-    public List<LocationListResponse> getLocationList(Long userId, Long groupId) {
+    public List<LocationsListResponse> getLocationList(Long userId, Long groupId) {
         // 그룹에 user가 존재하는지 확인
         groupMembersService.validateGroupMembers(groupId, userId);
 
@@ -195,7 +195,7 @@ public class GroupManagementUseCase {
      * @return location 상세 정보 반환
      */
     @Transactional(readOnly = true)
-    public LocationResponse getLocation(Long userId, Long groupId, Long locationId) {
+    public LocationsResponse getLocation(Long userId, Long groupId, Long locationId) {
         // 그룹에 user가 존재하는지 확인
         groupMembersService.validateGroupMembers(groupId, userId);
 

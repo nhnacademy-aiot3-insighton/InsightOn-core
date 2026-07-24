@@ -1,9 +1,9 @@
 package com.insighton.core.location.controller;
 
 import com.insighton.core.groups.service.GroupManagementUseCase;
-import com.insighton.core.location.dto.request.LocationCreateRequest;
-import com.insighton.core.location.dto.response.LocationListResponse;
-import com.insighton.core.location.dto.response.LocationResponse;
+import com.insighton.core.location.dto.request.LocationsCreateRequest;
+import com.insighton.core.location.dto.response.LocationsListResponse;
+import com.insighton.core.location.dto.response.LocationsResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -14,7 +14,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-public class LocationController {
+public class LocationsController {
     private final GroupManagementUseCase useCase;
 
     /**
@@ -29,7 +29,7 @@ public class LocationController {
     public ResponseEntity<Void> createLocation(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
-            @Valid @RequestBody LocationCreateRequest request
+            @Valid @RequestBody LocationsCreateRequest request
     ) {
         useCase.createLocation(userId, groupId, request);
 
@@ -44,17 +44,17 @@ public class LocationController {
      * @return location list 반환
      */
     @GetMapping("/api/groups/{group-id}/locations")
-    public ResponseEntity<List<LocationListResponse>> getLocationList(
+    public ResponseEntity<List<LocationsListResponse>> getLocationList(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId
     ) {
-        List<LocationListResponse> locationListResponses = useCase.getLocationList(userId, groupId);
+        List<LocationsListResponse> locationListResponses = useCase.getLocationList(userId, groupId);
 
         return ResponseEntity.ok(locationListResponses);
     }
 
     /**
-     * Location 상세 조회
+     * Locations 상세 조회
      *
      * @param userId     상세 조회 하려는 user의 ID
      * @param groupId    상세 조회 하려는 Location이 속한 group의 ID
@@ -62,12 +62,12 @@ public class LocationController {
      * @return location 상세 정보 반환
      */
     @GetMapping("/api/groups/{group-id}/location/{location-id}")
-    public ResponseEntity<LocationResponse> getLocation(
+    public ResponseEntity<LocationsResponse> getLocation(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
             @PathVariable("location-id") Long locationId
     ) {
-        LocationResponse response = useCase.getLocation(userId, groupId, locationId);
+        LocationsResponse response = useCase.getLocation(userId, groupId, locationId);
 
         return ResponseEntity.ok(response);
     }

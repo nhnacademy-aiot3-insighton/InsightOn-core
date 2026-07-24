@@ -11,10 +11,10 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
 @Entity
-@Table(name = "location")
+@Table(name = "locations")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Location {
+public class Locations {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,12 +33,12 @@ public class Location {
     private AutoControlMode autoControlMode = AutoControlMode.SUGGESTION;
 
     /**
-     * @Builder 패턴을 적용한 생성자
+     * {@code @Builder} 패턴을 적용한 생성자
      * - 엔티티 최초 가입/생성 시 필요한 필드(groups, locationName, autoControlMode)만 빌더로 넘겨받아 안전하게 객체를 생성합니다.
      * - DB에서 자동 생성되는 PK(locationId)와 @PrePersist로 자동 설정되는 가입 일자(createdAt)는 제외하여 실수를 방지합니다.
      */
     @Builder
-    public Location(Groups groups, String locationName, AutoControlMode autoControlMode) {
+    public Locations(Groups groups, String locationName, AutoControlMode autoControlMode) {
         this.groups = groups;
         this.locationName = locationName;
         if (autoControlMode != null) {

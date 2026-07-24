@@ -1,6 +1,6 @@
 package com.insighton.core.location.dto.request;
 
-import com.insighton.core.location.entity.Location;
+import com.insighton.core.location.entity.Locations;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
@@ -12,8 +12,8 @@ import lombok.Builder;
  * @param autoControlMode AI가 제안 or AI가 직접 제어  ENUM(SUGGESTION/AI_DIRECT)
  */
 @Builder
-public record LocationCreateRequest(
+public record LocationsCreateRequest(
         @NotBlank String locationName,
-        @NotNull Location.AutoControlMode autoControlMode
+        @NotNull Locations.AutoControlMode autoControlMode
 ) {
 }
