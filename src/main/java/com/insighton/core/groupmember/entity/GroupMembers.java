@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-//@Table(name = "group_members")
+@Table(name = "group_members")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class GroupMembers {
@@ -26,7 +26,7 @@ public class GroupMembers {
 
     @ManyToOne(fetch = FetchType.LAZY) // 지연 로딩 설정으로 성능 최적화
     @JoinColumn(
-//            name = "group_id",
+            name = "group_id",
             nullable = false)
     private Groups groups;
 

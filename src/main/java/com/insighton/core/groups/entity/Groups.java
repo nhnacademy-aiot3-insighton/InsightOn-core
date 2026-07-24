@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-//@Table(name = "groups")
+@Table(name = "groups")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Groups {
@@ -19,7 +19,7 @@ public class Groups {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long groupId;
 
-    @Column(nullable = false)
+    @Column(name = "group_name", nullable = false)
     private String name;
 
     @Column(columnDefinition = "TEXT")

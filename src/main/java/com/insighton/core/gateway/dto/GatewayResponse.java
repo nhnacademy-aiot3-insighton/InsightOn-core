@@ -22,7 +22,7 @@ public record GatewayResponse(
     public static GatewayResponse from(Gateway gateway) {
         return new GatewayResponse(
                 gateway.getGatewayId(),
-                gateway.getGroupsId(),
+                gateway.getGroupId(),
                 gateway.getGatewayUid(),
                 gateway.getName(),
                 gateway.getProtocolType(),

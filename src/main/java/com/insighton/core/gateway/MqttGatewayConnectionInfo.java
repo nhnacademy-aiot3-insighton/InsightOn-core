@@ -28,14 +28,14 @@ public record MqttGatewayConnectionInfo (
     public static MqttGatewayConnectionInfo from(Gateway gateway) {
         Map<String, Object> config = gateway.getConnectionConfig();
 
-        String[] brokerUrls = ((List<?>) config.get("brokersUrls")).stream()
+        String[] brokerUrl = ((List<?>) config.get("broker_urls")).stream()
                 .map(String::valueOf)
                 .toArray(String[]::new);
 
         return new MqttGatewayConnectionInfo(
                 gateway.getGatewayId(),
                 gateway.getGatewayUid(),
-                brokerUrls,
+                brokerUrl,
                 (String) config.get("username"),
                 (String) config.get("password")
         );
