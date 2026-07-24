@@ -33,7 +33,7 @@ public class Groups {
     @Column(unique = true, nullable = false)
     private String inviteToken;
 
-    @Column(nullable = false, updatable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    @Column(updatable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
     private OffsetDateTime createdAt;
 
     /**
