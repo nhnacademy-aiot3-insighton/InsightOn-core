@@ -9,6 +9,7 @@ import com.insighton.core.groups.exception.GroupNotFoundException;
 import com.insighton.core.groups.exception.InviteTokenNotFoundException;
 import com.insighton.core.groups.exception.NoPermissionException;
 import com.insighton.core.groups.exception.UnAuthorizedAccessException;
+import com.insighton.core.location.exception.LocationNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -21,7 +22,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler({GatewayNotFoundException.class, GroupNotFoundException.class, InviteTokenNotFoundException.class, GroupMemberNotFoundException.class, UserIdNotFoundException.class})
+    @ExceptionHandler({GatewayNotFoundException.class, GroupNotFoundException.class, InviteTokenNotFoundException.class, GroupMemberNotFoundException.class, UserIdNotFoundException.class, LocationNotFoundException.class})
     public ResponseEntity<ErrorResponse> handleNotFound(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(new ErrorResponse(HttpStatus.NOT_FOUND.value(), e.getMessage()));
