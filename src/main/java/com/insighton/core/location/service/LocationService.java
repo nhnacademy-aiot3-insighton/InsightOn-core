@@ -7,7 +7,7 @@ import com.insighton.core.location.dto.LocationRequestDto;
 import com.insighton.core.location.dto.LocationResponseDto;
 import com.insighton.core.location.registry.LocationRegistry;
 import com.insighton.core.location.repository.GroupLocationRepository;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -45,7 +45,7 @@ public class LocationService {
         GroupLocationDto groupLocationDto = new GroupLocationDto(
                 requestDto.groupId(),
                 gridDto,
-                LocalDateTime.now()
+                OffsetDateTime.now()
         );
 
         groupLocationRepository.save(groupLocationDto);
