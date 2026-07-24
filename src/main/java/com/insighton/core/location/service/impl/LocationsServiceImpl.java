@@ -1,14 +1,14 @@
 package com.insighton.core.location.service.impl;
 
 import com.insighton.core.groups.entity.Groups;
-import com.insighton.core.location.dto.request.LocationCreateRequest;
-import com.insighton.core.location.dto.response.LocationListResponse;
-import com.insighton.core.location.dto.response.LocationResponse;
-import com.insighton.core.location.entity.Location;
+import com.insighton.core.location.dto.request.LocationsCreateRequest;
+import com.insighton.core.location.dto.response.LocationsListResponse;
+import com.insighton.core.location.dto.response.LocationsResponse;
+import com.insighton.core.location.entity.Locations;
 import com.insighton.core.location.exception.LocationAlreadyException;
 import com.insighton.core.location.exception.LocationNotFoundException;
-import com.insighton.core.location.repository.LocationRepository;
-import com.insighton.core.location.service.LocationService;
+import com.insighton.core.location.repository.LocationsRepository;
+import com.insighton.core.location.service.LocationsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,19 +17,19 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class LocationServiceImpl implements LocationService {
-    private final LocationRepository locationRepository;
+public class LocationsServiceImpl implements LocationsService {
+    private final LocationsRepository locationRepository;
 
 
     @Override
     @Transactional
-    public void createLocation(Groups groups, LocationCreateRequest request) {
+    public void createLocation(Groups groups, LocationsCreateRequest request) {
         // 어떤 검증이 필요할까...
         if (locationRepository.existsByGroups_GroupIdAndLocationName(groups.getGroupId(), request.locationName())) {
             throw new LocationAlreadyException(request.locationName());
         }
 
-        Location newLocation = Location.builder()
+        Locations newLocation = Locations.builder()
                 .groups(groups)
                 .locationName(request.locationName())
                 .autoControlMode(request.autoControlMode())
@@ -41,19 +41,19 @@ public class LocationServiceImpl implements LocationService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<LocationListResponse> getLocationList(Long groupId) {
+    public List<LocationsListResponse> getLocationList(Long groupId) {
 
         return locationRepository.findAllByGroups_GroupId(groupId);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public LocationResponse getLocation(Long locationId, Long groupId) {
+    public LocationsResponse getLocation(Long locationId, Long groupId) {
         // 어떤 걸 검증해야하나... 흠냐
-        Location location = locationRepository.findByLocationIdAndGroups_GroupId(locationId, groupId)
+        Locations location = locationRepository.findByLocationIdAndGroups_GroupId(locationId, groupId)
                 .orElseThrow(() -> new LocationNotFoundException(locationId));
 
-        return LocationResponse.builder()
+        return LocationsResponse.builder()
                 .groupId(groupId)
                 .locationName(location.getLocationName())
                 .createdAt(location.getCreatedAt())
@@ -65,7 +65,7 @@ public class LocationServiceImpl implements LocationService {
     @Override
     @Transactional
     public void toggleAutoControlMode(Long locationId, Long groupId) {
-        Location location = locationRepository.findByLocationIdAndGroups_GroupId(locationId, groupId)
+        Locations location = locationRepository.findByLocationIdAndGroups_GroupId(locationId, groupId)
                 .orElseThrow(() -> new LocationNotFoundException(locationId));
 
         location.toggleAutoControlMode();
@@ -74,7 +74,7 @@ public class LocationServiceImpl implements LocationService {
     @Override
     @Transactional
     public void deleteLocation(Long targetLocationId, Long groupId) {
-        Location location = locationRepository.findByLocationIdAndGroups_GroupId(targetLocationId, groupId)
+        Locations location = locationRepository.findByLocationIdAndGroups_GroupId(targetLocationId, groupId)
                 .orElseThrow(() -> new LocationNotFoundException(targetLocationId));
 
         locationRepository.delete(location);

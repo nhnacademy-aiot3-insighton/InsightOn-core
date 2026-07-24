@@ -36,7 +36,7 @@ public class Groups {
     private OffsetDateTime createdAt;
 
     /**
-     * @Builder 패턴을 적용한 생성자
+     * {@code @Builder} 패턴을 적용한 생성자
      * - 엔티티 최초 생성 시 필요한 필드만 깔끔하게 빌더로 넘겨받아 안전하게 객체를 생성합니다.
      * - PK인 groupId와 자동으로 들어갈 createdAt은 빌더 대상에서 제외하여 객체 오용을 방지합니다.
      */
