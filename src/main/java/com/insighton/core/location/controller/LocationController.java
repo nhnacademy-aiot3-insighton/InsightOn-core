@@ -4,6 +4,7 @@ import com.insighton.core.groups.service.GroupManagementUseCase;
 import com.insighton.core.location.dto.request.LocationCreateRequest;
 import com.insighton.core.location.dto.response.LocationListResponse;
 import com.insighton.core.location.dto.response.LocationResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +29,7 @@ public class LocationController {
     public ResponseEntity<Void> createLocation(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
-            @RequestBody LocationCreateRequest request
+            @Valid @RequestBody LocationCreateRequest request
     ) {
         useCase.createLocation(userId, groupId, request);
 
