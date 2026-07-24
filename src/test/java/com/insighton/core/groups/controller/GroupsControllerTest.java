@@ -18,6 +18,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -78,7 +79,7 @@ class GroupsControllerTest {
         @DisplayName("내 그룹 정보 조회 성공 - Mock 응답 반환 확인")
         void getMyGroup_success() throws Exception {
             // given
-            GroupsResponse mockResponse = new GroupsResponse(1L, "testName", "testDescription", "testLocation", "testToken", LocalDateTime.now());
+            GroupsResponse mockResponse = new GroupsResponse(1L, "testName", "testDescription", "testLocation", "testToken", OffsetDateTime.now());
             given(groupsUseCase.getMyGroup(1L, 1L)).willReturn(mockResponse);
 
             // when & then
@@ -93,7 +94,7 @@ class GroupsControllerTest {
         @DisplayName("내가 초대받은 회사의 정보 조회 성공")
         void getGroupPreview_success() throws Exception {
             // given
-            GroupsResponse mockResponse = new GroupsResponse(1L, "testName", "testDescription", "testLocation", "testToken", LocalDateTime.now());
+            GroupsResponse mockResponse = new GroupsResponse(1L, "testName", "testDescription", "testLocation", "testToken", OffsetDateTime.now());
             given(groupsUseCase.getGroupPreview("token", 1L, 1L)).willReturn(mockResponse);
 
             // when & then

@@ -8,6 +8,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
 @Entity
 @Table(name = "groups")
@@ -32,7 +34,7 @@ public class Groups {
     private String inviteToken;
 
     @Column(nullable = false, updatable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     /**
      * @Builder 패턴을 적용한 생성자
@@ -53,7 +55,7 @@ public class Groups {
      */
     @PrePersist
     protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = OffsetDateTime.now(ZoneOffset.UTC);
     }
 
     /**
