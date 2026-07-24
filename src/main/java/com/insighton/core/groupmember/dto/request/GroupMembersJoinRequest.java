@@ -1,16 +1,18 @@
 package com.insighton.core.groupmember.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 
 /**
  * group 가입 요청
+ *
  * @param inviteToken group 초대 토큰
- * @param userId login한 user의 ID
+ * @param userId      login한 user의 ID
  */
 @Builder
 public record GroupMembersJoinRequest(
         @NotBlank String inviteToken,
-        @NotBlank Long userId
+        @NotNull Long userId
 ) {
 }
