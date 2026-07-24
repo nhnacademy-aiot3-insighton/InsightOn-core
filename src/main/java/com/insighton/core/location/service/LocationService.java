@@ -29,19 +29,19 @@ public interface LocationService {
      * @param groupId location이 속해있는 group의 ID
      * @return location 상세 정보 반환
      */
-    LocationResponse getLocation(Long groupId, Long locationId);
+    LocationResponse getLocation(Long locationId, Long groupId);
 
     /**
      * mode 변경
      *
      * @param locationId
      */
-    void toggleAutoControlMode(Long locationId);
+    void toggleAutoControlMode(Long locationId, Long groupId);
 
     /**
      * location 삭제
      *
      * @param targetLocationId 삭제될 location ID
      */
-    void deleteLocation(Long targetLocationId);
+    void deleteLocation(Long targetLocationId, Long groupId);
 }
