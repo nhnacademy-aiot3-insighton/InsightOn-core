@@ -52,7 +52,7 @@ public class GatewayServiceImpl implements GatewayService {
         Gateway gateway = gatewayRepository.findByGatewayId(gatewayId)
                 .orElseThrow(() -> new GatewayNotFoundException(gatewayId));
 
-        requireGroupMembership(userId, gateway.getGroupsId());
+        requireGroupMembership(userId, gateway.getGroupId());
 
         return GatewayResponse.from(gateway);
     }
@@ -61,7 +61,7 @@ public class GatewayServiceImpl implements GatewayService {
     public List<GatewayResponse> getAllByGroupId(Long userId, Long groupId) {
         requireGroupMembership(userId, groupId);
 
-        return gatewayRepository.findAllByGroupsId(groupId).stream()
+        return gatewayRepository.findAllByGroupId(groupId).stream()
                 .map(GatewayResponse::from)
                 .toList();
     }
@@ -85,7 +85,7 @@ public class GatewayServiceImpl implements GatewayService {
         Gateway gateway = gatewayRepository.findByGatewayId(gatewayId)
                 .orElseThrow(() -> new GatewayNotFoundException(gatewayId));
 
-        requireManagerRole(userId, gateway.getGroupsId());
+        requireManagerRole(userId, gateway.getGroupId());
 
         gateway.update(request.name(), request.protocolType(), request.connectionConfig());
     }
@@ -96,7 +96,7 @@ public class GatewayServiceImpl implements GatewayService {
         Gateway gateway = gatewayRepository.findByGatewayId(gatewayId)
                 .orElseThrow(() -> new GatewayNotFoundException(gatewayId));
 
-        requireManagerRole(userId, gateway.getGroupsId());
+        requireManagerRole(userId, gateway.getGroupId());
 
         gatewayRepository.deleteById(gatewayId);
         gatewayManager.unregisterGateway(gatewayId);

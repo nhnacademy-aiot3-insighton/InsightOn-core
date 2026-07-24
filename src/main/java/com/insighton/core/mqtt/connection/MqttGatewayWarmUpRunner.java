@@ -44,7 +44,7 @@ public class MqttGatewayWarmUpRunner implements ApplicationRunner {
         for (Gateway gateway : mqttGateways) {
             try {
                 MqttGatewayConnectionInfo connectionInfo = MqttGatewayConnectionInfo.from(gateway);
-                groupMappingCache.put(gateway.getGatewayId(), gateway.getGroupsId());
+                groupMappingCache.put(gateway.getGatewayId(), gateway.getGroupId());
                 connectionInfoCache.put(connectionInfo);
                 gatewayManager.registerGateway(connectionInfo);
             } catch (Exception e) {
