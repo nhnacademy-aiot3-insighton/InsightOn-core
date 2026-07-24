@@ -6,7 +6,10 @@ import com.insighton.core.groupmember.dto.response.AuthUserResponse;
 import com.insighton.core.groupmember.dto.response.GroupMembersListResponse;
 import com.insighton.core.groupmember.dto.response.GroupMembersResponse;
 import com.insighton.core.groupmember.entity.GroupMembers;
-import com.insighton.core.groupmember.exception.*;
+import com.insighton.core.groupmember.exception.AlreadyJoinedException;
+import com.insighton.core.groupmember.exception.GroupMemberNotFoundException;
+import com.insighton.core.groupmember.exception.NotJoinedAnyGroupException;
+import com.insighton.core.groupmember.exception.SuperManagerCannotLeaveException;
 import com.insighton.core.groupmember.repository.GroupMembersRepository;
 import com.insighton.core.groupmember.service.GroupMembersService;
 import com.insighton.core.groups.entity.Groups;
@@ -83,12 +86,13 @@ public class GroupMembersServiceImpl implements GroupMembersService {
             throw new UnAuthorizedAccessException(userId);
         }
 
-        AuthUserResponse authUserResponse = authClient.getUserName(members.getUserId());
+        AuthUserResponse authUserResponse = authClient.getUserResponse(members.getUserId());
 
         return GroupMembersResponse.builder()
                 .userId(members.getUserId())
                 .groupRole(members.getGroupRole())
                 .userName(authUserResponse.userName())
+                .userPhoneNumber(authUserResponse.userPhoneNumber())
                 .joinedAt(members.getJoinedAt())
                 .build();
     }
@@ -99,7 +103,7 @@ public class GroupMembersServiceImpl implements GroupMembersService {
         // 1. group id가 존재하는지 확인
         GroupMembers adminMember = validateGroupMembers(groupId, adminId);
         GroupMembers targetMember = groupMembersRepository.findByGroupMemberIdAndGroups_GroupId(targetGroupMemberId, groupId)
-                .orElseThrow(()-> GroupMemberNotFoundException.byMemberIdAndGroupId(targetGroupMemberId, groupId));
+                .orElseThrow(() -> GroupMemberNotFoundException.byMemberIdAndGroupId(targetGroupMemberId, groupId));
 
         // 2. adminID가 manager나 owner권한을 가진 자인지 확인
         // target의 권한이 member일 경우 member는 권한이 없음
@@ -117,7 +121,7 @@ public class GroupMembersServiceImpl implements GroupMembersService {
         }
 
         // super manager는 권한 변경 X
-        if(targetMember.isSuperManager()){
+        if (targetMember.isSuperManager()) {
             throw NoPermissionException.forAdmin(adminId);
         }
 
@@ -131,21 +135,21 @@ public class GroupMembersServiceImpl implements GroupMembersService {
 
         GroupMembers admin = validateGroupMembers(groupId, adminId);
         GroupMembers target = groupMembersRepository.findByGroupMemberIdAndGroups_GroupId(targetGroupMemberId, groupId)
-                .orElseThrow(()-> GroupMemberNotFoundException.byMemberIdAndGroupId(targetGroupMemberId, groupId));
+                .orElseThrow(() -> GroupMemberNotFoundException.byMemberIdAndGroupId(targetGroupMemberId, groupId));
 
         // 삭제를 시도하는 자가 member 권한이면 아무도 삭제할 수 없음
-        if(admin.isMember()){
+        if (admin.isMember()) {
             throw NoPermissionException.forAdmin(admin.getGroupMemberId());
         }
 
         // 삭제를 시도하는자가 target과 동일인물이면 안됨
-        if(Objects.equals(admin.getUserId(), target.getUserId())){
+        if (Objects.equals(admin.getUserId(), target.getUserId())) {
             throw new SuperManagerCannotLeaveException(admin.getGroupMemberId());
         }
 
         // 삭제하려는 자가 manager권한인데 target이 같은 권한이거나 superManager면 삭제할 수 없음
-        if(admin.isManager()){
-            if(target.isManager() || target.isSuperManager()){
+        if (admin.isManager()) {
+            if (target.isManager() || target.isSuperManager()) {
                 throw NoPermissionException.forAdmin(admin.getGroupMemberId());
             }
         }
@@ -161,7 +165,7 @@ public class GroupMembersServiceImpl implements GroupMembersService {
         GroupMembers admin = validateGroupMembers(groupId, adminId);
 
         // superManager 아니면 아예 안돼
-        if(admin.isManager() || admin.isMember() || !admin.isSuperManager()){
+        if (admin.isManager() || admin.isMember() || !admin.isSuperManager()) {
             throw new UnAuthorizedAccessException(adminId);
         }
 
@@ -176,7 +180,7 @@ public class GroupMembersServiceImpl implements GroupMembersService {
         GroupMembers members = validateGroupMembers(groupId, userId);
 
         // super manager는 권한 위임 전에는 절대 탈퇴 불가
-        if(members.isSuperManager()){
+        if (members.isSuperManager()) {
             throw new SuperManagerCannotLeaveException(members.getGroupMemberId());
         }
 
@@ -209,7 +213,7 @@ public class GroupMembersServiceImpl implements GroupMembersService {
      */
     @Override
     public void validateUserInAnyGroup(Long userId) {
-        if(groupMembersRepository.existsByUserId(userId)){
+        if (groupMembersRepository.existsByUserId(userId)) {
             return;
         }
         throw new NotJoinedAnyGroupException(userId);
@@ -220,7 +224,7 @@ public class GroupMembersServiceImpl implements GroupMembersService {
      */
     @Override
     public void validateUserNotInAnyGroup(Long userId) {
-        if(groupMembersRepository.existsByUserId(userId)){
+        if (groupMembersRepository.existsByUserId(userId)) {
             throw new AlreadyJoinedException(userId);
         }
     }

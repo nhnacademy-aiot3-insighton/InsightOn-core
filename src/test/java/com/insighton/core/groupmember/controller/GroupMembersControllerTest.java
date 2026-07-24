@@ -13,7 +13,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -60,7 +59,7 @@ class GroupMembersControllerTest {
         @DisplayName("멤버 상세 조회 성공 - JSON 객체 응답 검증")
         void getGroupMember_success() throws Exception {
             // given
-            GroupMembersResponse mockResponse = new GroupMembersResponse(1L, GroupMembers.GroupRole.MEMBER, "testName", OffsetDateTime.now());
+            GroupMembersResponse mockResponse = new GroupMembersResponse(1L, GroupMembers.GroupRole.MEMBER, "testName", "010-0000-0000", OffsetDateTime.now());
             given(groupMembersService.getGroupMember(1L, 1L, 1L)).willReturn(mockResponse);
 
             // when & then
