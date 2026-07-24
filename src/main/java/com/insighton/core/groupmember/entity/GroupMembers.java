@@ -8,6 +8,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
 @Entity
 @Table(name = "group_members")
@@ -38,7 +40,7 @@ public class GroupMembers {
     private GroupRole groupRole;
 
     @Column(nullable = false, updatable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
-    private LocalDateTime joinedAt;
+    private OffsetDateTime joinedAt;
 
 
     /**
@@ -59,7 +61,7 @@ public class GroupMembers {
      */
     @PrePersist
     protected void onJoin(){
-        this.joinedAt = LocalDateTime.now();
+        this.joinedAt = OffsetDateTime.now(ZoneOffset.UTC);
     }
 
     public void updateRole(GroupRole newGroupRole){

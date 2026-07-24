@@ -14,6 +14,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 import static org.mockito.BDDMockito.given;
@@ -59,7 +60,7 @@ class GroupMembersControllerTest {
         @DisplayName("멤버 상세 조회 성공 - JSON 객체 응답 검증")
         void getGroupMember_success() throws Exception {
             // given
-            GroupMembersResponse mockResponse = new GroupMembersResponse(1L, GroupMembers.GroupRole.MEMBER, "testName", LocalDateTime.now());
+            GroupMembersResponse mockResponse = new GroupMembersResponse(1L, GroupMembers.GroupRole.MEMBER, "testName", OffsetDateTime.now());
             given(groupMembersService.getGroupMember(1L, 1L, 1L)).willReturn(mockResponse);
 
             // when & then

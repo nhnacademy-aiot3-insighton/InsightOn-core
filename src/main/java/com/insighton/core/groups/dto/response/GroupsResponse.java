@@ -5,6 +5,7 @@ import com.insighton.core.groups.entity.Groups;
 import lombok.Builder;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 /**
  * 그룹 조회 시 응답
@@ -22,7 +23,7 @@ public record GroupsResponse(
         String description,
         String location,
         String inviteToken,
-        LocalDateTime createdAt
+        OffsetDateTime createdAt
 ) {
 
     /**

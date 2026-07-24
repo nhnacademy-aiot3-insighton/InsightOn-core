@@ -4,6 +4,7 @@ import com.insighton.core.groupmember.entity.GroupMembers;
 import lombok.Builder;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 /**
  * group member 상세 정보
@@ -17,6 +18,6 @@ public record GroupMembersResponse(
         Long userId,
         GroupMembers.GroupRole groupRole,
         String userName,
-        LocalDateTime joinedAt
+        OffsetDateTime joinedAt
 ) {
 }
