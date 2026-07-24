@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 
 /**
@@ -44,15 +45,15 @@ public class DeviceEntity {
     @Column(name = "type", nullable = false)
     private DeviceType type;
 
-    private ZonedDateTime lastSeenAt;
+    private OffsetDateTime lastSeenAt;
 
-    private ZonedDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     public void updateLocation(Long newLocationId){
         this.locationsId = newLocationId;
     }
 
     public void updateLastSeen(){
-        this.lastSeenAt = ZonedDateTime.now();
+        this.lastSeenAt = OffsetDateTime.now();
     }
 }

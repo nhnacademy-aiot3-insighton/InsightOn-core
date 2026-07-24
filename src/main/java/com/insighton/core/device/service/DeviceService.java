@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.List;
 
@@ -30,7 +31,7 @@ public class DeviceService {
                 .deviceEui(request.deviceEui())
                 .gatewaysId(request.gatewayId())
                 .locationsId(request.locationsId())
-                .createdAt(ZonedDateTime.now())
+                .createdAt(OffsetDateTime.now())
                 .build();
         return deviceRepository.save(deviceEntity).getDeviceId();
     }
