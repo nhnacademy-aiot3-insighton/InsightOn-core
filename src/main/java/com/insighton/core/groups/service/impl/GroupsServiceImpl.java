@@ -117,7 +117,9 @@ public class GroupsServiceImpl implements GroupsService {
     /**
      * ID로 그룹이 존재하는지 조회 (존재하지 않을 시 예외 발생)
      */
-    private Groups groupFindById(Long groupId) {
+    @Override
+    @Transactional
+    public Groups groupFindById(Long groupId) {
         return groupsRepository.findById(groupId)
                 .orElseThrow(() -> new GroupNotFoundException(groupId));
     }
