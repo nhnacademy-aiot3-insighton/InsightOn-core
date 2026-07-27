@@ -75,12 +75,23 @@ public class DeviceAttributeServiceImpl implements DeviceAttributeService {
         if(newValue == null || newValue.trim().isEmpty()){
             throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
         }
-        MetricDefinition.fromKey(metricKey); // 입력 키 사전 검증
 
-        DeviceAttributeEntity attribute = attributeRepository.findByDeviceId_DeviceIdAndMetricKey(deviceId, metricKey)
+        /**
+         * 코더레빗 제안
+         * 대소문자 불일치로 인한 404 방지
+         * 정규화된 메트릭 키로 조회하세요. MetricDefinition.fromKey(metricKey)는 대소문자를 무시하지만, 바로 아래 조회는 원본 metricKey를 사용합니다.
+         * CO2처럼 대문자로 들어온 값은 검증을 통과해도 co2로 저장된 행을 못 찾을 수 있으니
+         * MetricDefinition.fromKey(metricKey).getMetricKey()를 조회 인자로 쓰세요.
+         */
+        // MetricDefinition에서 정규화된 표준 metricKey(예: "co2") 추출
+        MetricDefinition definition = MetricDefinition.fromKey(metricKey);
+        String normalizedMetricKey = definition.getMetricKey();
+
+        // 정규화된 metricKey로 DB 조회
+        DeviceAttributeEntity attribute = attributeRepository
+                .findByDeviceId_DeviceIdAndMetricKey(deviceId, normalizedMetricKey)
                 .orElseThrow(() -> new CustomException(ErrorCode.METRIC_KEY_NOT_FOUND));
 
-        // 엔티티 내부 메서드를 호출하여 상태값 업데이트 (Dirty Checking 적용)
         attribute.updateCurrentValue(newValue);
     }
 

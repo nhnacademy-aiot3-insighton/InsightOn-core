@@ -14,7 +14,10 @@ import org.jetbrains.annotations.NotNull;
  * 동일한 장치 내에서 중복된 메트릭 키가 생성되지 않도록 (device_id, metric_key) 복합 UNIQUE 제약조건이 걸려있습니다.
  */
 @Entity
-@Table(name = "sensor_device_attributes")
+@Table(name = "sensor_device_attributes",
+    uniqueConstraints = @UniqueConstraint(
+            columnNames = {"device_id", "metric_key"}
+    ))
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -42,7 +45,7 @@ public class DeviceAttributeEntity {
      * 수집 패킷 내 JSON Key 또는 제어 명령 필드 식별자 (ex. "co2", "temperature", "power_status")
      */
     @NotNull
-    @Column(name = "metric_key", length = 50, unique = true )
+    @Column(name = "metric_key", length = 50, nullable = false)
     private String metricKey;
 
     /*

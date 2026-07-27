@@ -15,7 +15,7 @@ public enum ErrorCode {
 
 
     // 400 Bad Request
-    DUPLICATE_DEVICE_EUI(HttpStatus.BAD_REQUEST, "EUI_400","중복된 값이있습니다"),
+    DUPLICATE_DEVICE_EUI(HttpStatus.BAD_REQUEST, "EUI_400","중복된 값이 있습니다"),
     INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "COMMON_400", "잘못된 요청 값입니다.");
 
     private final HttpStatus httpStatus;

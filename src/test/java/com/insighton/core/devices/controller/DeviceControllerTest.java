@@ -2,7 +2,6 @@ package com.insighton.core.devices.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.insighton.core.devices.dto.DeviceRequest;
-import com.insighton.core.devices.dto.DeviceUpdateRequest;
 import com.insighton.core.devices.entity.DeviceEntity;
 import com.insighton.core.devices.repository.DeviceRepository;
 import org.junit.jupiter.api.BeforeEach;

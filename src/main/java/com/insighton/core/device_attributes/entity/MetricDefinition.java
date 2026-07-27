@@ -17,7 +17,7 @@ public enum MetricDefinition {
     HUMIDITY("humidity", "습도", "%"),
     POWER_STATUS("power_status", "전원상태", null),
     AC_MODE("ac_mode", "에어컨모드", null),
-    AIR_PURIFIER_MODE("ap_mode", "공기청청기모드", null),
+    AIR_PURIFIER_MODE("ap_mode", "공기청정기모드", null),
     VENTILATION_FAN("vf_mode", "환풍기모드", null);
 
     private final String metricKey;

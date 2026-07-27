@@ -18,10 +18,11 @@ public interface DeviceService {
      */
     DeviceResponse getDeviceById(Long deviceId);
 
-    /**
-     * 장치 위치 정보 수정
-     */
+    // 위치 수정
     void updateDeviceLocation(Long deviceId, Long newLocationId);
+
+    // 이름 수정 (추가)
+    void updateDeviceName(Long deviceId, String newDeviceName);
 
     /**
      * MQTT/패킷 수신 시 마지막 통신 시각 갱신

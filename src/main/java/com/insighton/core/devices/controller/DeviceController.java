@@ -1,9 +1,10 @@
 package com.insighton.core.devices.controller;
 
 
+import com.insighton.core.devices.dto.DeviceLocationUpdateRequest;
+import com.insighton.core.devices.dto.DeviceNameUpdateRequest;
 import com.insighton.core.devices.dto.DeviceRequest;
 import com.insighton.core.devices.dto.DeviceResponse;
-import com.insighton.core.devices.dto.DeviceUpdateRequest;
 import com.insighton.core.devices.service.DeviceService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
@@ -49,16 +50,22 @@ public class DeviceController {
         return ResponseEntity.ok(result);
     }
 
-    // 장치 위치 이동(수정) API
+    // 장치 위치 이동(수정) API - 전용 DTO 적용
     @PatchMapping("/{id}/location")
     public ResponseEntity<Void> updateDeviceLocation(
             @PathVariable Long id,
-            @RequestBody DeviceUpdateRequest request){
-
-        // DeviceUpdateRequest에 포함된 위치ID를 추출하여 서비스로 넘김
+            @RequestBody @Valid DeviceLocationUpdateRequest request){
         deviceService.updateDeviceLocation(id, request.locationId());
-        // return ResponseEntity.noContent().build(); noContent 204설정
-        // build는 응답 데이터를 넣지않고 이대로 포장함
+        return ResponseEntity.noContent().build();
+    }
+
+
+    // 장치 이름 수정 API - 전용 DTO 및 서비스 연동
+    @PatchMapping("/{id}/name")
+    public ResponseEntity<Void> updateDeviceName(
+            @PathVariable Long id,
+            @RequestBody @Valid DeviceNameUpdateRequest request){
+        deviceService.updateDeviceName(id, request.deviceName());
         return ResponseEntity.noContent().build();
     }
 

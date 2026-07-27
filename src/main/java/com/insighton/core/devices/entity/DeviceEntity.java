@@ -51,4 +51,10 @@ public class DeviceEntity {
     public void updateLastSeen(){
         this.lastSeenAt = OffsetDateTime.now();
     }
+
+    public void updateName(String newDeviceName){
+        if(newDeviceName != null && !newDeviceName.trim().isEmpty()){
+            this.deviceName = newDeviceName;
+        }
+    }
 }
