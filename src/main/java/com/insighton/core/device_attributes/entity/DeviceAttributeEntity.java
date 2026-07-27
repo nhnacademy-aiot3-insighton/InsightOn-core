@@ -42,7 +42,7 @@ public class DeviceAttributeEntity {
      * 수집 패킷 내 JSON Key 또는 제어 명령 필드 식별자 (ex. "co2", "temperature", "power_status")
      */
     @NotNull
-    @Column(name = "metric_key", length = 50)
+    @Column(name = "metric_key", length = 50, unique = true )
     private String metricKey;
 
     /*
