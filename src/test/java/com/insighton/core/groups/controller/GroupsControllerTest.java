@@ -17,7 +17,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -95,7 +94,7 @@ class GroupsControllerTest {
         void getGroupPreview_success() throws Exception {
             // given
             GroupsResponse mockResponse = new GroupsResponse(1L, "testName", "testDescription", "testLocation", "testToken", OffsetDateTime.now());
-            given(groupsUseCase.getGroupPreview("token", 1L, 1L)).willReturn(mockResponse);
+            given(groupsUseCase.getGroupPreview("testToken", 1L, 1L)).willReturn(mockResponse);
 
             // when & then
             mockMvc.perform(get("/api/groups/{group-id}/preview", 1L)
