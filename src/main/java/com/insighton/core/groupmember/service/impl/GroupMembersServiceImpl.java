@@ -79,7 +79,7 @@ public class GroupMembersServiceImpl implements GroupMembersService {
         GroupMembers members = groupMembersRepository.findByGroupMemberIdAndGroups_GroupId(groupMemberId, groupId)
                 .orElseThrow(() -> GroupMemberNotFoundException.byMemberIdAndGroupId(groupMemberId, groupId));
 
-        if (requester.isMember()) {
+        if (requester.isMember() || !Objects.equals(requester.getUserId(), members.getUserId())) {
             throw new UnAuthorizedAccessException(userId);
         }
 
@@ -87,10 +87,23 @@ public class GroupMembersServiceImpl implements GroupMembersService {
 
         return GroupMembersResponse.builder()
                 .userId(members.getUserId())
+                .groupId(members.getGroups().getGroupId())
                 .groupRole(members.getGroupRole())
                 .userName(authUserResponse.userName())
                 .userPhoneNumber(authUserResponse.userPhoneNumber())
                 .joinedAt(members.getJoinedAt())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public GroupMembersResponse getGroupMemberAI(Long userId, Long groupId) {
+        GroupMembers members = validateGroupMembers(groupId, userId);
+
+        return GroupMembersResponse.builder()
+                .userId(members.getUserId())
+                .groupId(members.getGroups().getGroupId())
+                .groupRole(members.getGroupRole())
                 .build();
     }
 

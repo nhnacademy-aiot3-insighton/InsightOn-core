@@ -39,13 +39,22 @@ public interface GroupMembersService {
 
 
     /**
-     * group member 상세 조회
+     * group member 상세 조회(관리자나 자기 자신만 member의 정보를 볼 수 잇음)
      *
      * @param userId  조회하는 userId
      * @param groupId member가 속해있는 group의 ID
      * @return groupMember의 정보
      */
     GroupMembersResponse getGroupMember(Long userId, Long groupId, Long groupMemberId);
+
+    /**
+     * 그룹 소속 확인용
+     *
+     * @param userId  소속 여부를 확인할 유저 ID
+     * @param groupId Group ID
+     * @return 멤버면 groupID
+     */
+    GroupMembersResponse getGroupMemberAI(Long userId, Long groupId);
 
     /**
      * member 권한 변경
