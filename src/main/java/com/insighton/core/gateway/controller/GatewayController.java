@@ -7,7 +7,6 @@ import com.insighton.core.gateway.service.GatewayService;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -44,9 +43,9 @@ public class GatewayController {
     }
 
     @GetMapping
-    public ResponseEntity<List<GatewayResponse>> getAllByGroupId(@RequestHeader("X-User-Id") Long userId,
-                                                                 @RequestParam Long groupId) {
-        return ResponseEntity.ok(gatewayService.getAllByGroupId(userId, groupId));
+    public ResponseEntity<GatewayResponse> getByGroupId(@RequestHeader("X-User-Id") Long userId,
+                                                         @RequestParam Long groupId) {
+        return ResponseEntity.ok(gatewayService.getByGroupId(userId, groupId));
     }
 
     @GetMapping("/admin")
