@@ -1,6 +1,5 @@
 package com.insighton.core.gateway.repository;
 
-import com.insighton.core.gateway.dto.GatewayUpdateRequest;
 import com.insighton.core.gateway.entity.Gateway;
 import com.insighton.core.gateway.entity.ProtocolType;
 import java.util.List;
@@ -14,4 +13,6 @@ public interface GatewayRepository extends JpaRepository<Gateway, Long> {
     List<Gateway> findAllByProtocolType(ProtocolType protocolType);
     List<Gateway> findAllByGroupId(Long groupId);
     Optional<Gateway> findByGatewayId(Long gatewayId);
+    Optional<Gateway> findByGroupId(Long groupId);
+    void deleteByGroupId(Long groupId);
 }

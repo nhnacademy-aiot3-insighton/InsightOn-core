@@ -24,4 +24,6 @@ public interface GatewayService {
     //gateway 삭제 (요청자가 해당 게이트웨이의 그룹에 대해 MANAGER/SUPER_MANAGER인지 확인)
     void delete(Long userId, Long gatewayId);
 
+    //gateway 삭제 group 삭제용
+    void deleteByGroupId(Long groupId);
 }
