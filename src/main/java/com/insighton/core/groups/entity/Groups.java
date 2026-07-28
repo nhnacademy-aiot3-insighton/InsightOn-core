@@ -27,7 +27,7 @@ public class Groups {
     private String description;
 
     @Column(nullable = false)
-    private String location;
+    private String groupRegion;
 
     @Column(unique = true, nullable = false)
     private String inviteToken;
@@ -41,10 +41,10 @@ public class Groups {
      * - PK인 groupId와 자동으로 들어갈 createdAt은 빌더 대상에서 제외하여 객체 오용을 방지합니다.
      */
     @Builder
-    public Groups(String name, String description, String location, String inviteToken) {
+    public Groups(String name, String description, String groupRegion, String inviteToken) {
         this.name = name;
         this.description = description;
-        this.location = location;
+        this.groupRegion = groupRegion;
         this.inviteToken = inviteToken;
     }
 
@@ -71,6 +71,6 @@ public class Groups {
     public void update(GroupsRequest request) {
         this.name = request.name();
         this.description = request.description();
-        this.location = request.location();
+        this.groupRegion = request.groupRegion();
     }
 }
