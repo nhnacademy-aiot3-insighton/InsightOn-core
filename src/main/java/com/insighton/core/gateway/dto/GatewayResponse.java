@@ -12,7 +12,6 @@ import java.time.OffsetDateTime;
 public record GatewayResponse(
         Long id,
         Long groupsId,
-        String gatewayUid,
         String name,
         ProtocolType protocolType,
         GatewayStatus status,
@@ -22,8 +21,7 @@ public record GatewayResponse(
     public static GatewayResponse from(Gateway gateway) {
         return new GatewayResponse(
                 gateway.getGatewayId(),
-                gateway.getGroupsId(),
-                gateway.getGatewayUid(),
+                gateway.getGroupId(),
                 gateway.getName(),
                 gateway.getProtocolType(),
                 gateway.getStatus(),

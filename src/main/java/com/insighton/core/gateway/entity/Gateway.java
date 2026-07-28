@@ -20,7 +20,6 @@ import org.hibernate.type.SqlTypes;
 
 /**
  * LoRaWAN/기타 프로토콜 게이트웨이 인프라 자산 대장. MQTT 접속 정보의 실제 소유 단위
- * TEMP — Group 브랜치 머지 후 FK 제약 추가 필요
  */
 @Entity
 @Table(name = "gateways")
@@ -32,13 +31,10 @@ public class Gateway {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long gatewayId;
 
-    @Column(name = "groups_id", nullable = false)
-    private Long groupsId;
+    @Column(name = "group_id", nullable = false, unique = true)
+    private Long groupId;
 
-    @Column(name = "gateway_uid", nullable = false, unique = true)
-    private String gatewayUid;
-
-    @Column(nullable = false)
+    @Column(name = "gateway_name", nullable = false)
     private String name;
 
     @Enumerated(EnumType.STRING)
@@ -60,14 +56,13 @@ public class Gateway {
     private OffsetDateTime createdAt;
 
     @Builder
-    public Gateway(Long groupsId, String gatewayUid, String name, ProtocolType protocolType,
+    public Gateway(Long groupsId, String name, ProtocolType protocolType,
             Map<String, Object> connectionConfig) {
-        this.groupsId = groupsId;
-        this.gatewayUid = gatewayUid;
+        this.groupId = groupsId;
         this.name = name;
         this.protocolType = protocolType;
         this.connectionConfig = connectionConfig;
-        this.status = GatewayStatus.NORMAL;
+        this.status = GatewayStatus.ACTIVE;
     }
 
     public void update(String name, ProtocolType protocolType, Map<String, Object> connectionConfig) {

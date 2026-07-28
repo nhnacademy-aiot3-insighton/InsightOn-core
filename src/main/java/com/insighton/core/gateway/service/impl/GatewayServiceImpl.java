@@ -5,17 +5,18 @@ import com.insighton.core.gateway.dto.GatewayResponse;
 import com.insighton.core.gateway.dto.GatewayUpdateRequest;
 import com.insighton.core.gateway.entity.Gateway;
 import com.insighton.core.gateway.exception.GatewayAccessDeniedException;
+import com.insighton.core.gateway.event.GatewayDeletedEvent;
 import com.insighton.core.gateway.exception.GatewayNotFoundException;
 import com.insighton.core.gateway.repository.GatewayRepository;
 import com.insighton.core.gateway.service.GatewayService;
 import com.insighton.core.groupmember.entity.GroupMembers;
 import com.insighton.core.groupmember.repository.GroupMembersRepository;
-import com.insighton.core.mqtt.connection.DynamicMqttGatewayManager;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,8 +27,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class GatewayServiceImpl implements GatewayService {
 
     private final GatewayRepository gatewayRepository;
-    private final DynamicMqttGatewayManager gatewayManager;
     private final GroupMembersRepository groupMembersRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public GatewayResponse create(Long userId, GatewayCreateRequest request) {
@@ -36,7 +37,6 @@ public class GatewayServiceImpl implements GatewayService {
 
         Gateway newGateway = Gateway.builder()
                 .groupsId(request.groupsId())
-                .gatewayUid(request.gatewayUid())
                 .name(request.name())
                 .protocolType(request.protocolType())
                 .connectionConfig(request.connectionConfig())
@@ -52,18 +52,19 @@ public class GatewayServiceImpl implements GatewayService {
         Gateway gateway = gatewayRepository.findByGatewayId(gatewayId)
                 .orElseThrow(() -> new GatewayNotFoundException(gatewayId));
 
-        requireGroupMembership(userId, gateway.getGroupsId());
+        requireGroupMembership(userId, gateway.getGroupId());
 
         return GatewayResponse.from(gateway);
     }
 
     @Override
-    public List<GatewayResponse> getAllByGroupId(Long userId, Long groupId) {
+    public GatewayResponse getByGroupId(Long userId, Long groupId) {
         requireGroupMembership(userId, groupId);
 
-        return gatewayRepository.findAllByGroupsId(groupId).stream()
-                .map(GatewayResponse::from)
-                .toList();
+        Gateway gateway = gatewayRepository.findByGroupId(groupId)
+                .orElseThrow(() -> new GatewayNotFoundException("게이트웨이를 찾을 수 없습니다. groupId=" + groupId));
+
+        return GatewayResponse.from(gateway);
     }
 
     @Override
@@ -85,7 +86,7 @@ public class GatewayServiceImpl implements GatewayService {
         Gateway gateway = gatewayRepository.findByGatewayId(gatewayId)
                 .orElseThrow(() -> new GatewayNotFoundException(gatewayId));
 
-        requireManagerRole(userId, gateway.getGroupsId());
+        requireManagerRole(userId, gateway.getGroupId());
 
         gateway.update(request.name(), request.protocolType(), request.connectionConfig());
     }
@@ -96,10 +97,26 @@ public class GatewayServiceImpl implements GatewayService {
         Gateway gateway = gatewayRepository.findByGatewayId(gatewayId)
                 .orElseThrow(() -> new GatewayNotFoundException(gatewayId));
 
-        requireManagerRole(userId, gateway.getGroupsId());
+        requireManagerRole(userId, gateway.getGroupId());
 
         gatewayRepository.deleteById(gatewayId);
-        gatewayManager.unregisterGateway(gatewayId);
+        eventPublisher.publishEvent(new GatewayDeletedEvent(gatewayId));
+    }
+
+
+    /**
+     * group 삭제 시 호출용
+     * @param groupId 그룹ID
+     */
+    @Transactional
+    @Override
+    public void deleteByGroupId(Long groupId) {
+        gatewayRepository.findByGroupId(groupId).ifPresent(gateway -> {
+            log.info("gateway 삭제 - gatewayId: {}, groupId: {}", gateway.getGatewayId(), groupId);
+            eventPublisher.publishEvent(new GatewayDeletedEvent(gateway.getGatewayId()));
+        });
+
+        gatewayRepository.deleteByGroupId(groupId);
     }
 
     private void validateConnectionConfig(Map<String, Object> connectionConfig) {
