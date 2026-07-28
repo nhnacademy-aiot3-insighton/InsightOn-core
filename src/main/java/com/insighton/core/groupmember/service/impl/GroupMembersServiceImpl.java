@@ -6,10 +6,7 @@ import com.insighton.core.groupmember.dto.response.AuthUserResponse;
 import com.insighton.core.groupmember.dto.response.GroupMembersListResponse;
 import com.insighton.core.groupmember.dto.response.GroupMembersResponse;
 import com.insighton.core.groupmember.entity.GroupMembers;
-import com.insighton.core.groupmember.exception.AlreadyJoinedException;
-import com.insighton.core.groupmember.exception.GroupMemberNotFoundException;
-import com.insighton.core.groupmember.exception.NotJoinedAnyGroupException;
-import com.insighton.core.groupmember.exception.SuperManagerCannotLeaveException;
+import com.insighton.core.groupmember.exception.*;
 import com.insighton.core.groupmember.repository.GroupMembersRepository;
 import com.insighton.core.groupmember.service.GroupMembersService;
 import com.insighton.core.groups.entity.Groups;
@@ -127,6 +124,29 @@ public class GroupMembersServiceImpl implements GroupMembersService {
 
         // 3. targetUser가 Member권한일 때 Manager로 변경
         targetMember.updateRole(targetMember.getGroupRole() == GroupMembers.GroupRole.MEMBER ? GroupMembers.GroupRole.MANAGER : GroupMembers.GroupRole.MEMBER);
+    }
+
+    @Override
+    @Transactional
+    public void toggleSuperManagerRole(Long groupId, Long targetGroupMemberId, Long superManagerUserId) {
+        // 1. group id가 존재하는지 확인
+        GroupMembers superManager = validateGroupMembers(groupId, superManagerUserId);
+        GroupMembers targetMember = groupMembersRepository.findByGroupMemberIdAndGroups_GroupId(targetGroupMemberId, groupId)
+                .orElseThrow(() -> GroupMemberNotFoundException.byMemberIdAndGroupId(targetGroupMemberId, groupId));
+
+        // super Manager가 아니면 안 됨!!
+        if (!superManager.isSuperManager()) {
+            throw new ManagerRoleRequiredForTransferException(superManager.getGroupMemberId());
+        }
+
+        // super Manager이지만 대상이 일반 Member일 경우에는 양도 ㄴㄴ
+        if (superManager.isSuperManager()) {
+            if (targetMember.isMember() || !targetMember.isManager()) {
+                throw new ManagerRoleRequiredForTransferException();
+            }
+        }
+
+        targetMember.updateRole(GroupMembers.GroupRole.SUPER_MANAGER);
     }
 
     @Override
