@@ -6,12 +6,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-
-
-import java.util.Optional;
-
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
+
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -43,7 +41,7 @@ class GroupsRepositoryTest {
     void findByInviteTokenAndGroupId_success() {
         // given
         // 1L은 SQL에서 생성된 기본 그룹의 ID
-        
+
         // when
         Optional<Groups> found = groupsRepository.findByInviteTokenAndGroupId("test-token", 1L);
 
@@ -58,7 +56,7 @@ class GroupsRepositoryTest {
         // given
         Groups group = Groups.builder()
                 .name("new-group")
-                .location("Seoul")
+                .groupRegion("Seoul")
                 .inviteToken("new-token")
                 .build();
         group = groupsRepository.save(group);

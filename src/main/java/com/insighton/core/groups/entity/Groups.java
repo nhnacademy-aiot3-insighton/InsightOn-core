@@ -1,13 +1,14 @@
 package com.insighton.core.groups.entity;
 
-import com.insighton.core.groups.dto.request.GroupsUpdateRequest;
+import com.insighton.core.groups.dto.request.GroupsRequest;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
 @Entity
 @Table(name = "groups")
@@ -19,31 +20,31 @@ public class Groups {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long groupId;
 
-    @Column(name = "group_name", nullable = false)
+    @Column(nullable = false, name = "group_name")
     private String name;
 
     @Column(columnDefinition = "TEXT")
     private String description;
 
     @Column(nullable = false)
-    private String location;
+    private String groupRegion;
 
     @Column(unique = true, nullable = false)
     private String inviteToken;
 
-    @Column(nullable = false, updatable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
-    private LocalDateTime createdAt;
+    @Column(updatable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    private OffsetDateTime createdAt;
 
     /**
-     * @Builder 패턴을 적용한 생성자
+     * {@code @Builder} 패턴을 적용한 생성자
      * - 엔티티 최초 생성 시 필요한 필드만 깔끔하게 빌더로 넘겨받아 안전하게 객체를 생성합니다.
      * - PK인 groupId와 자동으로 들어갈 createdAt은 빌더 대상에서 제외하여 객체 오용을 방지합니다.
      */
     @Builder
-    public Groups(String name, String description, String location, String inviteToken) {
+    public Groups(String name, String description, String groupRegion, String inviteToken) {
         this.name = name;
         this.description = description;
-        this.location = location;
+        this.groupRegion = groupRegion;
         this.inviteToken = inviteToken;
     }
 
@@ -53,7 +54,7 @@ public class Groups {
      */
     @PrePersist
     protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = OffsetDateTime.now(ZoneOffset.UTC);
     }
 
     /**
@@ -67,9 +68,9 @@ public class Groups {
         this.inviteToken = newInviteToken;
     }
 
-    public void update(GroupsUpdateRequest request){
+    public void update(GroupsRequest request) {
         this.name = request.name();
         this.description = request.description();
-        this.location = request.location();
+        this.groupRegion = request.groupRegion();
     }
 }
