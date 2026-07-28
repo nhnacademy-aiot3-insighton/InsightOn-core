@@ -1,19 +1,19 @@
 package com.insighton.core.groups.controller;
 
 import com.insighton.core.groupmember.dto.request.GroupMembersJoinRequest;
-import com.insighton.core.groups.dto.request.GroupsCreateRequest;
-import com.insighton.core.groups.dto.request.GroupsUpdateRequest;
-import com.insighton.core.groups.dto.response.GroupsListResponse;
+import com.insighton.core.groups.dto.request.GroupsRequest;
+import com.insighton.core.groups.dto.response.GroupsAdminResponse;
 import com.insighton.core.groups.dto.response.GroupsResponse;
 import com.insighton.core.groups.service.GroupManagementUseCase;
 import com.insighton.core.groups.service.GroupsService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -45,7 +45,7 @@ public class GroupsController {
     @PostMapping("/api/groups/create")
     public ResponseEntity<Void> createGroup(
             @RequestHeader("X-USER-ID") Long userId,
-            @RequestBody GroupsCreateRequest groupsCreateRequest) {
+            @RequestBody GroupsRequest groupsCreateRequest) {
 
         groupsUseCase.createGroup(groupsCreateRequest, userId);
 
@@ -94,10 +94,12 @@ public class GroupsController {
      * @return 시스템에 생성된 그룹들 리스트
      */
     @GetMapping("/api/groups/admin/group-list")
-    public ResponseEntity<List<GroupsListResponse>> getGroupList(
+    public ResponseEntity<Page<GroupsAdminResponse>> getGroupList(
             @RequestHeader("X-USER-ROLE") String userRole,
-            @RequestHeader("X-USER-ID") Long userId) {
-        List<GroupsListResponse> groupsListResponses = groupsService.getGroupList(userRole, userId);
+            @RequestHeader("X-USER-ID") Long userId,
+            @PageableDefault(size = 10, sort = "groupId") Pageable pageable) {
+
+        Page<GroupsAdminResponse> groupsListResponses = groupsService.getGroupList(userRole, userId, pageable);
 
         return ResponseEntity.ok(groupsListResponses);
     }
@@ -132,7 +134,7 @@ public class GroupsController {
     public ResponseEntity<Void> updateGroup(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
-            @Valid @RequestBody GroupsUpdateRequest request) {
+            @Valid @RequestBody GroupsRequest request) {
         groupsUseCase.updateGroup(request, userId, groupId);
 
         return ResponseEntity.ok().build();

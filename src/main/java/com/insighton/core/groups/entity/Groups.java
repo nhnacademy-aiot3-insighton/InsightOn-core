@@ -1,6 +1,6 @@
 package com.insighton.core.groups.entity;
 
-import com.insighton.core.groups.dto.request.GroupsUpdateRequest;
+import com.insighton.core.groups.dto.request.GroupsRequest;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -68,7 +68,7 @@ public class Groups {
         this.inviteToken = newInviteToken;
     }
 
-    public void update(GroupsUpdateRequest request) {
+    public void update(GroupsRequest request) {
         this.name = request.name();
         this.description = request.description();
         this.location = request.location();
