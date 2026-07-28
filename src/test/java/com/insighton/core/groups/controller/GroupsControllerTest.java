@@ -2,9 +2,8 @@ package com.insighton.core.groups.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.insighton.core.groupmember.dto.request.GroupMembersJoinRequest;
-import com.insighton.core.groups.dto.request.GroupsCreateRequest;
-import com.insighton.core.groups.dto.request.GroupsUpdateRequest;
-import com.insighton.core.groups.dto.response.GroupsListResponse;
+import com.insighton.core.groups.dto.request.GroupsRequest;
+import com.insighton.core.groups.dto.response.GroupsAdminResponse;
 import com.insighton.core.groups.dto.response.GroupsResponse;
 import com.insighton.core.groups.service.GroupManagementUseCase;
 import com.insighton.core.groups.service.GroupsService;
@@ -13,6 +12,9 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -63,7 +65,7 @@ class GroupsControllerTest {
         @Test
         @DisplayName("그룹 생성 성공")
         void createGroup_success() throws Exception {
-            GroupsCreateRequest request = new GroupsCreateRequest("testName", "testDescription", "testLocation");
+            GroupsRequest request = new GroupsRequest("testName", "testDescription", "testLocation");
 
             mockMvc.perform(post("/api/groups/create")
                             .header("X-USER-ID", 1L)
@@ -71,7 +73,7 @@ class GroupsControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated());
 
-            verify(groupsUseCase).createGroup(any(GroupsCreateRequest.class), eq(1L));
+            verify(groupsUseCase).createGroup(any(GroupsRequest.class), eq(1L));
         }
 
         @Test
@@ -106,20 +108,21 @@ class GroupsControllerTest {
         }
 
         @Test
-        @DisplayName("시스템 관리자용 그룹 리스트 조회 성공 - JSON 배열 반환 검증")
-        void getGroupList_success() throws Exception {
-            // given
-            List<GroupsListResponse> mockList = List.of(new GroupsListResponse(1L, "testName", "testDescription", "testLocation"));
-            given(groupsService.getGroupList("ADMIN", 1L)).willReturn(mockList);
+        @DisplayName("시스템 관리자용 그룹 리스트 조회 성공")
+        void getGroupList_success() throws Exception { // ⭕ 테스트 메서드 파라미터는 비워둡니다.
+            List<GroupsAdminResponse> content = List.of(new GroupsAdminResponse(1L, "testName", "testDescription", "testLocation"));
+            Page<GroupsAdminResponse> mockPage = new PageImpl<>(content);
 
-            // when & then
+            given(groupsService.getGroupList(eq("ADMIN"), eq(1L), any(Pageable.class)))
+                    .willReturn(mockPage);
+
             mockMvc.perform(get("/api/groups/admin/group-list")
                             .header("X-USER-ROLE", "ADMIN")
                             .header("X-USER-ID", 1L))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.length()").value(1));
+                    .andExpect(jsonPath("$.content.length()").value(1));
 
-            verify(groupsService).getGroupList("ADMIN", 1L);
+            verify(groupsService).getGroupList(eq("ADMIN"), eq(1L), any(Pageable.class));
         }
 
         @Test
@@ -135,7 +138,7 @@ class GroupsControllerTest {
         @Test
         @DisplayName("그룹 수정 성공")
         void updateGroup_success() throws Exception {
-            GroupsUpdateRequest request = new GroupsUpdateRequest("testName", "testDescription", "testLocation");
+            GroupsRequest request = new GroupsRequest("testName", "testDescription", "testLocation");
 
             mockMvc.perform(put("/api/groups/{group-id}/update", 1L)
                             .header("X-USER-ID", 1L)
@@ -143,7 +146,7 @@ class GroupsControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk());
 
-            verify(groupsUseCase).updateGroup(any(GroupsUpdateRequest.class), eq(1L), eq(1L));
+            verify(groupsUseCase).updateGroup(any(GroupsRequest.class), eq(1L), eq(1L));
         }
 
         @Test
@@ -180,7 +183,7 @@ class GroupsControllerTest {
         @DisplayName("그룹 수정 시 @Valid 유효성 검사 실패 시 400 Bad Request")
         void updateGroup_invalidBody_returnsBadRequest() throws Exception {
             // DTO 유효성 조건(@NotBlank 등)에 걸리는 잘못된 요청 객체
-            GroupsUpdateRequest invalidRequest = new GroupsUpdateRequest(null, null, null);
+            GroupsRequest invalidRequest = new GroupsRequest(null, null, null);
 
             mockMvc.perform(put("/api/groups/{group-id}/update", 1L)
                             .header("X-USER-ID", 1L)
