@@ -1,5 +1,6 @@
 package com.insighton.core.groups.service;
 
+import com.insighton.core.gateway.service.GatewayService;
 import com.insighton.core.groupmember.dto.request.GroupMembersJoinRequest;
 import com.insighton.core.groupmember.entity.GroupMembers;
 import com.insighton.core.groupmember.service.GroupMembersService;
@@ -24,6 +25,7 @@ public class GroupManagementUseCase {
     private final GroupsService groupService;
     private final GroupMembersService groupMembersService;
     private final LocationsService locationService;
+    private final GatewayService gatewayService;
 
     // ====================== Group Controller ======================
 
@@ -144,10 +146,11 @@ public class GroupManagementUseCase {
         if (!groupMembers.isSuperManager()) {
             throw NoPermissionException.forAdmin(groupMembers.getGroupMemberId());
         }
+        // gateway 삭제하기 전부.
 
         groupMembersService.deleteGroupMemberAll(userId, groupId);
 
-        locationService.deleteLocationAll(groupId);
+        deleteLocationAll(groupId);
 
         groupService.deleteGroup(groupId);
     }
@@ -219,7 +222,6 @@ public class GroupManagementUseCase {
     @Transactional
     public void toggleAutoControlMode(Long userId, Long groupId, Long locationId) {
 
-        // 그룹이 존재한다면 그 그룹 안에 location을 만드려는 사람이 존재하는지 확인하고
         GroupMembers groupMembers = groupMembersService.validateGroupMembers(groupId, userId);
 
         // member가 member 권한일 때는 에러를 던지고
@@ -242,7 +244,7 @@ public class GroupManagementUseCase {
      */
     @Transactional
     public void deleteLocation(Long userId, Long groupId, Long targetLocationId) {
-        // 그룹이 존재한다면 그 그룹 안에 location을 만드려는 사람이 존재하는지 확인하고
+        // 그룹이 존재한다면 그 그룹 안에 location을 삭제하려는 사람이 존재하는지 확인하고
         GroupMembers groupMembers = groupMembersService.validateGroupMembers(groupId, userId);
 
         // member가 member 권한일 때는 에러를 던지고
@@ -250,7 +252,21 @@ public class GroupManagementUseCase {
             throw NoPermissionException.forAdmin(groupMembers.getGroupMemberId());
         }
 
+        // devices는 location 값만 null로 바꿔주기
+
+        // dashboards 삭제
+
         locationService.deleteLocation(targetLocationId, groupId);
+    }
+
+    private void deleteLocationAll(Long groupId) {
+
+        // locationID에 해당하는 devices와 dashboards 지우는 로직 추가하기
+
+        // devices는 location 값만 null로 바꿔주기
+
+        // dashboards 삭제
+        locationService.deleteLocationAll(groupId);
     }
 
 }
