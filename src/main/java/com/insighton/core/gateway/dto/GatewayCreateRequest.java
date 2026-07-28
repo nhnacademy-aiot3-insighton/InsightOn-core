@@ -11,7 +11,6 @@ import java.util.Map;
  */
 public record GatewayCreateRequest(
         @NotNull Long groupsId,
-        @NotBlank String gatewayUid,
         @NotBlank String name,
         @NotNull ProtocolType protocolType,
         @NotNull Map<String, Object> connectionConfig

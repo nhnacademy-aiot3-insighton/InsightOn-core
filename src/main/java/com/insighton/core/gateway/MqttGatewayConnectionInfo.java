@@ -34,7 +34,7 @@ public record MqttGatewayConnectionInfo (
 
         return new MqttGatewayConnectionInfo(
                 gateway.getGatewayId(),
-                gateway.getGatewayUid(),
+                String.valueOf(gateway.getGatewayId()),
                 brokerUrl,
                 (String) config.get("username"),
                 (String) config.get("password")
