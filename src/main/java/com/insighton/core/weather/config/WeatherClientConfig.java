@@ -15,15 +15,15 @@ public class WeatherClientConfig {
     private String airBaseUrl;
 
     @Bean
-    public WebClient kmaWebClient(WebClient.Builder builder) {
-        return builder
+    public WebClient kmaWebClient() {
+        return WebClient.builder()
                 .baseUrl(kmaBaseUrl)
                 .build();
     }
 
     @Bean
-    public WebClient airQualityWebClient(WebClient.Builder builder) {
-        return builder
+    public WebClient airQualityWebClient() {
+        return WebClient.builder()
                 .baseUrl(airBaseUrl)
                 .build();
     }
