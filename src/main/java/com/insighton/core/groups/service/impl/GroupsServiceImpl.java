@@ -1,8 +1,7 @@
 package com.insighton.core.groups.service.impl;
 
-import com.insighton.core.groups.dto.request.GroupsCreateRequest;
-import com.insighton.core.groups.dto.request.GroupsUpdateRequest;
-import com.insighton.core.groups.dto.response.GroupsListResponse;
+import com.insighton.core.groups.dto.request.GroupsRequest;
+import com.insighton.core.groups.dto.response.GroupsAdminResponse;
 import com.insighton.core.groups.dto.response.GroupsResponse;
 import com.insighton.core.groups.entity.Groups;
 import com.insighton.core.groups.exception.GroupNotFoundException;
@@ -11,10 +10,11 @@ import com.insighton.core.groups.exception.UnAuthorizedAccessException;
 import com.insighton.core.groups.repository.GroupsRepository;
 import com.insighton.core.groups.service.GroupsService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -24,7 +24,7 @@ public class GroupsServiceImpl implements GroupsService {
 
     @Override
     @Transactional
-    public Groups createGroup(GroupsCreateRequest request) {
+    public Groups createGroup(GroupsRequest request) {
         // 초대 토큰 랜덤 발급 (UUID 기반으로 대시(-)를 제외한 32자리 고유문자 생성 후 12자리로 자르기)
         String inviteToken = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
 
@@ -33,7 +33,7 @@ public class GroupsServiceImpl implements GroupsService {
         Groups group = Groups.builder()
                 .name(request.name())
                 .description(request.description())
-                .location(request.location())
+                .groupRegion(request.groupRegion())
                 .inviteToken(inviteToken)
                 .build();
 
@@ -42,7 +42,7 @@ public class GroupsServiceImpl implements GroupsService {
 
     @Override
     @Transactional
-    public void updateGroup(GroupsUpdateRequest request, Long groupId) {
+    public void updateGroup(GroupsRequest request, Long groupId) {
 
         Groups groups = groupFindById(groupId);
 
@@ -61,17 +61,17 @@ public class GroupsServiceImpl implements GroupsService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<GroupsListResponse> getGroupList(String userRole, Long userId) {
+    public Page<GroupsAdminResponse> getGroupList(String userRole, Long userId, Pageable pageable) {
 
         if ("ADMIN".equals(userRole)) {
-            return groupsRepository.findAll().stream()
-                    .map(group -> new GroupsListResponse(
+
+            return groupsRepository.findAll(pageable)
+                    .map(group -> new GroupsAdminResponse(
                             group.getGroupId(),
                             group.getName(),
                             group.getDescription(),
-                            group.getLocation()
-                    ))
-                    .toList();
+                            group.getGroupRegion()
+                    ));
         }
         // 시스템 관리자가 아닐 경우에 접근권한에러 던지기
         throw new UnAuthorizedAccessException(userId);
@@ -99,8 +99,6 @@ public class GroupsServiceImpl implements GroupsService {
     }
 
 
-
-
     // ==================== 공통 검증 및 조회용 헬퍼 메서드 ====================
 
     /**
@@ -108,7 +106,7 @@ public class GroupsServiceImpl implements GroupsService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Groups validateGroupByInviteToken(String inviteToken){
+    public Groups validateGroupByInviteToken(String inviteToken) {
         // inviteToken으로 대상 그룹이 존재하는지 확인 및 조회
         return groupsRepository.findByInviteToken(inviteToken)
                 .orElseThrow(InviteTokenNotFoundException::new);
@@ -117,7 +115,8 @@ public class GroupsServiceImpl implements GroupsService {
     /**
      * ID로 그룹이 존재하는지 조회 (존재하지 않을 시 예외 발생)
      */
-    private Groups groupFindById(Long groupId) {
+    @Override
+    public Groups groupFindById(Long groupId) {
         return groupsRepository.findById(groupId)
                 .orElseThrow(() -> new GroupNotFoundException(groupId));
     }

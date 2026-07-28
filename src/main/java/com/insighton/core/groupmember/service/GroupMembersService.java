@@ -13,13 +13,15 @@ public interface GroupMembersService {
 
     /**
      * 그룹 가입
-     * @param groups 가입하려는 group의 정보
+     *
+     * @param groups  가입하려는 group의 정보
      * @param request 그룹 가입 요청 DTO
      */
     void joinGroupByToken(Groups groups, GroupMembersJoinRequest request);
 
     /**
      * 그룹 생성자. 바로 SUPER_MANAGER 권한 가지는 GroupMember 생성
+     *
      * @param groups 생성된 group의 정보
      * @param userId login한 user의 id
      */
@@ -28,7 +30,8 @@ public interface GroupMembersService {
 
     /**
      * 관리자용 GroupMember List 조회
-     * @param userId login한 user의 ID
+     *
+     * @param userId  login한 user의 ID
      * @param groupId member가 속한 group의 ID
      * @return GroupMemberList 반환!!
      */
@@ -36,33 +39,55 @@ public interface GroupMembersService {
 
 
     /**
-     * group member 상세 조회
-     * @param userId 조회하는 userId
+     * group member 상세 조회(관리자나 자기 자신만 member의 정보를 볼 수 잇음)
+     *
+     * @param userId  조회하는 userId
      * @param groupId member가 속해있는 group의 ID
      * @return groupMember의 정보
      */
     GroupMembersResponse getGroupMember(Long userId, Long groupId, Long groupMemberId);
 
     /**
-     * member 권한 변경
-     * @param groupId 그들이 속한 group ID
-     * @param targetUserId 권한을 변경 타겟의 user의 ID
-     * @param adminId 변경 권한을 가진 user의 ID
+     * 그룹 소속 확인용
+     *
+     * @param userId  소속 여부를 확인할 유저 ID
+     * @param groupId Group ID
+     * @return 멤버면 groupID
      */
-    void toggleManagerRole(Long groupId, Long targetUserId, Long adminId);
+    GroupMembersResponse getGroupMemberAI(Long userId, Long groupId);
+
+    /**
+     * member 권한 변경
+     *
+     * @param groupId             그들이 속한 group ID
+     * @param targetGroupMemberId 권한을 변경 타겟의 user의 ID
+     * @param adminId             변경 권한을 가진 user의 ID
+     */
+    void toggleManagerRole(Long groupId, Long targetGroupMemberId, Long adminId);
+
+    /**
+     * super manager 권한 양도
+     *
+     * @param groupId             그들이 속한 group ID
+     * @param targetGroupMemberId super manager 권한을 양도 할 타겟의 group member의 ID
+     * @param superManagerUserId  양도 할 권한을 가진 user의 ID
+     */
+    void toggleSuperManagerRole(Long groupId, Long targetGroupMemberId, Long superManagerUserId);
 
 
     /**
      * 그룹 멤버 삭제(관리자용)
-     * @param adminId 삭제하려는 자의 user ID
-     * @param groupId 속해있는 groupID?
+     *
+     * @param adminId             삭제하려는 자의 user ID
+     * @param groupId             속해있는 groupID?
      * @param targetGroupMemberId 삭제당할 groupMember의 ID
      */
     void kickGroupMember(Long adminId, Long groupId, Long targetGroupMemberId);
 
 
     /**
-     * 그룹 탈퇴
+     * 그룹 탈퇴 (하지만 supermanager의 권한을 양도하는 건 아직 없음)
+     *
      * @param userId 탈퇴하려는 user ID
      */
     void leaveGroup(Long groupId, Long userId);
@@ -70,6 +95,7 @@ public interface GroupMembersService {
 
     /**
      * 그룹이 삭제될 때 자동으로 member도 모두 삭제
+     *
      * @param adminId 관리자 ID
      * @param groupId 삭제되는 group의 ID...?
      */
@@ -92,6 +118,7 @@ public interface GroupMembersService {
 
     /**
      * 아무데도 가입이 안 되어있따.
+     *
      * @param userId
      */
     void validateUserNotInAnyGroup(Long userId);
