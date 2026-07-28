@@ -93,7 +93,7 @@ public class GroupsServiceTest {
             // given
             Long groupId = 1L;
             String token = "token";
-            Groups mockGroup = Groups.builder().name("T").description("D").location("L").inviteToken(token).build();
+            Groups mockGroup = Groups.builder().name("T").description("D").groupRegion("L").inviteToken(token).build();
             given(groupsRepository.findByInviteTokenAndGroupId(token, groupId)).willReturn(Optional.of(mockGroup));
 
             // when
@@ -112,7 +112,7 @@ public class GroupsServiceTest {
             Groups group = Groups.builder()
                     .name("T")
                     .description("D")
-                    .location("L")
+                    .groupRegion("L")
                     .inviteToken("t")
                     .build();
 
