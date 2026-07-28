@@ -3,8 +3,7 @@ package com.insighton.core.groups.service;
 import com.insighton.core.groupmember.dto.request.GroupMembersJoinRequest;
 import com.insighton.core.groupmember.entity.GroupMembers;
 import com.insighton.core.groupmember.service.GroupMembersService;
-import com.insighton.core.groups.dto.request.GroupsCreateRequest;
-import com.insighton.core.groups.dto.request.GroupsUpdateRequest;
+import com.insighton.core.groups.dto.request.GroupsRequest;
 import com.insighton.core.groups.dto.response.GroupsResponse;
 import com.insighton.core.groups.entity.Groups;
 import com.insighton.core.groups.exception.NoPermissionException;
@@ -48,7 +47,7 @@ public class GroupManagementUseCase {
      * @param userId              그룹을 생성하는 user의 ID
      */
     @Transactional
-    public void createGroup(GroupsCreateRequest groupsCreateRequest, Long userId) {
+    public void createGroup(GroupsRequest groupsCreateRequest, Long userId) {
         Groups groups = groupService.createGroup(groupsCreateRequest);
 
         groupMembersService.createGroupMember(groups, userId);
@@ -63,7 +62,7 @@ public class GroupManagementUseCase {
      * @param groupId 수정하려는 group의 ID
      */
     @Transactional
-    public void updateGroup(GroupsUpdateRequest request, Long userId, Long groupId) {
+    public void updateGroup(GroupsRequest request, Long userId, Long groupId) {
         if (groupMembersService.isGroupAdmin(groupId, userId)) {
             groupService.updateGroup(request, groupId);
             return;
@@ -129,6 +128,11 @@ public class GroupManagementUseCase {
 
     /**
      * 그룹 삭제
+     * 초대 토큰을 입력 받아서 초대토큰이 맞다면 삭제(확인용)
+     * 하위에서부터 차근차근 싹 다 삭제한 후에 group까지 delete하기
+     * flow등은 삭제 요청 날리기 group이 삭제할거라고? 될거ㅏㄹ고?
+     * <p>
+     * ON DELETE CASCADE << 이거 사용해서 지우라고??
      *
      * @param userId  그룺을 삭제할 권한을 가진 userID
      * @param groupId 삭제될 group ID
@@ -142,6 +146,8 @@ public class GroupManagementUseCase {
         }
 
         groupMembersService.deleteGroupMemberAll(userId, groupId);
+
+        locationService.deleteLocationAll(groupId);
 
         groupService.deleteGroup(groupId);
     }
@@ -226,6 +232,8 @@ public class GroupManagementUseCase {
 
     /**
      * location 삭제
+     * 하위에 있는 것들을 먼저 차근차근 삭제하시오 여기서.
+     * 센서 디바이스는 삭제 말고 locations_id를 null 값으로 바꿔주셔?
      *
      * @param userId           삭제하려는 user의 ID
      * @param groupId          삭제될 location이 속해있는 group ID
