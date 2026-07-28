@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 public interface AuthClient {
 
     /**
-     * @GetMapping("/api/users/{user-id}") AuthUserResponse getUserName(@PathVariable("user-id") Long userId);
+     * @GetMapping("/internal/users/{user-id}") AuthUserResponse getUserName(@PathVariable("user-id") Long userId);
      * 이 구조는 Auth 서버의 API 스펙이 어떻게 되어있는지에 따라 맞는지 틀린지가 갈립니다.
      * <p>
      * CASE A: Auth 서버가 URL 경로로 ID를 받는 경우
@@ -23,6 +23,6 @@ public interface AuthClient {
      * <p>
      * 일단 내 맘대로 작성한 거니까 나중에 다시 결정 일단은 구현...하자
      */
-    @GetMapping("/api/users/{user-id}")
+    @GetMapping("/internal/users/{user-id}")
     AuthUserResponse getUserResponse(@PathVariable("user-id") Long userId);
 }
