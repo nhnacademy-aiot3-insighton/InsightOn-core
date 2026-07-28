@@ -1,5 +1,6 @@
 package com.insighton.core.groups.dto.request;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 
@@ -11,8 +12,8 @@ import org.jetbrains.annotations.NotNull;
  */
 @Builder
 public record GroupsUpdateRequest(
-        @NotNull String name,
+        @NotBlank String name,
         String description,
-        @NotNull String location
+        @NotBlank String location
 ) {
 }
