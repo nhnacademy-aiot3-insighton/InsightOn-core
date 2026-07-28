@@ -1,6 +1,6 @@
-package com.insighton.core.location.repository;
+package com.insighton.core.region.repository;
 
-import com.insighton.core.location.dto.GroupRegionDto;
+import com.insighton.core.region.dto.GroupRegionDto;
 import java.util.Optional;
 
 public interface GroupRegionRepository {

@@ -1,8 +1,8 @@
-package com.insighton.core.location.controller;
+package com.insighton.core.region.controller;
 
-import com.insighton.core.location.dto.RegionRequestDto;
-import com.insighton.core.location.dto.RegionResponseDto;
-import com.insighton.core.location.service.RegionService;
+import com.insighton.core.region.dto.RegionRequestDto;
+import com.insighton.core.region.dto.RegionResponseDto;
+import com.insighton.core.region.service.RegionService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
