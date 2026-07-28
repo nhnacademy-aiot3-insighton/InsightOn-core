@@ -51,7 +51,7 @@ public class DeviceController {
     }
 
     // 장치 위치 이동(수정) API - 전용 DTO 적용
-    @PatchMapping("/{id}/location")
+    @PutMapping("/{id}/location")
     public ResponseEntity<Void> updateDeviceLocation(
             @PathVariable Long id,
             @RequestBody @Valid DeviceLocationUpdateRequest request){
@@ -61,7 +61,7 @@ public class DeviceController {
 
 
     // 장치 이름 수정 API - 전용 DTO 및 서비스 연동
-    @PatchMapping("/{id}/name")
+    @PutMapping("/{id}/name")
     public ResponseEntity<Void> updateDeviceName(
             @PathVariable Long id,
             @RequestBody @Valid DeviceNameUpdateRequest request){
