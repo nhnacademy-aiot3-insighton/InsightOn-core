@@ -126,7 +126,7 @@ class GroupMembersServiceTest {
         given(target.getUserId()).willReturn(2L);
         given(groupMembersRepository.findByGroups_GroupIdAndUserId(1L, 1L)).willReturn(Optional.of(requester));
         given(groupMembersRepository.findByGroupMemberIdAndGroups_GroupId(1L, 1L)).willReturn(Optional.of(target));
-        given(authClient.getUserResponse(2L)).willReturn(new AuthUserResponse(2L, "testUser", "010-0000-0000"));
+        given(authClient.getUserResponse(2L)).willReturn(new AuthUserResponse(2L, "testUser", "010-0000-0000", "녀어렁"));
 
         // when
         GroupMembersResponse result = groupMembersService.getGroupMember(1L, 1L, 1L);
