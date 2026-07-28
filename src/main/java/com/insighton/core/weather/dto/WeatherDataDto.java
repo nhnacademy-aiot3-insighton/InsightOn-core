@@ -15,7 +15,7 @@ public record WeatherDataDto(
         //공공데이터포털 미세먼지 항목
         String pm10Value,
         String pm25Value,
-        String pm10value24,
+        String pm10Value24,
         String pm25Value24,
         String pm10Grade1h,
         String pm25Grade1h
