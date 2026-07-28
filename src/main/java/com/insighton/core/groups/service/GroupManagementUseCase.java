@@ -4,6 +4,7 @@ import com.insighton.core.gateway.service.GatewayService;
 import com.insighton.core.groupmember.dto.request.GroupMembersJoinRequest;
 import com.insighton.core.groupmember.entity.GroupMembers;
 import com.insighton.core.groupmember.service.GroupMembersService;
+import com.insighton.core.groups.client.EngineClient;
 import com.insighton.core.groups.dto.request.GroupsRequest;
 import com.insighton.core.groups.dto.response.GroupsResponse;
 import com.insighton.core.groups.entity.Groups;
@@ -26,6 +27,7 @@ public class GroupManagementUseCase {
     private final GroupMembersService groupMembersService;
     private final LocationsService locationService;
     private final GatewayService gatewayService;
+    private final EngineClient engineClient;
 
     // ====================== Group Controller ======================
 
@@ -146,6 +148,8 @@ public class GroupManagementUseCase {
         if (!groupMembers.isSuperManager()) {
             throw NoPermissionException.forAdmin(groupMembers.getGroupMemberId());
         }
+
+        engineClient.deleteEnginesByGroupId(groupId);
         // gateway 삭제하기 전부.
 
         groupMembersService.deleteGroupMemberAll(userId, groupId);
@@ -261,7 +265,7 @@ public class GroupManagementUseCase {
 
     private void deleteLocationAll(Long groupId) {
 
-        // locationID에 해당하는 devices와 dashboards 지우는 로직 추가하기
+        // locationID에 해당하는 모든? devices와 dashboards 지우는 로직 추가하기
 
         // devices는 location 값만 null로 바꿔주기
 
