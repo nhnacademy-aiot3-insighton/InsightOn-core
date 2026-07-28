@@ -51,7 +51,7 @@ public class LocationsServiceImpl implements LocationsService {
     public LocationsResponse getLocation(Long locationId, Long groupId) {
         // 어떤 걸 검증해야하나... 흠냐
         Locations location = locationRepository.findByLocationIdAndGroups_GroupId(locationId, groupId)
-                .orElseThrow(() -> new LocationNotFoundException(locationId));
+                .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(locationId));
 
         return LocationsResponse.builder()
                 .locationId(locationId)
@@ -67,7 +67,7 @@ public class LocationsServiceImpl implements LocationsService {
     @Transactional
     public void toggleAutoControlMode(Long locationId, Long groupId) {
         Locations location = locationRepository.findByLocationIdAndGroups_GroupId(locationId, groupId)
-                .orElseThrow(() -> new LocationNotFoundException(locationId));
+                .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(locationId));
 
         location.toggleAutoControlMode();
     }
@@ -76,10 +76,17 @@ public class LocationsServiceImpl implements LocationsService {
     @Transactional
     public void deleteLocation(Long targetLocationId, Long groupId) {
         Locations location = locationRepository.findByLocationIdAndGroups_GroupId(targetLocationId, groupId)
-                .orElseThrow(() -> new LocationNotFoundException(targetLocationId));
+                .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(targetLocationId));
 
         locationRepository.delete(location);
     }
 
-
+    @Override
+    @Transactional
+    public void deleteLocationAll(Long groupId) {
+        if (!locationRepository.existsByGroups_groupId(groupId)) {
+            throw LocationNotFoundException.notFoundLocationByGroupId(groupId);
+        }
+        locationRepository.deleteByGroups_GroupId(groupId);
+    }
 }

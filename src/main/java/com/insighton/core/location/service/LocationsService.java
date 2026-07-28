@@ -44,4 +44,11 @@ public interface LocationsService {
      * @param targetLocationId 삭제될 location ID
      */
     void deleteLocation(Long targetLocationId, Long groupId);
+
+    /**
+     * group 삭제 시 필요한 groupId로 찾은 location 전체 삭제
+     *
+     * @param groupId 삭제할 group ID
+     */
+    void deleteLocationAll(Long groupId);
 }
