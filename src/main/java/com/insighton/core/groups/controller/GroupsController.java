@@ -42,7 +42,7 @@ public class GroupsController {
      * @param groupsCreateRequest 그룹 생성 요청 정보
      * @return 성공시 상태 201 반환
      */
-    @PostMapping("/api/groups/create")
+    @PostMapping("/api/v1/groups/create")
     public ResponseEntity<Void> createGroup(
             @RequestHeader("X-USER-ID") Long userId,
             @RequestBody GroupsRequest groupsCreateRequest) {
@@ -59,7 +59,7 @@ public class GroupsController {
      * @param groupId 내가 속한 group의 ID
      * @return 토큰 정보가 빠진 그룹 조회 정보 반환
      */
-    @GetMapping("/api/groups/{group-id}/my-group")
+    @GetMapping("/api/v1/groups/{group-id}/my-group")
     public ResponseEntity<GroupsResponse> getMyGroup(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId) {
@@ -76,7 +76,7 @@ public class GroupsController {
      * @param groupId     내가 속한 group의 ID
      * @return 초대 받은 회사의 정보 반환(token null)
      */
-    @GetMapping("/api/groups/{group-id}/preview")
+    @GetMapping("/api/v1/groups/{group-id}/preview")
     public ResponseEntity<GroupsResponse> getGroupPreview(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
@@ -93,7 +93,7 @@ public class GroupsController {
      * @param userId   시스템 관리자의 ID
      * @return 시스템에 생성된 그룹들 리스트
      */
-    @GetMapping("/api/groups/admin/group-list")
+    @GetMapping("/api/v1/groups/admin/group-list")
     public ResponseEntity<Page<GroupsAdminResponse>> getGroupList(
             @RequestHeader("X-USER-ROLE") String userRole,
             @RequestHeader("X-USER-ID") Long userId,
@@ -112,7 +112,7 @@ public class GroupsController {
      * @param groupId 재발급 하려는 group의 ID
      * @return 성공시 상태 200 반환(?)
      */
-    @PostMapping("/api/groups/{group-id}/invite-token/new")
+    @PostMapping("/api/v1/groups/{group-id}/invite-token/new")
     public ResponseEntity<Void> newInviteToken(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId) {
@@ -130,7 +130,7 @@ public class GroupsController {
      * @param request group 수정 요청 정보
      * @return 성공 시 상태 200 반환
      */
-    @PutMapping("/api/groups/{group-id}/update")
+    @PutMapping("/api/v1/groups/{group-id}/update")
     public ResponseEntity<Void> updateGroup(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
@@ -147,7 +147,7 @@ public class GroupsController {
      * @param userId  삭제할 권한을 가진 user ID
      * @return 성공 시 상태 204 반환
      */
-    @DeleteMapping("/api/groups/{group-id}/delete")
+    @DeleteMapping("/api/v1/groups/{group-id}/delete")
     public ResponseEntity<Void> deleteGroup(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId) {

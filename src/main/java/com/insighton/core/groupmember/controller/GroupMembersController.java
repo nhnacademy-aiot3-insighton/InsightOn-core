@@ -24,7 +24,7 @@ public class GroupMembersController {
      * @param groupId 조회하려는 group의 ID
      * @return groupMemberList 반환
      */
-    @GetMapping("/api/groups/{group-id}/members")
+    @GetMapping("/api/v1/groups/{group-id}/members")
     public ResponseEntity<List<GroupMembersListResponse>> getGroupMemberList(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId) {
@@ -42,7 +42,7 @@ public class GroupMembersController {
      * @param groupMemberId 조회하려는 member의 ID
      * @return member의 상세 정보 반환
      */
-    @GetMapping("/api/groups/{group-id}/members/{group-member-id}")
+    @GetMapping("/api/v1/groups/{group-id}/members/{group-member-id}")
     public ResponseEntity<GroupMembersResponse> getGroupMember(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
@@ -62,7 +62,7 @@ public class GroupMembersController {
      * @param groupMemberId 변경 타겟인 member의 ID
      * @return 성공 시 상태 200 반환
      */
-    @PutMapping("/api/groups/{group-id}/members/{group-member-id}/toggle-manager")
+    @PutMapping("/api/v1/groups/{group-id}/members/{group-member-id}/toggle-manager")
     public ResponseEntity<Void> toggleManagerRole(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
@@ -81,7 +81,7 @@ public class GroupMembersController {
      * @param groupMemberId target의 Group Member ID
      * @return 성공 시 상태 200 반환
      */
-    @PutMapping("/api/groups/{group-id}/members/{group-member-id}/toggle-super-manager")
+    @PutMapping("/api/v1/groups/{group-id}/members/{group-member-id}/toggle-super-manager")
     public ResponseEntity<Void> toggleSuperManagerRole(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
@@ -100,7 +100,7 @@ public class GroupMembersController {
      * @param groupMemberId 추방하려는 member의 ID
      * @return 성공 시 상태 204 반환
      */
-    @DeleteMapping("/api/groups/{group-id}/members/{group-member-id}/kick-member")
+    @DeleteMapping("/api/v1/groups/{group-id}/members/{group-member-id}/kick-member")
     public ResponseEntity<Void> kickGroupMember(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
@@ -118,7 +118,7 @@ public class GroupMembersController {
      * @param groupId 떠나려는 group의 ID
      * @return 성공 시 상태 204 반환
      */
-    @DeleteMapping("/api/groups/{group-id}/members/leave-group")
+    @DeleteMapping("/api/v1/groups/{group-id}/members/leave-group")
     public ResponseEntity<Void> deleteGroupMemberAll(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId) {

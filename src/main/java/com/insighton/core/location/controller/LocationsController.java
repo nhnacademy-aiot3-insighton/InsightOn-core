@@ -25,7 +25,7 @@ public class LocationsController {
      * @param request location 생성 요청
      * @return 성공 시 상태 201 반환
      */
-    @PostMapping("/api/groups/{group-id}/location/create")
+    @PostMapping("/api/v1/groups/{group-id}/location/create")
     public ResponseEntity<Void> createLocation(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
@@ -43,7 +43,7 @@ public class LocationsController {
      * @param groupId location list들이 속해있는 group ID
      * @return location list 반환
      */
-    @GetMapping("/api/groups/{group-id}/locations")
+    @GetMapping("/api/v1/groups/{group-id}/locations")
     public ResponseEntity<List<LocationsListResponse>> getLocationList(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId
@@ -61,7 +61,7 @@ public class LocationsController {
      * @param locationId 상세 조회 할 location ID
      * @return location 상세 정보 반환
      */
-    @GetMapping("/api/groups/{group-id}/location/{location-id}")
+    @GetMapping("/api/v1/groups/{group-id}/location/{location-id}")
     public ResponseEntity<LocationsResponse> getLocation(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
@@ -80,7 +80,7 @@ public class LocationsController {
      * @param locationId 변경하려는 location의 ID
      * @return 성공 시 상태 200 반환
      */
-    @PutMapping("/api/groups/{group-id}/location/{location-id}/toggle-mode")
+    @PutMapping("/api/v1/groups/{group-id}/location/{location-id}/toggle-mode")
     public ResponseEntity<Void> toggleAutoControlMode(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
@@ -99,7 +99,7 @@ public class LocationsController {
      * @param locationId 삭제하려는 location의 ID
      * @return 성공 시 상태 204 반환
      */
-    @DeleteMapping("/api/groups/{group-id}/location/{location-id}/delete")
+    @DeleteMapping("/api/v1/groups/{group-id}/location/{location-id}/delete")
     public ResponseEntity<Void> deleteLocation(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
