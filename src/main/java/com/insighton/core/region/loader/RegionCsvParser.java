@@ -1,7 +1,7 @@
-package com.insighton.core.location.loader;
+package com.insighton.core.region.loader;
 
 import com.insighton.core.exception.LocationNotFoundException;
-import com.insighton.core.location.dto.RegionGridDto;
+import com.insighton.core.region.dto.RegionGridDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

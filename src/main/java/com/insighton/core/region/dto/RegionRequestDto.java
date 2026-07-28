@@ -1,4 +1,4 @@
-package com.insighton.core.location.dto;
+package com.insighton.core.region.dto;
 
 import jakarta.validation.constraints.NotBlank;
 

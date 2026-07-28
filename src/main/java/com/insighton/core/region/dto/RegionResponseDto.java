@@ -1,4 +1,4 @@
-package com.insighton.core.location.dto;
+package com.insighton.core.region.dto;
 
 public record RegionResponseDto(
         Long groupId,

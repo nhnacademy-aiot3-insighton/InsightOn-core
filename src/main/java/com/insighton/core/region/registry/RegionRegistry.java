@@ -1,6 +1,6 @@
-package com.insighton.core.location.registry;
+package com.insighton.core.region.registry;
 
-import com.insighton.core.location.dto.RegionGridDto;
+import com.insighton.core.region.dto.RegionGridDto;
 import java.util.List;
 import java.util.Optional;
 

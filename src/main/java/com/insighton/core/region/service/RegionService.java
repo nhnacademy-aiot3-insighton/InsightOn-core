@@ -1,12 +1,12 @@
-package com.insighton.core.location.service;
+package com.insighton.core.region.service;
 
 import com.insighton.core.exception.LocationNotFoundException;
-import com.insighton.core.location.dto.GroupRegionDto;
-import com.insighton.core.location.dto.RegionGridDto;
-import com.insighton.core.location.dto.RegionRequestDto;
-import com.insighton.core.location.dto.RegionResponseDto;
-import com.insighton.core.location.registry.RegionRegistry;
-import com.insighton.core.location.repository.GroupRegionRepository;
+import com.insighton.core.region.dto.GroupRegionDto;
+import com.insighton.core.region.dto.RegionGridDto;
+import com.insighton.core.region.dto.RegionRequestDto;
+import com.insighton.core.region.dto.RegionResponseDto;
+import com.insighton.core.region.registry.RegionRegistry;
+import com.insighton.core.region.repository.GroupRegionRepository;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
