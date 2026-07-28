@@ -3,6 +3,12 @@ package com.insighton.core.exception;
 import com.insighton.core.gateway.exception.GatewayAccessDeniedException;
 import com.insighton.core.gateway.exception.GatewayNotFoundException;
 import java.util.stream.Collectors;
+
+import com.insighton.core.groupmember.exception.*;
+import com.insighton.core.groups.exception.GroupNotFoundException;
+import com.insighton.core.groups.exception.InviteTokenNotFoundException;
+import com.insighton.core.groups.exception.NoPermissionException;
+import com.insighton.core.groups.exception.UnAuthorizedAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -15,20 +21,26 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(GatewayNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNotFound(GatewayNotFoundException e) {
+    @ExceptionHandler({GatewayNotFoundException.class, GroupNotFoundException.class, InviteTokenNotFoundException.class, GroupMemberNotFoundException.class, UserIdNotFoundException.class})
+    public ResponseEntity<ErrorResponse> handleNotFound(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(new ErrorResponse(HttpStatus.NOT_FOUND.value(), e.getMessage()));
     }
 
-    @ExceptionHandler(GatewayAccessDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleAccessDenied(GatewayAccessDeniedException e) {
+    @ExceptionHandler({GatewayAccessDeniedException.class, NoPermissionException.class, UnAuthorizedAccessException.class})
+    public ResponseEntity<ErrorResponse> handleAccessDenied(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(new ErrorResponse(HttpStatus.FORBIDDEN.value(), e.getMessage()));
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleBadRequest(IllegalArgumentException e) {
+    @ExceptionHandler(AlreadyJoinedException.class)
+    public ResponseEntity<ErrorResponse> handleConflict(RuntimeException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse(HttpStatus.CONFLICT.value(), e.getMessage()));
+    }
+
+    @ExceptionHandler({IllegalArgumentException.class, SuperManagerCannotLeaveException.class, NotJoinedAnyGroupException.class})
+    public ResponseEntity<ErrorResponse> handleBadRequest(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage()));
     }

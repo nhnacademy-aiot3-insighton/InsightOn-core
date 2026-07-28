@@ -3,8 +3,6 @@ package com.insighton.core.groups.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
-import org.jetbrains.annotations.NotNull;
-
 /**
  * 그룹 생성 시
  * @param name 회사 가입 기관 또는 계열사 공식 명칭

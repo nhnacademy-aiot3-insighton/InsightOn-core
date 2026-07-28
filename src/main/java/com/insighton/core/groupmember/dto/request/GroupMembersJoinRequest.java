@@ -1,5 +1,6 @@
 package com.insighton.core.groupmember.dto.request;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 
 /**
@@ -9,7 +10,7 @@ import lombok.Builder;
  */
 @Builder
 public record GroupMembersJoinRequest(
-        String inviteToken,
-        Long userId
+        @NotBlank String inviteToken,
+        @NotBlank Long userId
 ) {
 }
