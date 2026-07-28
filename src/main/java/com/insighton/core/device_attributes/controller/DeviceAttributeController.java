@@ -41,7 +41,7 @@ public class DeviceAttributeController {
     }
 
     // 단일 엑충이터 속성 값 변경 제어 API
-    @PatchMapping("/{metricKey}")
+    @PutMapping("/{metricKey}")
     public ResponseEntity<Void> updateActuatorValue(
             @PathVariable("deviceId") Long deviceId,
             @PathVariable("metricKey") String metricKey,
