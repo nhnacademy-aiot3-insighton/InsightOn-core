@@ -48,10 +48,6 @@ public class DeviceAttributeEntity {
     @Column(name = "metric_key", length = 50, nullable = false)
     private String metricKey;
 
-    /*
-     * 참고: displayName, unit은 DB 테이블 컬럼 대신 MetricDefinition Enum에서 관리되므로 엔티티 필드에서 제외함
-     */
-
     /**
      * 액추에이터 및 가상 시뮬레이터 전용 최신 수치/텍스트 상태값 저장 필드 (ex. "ON", "OFF", "COOL", "24.0")
      */

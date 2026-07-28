@@ -1,6 +1,5 @@
 package com.insighton.core.devices.dto;
 
-//import com.insighton.core.device.entity.DeviceType;
 import java.time.OffsetDateTime;
 
 public record DeviceResponse(

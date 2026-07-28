@@ -1,6 +1,7 @@
 package com.insighton.core.devices.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.insighton.core.devices.dto.DeviceLocationUpdateRequest;
 import com.insighton.core.devices.dto.DeviceRequest;
 import com.insighton.core.devices.entity.DeviceEntity;
 import com.insighton.core.devices.repository.DeviceRepository;
@@ -75,7 +76,7 @@ class DeviceControllerTest {
                 DeviceEntity.builder().deviceName("센서B").deviceEui("EUI-4").gatewaysId(100L).locationsId(1L).build()
         );
 
-        DeviceUpdateRequest req = new DeviceUpdateRequest("센서B", 99L);
+        DeviceLocationUpdateRequest req = new DeviceLocationUpdateRequest(99L);
 
         mockMvc.perform(patch("/api/v1/devices/" + saved.getDeviceId() + "/location")
                         .contentType(MediaType.APPLICATION_JSON)
