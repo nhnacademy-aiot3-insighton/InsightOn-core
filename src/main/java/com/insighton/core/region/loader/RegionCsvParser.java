@@ -1,7 +1,7 @@
 package com.insighton.core.region.loader;
 
-import com.insighton.core.exception.LocationNotFoundException;
 import com.insighton.core.region.dto.RegionGridDto;
+import com.insighton.core.region.exception.RegionNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -20,7 +20,7 @@ public class RegionCsvParser {
         }
 
         if (tokens[0].isBlank() || tokens[1].isBlank()) {
-            throw new LocationNotFoundException("행정구역이 비어있습니다.");
+            throw new RegionNotFoundException("행정구역이 비어있습니다.");
         }
 
         String step1 = tokens[0].trim();
