@@ -2,13 +2,15 @@ package com.insighton.core.weather.service;
 
 import com.insighton.core.exception.WeatherApiException;
 import com.insighton.core.weather.dto.AirQualityResponseDto;
+import com.insighton.core.weather.dto.ForecastBaseDateTime;
 import com.insighton.core.weather.dto.KmaWeatherResponseDto;
 import com.insighton.core.weather.dto.WeatherDataDto;
 import com.insighton.core.weather.parser.SidoNameParser;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.time.OffsetDateTime;
+import java.time.Duration;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
@@ -24,6 +26,12 @@ public class WeatherIntegrationService {
     private final WebClient kmaWebClient;
     private final WebClient airQualityWebClient;
     private final SidoNameParser sidoNameParser;
+
+    @Value("${weather.api.kma-base-url}")
+    private String kmaBaseUrl;
+
+    @Value("${weather.api.air-base-url}")
+    private String airBaseUrl;
 
     @Value("${weather.api.kma-key}")
     private String kmaApiKey;
@@ -48,9 +56,9 @@ public class WeatherIntegrationService {
             Map<String, String> currentMap = fetchKmaApi("/getUltraSrtNcst", gridX, gridY, baseDate, baseTime, true);
 
             // 기상청 단기예보
-            String fcstBaseTime = getRecentForecastBaseTime(baseDate, baseTime);
-            Map<String, String> forecastMap = fetchKmaApi("/getVilageFcst", gridX, gridY, baseDate, fcstBaseTime,
-                    false);
+            ForecastBaseDateTime fcstBaseTime = getRecentForecastBaseTime(baseDate, baseTime);
+            Map<String, String> forecastMap = fetchKmaApi("/getVilageFcst", gridX, gridY, fcstBaseTime.baseDate(),
+                    fcstBaseTime.baseTime(), false);
 
             // 에어코리아 미세먼지 정보
             Map<String, String> airMap = fetchAirQualityData(parsedSidoName, cityName);
@@ -78,16 +86,21 @@ public class WeatherIntegrationService {
 
     private Map<String, String> fetchKmaApi(String endpoint, int nx, int ny, String baseDate, String baseTime,
                                             boolean isNcst) {
-        String url = String.format(
-                "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0%s?serviceKey=%s&pageNo=1&numOfRows=1000&dataType=JSON&base_date=%s&base_time=%s&nx=%d&ny=%d",
-                endpoint, kmaApiKey, baseDate, baseTime, nx, ny
+        String fullUrl = String.format(
+                "%s%s?serviceKey=%s&pageNo=1&numOfRows=1000&dataType=JSON&base_date=%s&base_time=%s&nx=%s&ny=%s",
+                kmaBaseUrl, endpoint, kmaApiKey, baseDate, baseTime, nx, ny
         );
 
-        KmaWeatherResponseDto response = kmaWebClient.get()
-                .uri(URI.create(url))
-                .retrieve()
-                .bodyToMono(KmaWeatherResponseDto.class)
-                .block();
+        KmaWeatherResponseDto response;
+        try {
+            response = kmaWebClient.get()
+                    .uri(URI.create(fullUrl))
+                    .retrieve()
+                    .bodyToMono(KmaWeatherResponseDto.class)
+                    .block(Duration.ofSeconds(15));
+        } catch (Exception e) {
+            throw new WeatherApiException("기상청 API 호출 중 오류 발생", e);
+        }
 
         Map<String, String> resultMap = new HashMap<>();
         if (response != null && response.response() != null && response.response().body() != null) {
@@ -104,16 +117,21 @@ public class WeatherIntegrationService {
 
     private Map<String, String> fetchAirQualityData(String sidoName, String cityName) {
         String encodedSidoName = URLEncoder.encode(sidoName, StandardCharsets.UTF_8);
-        String url = String.format(
-                "https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty?serviceKey=%s&sidoName=%s&pageNo=1&numOfRows=100&ver=1.3&returnType=json",
-                airApiKey, encodedSidoName
+        String fullUrl = String.format(
+                "%s/getCtprvnRltmMesureDnsty?serviceKey=%s&sidoName=%s&pageNo=1&numOfRows=100&ver=1.3&returnType=json",
+                airBaseUrl, airApiKey, encodedSidoName
         );
 
-        AirQualityResponseDto response = airQualityWebClient.get()
-                .uri(URI.create(url))
-                .retrieve()
-                .bodyToMono(AirQualityResponseDto.class)
-                .block();
+        AirQualityResponseDto response;
+        try {
+            response = airQualityWebClient.get()
+                    .uri(URI.create(fullUrl))
+                    .retrieve()
+                    .bodyToMono(AirQualityResponseDto.class)
+                    .block(Duration.ofSeconds(15));
+        } catch (Exception e) {
+            throw new WeatherApiException("에어코리아 API 호출 중 오류 발생", e);
+        }
 
         Map<String, String> resultMap = new HashMap<>();
         if (response != null && response.response() != null && response.response().body() != null) {
@@ -138,7 +156,7 @@ public class WeatherIntegrationService {
         return resultMap;
     }
 
-    private String getRecentForecastBaseTime(String baseDate, String baseTime) {
+    private ForecastBaseDateTime getRecentForecastBaseTime(String baseDate, String baseTime) {
         int hour = Integer.parseInt(baseTime.substring(0, 2));
         int[] forecastHours = {2, 5, 8, 11, 14, 17, 20, 23};
 
@@ -150,13 +168,15 @@ public class WeatherIntegrationService {
             }
         }
 
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+        LocalDate dateTime = LocalDate.parse(baseDate, dateTimeFormatter);
+
+        // 정각~새벽 2시ㅣ 이전 요청 시 전날 23시 예보 데이터 가져오기
         if (targetHour == -1) {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-            OffsetDateTime prevDate = OffsetDateTime.parse(baseDate + "0000",
-                    DateTimeFormatter.ofPattern("yyyyMMddHHmm")).minusDays(1);
-            return prevDate.format(formatter) + "2300";
+            LocalDate prevDate = dateTime.minusDays(1);
+            return new ForecastBaseDateTime(prevDate.format(dateTimeFormatter), "2300");
         }
 
-        return String.format("%02d00", targetHour);
+        return new ForecastBaseDateTime(baseDate, String.format("%02d00", targetHour));
     }
 }
