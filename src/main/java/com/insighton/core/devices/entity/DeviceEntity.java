@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.jetbrains.annotations.NotNull;
 
 import java.time.OffsetDateTime;
 
@@ -24,25 +23,28 @@ public class DeviceEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long deviceId;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "gateways_id")
-    private Long gatewaysId;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "device_type", nullable = false)
+    private DeviceType deviceType;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "locations_id")
-    private Long locationsId;
+    // ================= [센서 전용 필드들] =================
+    private Long gatewaysId; // SENSOR 전용 (ACTUATOR는 null)
 
-    @Column(name = "device_eui", nullable = false, unique = true)
+    @Column(name = "device_eui", unique = true) // nullable=false 제거 (ACTUATOR는 null)
     private String deviceEui;
 
-    // 필드명을 deviceName으로 통일
+    private OffsetDateTime lastSeenAt; // SENSOR 전용 (ACTUATOR는 null)
+
+    // ================= [공통 필드들] =================
+
     @Column(name = "device_name", nullable = false)
-    @NotNull
     private String deviceName;
 
-    private OffsetDateTime lastSeenAt; // 마지막 통신 시간
+    private Long locationsId;
 
     private OffsetDateTime createdAt;
+
+
 
     public void updateLocation(Long newLocationId){
         this.locationsId = newLocationId;
