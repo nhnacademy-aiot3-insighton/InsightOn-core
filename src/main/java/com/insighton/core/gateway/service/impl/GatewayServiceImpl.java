@@ -102,6 +102,17 @@ public class GatewayServiceImpl implements GatewayService {
         gatewayManager.unregisterGateway(gatewayId);
     }
 
+    @Transactional
+    @Override
+    public void deleteByGroupId(Long groupId) {
+        gatewayRepository.findByGroupId(groupId).ifPresent(gateway -> {
+            log.info("gateway 삭제 - gatewayId: {}, groupId: {}", gateway.getGatewayId(), groupId);
+            gatewayManager.unregisterGateway(gateway.getGatewayId());
+        });
+
+        gatewayRepository.deleteByGroupId(groupId);
+    }
+
     private void validateConnectionConfig(Map<String, Object> connectionConfig) {
         Object brokerUrls = connectionConfig.get("brokerUrls");
         if (!(brokerUrls instanceof List<?> list) || list.isEmpty()) {
