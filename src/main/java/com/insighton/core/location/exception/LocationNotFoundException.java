@@ -1,7 +1,19 @@
 package com.insighton.core.location.exception;
 
 public class LocationNotFoundException extends RuntimeException {
-    public LocationNotFoundException(Long locationId) {
-        super("location not found. Locations ID : " + locationId);
+    public LocationNotFoundException(String message) {
+        super(message);
+    }
+
+    public static LocationNotFoundException notFoundLocationByLocationId(Long locationId) {
+        return new LocationNotFoundException(
+                String.format("location not found. Locations ID : " + locationId)
+        );
+    }
+
+    public static LocationNotFoundException notFoundLocationByGroupId(Long groupId) {
+        return new LocationNotFoundException(
+                String.format("location not found. Group ID : " + groupId)
+        );
     }
 }
