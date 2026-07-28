@@ -45,7 +45,7 @@ public class GroupsController {
     @PostMapping("/api/v1/groups/create")
     public ResponseEntity<Void> createGroup(
             @RequestHeader("X-USER-ID") Long userId,
-            @RequestBody GroupsRequest groupsCreateRequest) {
+            @Valid @RequestBody GroupsRequest groupsCreateRequest) {
 
         groupsUseCase.createGroup(groupsCreateRequest, userId);
 
