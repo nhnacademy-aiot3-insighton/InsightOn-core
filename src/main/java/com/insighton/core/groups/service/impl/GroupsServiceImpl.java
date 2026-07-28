@@ -33,7 +33,7 @@ public class GroupsServiceImpl implements GroupsService {
         Groups group = Groups.builder()
                 .name(request.name())
                 .description(request.description())
-                .location(request.location())
+                .groupRegion(request.groupRegion())
                 .inviteToken(inviteToken)
                 .build();
 
@@ -70,7 +70,7 @@ public class GroupsServiceImpl implements GroupsService {
                             group.getGroupId(),
                             group.getName(),
                             group.getDescription(),
-                            group.getLocation()
+                            group.getGroupRegion()
                     ));
         }
         // 시스템 관리자가 아닐 경우에 접근권한에러 던지기
