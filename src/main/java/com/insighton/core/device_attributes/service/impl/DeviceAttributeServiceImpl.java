@@ -73,7 +73,7 @@ public class DeviceAttributeServiceImpl implements DeviceAttributeService {
         }
 
         if(newValue == null || newValue.trim().isEmpty()){
-            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+            throw new CustomException(ErrorCode.NO_NEW_ACTUATOR_VALUE);
         }
 
         /**
