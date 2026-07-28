@@ -3,7 +3,7 @@ package com.insighton.core.weather.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.client.RestClient;
 
 @Configuration
 public class WeatherClientConfig {
@@ -15,15 +15,15 @@ public class WeatherClientConfig {
     private String airBaseUrl;
 
     @Bean
-    public WebClient kmaWebClient() {
-        return WebClient.builder()
+    public RestClient kmaRestClient() {
+        return RestClient.builder()
                 .baseUrl(kmaBaseUrl)
                 .build();
     }
 
     @Bean
-    public WebClient airQualityWebClient() {
-        return WebClient.builder()
+    public RestClient airQualityRestClient() {
+        return RestClient.builder()
                 .baseUrl(airBaseUrl)
                 .build();
     }

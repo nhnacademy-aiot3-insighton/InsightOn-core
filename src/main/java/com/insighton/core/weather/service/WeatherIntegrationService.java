@@ -9,7 +9,6 @@ import com.insighton.core.weather.parser.SidoNameParser;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -18,13 +17,13 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.client.RestClient;
 
 @Service
 public class WeatherIntegrationService {
 
-    private final WebClient kmaWebClient;
-    private final WebClient airQualityWebClient;
+    private final RestClient kmaRestClient;
+    private final RestClient airQualityRestClient;
     private final SidoNameParser sidoNameParser;
 
     @Value("${weather.api.kma-base-url}")
@@ -40,11 +39,11 @@ public class WeatherIntegrationService {
     private String airApiKey;
 
     public WeatherIntegrationService(
-            @Qualifier("kmaWebClient") WebClient kmaWebClient,
-            @Qualifier("airQualityWebClient") WebClient airQualityWebClient,
+            @Qualifier("kmaRestClient") RestClient kmaRestClient,
+            @Qualifier("airQualityRestClient") RestClient airQualityRestClient,
             SidoNameParser sidoNameParser) {
-        this.kmaWebClient = kmaWebClient;
-        this.airQualityWebClient = airQualityWebClient;
+        this.kmaRestClient = kmaRestClient;
+        this.airQualityRestClient = airQualityRestClient;
         this.sidoNameParser = sidoNameParser;
     }
 
@@ -93,11 +92,10 @@ public class WeatherIntegrationService {
 
         KmaWeatherResponseDto response;
         try {
-            response = kmaWebClient.get()
+            response = kmaRestClient.get()
                     .uri(URI.create(fullUrl))
                     .retrieve()
-                    .bodyToMono(KmaWeatherResponseDto.class)
-                    .block(Duration.ofSeconds(15));
+                    .body(KmaWeatherResponseDto.class);
         } catch (Exception e) {
             throw new WeatherApiException("기상청 API 호출 중 오류 발생", e);
         }
@@ -124,11 +122,10 @@ public class WeatherIntegrationService {
 
         AirQualityResponseDto response;
         try {
-            response = airQualityWebClient.get()
+            response = airQualityRestClient.get()
                     .uri(URI.create(fullUrl))
                     .retrieve()
-                    .bodyToMono(AirQualityResponseDto.class)
-                    .block(Duration.ofSeconds(15));
+                    .body(AirQualityResponseDto.class);
         } catch (Exception e) {
             throw new WeatherApiException("에어코리아 API 호출 중 오류 발생", e);
         }
