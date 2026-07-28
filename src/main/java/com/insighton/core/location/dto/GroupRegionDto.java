@@ -2,9 +2,9 @@ package com.insighton.core.location.dto;
 
 import java.time.OffsetDateTime;
 
-public record GroupLocationDto(
+public record GroupRegionDto(
         Long groupId,
-        LocationGridDto locationGridDto,
+        RegionGridDto regionGridDto,
         OffsetDateTime updatedAt
 ) {
 }

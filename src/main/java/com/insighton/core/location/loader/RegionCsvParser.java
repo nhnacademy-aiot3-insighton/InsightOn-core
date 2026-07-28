@@ -1,15 +1,15 @@
 package com.insighton.core.location.loader;
 
 import com.insighton.core.exception.LocationNotFoundException;
-import com.insighton.core.location.dto.LocationGridDto;
+import com.insighton.core.location.dto.RegionGridDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class LocationCsvParser {
+public class RegionCsvParser {
 
-    public LocationGridDto parse(String line) {
+    public RegionGridDto parse(String line) {
         if (line == null || line.isBlank()) {
             return null;
         }
@@ -29,7 +29,7 @@ public class LocationCsvParser {
         try {
             int gridX = Integer.parseInt(tokens[2].trim());
             int gridY = Integer.parseInt(tokens[3].trim());
-            return new LocationGridDto(step1, step2, gridX, gridY);
+            return new RegionGridDto(step1, step2, gridX, gridY);
         } catch (NumberFormatException e) {
             return null;
         }

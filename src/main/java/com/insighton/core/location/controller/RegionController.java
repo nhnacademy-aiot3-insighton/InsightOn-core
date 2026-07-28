@@ -1,8 +1,8 @@
 package com.insighton.core.location.controller;
 
-import com.insighton.core.location.dto.LocationRequestDto;
-import com.insighton.core.location.dto.LocationResponseDto;
-import com.insighton.core.location.service.LocationService;
+import com.insighton.core.location.dto.RegionRequestDto;
+import com.insighton.core.location.dto.RegionResponseDto;
+import com.insighton.core.location.service.RegionService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,10 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/locations")
-public class LocationController {
+@RequestMapping("/api/v1/locations")
+public class RegionController {
 
-    private final LocationService locationService;
+    private final RegionService locationService;
 
     @GetMapping("/states")
     public ResponseEntity<List<String>> getAllStates() {
@@ -33,8 +33,8 @@ public class LocationController {
     }
 
     @PostMapping("/select")
-    public ResponseEntity<LocationResponseDto> selectLocation(@RequestBody LocationRequestDto requestDto) {
-        LocationResponseDto responseDto = locationService.selectGroupLocation(requestDto);
+    public ResponseEntity<RegionResponseDto> selectLocation(@RequestBody RegionRequestDto requestDto) {
+        RegionResponseDto responseDto = locationService.selectGroupLocation(requestDto);
         return ResponseEntity.ok(responseDto);
     }
 }

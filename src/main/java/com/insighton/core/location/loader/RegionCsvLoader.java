@@ -1,7 +1,7 @@
 package com.insighton.core.location.loader;
 
-import com.insighton.core.location.dto.LocationGridDto;
-import com.insighton.core.location.registry.InMemoryLocationRegistry;
+import com.insighton.core.location.dto.RegionGridDto;
+import com.insighton.core.location.registry.InMemoryRegionRegistry;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -13,10 +13,10 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class LocationCsvLoader implements ApplicationRunner {
+public class RegionCsvLoader implements ApplicationRunner {
 
-    private final LocationCsvParser locationCsvParser;
-    private final InMemoryLocationRegistry inMemoryLocationRegistry;
+    private final RegionCsvParser regionCsvParser;
+    private final InMemoryRegionRegistry inMemoryRegionRegistry;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
@@ -34,11 +34,11 @@ public class LocationCsvLoader implements ApplicationRunner {
                     continue;
                 }
 
-                LocationGridDto dto = locationCsvParser.parse(line);
+                RegionGridDto dto = regionCsvParser.parse(line);
                 if (dto == null) {
                     throw new IllegalStateException("잘못된 locations.csv 행: " + line);
                 }
-                inMemoryLocationRegistry.save(dto);
+                inMemoryRegionRegistry.save(dto);
             }
         }
     }

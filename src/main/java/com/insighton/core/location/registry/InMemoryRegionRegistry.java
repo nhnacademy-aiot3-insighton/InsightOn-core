@@ -1,6 +1,6 @@
 package com.insighton.core.location.registry;
 
-import com.insighton.core.location.dto.LocationGridDto;
+import com.insighton.core.location.dto.RegionGridDto;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -11,13 +11,13 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Getter
-public class InMemoryLocationRegistry implements LocationRegistry {
+public class InMemoryRegionRegistry implements RegionRegistry {
 
     private final Map<String, List<String>> stateToCitiesMap = new HashMap<>(); // 1:N 구조관리
-    private final Map<String, Map<String, LocationGridDto>> gridCoordinateMap = new HashMap<>(); // 한 번에 격자 데이터까지 도달하게 해줌
+    private final Map<String, Map<String, RegionGridDto>> gridCoordinateMap = new HashMap<>(); // 한 번에 격자 데이터까지 도달하게 해줌
 
     @Override
-    public void save(LocationGridDto dto) {
+    public void save(RegionGridDto dto) {
         String state = dto.step1();
         String city = dto.step2();
 
@@ -45,8 +45,8 @@ public class InMemoryLocationRegistry implements LocationRegistry {
     }
 
     @Override
-    public Optional<LocationGridDto> findGridCoordinate(String state, String city) {
-        Map<String, LocationGridDto> cityMap = gridCoordinateMap.get(state);
+    public Optional<RegionGridDto> findGridCoordinate(String state, String city) {
+        Map<String, RegionGridDto> cityMap = gridCoordinateMap.get(state);
         if (cityMap == null) {
             return Optional.empty();
         }

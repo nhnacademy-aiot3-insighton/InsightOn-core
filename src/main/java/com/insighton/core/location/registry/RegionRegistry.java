@@ -1,17 +1,17 @@
 package com.insighton.core.location.registry;
 
-import com.insighton.core.location.dto.LocationGridDto;
+import com.insighton.core.location.dto.RegionGridDto;
 import java.util.List;
 import java.util.Optional;
 
-public interface LocationRegistry {
-    void save(LocationGridDto dto);
+public interface RegionRegistry {
+    void save(RegionGridDto dto);
 
     List<String> findAllStates();
 
     List<String> findCitiesByState(String state);
 
-    Optional<LocationGridDto> findGridCoordinate(String state, String city);
+    Optional<RegionGridDto> findGridCoordinate(String state, String city);
 
     void clear();
 }
