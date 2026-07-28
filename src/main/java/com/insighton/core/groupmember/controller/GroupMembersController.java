@@ -3,7 +3,6 @@ package com.insighton.core.groupmember.controller;
 import com.insighton.core.groupmember.dto.response.GroupMembersListResponse;
 import com.insighton.core.groupmember.dto.response.GroupMembersResponse;
 import com.insighton.core.groupmember.service.GroupMembersService;
-import com.insighton.core.groups.service.GroupManagementUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,8 +13,24 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 public class GroupMembersController {
-    private final GroupManagementUseCase useCase;
     private final GroupMembersService groupMembersService;
+
+    /**
+     * 그룹 소속 확인용 내부 API — 서비스 간 호출 전용
+     *
+     * @param groupId 그룹 ID
+     * @param userId  소속 여부를 확인할 유저 ID
+     * @return 멤버면 groupId/groupRole 포함 응답, 아니면 404
+     */
+    @GetMapping("/internal/groups/{group-id}/members/user/{user-id}")
+    public ResponseEntity<GroupMembersResponse> getGroupMemberByUserId(
+            @PathVariable("group-id") Long groupId,
+            @PathVariable("user-id") Long userId
+    ) {
+        GroupMembersResponse response = groupMembersService.getGroupMemberAI(userId, groupId);
+
+        return ResponseEntity.ok(response);
+    }
 
     /**
      * 그룹 멤버 리스트 조회(관리자용(?))
