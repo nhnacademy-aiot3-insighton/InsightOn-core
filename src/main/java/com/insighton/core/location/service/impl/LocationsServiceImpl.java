@@ -54,6 +54,7 @@ public class LocationsServiceImpl implements LocationsService {
                 .orElseThrow(() -> new LocationNotFoundException(locationId));
 
         return LocationsResponse.builder()
+                .locationId(locationId)
                 .groupId(groupId)
                 .locationName(location.getLocationName())
                 .createdAt(location.getCreatedAt())
