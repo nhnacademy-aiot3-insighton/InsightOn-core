@@ -112,7 +112,7 @@ public class GroupsController {
      * @param groupId 재발급 하려는 group의 ID
      * @return 성공시 상태 200 반환(?)
      */
-    @PostMapping("/api/v1/groups/{group-id}/invite-token/new")
+    @PutMapping("/api/v1/groups/{group-id}/invite-token/new")
     public ResponseEntity<Void> newInviteToken(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId) {
