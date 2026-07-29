@@ -23,6 +23,7 @@ public class ActuatorsServiceImpl implements ActuatorsService {
     private final ActuatorsRepository actuatorsRepository;
 
     @Override
+    @Transactional
     public Long createActuator(ActuatorsRequest request) {
 
         // 새로운 액추에이서 생성
@@ -80,7 +81,7 @@ public class ActuatorsServiceImpl implements ActuatorsService {
         }
 
         ActuatorsEntity entity = actuatorsRepository.findById(actuatorId)
-                .orElseThrow(() -> new CustomException(ErrorCode.NO_NEW_ACTUATOR_NAME));
+                .orElseThrow(() -> new CustomException(ErrorCode.ACTUATOR_NOT_FOUND));
 
         entity.updateName(newName);
 
@@ -97,6 +98,7 @@ public class ActuatorsServiceImpl implements ActuatorsService {
     }
 
     @Override
+    @Transactional
     public void deleteAll() {
         actuatorsRepository.deleteAll();
     }
