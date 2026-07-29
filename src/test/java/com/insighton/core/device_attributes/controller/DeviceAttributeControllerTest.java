@@ -97,7 +97,7 @@ class DeviceAttributeControllerTest {
         ActuatorUpdateRequest request = new ActuatorUpdateRequest("ON");
 
         // When & Then
-        mockMvc.perform(patch("/api/v1/devices/" + savedDevice.getDeviceId() + "/attribute/power_status")
+        mockMvc.perform(ㅔp("/api/v1/devices/" + savedDevice.getDeviceId() + "/attribute/power_status")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNoContent());
