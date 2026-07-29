@@ -1,8 +1,8 @@
-package com.insighton.core.device_attributes.repositroy;
+package com.insighton.core.device_attributes.repository;
 
 import com.insighton.core.device_attributes.entity.DeviceAttributeEntity;
-import com.insighton.core.device_attributes.repository.DeviceAttributeRepository;
 import com.insighton.core.sensors.entity.DeviceEntity;
+import com.insighton.core.sensors.entity.DeviceType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,8 +29,10 @@ class DeviceAttributeRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        // 테스트용 부모 DeviceEntity 영속화
+        // 테스트용 부모 DeviceEntity 영속화 (groupId, deviceType 추가)
         DeviceEntity device = DeviceEntity.builder()
+                .groupId(1L)
+                .deviceType(DeviceType.SENSOR)
                 .deviceName("테스트 센서")
                 .deviceEui("EUI-REPO-TEST")
                 .gatewaysId(100L)
@@ -43,15 +45,17 @@ class DeviceAttributeRepositoryTest {
     @Test
     @DisplayName("1. 특정 deviceId의 모든 속성 목록 조회")
     void findByDeviceId_DeviceId() {
-        // Given
+        // Given (groupId 필수값 세팅)
         DeviceAttributeEntity attr1 = DeviceAttributeEntity.builder()
                 .deviceId(savedDevice)
+                .groupId(1L)
                 .metricKey("co2")
                 .currentValueStr("1000")
                 .build();
 
         DeviceAttributeEntity attr2 = DeviceAttributeEntity.builder()
                 .deviceId(savedDevice)
+                .groupId(1L)
                 .metricKey("temperature")
                 .currentValueStr("24.5")
                 .build();
@@ -71,9 +75,10 @@ class DeviceAttributeRepositoryTest {
     @Test
     @DisplayName("2. deviceId와 metricKey 조건으로 단일 속성 조회")
     void findByDeviceId_DeviceIdAndMetricKey() {
-        // Given
+        // Given (groupId 필수값 세팅)
         DeviceAttributeEntity attr = DeviceAttributeEntity.builder()
                 .deviceId(savedDevice)
+                .groupId(1L)
                 .metricKey("power_status")
                 .currentValueStr("ON")
                 .build();
@@ -91,9 +96,10 @@ class DeviceAttributeRepositoryTest {
     @Test
     @DisplayName("3. 특정 기기에 해당 metricKey 존재 여부 확인")
     void existsByDeviceId_DeviceIdAndMetricKey() {
-        // Given
+        // Given (groupId 필수값 세팅)
         DeviceAttributeEntity attr = DeviceAttributeEntity.builder()
                 .deviceId(savedDevice)
+                .groupId(1L)
                 .metricKey("humidity")
                 .currentValueStr("50")
                 .build();

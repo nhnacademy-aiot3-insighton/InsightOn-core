@@ -3,7 +3,6 @@ package com.insighton.core.sensors.controller;
 
 import com.insighton.core.sensors.dto.DeviceLocationUpdateRequest;
 import com.insighton.core.sensors.dto.DeviceNameUpdateRequest;
-import com.insighton.core.sensors.dto.DeviceRequest;
 import com.insighton.core.sensors.dto.DeviceResponse;
 import com.insighton.core.sensors.service.DeviceService;
 import org.springframework.web.bind.annotation.*;
