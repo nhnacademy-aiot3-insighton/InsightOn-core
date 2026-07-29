@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -47,6 +48,7 @@ public class WeatherIntegrationService {
         this.sidoNameParser = sidoNameParser;
     }
 
+    @Cacheable(value = "weatherData", key = "#sidoName", unless = "#result == null ")
     public WeatherDataDto fetchWeatherData(int gridX, int gridY, String sidoName, String cityName, String baseDate,
                                            String baseTime) {
         String parsedSidoName = sidoNameParser.parse(sidoName);
