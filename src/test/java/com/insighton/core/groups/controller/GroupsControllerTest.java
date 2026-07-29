@@ -7,7 +7,6 @@ import com.insighton.core.groups.dto.response.GroupsAdminResponse;
 import com.insighton.core.groups.dto.response.GroupsResponse;
 import com.insighton.core.groups.service.GroupManagementUseCase;
 import com.insighton.core.groups.service.GroupsService;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -64,12 +63,11 @@ class GroupsControllerTest {
         }
 
         @Test
-        @Disabled("실제 컨트롤러 경로(/api/v1/groups/...)와 테스트 요청 경로(/api/groups/...)가 안 맞아 404 — 배포 테스트 위해 임시 비활성화")
         @DisplayName("그룹 생성 성공")
         void createGroup_success() throws Exception {
             GroupsRequest request = new GroupsRequest("testName", "testDescription", "testLocation");
 
-            mockMvc.perform(post("/api/groups/create")
+            mockMvc.perform(post("/api/v1/groups/create")
                             .header("X-USER-ID", 1L)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
@@ -79,7 +77,6 @@ class GroupsControllerTest {
         }
 
         @Test
-        @Disabled("실제 컨트롤러 경로(/api/v1/groups/...)와 테스트 요청 경로(/api/groups/...)가 안 맞아 404 — 배포 테스트 위해 임시 비활성화")
         @DisplayName("내 그룹 정보 조회 성공 - Mock 응답 반환 확인")
         void getMyGroup_success() throws Exception {
             // given
@@ -87,7 +84,7 @@ class GroupsControllerTest {
             given(groupsUseCase.getMyGroup(1L, 1L)).willReturn(mockResponse);
 
             // when & then
-            mockMvc.perform(get("/api/groups/{group-id}/my-group", 1L)
+            mockMvc.perform(get("/api/v1/groups/{group-id}/my-group", 1L)
                             .header("X-USER-ID", 1L))
                     .andExpect(status().isOk());
 
@@ -95,7 +92,6 @@ class GroupsControllerTest {
         }
 
         @Test
-        @Disabled("실제 컨트롤러 경로(/api/v1/groups/...)와 테스트 요청 경로(/api/groups/...)가 안 맞아 404 — 배포 테스트 위해 임시 비활성화")
         @DisplayName("내가 초대받은 회사의 정보 조회 성공")
         void getGroupPreview_success() throws Exception {
             // given
@@ -103,7 +99,7 @@ class GroupsControllerTest {
             given(groupsUseCase.getGroupPreview("testToken", 1L, 1L)).willReturn(mockResponse);
 
             // when & then
-            mockMvc.perform(get("/api/groups/{group-id}/preview", 1L)
+            mockMvc.perform(get("/api/v1/groups/{group-id}/preview", 1L)
                             .header("X-USER-ID", 1L)
                             .param("inviteToken", "testToken"))
                     .andExpect(status().isOk());
@@ -112,7 +108,6 @@ class GroupsControllerTest {
         }
 
         @Test
-        @Disabled("실제 컨트롤러 경로(/api/v1/groups/...)와 테스트 요청 경로(/api/groups/...)가 안 맞아 404 — 배포 테스트 위해 임시 비활성화")
         @DisplayName("시스템 관리자용 그룹 리스트 조회 성공")
         void getGroupList_success() throws Exception { // ⭕ 테스트 메서드 파라미터는 비워둡니다.
             List<GroupsAdminResponse> content = List.of(new GroupsAdminResponse(1L, "testName", "testDescription", "testLocation"));
@@ -121,7 +116,7 @@ class GroupsControllerTest {
             given(groupsService.getGroupList(eq("ADMIN"), eq(1L), any(Pageable.class)))
                     .willReturn(mockPage);
 
-            mockMvc.perform(get("/api/groups/admin/group-list")
+            mockMvc.perform(get("/api/v1/groups/admin/group-list")
                             .header("X-USER-ROLE", "ADMIN")
                             .header("X-USER-ID", 1L))
                     .andExpect(status().isOk())
@@ -131,10 +126,9 @@ class GroupsControllerTest {
         }
 
         @Test
-        @Disabled("실제 컨트롤러 경로(/api/v1/groups/...)와 테스트 요청 경로(/api/groups/...)가 안 맞아 404 — 배포 테스트 위해 임시 비활성화")
         @DisplayName("토큰 재발급 성공")
         void newInviteToken_success() throws Exception {
-            mockMvc.perform(post("/api/groups/{group-id}/invite-token/new", 1L)
+            mockMvc.perform(put("/api/v1/groups/{group-id}/invite-token/new", 1L)
                             .header("X-USER-ID", 1L))
                     .andExpect(status().isOk());
 
@@ -142,12 +136,11 @@ class GroupsControllerTest {
         }
 
         @Test
-        @Disabled("실제 컨트롤러 경로(/api/v1/groups/...)와 테스트 요청 경로(/api/groups/...)가 안 맞아 404 — 배포 테스트 위해 임시 비활성화")
         @DisplayName("그룹 수정 성공")
         void updateGroup_success() throws Exception {
             GroupsRequest request = new GroupsRequest("testName", "testDescription", "testLocation");
 
-            mockMvc.perform(put("/api/groups/{group-id}/update", 1L)
+            mockMvc.perform(put("/api/v1/groups/{group-id}/update", 1L)
                             .header("X-USER-ID", 1L)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
@@ -157,10 +150,9 @@ class GroupsControllerTest {
         }
 
         @Test
-        @Disabled("실제 컨트롤러 경로(/api/v1/groups/...)와 테스트 요청 경로(/api/groups/...)가 안 맞아 404 — 배포 테스트 위해 임시 비활성화")
         @DisplayName("그룹 삭제 성공")
         void deleteGroup_success() throws Exception {
-            mockMvc.perform(delete("/api/groups/{group-id}/delete", 1L)
+            mockMvc.perform(delete("/api/v1/groups/{group-id}/delete", 1L)
                             .header("X-USER-ID", 1L))
                     .andExpect(status().isNoContent());
 
@@ -169,21 +161,20 @@ class GroupsControllerTest {
     }
 
     @Nested
-    @Disabled("실제 컨트롤러 경로(/api/v1/groups/...)와 테스트 요청 경로(/api/groups/...)가 안 맞아 전부 404 — 배포 테스트 위해 임시 비활성화")
     @DisplayName("실패 및 예외 케이스")
     class FailureCases {
 
         @Test
         @DisplayName("필수 헤더(X-USER-ID) 누락 시 400 Bad Request")
         void missingHeader_returnsBadRequest() throws Exception {
-            mockMvc.perform(get("/api/groups/{group-id}/my-group", 1L))
+            mockMvc.perform(get("/api/v1/groups/{group-id}/my-group", 1L))
                     .andExpect(status().isBadRequest());
         }
 
         @Test
         @DisplayName("필수 쿼리 파라미터(inviteToken) 누락 시 400 Bad Request")
         void missingRequestParam_returnsBadRequest() throws Exception {
-            mockMvc.perform(get("/api/groups/{group-id}/preview", 1L)
+            mockMvc.perform(get("/api/v1/groups/{group-id}/preview", 1L)
                             .header("X-USER-ID", 1L))
                     .andExpect(status().isBadRequest());
         }
@@ -194,7 +185,7 @@ class GroupsControllerTest {
             // DTO 유효성 조건(@NotBlank 등)에 걸리는 잘못된 요청 객체
             GroupsRequest invalidRequest = new GroupsRequest(null, null, null);
 
-            mockMvc.perform(put("/api/groups/{group-id}/update", 1L)
+            mockMvc.perform(put("/api/v1/groups/{group-id}/update", 1L)
                             .header("X-USER-ID", 1L)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(invalidRequest)))

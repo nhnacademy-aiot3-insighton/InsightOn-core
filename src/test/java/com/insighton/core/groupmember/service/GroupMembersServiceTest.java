@@ -13,7 +13,6 @@ import com.insighton.core.groupmember.service.impl.GroupMembersServiceImpl;
 import com.insighton.core.groups.entity.Groups;
 import com.insighton.core.groups.exception.NoPermissionException;
 import com.insighton.core.groups.exception.UnAuthorizedAccessException;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -118,24 +117,34 @@ class GroupMembersServiceTest {
     }
 
     @Test
-    @Disabled("실제 서비스가 UnAuthorizedAccessException을 던져 mock 권한 설정과 안 맞음 — 배포 테스트 위해 임시 비활성화")
     @DisplayName("개별 멤버 조회 성공 - AuthClient 연동 포함")
     void getGroupMember_success() {
         // given
+        Long userId = 2L;
+        Long groupId = 1L;
+        Long groupMemberId = 1L;
+
         GroupMembers requester = mock(GroupMembers.class);
         GroupMembers target = mock(GroupMembers.class);
+        Groups mockGroup = mock(Groups.class); // 추가
+
         given(requester.isMember()).willReturn(false);
-        given(target.getUserId()).willReturn(2L);
-        given(groupMembersRepository.findByGroups_GroupIdAndUserId(1L, 1L)).willReturn(Optional.of(requester));
-        given(groupMembersRepository.findByGroupMemberIdAndGroups_GroupId(1L, 1L)).willReturn(Optional.of(target));
-        given(authClient.getUserResponse(2L)).willReturn(new AuthUserResponse(2L, "testUser", "010-0000-0000", "녀어렁"));
+        given(requester.getUserId()).willReturn(userId); // userId 설정
+
+        given(target.getUserId()).willReturn(userId); // target과 userId 일치
+        given(target.getGroups()).willReturn(mockGroup); // 그룹 객체 연결
+        given(mockGroup.getGroupId()).willReturn(groupId); // 그룹 ID 설정
+
+        given(groupMembersRepository.findByGroups_GroupIdAndUserId(groupId, userId)).willReturn(Optional.of(requester));
+        given(groupMembersRepository.findByGroupMemberIdAndGroups_GroupId(groupMemberId, groupId)).willReturn(Optional.of(target));
+        given(authClient.getUserResponse(userId)).willReturn(new AuthUserResponse(userId, "testUser", "010-0000-0000", "녀어렁"));
 
         // when
-        GroupMembersResponse result = groupMembersService.getGroupMember(1L, 1L, 1L);
+        GroupMembersResponse result = groupMembersService.getGroupMember(userId, groupId, groupMemberId);
 
         // then
         assertThat(result.userName()).isEqualTo("testUser");
-        assertThat(result.userId()).isEqualTo(2L);
+        assertThat(result.userId()).isEqualTo(userId);
     }
 
     // ==================== 권한 수정 & 강퇴 ====================
