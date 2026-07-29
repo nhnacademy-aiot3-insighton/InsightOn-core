@@ -72,6 +72,7 @@ public class DeviceAttributeServiceImpl implements DeviceAttributeService {
     public void updateActuatorValue(Long deviceId, String metricKey, String newValue){
 
         // existsById 대신 findById로 직접 조회
+        // DB조회 1번으로 줄이기
         DeviceEntity entity = deviceRepository.findById(deviceId)
                 .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND));
 
