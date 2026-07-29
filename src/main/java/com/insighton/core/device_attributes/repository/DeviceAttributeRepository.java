@@ -39,4 +39,6 @@ public interface DeviceAttributeRepository extends JpaRepository<DeviceAttribute
      */
     boolean existsByDeviceId_DeviceIdAndMetricKey(Long deviceId, String metricKey);
 
+    void deleteByDeviceId_DeviceId(Long deviceId);
+
 }

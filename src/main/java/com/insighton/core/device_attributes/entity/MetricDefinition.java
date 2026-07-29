@@ -24,10 +24,11 @@ public enum MetricDefinition {
     private final String metricName;
     private final String unit;
 
+    // 문자열 metricKey를 전달받아 대소문자 구문 없이 해당하는 MetricDefinition Enum 객체를 찾아 반환하는 정적 메서드
     public static MetricDefinition fromKey(String metricKey){
-        return Arrays.stream(values())
-                .filter(m -> m.getMetricKey().equalsIgnoreCase(metricKey))
-                .findFirst()
-                .orElseThrow(() -> new CustomException(ErrorCode.METRIC_KEY_NOT_FOUND));
+        return Arrays.stream(values()) // 모든 Enum 상수를 스트림으로 변환
+                .filter(m -> m.getMetricKey().equalsIgnoreCase(metricKey)) // 대소문자 무시 비교 필터링
+                .findFirst() // 조건에 일치하는 첫 번째 항목 탐색
+                .orElseThrow(() -> new CustomException(ErrorCode.METRIC_KEY_NOT_FOUND)); // 없을 경우 404 예외 발생
     }
 }

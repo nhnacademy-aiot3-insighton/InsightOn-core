@@ -7,7 +7,7 @@ import com.insighton.core.device_attributes.entity.DeviceAttributeEntity;
 import com.insighton.core.device_attributes.entity.MetricDefinition;
 import com.insighton.core.device_attributes.repository.DeviceAttributeRepository;
 import com.insighton.core.device_attributes.service.DeviceAttributeService;
-import com.insighton.core.devices.repository.DeviceRepository;
+import com.insighton.core.sensors.repository.DeviceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

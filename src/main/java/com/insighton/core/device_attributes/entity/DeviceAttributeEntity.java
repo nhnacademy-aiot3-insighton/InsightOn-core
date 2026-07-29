@@ -1,6 +1,6 @@
 package com.insighton.core.device_attributes.entity;
 
-import com.insighton.core.devices.entity.DeviceEntity;
+import com.insighton.core.sensors.entity.DeviceEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
