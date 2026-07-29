@@ -7,6 +7,8 @@ import com.insighton.core.device_attributes.entity.DeviceAttributeEntity;
 import com.insighton.core.device_attributes.entity.MetricDefinition;
 import com.insighton.core.device_attributes.repository.DeviceAttributeRepository;
 import com.insighton.core.device_attributes.service.DeviceAttributeService;
+import com.insighton.core.sensors.entity.DeviceEntity;
+import com.insighton.core.sensors.entity.DeviceType;
 import com.insighton.core.sensors.repository.DeviceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -68,10 +70,21 @@ public class DeviceAttributeServiceImpl implements DeviceAttributeService {
      */
     @Transactional
     public void updateActuatorValue(Long deviceId, String metricKey, String newValue){
-        if(!deviceRepository.existsById(deviceId)){
-            throw new CustomException(ErrorCode.DEVICE_NOT_FOUND);
+
+        // existsById 대신 findById로 직접 조회
+        DeviceEntity entity = deviceRepository.findById(deviceId)
+                .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND));
+
+//        if(!deviceRepository.existsById(deviceId)){
+//            throw new CustomException(ErrorCode.DEVICE_NOT_FOUND);
+//        }
+
+        // 센서타입인 경우 제어 API를 통한 수치 변경을 거부
+        if(entity.getDeviceType() != DeviceType.ACTUATOR){
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE,"센서 장치의 수집데이터는 제어 API로 수정 불가");
         }
 
+        // 변경할 수치 값 유효성 검사
         if(newValue == null || newValue.trim().isEmpty()){
             throw new CustomException(ErrorCode.NO_NEW_ACTUATOR_VALUE);
         }
@@ -102,8 +115,15 @@ public class DeviceAttributeServiceImpl implements DeviceAttributeService {
      * @param metricKey 메트릭 키
      * @return 해당 기기에 메트릭 키가 정상 등록되어 있으면 true, 없으면 false
      */
+    // 등록되지 않는 메트릭키가 전달되어도 예외가 터지지않고 false 반환
+    // 대소문자 정규화
     public boolean isValidDeviceAttribute(Long deviceId, String metricKey){
-        String normalizedMetricKey = MetricDefinition.fromKey(metricKey).getMetricKey();
-        return attributeRepository.existsByDeviceId_DeviceIdAndMetricKey(deviceId, normalizedMetricKey);
+        if(deviceId == null || metricKey == null){
+            return false;
+        }
+        return MetricDefinition.findFromKey(metricKey)
+                .map(def -> attributeRepository.
+                        existsByDeviceId_DeviceIdAndMetricKey(deviceId, def.getMetricKey()))
+                .orElse(false);
     }
 }
