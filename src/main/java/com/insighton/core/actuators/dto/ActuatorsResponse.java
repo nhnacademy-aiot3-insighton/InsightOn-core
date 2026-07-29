@@ -1,0 +1,30 @@
+package com.insighton.core.actuators.dto;
+
+import com.insighton.core.actuators.entity.ActuatorType;
+import com.insighton.core.actuators.entity.ActuatorsEntity;
+
+import java.time.OffsetDateTime;
+import java.util.Map;
+
+public record ActuatorsResponse(
+        Long actuatorId, // 액추에이터 PK
+        Long locationId, // 설치 구역 ID
+        String deviceName, // 장비 이름
+        ActuatorType actuatorType, // 액추에이터 종류
+        Map<String, Object> currentState, // 현재 상태 JSON Map
+        OffsetDateTime stateUpdateAt, // 상태 변경 일시
+        OffsetDateTime createdAt // 생성 일시
+) {
+
+    public static ActuatorsResponse from(ActuatorsEntity entity){
+        return new ActuatorsResponse(
+                entity.getActuatorId(),
+                entity.getLocationId(),
+                entity.getDeviceName(),
+                entity.getActuatorType(),
+                entity.getCurrentState(),
+                entity.getStateUpdatedAt(),
+                entity.getCreatedAt()
+        );
+    }
+}
