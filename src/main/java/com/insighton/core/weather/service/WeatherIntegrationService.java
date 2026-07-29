@@ -1,10 +1,10 @@
 package com.insighton.core.weather.service;
 
-import com.insighton.core.exception.WeatherApiException;
 import com.insighton.core.weather.dto.AirQualityResponseDto;
 import com.insighton.core.weather.dto.ForecastBaseDateTime;
 import com.insighton.core.weather.dto.KmaWeatherResponseDto;
 import com.insighton.core.weather.dto.WeatherDataDto;
+import com.insighton.core.weather.exception.WeatherApiException;
 import com.insighton.core.weather.parser.SidoNameParser;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -79,7 +79,7 @@ public class WeatherIntegrationService {
                     airMap.getOrDefault("pm25Grade1h", "N/A")
             );
         } catch (Exception e) {
-            throw new WeatherApiException("날씨/미세먼지 외부 API 연동 중 오류 발생", e);
+            throw new WeatherApiException("날씨/미세먼지 외부 API 연동 중 오류 발생");
         }
     }
 
@@ -97,7 +97,7 @@ public class WeatherIntegrationService {
                     .retrieve()
                     .body(KmaWeatherResponseDto.class);
         } catch (Exception e) {
-            throw new WeatherApiException("기상청 API 호출 중 오류 발생", e);
+            throw new WeatherApiException("기상청 API 호출 중 오류 발생");
         }
 
         Map<String, String> resultMap = new HashMap<>();
@@ -127,7 +127,7 @@ public class WeatherIntegrationService {
                     .retrieve()
                     .body(AirQualityResponseDto.class);
         } catch (Exception e) {
-            throw new WeatherApiException("에어코리아 API 호출 중 오류 발생", e);
+            throw new WeatherApiException("에어코리아 API 호출 중 오류 발생");
         }
 
         Map<String, String> resultMap = new HashMap<>();
