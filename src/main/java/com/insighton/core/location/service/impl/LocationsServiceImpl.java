@@ -84,9 +84,7 @@ public class LocationsServiceImpl implements LocationsService {
     @Override
     @Transactional
     public void deleteLocationAll(Long groupId) {
-        if (!locationRepository.existsByGroups_groupId(groupId)) {
-            throw LocationNotFoundException.notFoundLocationByGroupId(groupId);
-        }
+
         locationRepository.deleteByGroups_GroupId(groupId);
     }
 }
