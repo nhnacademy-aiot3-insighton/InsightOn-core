@@ -103,6 +103,7 @@ public class DeviceAttributeServiceImpl implements DeviceAttributeService {
      * @return 해당 기기에 메트릭 키가 정상 등록되어 있으면 true, 없으면 false
      */
     public boolean isValidDeviceAttribute(Long deviceId, String metricKey){
-        return attributeRepository.existsByDeviceId_DeviceIdAndMetricKey(deviceId, metricKey);
+        String normalizedMetricKey = MetricDefinition.fromKey(metricKey).getMetricKey();
+        return attributeRepository.existsByDeviceId_DeviceIdAndMetricKey(deviceId, normalizedMetricKey);
     }
 }
