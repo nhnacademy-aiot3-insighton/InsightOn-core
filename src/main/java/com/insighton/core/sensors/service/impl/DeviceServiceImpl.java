@@ -32,13 +32,16 @@ public class DeviceServiceImpl implements DeviceService {
     @Transactional
     public DeviceCacheEntry autoProvision(Long gatewayId, Long groupId, String deviceEui, String deviceName, Set<String> metricKeys) {
 
+        // 대소문자 졍규화
+        String nolDeviceName = nomalizeDeviceName(deviceName);
+
         // [1단계] 패킷 정보로 센서 엔티티 객체를 조립
         DeviceEntity deviceEntity = DeviceEntity.builder()
                 .deviceType(DeviceType.SENSOR) // 센서 타입으로 지정
                 .gatewaysId(gatewayId) // 패킷이 거쳐온 게이트웨이 ID를 입력
                 .groupId(groupId) // 소속 그룹아이디 주입
                 .deviceEui(deviceEui) // 센서의 고유 시리얼 번호(EUI)를 입력
-                .deviceName(deviceName) // 패킷 정보 기반의 임시 이름(예: "Temp_Sensor_01")을 입력
+                .deviceName(nolDeviceName) // 패킷 정보 기반의 임시 이름(예: "Temp_Sensor_01")을 입력
                 .locationsId(null) // 설치 장소는 아직 모르므로 일단 null로 비움
                 .lastSeenAt(OffsetDateTime.now()) // 첫 데이터가 도착했으니 통신 시각을 현재로 기록
                 .createdAt(OffsetDateTime.now()) // 생성 시각을 현재로 저장
@@ -156,8 +159,10 @@ public class DeviceServiceImpl implements DeviceService {
     @Override
     @Transactional
     public void deleteAll() {
+        // DB삭제 캐시 삭제
         deviceAttributeRepository.deleteAll();
         deviceRepository.deleteAll();
+        deviceLookupCacheService.clear();
     }
 
     @Override
@@ -192,5 +197,13 @@ public class DeviceServiceImpl implements DeviceService {
                 e.getCreatedAt(),
                 e.getLastSeenAt()
         );
+    }
+
+    // 대소문자 졍규화
+    private String nomalizeDeviceName(String name){
+        if(name == null || name.trim().isEmpty()){
+            return name;
+        }
+        return name.trim().toUpperCase();
     }
 }
