@@ -1,11 +1,11 @@
-package com.insighton.core.devices.service;
+package com.insighton.core.sensors.service;
 
 import com.insighton.core.exception.CustomException;
-import com.insighton.core.devices.dto.DeviceRequest;
-import com.insighton.core.devices.dto.DeviceResponse;
-import com.insighton.core.devices.entity.DeviceEntity;
-import com.insighton.core.devices.repository.DeviceRepository;
-import com.insighton.core.devices.service.impl.DeviceServiceImpl; // 💡 구현체 import
+import com.insighton.core.sensors.dto.DeviceRequest;
+import com.insighton.core.sensors.dto.DeviceResponse;
+import com.insighton.core.sensors.entity.DeviceEntity;
+import com.insighton.core.sensors.repository.DeviceRepository;
+import com.insighton.core.sensors.service.impl.DeviceServiceImpl; // 💡 구현체 import
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

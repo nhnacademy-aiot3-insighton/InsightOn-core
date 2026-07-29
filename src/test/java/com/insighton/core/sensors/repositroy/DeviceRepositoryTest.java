@@ -1,9 +1,9 @@
-package com.insighton.core.devices.repositroy;
+package com.insighton.core.sensors.repositroy;
 
 
-import com.insighton.core.devices.entity.DeviceEntity;
+import com.insighton.core.sensors.entity.DeviceEntity;
 //import com.insighton.core.sensor_devices.entity.DeviceType;
-import com.insighton.core.devices.repository.DeviceRepository;
+import com.insighton.core.sensors.repository.DeviceRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

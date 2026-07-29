@@ -6,8 +6,8 @@ import com.insighton.core.device_attributes.dto.DeviceAttribute;
 import com.insighton.core.device_attributes.entity.DeviceAttributeEntity;
 import com.insighton.core.device_attributes.repository.DeviceAttributeRepository;
 import com.insighton.core.device_attributes.service.impl.DeviceAttributeServiceImpl;
-import com.insighton.core.devices.entity.DeviceEntity;
-import com.insighton.core.devices.repository.DeviceRepository;
+import com.insighton.core.sensors.entity.DeviceEntity;
+import com.insighton.core.sensors.repository.DeviceRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,7 +20,6 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)

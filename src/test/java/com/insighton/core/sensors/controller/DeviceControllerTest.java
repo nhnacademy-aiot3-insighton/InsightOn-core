@@ -1,10 +1,10 @@
-package com.insighton.core.devices.controller;
+package com.insighton.core.sensors.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.insighton.core.devices.dto.DeviceLocationUpdateRequest;
-import com.insighton.core.devices.dto.DeviceRequest;
-import com.insighton.core.devices.entity.DeviceEntity;
-import com.insighton.core.devices.repository.DeviceRepository;
+import com.insighton.core.sensors.dto.DeviceLocationUpdateRequest;
+import com.insighton.core.sensors.dto.DeviceRequest;
+import com.insighton.core.sensors.entity.DeviceEntity;
+import com.insighton.core.sensors.repository.DeviceRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

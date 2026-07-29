@@ -2,7 +2,7 @@ package com.insighton.core.device_attributes.repositroy;
 
 import com.insighton.core.device_attributes.entity.DeviceAttributeEntity;
 import com.insighton.core.device_attributes.repository.DeviceAttributeRepository;
-import com.insighton.core.devices.entity.DeviceEntity;
+import com.insighton.core.sensors.entity.DeviceEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
