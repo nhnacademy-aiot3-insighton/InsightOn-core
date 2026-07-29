@@ -5,7 +5,6 @@ import com.insighton.core.groupmember.dto.response.GroupMembersResponse;
 import com.insighton.core.groupmember.entity.GroupMembers;
 import com.insighton.core.groupmember.service.GroupMembersService;
 import com.insighton.core.groups.service.GroupManagementUseCase;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -23,7 +22,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@Disabled("실제 컨트롤러 경로(/api/v1/groups/...)와 테스트 요청 경로(/api/groups/...)가 안 맞아 전부 404 — 배포 테스트 위해 임시 비활성화")
+//@Disabled("실제 컨트롤러 경로(/api/v1/groups/...)와 테스트 요청 경로(/api/groups/...)가 안 맞아 전부 404 — 배포 테스트 위해 임시 비활성화")
 @WebMvcTest(GroupMembersController.class)
 class GroupMembersControllerTest {
 
@@ -49,7 +48,7 @@ class GroupMembersControllerTest {
             given(groupMembersService.getGroupMemberList(1L, 1L)).willReturn(mockList);
 
             // when & then
-            mockMvc.perform(get("/api/groups/{group-id}/members", 1L)
+            mockMvc.perform(get("/api/v1/groups/{group-id}/members", 1L)
                             .header("X-USER-ID", 1L))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(1)); // 반환된 리스트 개수 검증
@@ -65,7 +64,7 @@ class GroupMembersControllerTest {
             given(groupMembersService.getGroupMember(1L, 1L, 1L)).willReturn(mockResponse);
 
             // when & then
-            mockMvc.perform(get("/api/groups/{group-id}/members/{group-member-id}", 1L, 1L)
+            mockMvc.perform(get("/api/v1/groups/{group-id}/members/{group-member-id}", 1L, 1L)
                             .header("X-USER-ID", 1L))
                     .andExpect(status().isOk());
 
@@ -75,7 +74,7 @@ class GroupMembersControllerTest {
         @Test
         @DisplayName("그룹 멤버 권한 변경 성공")
         void toggleManagerRole_success() throws Exception {
-            mockMvc.perform(put("/api/groups/{group-id}/members/{group-member-id}/role-change", 1L, 1L)
+            mockMvc.perform(put("/api/v1/groups/{group-id}/members/{group-member-id}/toggle-manager", 1L, 1L)
                             .header("X-USER-ID", 1L))
                     .andExpect(status().isOk());
 
@@ -83,9 +82,19 @@ class GroupMembersControllerTest {
         }
 
         @Test
+        @DisplayName("super manager 권한 양도 성공")
+        void toggleSuperManagerRole_success() throws Exception {
+            mockMvc.perform(put("/api/v1/groups/{group-id}/members/{group-member-id}/toggle-super-manager", 1L, 1L)
+                            .header("X-USER-ID", 1L))
+                    .andExpect(status().isOk());
+
+            verify(groupMembersService).toggleSuperManagerRole(1L, 1L, 1L);
+        }
+
+        @Test
         @DisplayName("멤버 강퇴 성공")
         void kickGroupMember_success() throws Exception {
-            mockMvc.perform(delete("/api/groups/{group-id}/members/{group-member-id}/kick-member", 1L, 1L)
+            mockMvc.perform(delete("/api/v1/groups/{group-id}/members/{group-member-id}/kick-member", 1L, 1L)
                             .header("X-USER-ID", 1L))
                     .andExpect(status().isNoContent());
 
@@ -95,7 +104,7 @@ class GroupMembersControllerTest {
         @Test
         @DisplayName("그룹 탈퇴 성공")
         void leaveGroup_success() throws Exception {
-            mockMvc.perform(delete("/api/groups/{group-id}/members/leave-group", 1L)
+            mockMvc.perform(delete("/api/v1/groups/{group-id}/members/leave-group", 1L)
                             .header("X-USER-ID", 1L))
                     .andExpect(status().isNoContent());
 
@@ -110,14 +119,14 @@ class GroupMembersControllerTest {
         @Test
         @DisplayName("필수 헤더(X-USER-ID) 누락 시 400 Bad Request")
         void missingHeader_returnsBadRequest() throws Exception {
-            mockMvc.perform(get("/api/groups/{group-id}/members", 1L))
+            mockMvc.perform(get("/api/v1/groups/{group-id}/members", 1L))
                     .andExpect(status().isBadRequest());
         }
 
         @Test
         @DisplayName("PathVariable 타입이 바르지 않을 경우(Long이 아닌 문자열) 400 Bad Request")
         void invalidPathVariableType_returnsBadRequest() throws Exception {
-            mockMvc.perform(get("/api/groups/{group-id}/members", "invalid-id")
+            mockMvc.perform(get("/api/v1/groups/{group-id}/members", "invalid-id")
                             .header("X-USER-ID", 1L))
                     .andExpect(status().isBadRequest());
         }
