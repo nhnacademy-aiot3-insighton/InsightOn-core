@@ -19,14 +19,15 @@ public class DeviceController {
 
     private final DeviceService deviceService; // 디바이스 서비스 주입
 
-    // [개선] URL을 /actuators로 바꾸고 메서드명도 createActuator로 변경하여 목적을 명확히 함
-    @PostMapping("/actuators") // POST /api/v1/devices/actuators
-    public ResponseEntity<Long> createActuator(@RequestBody @Valid DeviceRequest requestDto){
-        // 액추에이터 생성을 서비스 계층에 요청
-        Long deviceId = deviceService.createActuator(requestDto);
-        // 생성된 기기 PK ID 응답 반환
-        return ResponseEntity.ok(deviceId);
-    }
+    // 액추에이터로 이동
+//    // [개선] URL을 /actuators로 바꾸고 메서드명도 createActuator로 변경하여 목적을 명확히 함
+//    @PostMapping("/actuators") // POST /api/v1/devices/actuators
+//    public ResponseEntity<Long> createActuator(@RequestBody @Valid DeviceRequest requestDto){
+//        // 액추에이터 생성을 서비스 계층에 요청
+//        Long deviceId = deviceService.createActuator(requestDto);
+//        // 생성된 기기 PK ID 응답 반환
+//        return ResponseEntity.ok(deviceId);
+//    }
 
     // 단일 디바이스 조회 API (GET /api/v1/devices/{id})
     @GetMapping("/{id}")
@@ -70,8 +71,8 @@ public class DeviceController {
         return ResponseEntity.noContent().build();
     }
 
-    // 개별 장치 삭제 API (DELETE /api/v1/devices/{id})
-    @DeleteMapping("/{id}")
+    // 개별 장치 삭제 API (DELETE /api/v1/devices/{id}/sensor)
+    @DeleteMapping("/{id}/delete")
     public ResponseEntity<Void> deleteDevice(@PathVariable Long id){
         // 디바이스 단일 삭제 수행
         deviceService.deleteDevice(id);
@@ -79,7 +80,7 @@ public class DeviceController {
     }
 
     // 전체 장치 삭제 API (DELETE /api/v1/devices)
-    @DeleteMapping
+    @DeleteMapping("/deleteAll")
     public ResponseEntity<Void> deleteAllDevice(){
         // 전체 디바이스 삭제 수행
         deviceService.deleteAll();
