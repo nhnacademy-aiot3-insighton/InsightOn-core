@@ -28,11 +28,13 @@ public class DeviceEntity {
     private DeviceType deviceType;
 
     // ================= [센서 전용 필드들] =================
+    @Column(name = "gateway_id")
     private Long gatewaysId; // SENSOR 전용 (ACTUATOR는 null)
 
     @Column(name = "device_eui", unique = true) // nullable=false 제거 (ACTUATOR는 null)
     private String deviceEui;
 
+    @Column(name = "last_seen_at")
     private OffsetDateTime lastSeenAt; // SENSOR 전용 (ACTUATOR는 null)
 
     // ================= [공통 필드들] =================
@@ -40,11 +42,15 @@ public class DeviceEntity {
     @Column(name = "device_name", nullable = false)
     private String deviceName;
 
+    @Column(name = "location_id")
     private Long locationsId;
 
+    @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
-
+    // =================================================
+    @Column(name = "group_id")
+    private Long groupId;
 
     public void updateLocation(Long newLocationId){
         this.locationsId = newLocationId;

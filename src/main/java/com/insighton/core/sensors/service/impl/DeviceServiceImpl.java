@@ -2,7 +2,6 @@ package com.insighton.core.sensors.service.impl;
 
 import com.insighton.core.device_attributes.entity.DeviceAttributeEntity;
 import com.insighton.core.device_attributes.repository.DeviceAttributeRepository;
-import com.insighton.core.sensors.dto.DeviceRequest;
 import com.insighton.core.sensors.dto.DeviceResponse;
 import com.insighton.core.sensors.entity.DeviceCacheEntry;
 import com.insighton.core.sensors.entity.DeviceEntity;
@@ -31,12 +30,13 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     @Transactional
-    public DeviceCacheEntry autoProvision(Long gatewayId, String deviceEui, String deviceName, Set<String> metricKeys) {
+    public DeviceCacheEntry autoProvision(Long gatewayId, Long groupId, String deviceEui, String deviceName, Set<String> metricKeys) {
 
         // [1단계] 패킷 정보로 센서 엔티티 객체를 조립
         DeviceEntity deviceEntity = DeviceEntity.builder()
                 .deviceType(DeviceType.SENSOR) // 센서 타입으로 지정
                 .gatewaysId(gatewayId) // 패킷이 거쳐온 게이트웨이 ID를 입력
+                .groupId(groupId) // 소속 그룹아이디 주입
                 .deviceEui(deviceEui) // 센서의 고유 시리얼 번호(EUI)를 입력
                 .deviceName(deviceName) // 패킷 정보 기반의 임시 이름(예: "Temp_Sensor_01")을 입력
                 .locationsId(null) // 설치 장소는 아직 모르므로 일단 null로 비움
@@ -52,6 +52,7 @@ public class DeviceServiceImpl implements DeviceService {
             List<DeviceAttributeEntity> attributes = metricKeys.stream()
                     .map(metricKey -> DeviceAttributeEntity.builder()
                             .deviceId(savedDevice) // 방금 DB에 저장한 센서(부모)와 연결 (FK 매핑).
+                            .groupId(groupId) // 속성 엔티티에도 그룹 주입
                             .metricKey(metricKey) // 수집 항목 키(예: "co2")를 저장
                             .build())
                     .toList();
@@ -75,22 +76,22 @@ public class DeviceServiceImpl implements DeviceService {
         return cacheEntry;
     }
 
-    @Override
-    @Transactional // REST API 기반 ACTUATOR 수동 등록
-    public Long createActuator(DeviceRequest request) {
-        // ACTUATOR 타입으로 지정하고 센서 전용 필드는 모두 null 처리
-        DeviceEntity deviceEntity = DeviceEntity.builder()
-                .deviceType(DeviceType.ACTUATOR)
-                .deviceName(request.deviceName())
-                .locationsId(request.locationId())
-                .gatewaysId(null)
-                .deviceEui(null)
-                .lastSeenAt(null)
-                .createdAt(OffsetDateTime.now())
-                .build();
-
-        return deviceRepository.save(deviceEntity).getDeviceId();
-    }
+//    @Override
+//    @Transactional // REST API 기반 ACTUATOR 수동 등록
+//    public Long createActuator(DeviceRequest request) {
+//        // ACTUATOR 타입으로 지정하고 센서 전용 필드는 모두 null 처리
+//        DeviceEntity deviceEntity = DeviceEntity.builder()
+//                .deviceType(DeviceType.ACTUATOR)
+//                .deviceName(request.deviceName())
+//                .locationsId(request.locationId())
+//                .gatewaysId(null)
+//                .deviceEui(null)
+//                .lastSeenAt(null)
+//                .createdAt(OffsetDateTime.now())
+//                .build();
+//
+//        return deviceRepository.save(deviceEntity).getDeviceId();
+//    }
 
     @Override
     public DeviceResponse getDeviceById(Long deviceId) {
@@ -108,6 +109,11 @@ public class DeviceServiceImpl implements DeviceService {
         DeviceEntity deviceEntity = deviceRepository.findById(deviceId)
                 .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND));
         deviceEntity.updateLocation(newLocationId);
+
+        // 캐시도 같이 갱신 (deviceEui가 있는 센서만 캐시에 들어있음)
+        if(deviceEntity.getDeviceEui() != null){
+            deviceLookupCacheService.updateLocation(deviceEntity.getDeviceEui(), newLocationId);
+        }
     }
 
     @Override
@@ -140,6 +146,11 @@ public class DeviceServiceImpl implements DeviceService {
         // @Query 없이 완벽하게 동작하는 자식 테이블 일괄 삭제 메서드 호출
         deviceAttributeRepository.deleteByDeviceId_DeviceId(deviceId);
         deviceRepository.delete(deviceEntity);
+
+        // 캐시에서도 제거
+        if(deviceEntity.getDeviceEui() != null){
+            deviceLookupCacheService.evict(deviceEntity.getDeviceEui());
+        }
     }
 
     @Override
