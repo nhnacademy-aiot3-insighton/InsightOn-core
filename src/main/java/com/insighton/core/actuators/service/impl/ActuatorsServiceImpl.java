@@ -76,7 +76,7 @@ public class ActuatorsServiceImpl implements ActuatorsService {
     @Transactional
     public void updateActuatorName(Long actuatorId, String newName) {
         // 전달 받은 상태 Map 객체의 Null/Empty 유효성 검증
-        if (newName == null || newName.isEmpty()){
+        if (newName == null || newName.isBlank()){
             throw new CustomException(ErrorCode.NO_NEW_ACTUATOR_NAME);
         }
 
