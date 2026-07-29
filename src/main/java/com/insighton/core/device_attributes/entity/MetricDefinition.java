@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 
 @Getter
@@ -30,5 +31,16 @@ public enum MetricDefinition {
                 .filter(m -> m.getMetricKey().equalsIgnoreCase(metricKey)) // 대소문자 무시 비교 필터링
                 .findFirst() // 조건에 일치하는 첫 번째 항목 탐색
                 .orElseThrow(() -> new CustomException(ErrorCode.METRIC_KEY_NOT_FOUND)); // 없을 경우 404 예외 발생
+    }
+
+
+    // 예외를 던지지 않고 안전하게 Optional로 메트릭 정의를 탐색하는 메서드
+    public static Optional<MetricDefinition> findFromKey(String metricKey){
+        if(metricKey == null || metricKey.isBlank()){
+            return Optional.empty();
+        }
+        return Arrays.stream(values())
+                .filter(m -> m.getMetricKey().equalsIgnoreCase(metricKey))
+                .findFirst();
     }
 }
