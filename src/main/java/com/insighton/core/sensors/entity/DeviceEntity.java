@@ -1,4 +1,4 @@
-package com.insighton.core.devices.entity;
+package com.insighton.core.sensors.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

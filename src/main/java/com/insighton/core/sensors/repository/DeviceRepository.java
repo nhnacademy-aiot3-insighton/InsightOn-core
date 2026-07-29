@@ -1,6 +1,6 @@
-package com.insighton.core.devices.repository;
+package com.insighton.core.sensors.repository;
 
-import com.insighton.core.devices.entity.DeviceEntity;
+import com.insighton.core.sensors.entity.DeviceEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

@@ -1,17 +1,22 @@
 
-package com.insighton.core.devices.service;
+package com.insighton.core.sensors.service;
 
-import com.insighton.core.devices.dto.DeviceRequest;
-import com.insighton.core.devices.dto.DeviceResponse;
+import com.insighton.core.sensors.dto.DeviceRequest;
+import com.insighton.core.sensors.dto.DeviceResponse;
+import com.insighton.core.sensors.entity.DeviceCacheEntry;
 
 import java.util.List;
+import java.util.Set;
 
 public interface DeviceService {
+
+    // MQTT 패킷 수신 시 캐시 미스가 발생하면 호출되어 센서를 자동 생성하고 캐시 엔트리를 반환하는 메서드
+    DeviceCacheEntry autoProvision(Long gatewayId, String deviceEui, String deviceName, Set<String> metricKeys);
 
     /**
      * 장치 생성 및 등록
      */
-    Long createDevice(DeviceRequest requestDto);
+    Long createActuator(DeviceRequest requestDto);
 
     /**
      * 단일 장치 상세 조회
