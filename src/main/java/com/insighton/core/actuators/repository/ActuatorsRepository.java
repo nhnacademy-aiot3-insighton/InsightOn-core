@@ -13,5 +13,5 @@ public interface ActuatorsRepository extends JpaRepository<ActuatorsEntity, Long
     List<ActuatorsEntity> findByLocationId(Long locationId);
 
     // 액추에이터 종류(ActuatorType)별 목록 조회
-    List<ActuatorsEntity> finByActuatorType(ActuatorType actuatorType);
+    List<ActuatorsEntity> findByActuatorType(ActuatorType actuatorType);
 }
