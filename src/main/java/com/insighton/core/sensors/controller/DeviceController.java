@@ -13,7 +13,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/devices")
+@RequestMapping("/api/v1/sensor")
 @RequiredArgsConstructor
 public class DeviceController {
 
