@@ -9,7 +9,6 @@ import com.insighton.core.groups.exception.InviteTokenNotFoundException;
 import com.insighton.core.groups.exception.UnAuthorizedAccessException;
 import com.insighton.core.groups.repository.GroupsRepository;
 import com.insighton.core.groups.service.impl.GroupsServiceImpl;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -186,9 +185,11 @@ public class GroupsServiceTest {
         }
 
         @Test
-        @Disabled("Pageable 파라미터를 채워줄 리졸버가 없어 ParameterResolutionException — 배포 테스트 위해 임시 비활성화")
         @DisplayName("관리자 그룹 List 조회 실패 - 시스템 관리자가 아닐 때")
-        void getGroupList_unauthorized(Pageable pageable) {
+        void getGroupList_unauthorized() {
+            //given
+            Pageable pageable = PageRequest.of(0, 10);
+
             // when & then
             assertThatThrownBy(() -> groupsService.getGroupList("USER", 1L, pageable))
                     .isInstanceOf(UnAuthorizedAccessException.class);
