@@ -40,13 +40,5 @@ public interface LocationsRepository extends JpaRepository<Locations, Long> {
      *
      * @param groupId group ID
      */
-    void deleteByGroups_GroupId(Long groupId);
-
-    /**
-     * group ID에 해당하는 location이 존재하는지 확인
-     *
-     * @param groupId group ID
-     * @return 존재하면 true, 존재하지 않으면 false
-     */
-    boolean existsByGroups_groupId(Long groupsGroupId);
+    void deleteAllByGroups_GroupId(Long groupId);
 }
