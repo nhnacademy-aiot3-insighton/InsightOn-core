@@ -1,6 +1,7 @@
 package com.insighton.core.groups.entity;
 
 import com.insighton.core.groups.dto.request.GroupsRequest;
+import com.insighton.core.location.exception.EmptyValueException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -63,7 +64,7 @@ public class Groups {
      */
     public void rotateInviteToken(String newInviteToken) {
         if (newInviteToken == null || newInviteToken.isBlank()) {
-            throw new IllegalArgumentException("새로운 초대 토큰은 비어있을 수 없습니다.");
+            throw new EmptyValueException();
         }
         this.inviteToken = newInviteToken;
     }
