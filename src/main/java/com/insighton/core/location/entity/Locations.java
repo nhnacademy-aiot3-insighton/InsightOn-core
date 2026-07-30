@@ -1,6 +1,7 @@
 package com.insighton.core.location.entity;
 
 import com.insighton.core.groups.entity.Groups;
+import com.insighton.core.location.exception.EmptyValueException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -65,8 +66,8 @@ public class Locations {
     }
 
     public void updateName(String newLocationName) {
-        if (newLocationName == null || locationName.isBlank()) {
-            throw new IllegalArgumentException("새로운 location 이름은 비어있을 수 없습니다.");
+        if (newLocationName == null || newLocationName.isBlank()) {
+            throw new EmptyValueException();
         }
         this.locationName = newLocationName;
     }

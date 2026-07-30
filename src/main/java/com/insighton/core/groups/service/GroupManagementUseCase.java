@@ -7,7 +7,6 @@ import com.insighton.core.groupmember.service.GroupMembersService;
 import com.insighton.core.groups.dto.request.GroupsRequest;
 import com.insighton.core.groups.dto.response.GroupsResponse;
 import com.insighton.core.groups.entity.Groups;
-import com.insighton.core.groups.event.GroupDeletedEvent;
 import com.insighton.core.groups.exception.NoPermissionException;
 import com.insighton.core.groups.exception.UnAuthorizedAccessException;
 import com.insighton.core.location.dto.request.LocationsCreateRequest;
@@ -158,7 +157,7 @@ public class GroupManagementUseCase {
 
         groupService.deleteGroup(groupId);
 
-        eventPublisher.publishEvent(new GroupDeletedEvent(groupId));
+//        eventPublisher.publishEvent(new GroupDeletedEvent(groupId));
     }
 
     // ====================== Locations Controller ======================
@@ -286,7 +285,7 @@ public class GroupManagementUseCase {
         locationService.deleteLocation(targetLocationId, groupId);
     }
 
-    private void deleteLocationAll(Long groupId) {
+    public void deleteLocationAll(Long groupId) {
 
         // locationID에 해당하는 모든? devices와 dashboards 지우는 로직 추가하기
 

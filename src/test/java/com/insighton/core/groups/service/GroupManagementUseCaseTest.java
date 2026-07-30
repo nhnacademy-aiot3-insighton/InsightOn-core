@@ -1,5 +1,6 @@
 package com.insighton.core.groups.service;
 
+import com.insighton.core.gateway.service.GatewayService;
 import com.insighton.core.groupmember.dto.request.GroupMembersJoinRequest;
 import com.insighton.core.groupmember.entity.GroupMembers;
 import com.insighton.core.groupmember.exception.AlreadyJoinedException;
@@ -8,10 +9,16 @@ import com.insighton.core.groupmember.service.GroupMembersService;
 import com.insighton.core.groups.dto.request.GroupsRequest;
 import com.insighton.core.groups.dto.response.GroupsResponse;
 import com.insighton.core.groups.entity.Groups;
+import com.insighton.core.groups.exception.GroupNotFoundException;
 import com.insighton.core.groups.exception.InviteTokenNotFoundException;
 import com.insighton.core.groups.exception.NoPermissionException;
 import com.insighton.core.groups.exception.UnAuthorizedAccessException;
-import org.junit.jupiter.api.Disabled;
+import com.insighton.core.location.dto.request.LocationsCreateRequest;
+import com.insighton.core.location.dto.request.LocationsUpdateRequest;
+import com.insighton.core.location.dto.response.LocationsListResponse;
+import com.insighton.core.location.dto.response.LocationsResponse;
+import com.insighton.core.location.entity.Locations;
+import com.insighton.core.location.service.LocationsService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -19,6 +26,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.OffsetDateTime;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -31,6 +41,12 @@ class GroupManagementUseCaseTest {
 
     @Mock
     private GroupsService groupService;
+
+    @Mock
+    private GatewayService gatewayService;
+
+    @Mock
+    private LocationsService locationsService;
 
     @Mock
     private GroupMembersService groupMembersService;
@@ -235,7 +251,6 @@ class GroupManagementUseCaseTest {
         }
 
         @Test
-        @Disabled("engineClient가 null로 주입돼 NPE — Mockito @Mock 설정 누락, 배포 테스트 위해 임시 비활성화")
         @DisplayName("그룹 삭제 성공 - 슈퍼 매니저만 가능하며 연관 멤버 및 그룹 데이터 모두 삭제")
         void deleteGroup_success() {
             // given
@@ -247,7 +262,9 @@ class GroupManagementUseCaseTest {
             managementUseCase.deleteGroup(1L, 1L);
 
             // then
+            verify(gatewayService, times(1)).deleteByGroupId(1L);
             verify(groupMembersService, times(1)).deleteGroupMemberAll(1L, 1L); // 멤버 전체 삭제 검증
+            verify(locationsService, times(1)).deleteLocationAll(1L);
             verify(groupService, times(1)).deleteGroup(1L); // 그룹 엔티티 삭제 검증
         }
 
@@ -271,5 +288,394 @@ class GroupManagementUseCaseTest {
     @DisplayName("location test code")
     class LocationTest {
 
+        @Test
+        @DisplayName("Location 생성 성공")
+        void createLocation_success() {
+            // given
+            Long userId = 100L;
+            Long groupId = 1L;
+            LocationsCreateRequest request = new LocationsCreateRequest("test", Locations.AutoControlMode.SUGGESTION);
+
+            Groups mockGroup = mock(Groups.class);
+            GroupMembers mockGroupMembers = mock(GroupMembers.class);
+
+
+            given(groupService.groupFindById(groupId)).willReturn(mockGroup);
+            given(groupMembersService.validateGroupMembers(groupId, userId)).willReturn(mockGroupMembers);
+
+            given(mockGroupMembers.isMember()).willReturn(false);
+
+            // when
+            managementUseCase.createLocation(userId, groupId, request);
+
+            // then
+            verify(groupService, times(1)).groupFindById(groupId);
+            verify(groupMembersService, times(1)).validateGroupMembers(groupId, userId);
+            verify(locationsService, times(1)).createLocation(mockGroup, request);
+        }
+
+        @Test
+        @DisplayName("Location 생성 실패 - 존재하지 않는 그룹인 경우 예외 발생")
+        void createLocation_fail_groupNotFound() {
+            // given
+            Long userId = 100L;
+            Long groupId = 1L;
+            LocationsCreateRequest request = new LocationsCreateRequest("test", Locations.AutoControlMode.SUGGESTION);
+
+            given(groupService.groupFindById(groupId))
+                    .willThrow(GroupNotFoundException.class);
+
+            // when & then
+            assertThatThrownBy(() -> managementUseCase.createLocation(userId, groupId, request))
+                    .isInstanceOf(GroupNotFoundException.class);
+
+            verify(groupService).groupFindById(groupId);
+            verifyNoInteractions(groupMembersService, locationsService);
+        }
+
+        @Test
+        @DisplayName("Location 생성 실패 - 그룹에 속하지 않은 사용자인 경우 예외 발생")
+        void createLocation_fail_memberNotFound() {
+            // given
+            Long userId = 100L;
+            Long groupId = 1L;
+            LocationsCreateRequest request = new LocationsCreateRequest("test", Locations.AutoControlMode.SUGGESTION);
+
+            Groups mockGroup = mock(Groups.class);
+            given(groupService.groupFindById(groupId)).willReturn(mockGroup);
+            given(groupMembersService.validateGroupMembers(groupId, userId))
+                    .willThrow(GroupMemberNotFoundException.byUserIdAndGroupId(userId, groupId));
+
+            // when & then
+            assertThatThrownBy(() -> managementUseCase.createLocation(userId, groupId, request))
+                    .isInstanceOf(GroupMemberNotFoundException.class);
+
+            verify(groupService).groupFindById(groupId);
+            verify(groupMembersService).validateGroupMembers(groupId, userId);
+            verifyNoInteractions(locationsService);
+        }
+
+        @Test
+        @DisplayName("Location 생성 실패 - 일반 MEMBER 권한인 경우 NoPermissionException 발생")
+        void createLocation_fail_noPermission() {
+            // given
+            Long userId = 100L;
+            Long groupId = 1L;
+            LocationsCreateRequest request = new LocationsCreateRequest("test", Locations.AutoControlMode.SUGGESTION);
+
+            Groups mockGroup = mock(Groups.class);
+            GroupMembers mockGroupMembers = mock(GroupMembers.class);
+
+            given(groupService.groupFindById(groupId)).willReturn(mockGroup);
+            given(groupMembersService.validateGroupMembers(groupId, userId)).willReturn(mockGroupMembers);
+
+            given(mockGroupMembers.isMember()).willReturn(true);
+            given(mockGroupMembers.getGroupMemberId()).willReturn(10L);
+
+            // when & then
+            assertThatThrownBy(() -> managementUseCase.createLocation(userId, groupId, request))
+                    .isInstanceOf(NoPermissionException.class);
+
+            verify(groupService).groupFindById(groupId);
+            verify(groupMembersService).validateGroupMembers(groupId, userId);
+            verifyNoInteractions(locationsService);
+        }
+
+        //        로케이션 리스트 조회 성공, 실패(user가 존재하지 않음)
+        @Test
+        @DisplayName("Location List 조회 성공")
+        void getLocationList_success() {
+            // given
+            Long userId = 100L;
+            Long groupId = 1L;
+
+            GroupMembers mockGroupMembers = mock(GroupMembers.class);
+            LocationsListResponse response1 = new LocationsListResponse(1L, "거실", Locations.AutoControlMode.SUGGESTION);
+            LocationsListResponse response2 = new LocationsListResponse(2L, "안방", Locations.AutoControlMode.SUGGESTION);
+            List<LocationsListResponse> expectedResponse = List.of(response1, response2);
+
+            given(groupMembersService.validateGroupMembers(groupId, userId)).willReturn(mockGroupMembers);
+            given(locationsService.getLocationList(groupId)).willReturn(expectedResponse);
+
+            // when
+            List<LocationsListResponse> result = managementUseCase.getLocationList(userId, groupId);
+
+            // then
+            assertThat(result).isNotNull();
+            assertThat(result).hasSize(2);
+            assertThat(result).isEqualTo(expectedResponse);
+
+            verify(groupMembersService).validateGroupMembers(groupId, userId);
+            verify(locationsService).getLocationList(groupId);
+        }
+
+        @Test
+        @DisplayName("Location List 조회 실패 - 존재하지 않는 유저(그룹 멤버)인 경우 예외 발생")
+        void getLocationList_fail_memberNotFound() {
+            // given
+            Long userId = 999L;
+            Long groupId = 1L;
+
+            given(groupMembersService.validateGroupMembers(groupId, userId))
+                    .willThrow(GroupMemberNotFoundException.byUserIdAndGroupId(userId, groupId));
+
+            // when & then
+            assertThatThrownBy(() -> managementUseCase.getLocationList(userId, groupId))
+                    .isInstanceOf(GroupMemberNotFoundException.class);
+
+            verify(groupMembersService).validateGroupMembers(groupId, userId);
+            verify(locationsService, times(0)).getLocationList(groupId);
+        }
+
+
+        // ==================== 로케이션 상세 정보 조회 ====================
+
+        @Test
+        @DisplayName("Location 상세 정보 조회 성공")
+        void getLocation_success() {
+            // given
+            Long userId = 100L;
+            Long groupId = 1L;
+            Long locationId = 10L;
+
+            GroupMembers mockGroupMembers = mock(GroupMembers.class);
+            LocationsResponse expectedResponse = new LocationsResponse(locationId, groupId, "거실", OffsetDateTime.now(), Locations.AutoControlMode.SUGGESTION);
+
+            given(groupMembersService.validateGroupMembers(groupId, userId)).willReturn(mockGroupMembers);
+            given(locationsService.getLocation(locationId, groupId)).willReturn(expectedResponse);
+
+            // when
+            LocationsResponse result = managementUseCase.getLocation(userId, groupId, locationId);
+
+            // then
+            assertThat(result).isNotNull();
+            assertThat(result).isEqualTo(expectedResponse);
+
+            verify(groupMembersService).validateGroupMembers(groupId, userId);
+            verify(locationsService).getLocation(locationId, groupId);
+        }
+
+        @Test
+        @DisplayName("Location 상세 정보 조회 실패 - 존재하지 않는 유저(그룹 멤버)인 경우 예외 발생")
+        void getLocation_fail_memberNotFound() {
+            // given
+            Long userId = 999L;
+            Long groupId = 1L;
+            Long locationId = 10L;
+
+            given(groupMembersService.validateGroupMembers(groupId, userId))
+                    .willThrow(GroupMemberNotFoundException.byUserIdAndGroupId(userId, groupId));
+
+            // when & then
+            assertThatThrownBy(() -> managementUseCase.getLocation(userId, groupId, locationId))
+                    .isInstanceOf(GroupMemberNotFoundException.class);
+
+            verify(groupMembersService).validateGroupMembers(groupId, userId);
+            verifyNoInteractions(locationsService);
+        }
+
+        // ==================== 로케이션 모드 수정 ====================
+
+        @Test
+        @DisplayName("Location 모드 수정 성공 - 관리자 권한 확인 후 변경")
+        void toggleAutoControlMode_success() {
+            // given
+            Long userId = 100L;
+            Long groupId = 1L;
+            Long locationId = 10L;
+
+            GroupMembers mockGroupMembers = mock(GroupMembers.class);
+            given(groupMembersService.validateGroupMembers(groupId, userId)).willReturn(mockGroupMembers);
+            given(mockGroupMembers.isMember()).willReturn(false);
+
+            // when
+            managementUseCase.toggleAutoControlMode(userId, groupId, locationId);
+
+            // then
+            verify(groupMembersService).validateGroupMembers(groupId, userId);
+            verify(locationsService).toggleAutoControlMode(locationId, groupId);
+        }
+
+        @Test
+        @DisplayName("Location 모드 수정 실패 - 그룹에 유저가 존재하지 않는 경우 예외 발생")
+        void toggleAutoControlMode_fail_memberNotFound() {
+            // given
+            Long userId = 999L;
+            Long groupId = 1L;
+            Long locationId = 10L;
+
+            given(groupMembersService.validateGroupMembers(groupId, userId))
+                    .willThrow(GroupMemberNotFoundException.byUserIdAndGroupId(userId, groupId));
+
+            // when & then
+            assertThatThrownBy(() -> managementUseCase.toggleAutoControlMode(userId, groupId, locationId))
+                    .isInstanceOf(GroupMemberNotFoundException.class);
+
+            verify(groupMembersService).validateGroupMembers(groupId, userId);
+            verifyNoInteractions(locationsService);
+        }
+
+        @Test
+        @DisplayName("Location 모드 수정 실패 - 일반 MEMBER 권한인 경우 NoPermissionException 발생")
+        void toggleAutoControlMode_fail_noPermission() {
+            // given
+            Long userId = 100L;
+            Long groupId = 1L;
+            Long locationId = 10L;
+
+            GroupMembers mockGroupMembers = mock(GroupMembers.class);
+            given(groupMembersService.validateGroupMembers(groupId, userId)).willReturn(mockGroupMembers);
+            given(mockGroupMembers.isMember()).willReturn(true);
+            given(mockGroupMembers.getGroupMemberId()).willReturn(10L);
+
+            // when & then
+            assertThatThrownBy(() -> managementUseCase.toggleAutoControlMode(userId, groupId, locationId))
+                    .isInstanceOf(NoPermissionException.class);
+
+            verify(groupMembersService).validateGroupMembers(groupId, userId);
+            verifyNoInteractions(locationsService);
+        }
+
+        // ==================== 로케이션 이름 수정 ====================
+
+        @Test
+        @DisplayName("Location 이름 수정 성공 - 관리자 권한 확인 후 수정")
+        void updateName_success() {
+            // given
+            Long userId = 100L;
+            Long groupId = 1L;
+            Long targetLocationId = 10L;
+            LocationsUpdateRequest request = new LocationsUpdateRequest("새이름");
+
+            GroupMembers mockGroupMembers = mock(GroupMembers.class);
+            given(groupMembersService.validateGroupMembers(groupId, userId)).willReturn(mockGroupMembers);
+            given(mockGroupMembers.isMember()).willReturn(false);
+
+            // when
+            managementUseCase.updateName(userId, groupId, targetLocationId, request);
+
+            // then
+            verify(groupMembersService).validateGroupMembers(groupId, userId);
+            verify(locationsService).updateName(targetLocationId, groupId, request);
+        }
+
+        @Test
+        @DisplayName("Location 이름 수정 실패 - 그룹에 유저가 존재하지 않는 경우 예외 발생")
+        void updateName_fail_memberNotFound() {
+            // given
+            Long userId = 999L;
+            Long groupId = 1L;
+            Long targetLocationId = 10L;
+            LocationsUpdateRequest request = new LocationsUpdateRequest("새이름");
+
+            given(groupMembersService.validateGroupMembers(groupId, userId))
+                    .willThrow(GroupMemberNotFoundException.byUserIdAndGroupId(userId, groupId));
+
+            // when & then
+            assertThatThrownBy(() -> managementUseCase.updateName(userId, groupId, targetLocationId, request))
+                    .isInstanceOf(GroupMemberNotFoundException.class);
+
+            verify(groupMembersService).validateGroupMembers(groupId, userId);
+            verifyNoInteractions(locationsService);
+        }
+
+        @Test
+        @DisplayName("Location 이름 수정 실패 - 일반 MEMBER 권한인 경우 NoPermissionException 발생")
+        void updateName_fail_noPermission() {
+            // given
+            Long userId = 100L;
+            Long groupId = 1L;
+            Long targetLocationId = 10L;
+            LocationsUpdateRequest request = new LocationsUpdateRequest("새이름");
+
+            GroupMembers mockGroupMembers = mock(GroupMembers.class);
+            given(groupMembersService.validateGroupMembers(groupId, userId)).willReturn(mockGroupMembers);
+            given(mockGroupMembers.isMember()).willReturn(true);
+            given(mockGroupMembers.getGroupMemberId()).willReturn(10L);
+
+            // when & then
+            assertThatThrownBy(() -> managementUseCase.updateName(userId, groupId, targetLocationId, request))
+                    .isInstanceOf(NoPermissionException.class);
+
+            verify(groupMembersService).validateGroupMembers(groupId, userId);
+            verifyNoInteractions(locationsService);
+        }
+
+        // ==================== 로케이션 삭제 ====================
+
+        @Test
+        @DisplayName("Location 삭제 성공 - 관리자 권한 확인 후 삭제")
+        void deleteLocation_success() {
+            // given
+            Long userId = 100L;
+            Long groupId = 1L;
+            Long targetLocationId = 10L;
+
+            GroupMembers mockGroupMembers = mock(GroupMembers.class);
+            given(groupMembersService.validateGroupMembers(groupId, userId)).willReturn(mockGroupMembers);
+            given(mockGroupMembers.isMember()).willReturn(false);
+
+            // when
+            managementUseCase.deleteLocation(userId, groupId, targetLocationId);
+
+            // then
+            verify(groupMembersService).validateGroupMembers(groupId, userId);
+            verify(locationsService).deleteLocation(targetLocationId, groupId);
+        }
+
+        @Test
+        @DisplayName("Location 삭제 실패 - 삭제를 시도하는 사람이 그룹에 존재하지 않는 경우 예외 발생")
+        void deleteLocation_fail_memberNotFound() {
+            // given
+            Long userId = 999L;
+            Long groupId = 1L;
+            Long targetLocationId = 10L;
+
+            given(groupMembersService.validateGroupMembers(groupId, userId))
+                    .willThrow(GroupMemberNotFoundException.byUserIdAndGroupId(userId, groupId));
+
+            // when & then
+            assertThatThrownBy(() -> managementUseCase.deleteLocation(userId, groupId, targetLocationId))
+                    .isInstanceOf(GroupMemberNotFoundException.class);
+
+            verify(groupMembersService).validateGroupMembers(groupId, userId);
+            verifyNoInteractions(locationsService);
+        }
+
+        @Test
+        @DisplayName("Location 삭제 실패 - 일반 MEMBER 권한인 경우 NoPermissionException 발생")
+        void deleteLocation_fail_noPermission() {
+            // given
+            Long userId = 100L;
+            Long groupId = 1L;
+            Long targetLocationId = 10L;
+
+            GroupMembers mockGroupMembers = mock(GroupMembers.class);
+            given(groupMembersService.validateGroupMembers(groupId, userId)).willReturn(mockGroupMembers);
+            given(mockGroupMembers.isMember()).willReturn(true);
+            given(mockGroupMembers.getGroupMemberId()).willReturn(10L);
+
+            // when & then
+            assertThatThrownBy(() -> managementUseCase.deleteLocation(userId, groupId, targetLocationId))
+                    .isInstanceOf(NoPermissionException.class);
+
+            verify(groupMembersService).validateGroupMembers(groupId, userId);
+            verifyNoInteractions(locationsService);
+        }
+
+        // ==================== 로케이션 모두 삭제 ====================
+
+        @Test
+        @DisplayName("Location 모두 삭제 성공")
+        void deleteLocationAll_success() {
+            // given
+            Long groupId = 1L;
+
+            // when
+            managementUseCase.deleteLocationAll(groupId);
+
+            // then
+            verify(locationsService).deleteLocationAll(groupId);
+        }
     }
 }
