@@ -64,6 +64,13 @@ public class Locations {
                 ? AutoControlMode.AI_DIRECT : AutoControlMode.SUGGESTION;
     }
 
+    public void updateName(String newLocationName) {
+        if (newLocationName == null || locationName.isBlank()) {
+            throw new IllegalArgumentException("새로운 location 이름은 비어있을 수 없습니다.");
+        }
+        this.locationName = newLocationName;
+    }
+
     public enum AutoControlMode {
         SUGGESTION, AI_DIRECT
     }
