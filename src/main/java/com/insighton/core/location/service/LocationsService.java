@@ -2,6 +2,7 @@ package com.insighton.core.location.service;
 
 import com.insighton.core.groups.entity.Groups;
 import com.insighton.core.location.dto.request.LocationsCreateRequest;
+import com.insighton.core.location.dto.request.LocationsUpdateRequest;
 import com.insighton.core.location.dto.response.LocationsListResponse;
 import com.insighton.core.location.dto.response.LocationsResponse;
 
@@ -34,9 +35,18 @@ public interface LocationsService {
     /**
      * mode 변경
      *
-     * @param locationId
+     * @param locationId 모드 변경 할 location ID
      */
     void toggleAutoControlMode(Long locationId, Long groupId);
+
+    /**
+     * location name 변경
+     *
+     * @param locationId 이름을 변경 할 Location ID
+     * @param groupId    location이 속한 group ID
+     * @param request    바꿀 이름 DTO...
+     */
+    void updateName(Long locationId, Long groupId, LocationsUpdateRequest request);
 
     /**
      * location 삭제

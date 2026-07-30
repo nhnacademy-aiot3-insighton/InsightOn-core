@@ -2,6 +2,7 @@ package com.insighton.core.location.service.impl;
 
 import com.insighton.core.groups.entity.Groups;
 import com.insighton.core.location.dto.request.LocationsCreateRequest;
+import com.insighton.core.location.dto.request.LocationsUpdateRequest;
 import com.insighton.core.location.dto.response.LocationsListResponse;
 import com.insighton.core.location.dto.response.LocationsResponse;
 import com.insighton.core.location.entity.Locations;
@@ -74,6 +75,15 @@ public class LocationsServiceImpl implements LocationsService {
 
     @Override
     @Transactional
+    public void updateName(Long locationId, Long groupId, LocationsUpdateRequest request) {
+        Locations location = locationRepository.findByLocationIdAndGroups_GroupId(locationId, groupId)
+                .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(locationId));
+
+        location.updateName(request.newLocationName());
+    }
+
+    @Override
+    @Transactional
     public void deleteLocation(Long targetLocationId, Long groupId) {
         Locations location = locationRepository.findByLocationIdAndGroups_GroupId(targetLocationId, groupId)
                 .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(targetLocationId));
@@ -85,6 +95,6 @@ public class LocationsServiceImpl implements LocationsService {
     @Transactional
     public void deleteLocationAll(Long groupId) {
 
-        locationRepository.deleteByGroups_GroupId(groupId);
+        locationRepository.deleteAllByGroups_GroupId(groupId);
     }
 }

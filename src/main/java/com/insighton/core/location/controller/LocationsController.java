@@ -2,6 +2,7 @@ package com.insighton.core.location.controller;
 
 import com.insighton.core.groups.service.GroupManagementUseCase;
 import com.insighton.core.location.dto.request.LocationsCreateRequest;
+import com.insighton.core.location.dto.request.LocationsUpdateRequest;
 import com.insighton.core.location.dto.response.LocationsListResponse;
 import com.insighton.core.location.dto.response.LocationsResponse;
 import jakarta.validation.Valid;
@@ -87,6 +88,27 @@ public class LocationsController {
             @PathVariable("location-id") Long locationId
     ) {
         useCase.toggleAutoControlMode(userId, groupId, locationId);
+
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * location의 name 변경
+     *
+     * @param userId     변경하려는 user의 ID
+     * @param groupId    변경하려는 location이 속한 group의 ID
+     * @param locationId 변경하려는 location의 ID
+     * @param request    변경하려는 name이 담겨있는 DTO(?)
+     * @return 성공 시 상태 200 반환
+     */
+    @PutMapping("/api/v1/groups/{group-id}/location/{location-id}/update")
+    public ResponseEntity<Void> updateName(
+            @RequestHeader("X-USER-ID") Long userId,
+            @PathVariable("group-id") Long groupId,
+            @PathVariable("location-id") Long locationId,
+            @Valid @RequestBody LocationsUpdateRequest request) {
+
+        useCase.updateName(userId, groupId, locationId, request);
 
         return ResponseEntity.ok().build();
     }

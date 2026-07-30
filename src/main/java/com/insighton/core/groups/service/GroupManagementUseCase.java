@@ -4,17 +4,19 @@ import com.insighton.core.gateway.service.GatewayService;
 import com.insighton.core.groupmember.dto.request.GroupMembersJoinRequest;
 import com.insighton.core.groupmember.entity.GroupMembers;
 import com.insighton.core.groupmember.service.GroupMembersService;
-import com.insighton.core.groups.client.EngineClient;
 import com.insighton.core.groups.dto.request.GroupsRequest;
 import com.insighton.core.groups.dto.response.GroupsResponse;
 import com.insighton.core.groups.entity.Groups;
+import com.insighton.core.groups.event.GroupDeletedEvent;
 import com.insighton.core.groups.exception.NoPermissionException;
 import com.insighton.core.groups.exception.UnAuthorizedAccessException;
 import com.insighton.core.location.dto.request.LocationsCreateRequest;
+import com.insighton.core.location.dto.request.LocationsUpdateRequest;
 import com.insighton.core.location.dto.response.LocationsListResponse;
 import com.insighton.core.location.dto.response.LocationsResponse;
 import com.insighton.core.location.service.LocationsService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +29,7 @@ public class GroupManagementUseCase {
     private final GroupMembersService groupMembersService;
     private final LocationsService locationService;
     private final GatewayService gatewayService;
-    private final EngineClient engineClient;
+    private final ApplicationEventPublisher eventPublisher;
 
     // ====================== Group Controller ======================
 
@@ -148,15 +150,15 @@ public class GroupManagementUseCase {
         if (!groupMembers.isSuperManager()) {
             throw NoPermissionException.forAdmin(groupMembers.getGroupMemberId());
         }
-
-        engineClient.deleteEnginesByGroupId(groupId);
-        // gateway 삭제하기 전부.
+        gatewayService.deleteByGroupId(groupId);
 
         groupMembersService.deleteGroupMemberAll(userId, groupId);
 
         deleteLocationAll(groupId);
 
         groupService.deleteGroup(groupId);
+
+        eventPublisher.publishEvent(new GroupDeletedEvent(groupId));
     }
 
     // ====================== Locations Controller ======================
@@ -234,6 +236,27 @@ public class GroupManagementUseCase {
         }
 
         locationService.toggleAutoControlMode(locationId, groupId);
+    }
+
+    /**
+     * location name 수정
+     *
+     * @param userId           정보를 수정하려는 user의 ID
+     * @param groupId          수정하려는 location이 속해있는 group의 ID
+     * @param targetLocationId 수정하려는 location의 ID
+     * @param request          수정 할 이름
+     */
+    @Transactional
+    public void updateName(Long userId, Long groupId, Long targetLocationId, LocationsUpdateRequest request) {
+
+        GroupMembers groupMembers = groupMembersService.validateGroupMembers(groupId, userId);
+
+        // member가 member 권한일 때는 에러를 던지고
+        if (groupMembers.isMember()) {
+            throw NoPermissionException.forAdmin(groupMembers.getGroupMemberId());
+        }
+
+        locationService.updateName(targetLocationId, groupId, request);
     }
 
     /**
