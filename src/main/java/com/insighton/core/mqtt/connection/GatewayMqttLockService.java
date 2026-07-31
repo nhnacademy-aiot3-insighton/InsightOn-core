@@ -53,17 +53,25 @@ public class GatewayMqttLockService {
      * 갱신 전에 Redis에 저장된 현재 소유자가 정말 나(ownerId)인지 먼저 GET으로 확인하는데,
      * 이 확인 없이 무조건 갱신하면 — 내가 TTL 만료로 이미 락을 잃은 사이 다른 인스턴스가 채간 경우
      * 남의 락 TTL을 내가 연장해주는 사고가 날 수 있기 때문임.
+     * <p>
+     * 소유자 불일치로 갱신에 실패하면 false를 반환함 — 호출자(Reconciler)가 이걸 무시하고
+     * 로컬 연결을 계속 유지하면, 이미 다른 인스턴스가 같은 게이트웨이에 새로 접속한 상태에서
+     * 나도 계속 붙어있게 되어 clientId 충돌(연결 뺏기 플래핑)이 재발함. 반드시 반환값을 확인해
+     * false면 로컬 연결을 해제해야 함.
      *
      * @param gatewayId 갱신할 게이트웨이 PK
      * @param ownerId   갱신을 시도하는 인스턴스 식별자
+     * @return 내가 진짜 소유자여서 갱신에 성공했으면 true, 이미 다른 인스턴스로 소유권이 넘어가 있으면 false
      */
-    public void renew(Long gatewayId, String ownerId) {
+    public boolean renew(Long gatewayId, String ownerId) {
         String currentOwner = redisTemplate.opsForValue().get(key(gatewayId));
 
         if(ownerId.equals(currentOwner)) {
             redisTemplate.expire(key(gatewayId), LOCK_TTL);
+            return true;
         } else {
             log.warn("Gateway {} 락 소유자가 나({})와 다름 — 갱신 스킵 (현재 소유자: {})", gatewayId, ownerId, currentOwner);
+            return false;
         }
     }
 
