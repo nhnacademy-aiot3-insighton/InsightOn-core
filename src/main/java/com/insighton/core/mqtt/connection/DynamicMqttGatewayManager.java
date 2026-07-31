@@ -2,6 +2,7 @@ package com.insighton.core.mqtt.connection;
 
 import com.insighton.core.gateway.MqttGatewayConnectionInfo;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,9 +23,6 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class DynamicMqttGatewayManager {
-
-    // ChirpStack 표준 업링크 토픽 규격 — 그룹마다 브로커는 달라도 토픽 형식은 동일해서 상수로 고정.
-    private static final String[] SUBSCRIBE_TOPICS = {"application/+/device/+/event/up"};
 
     // 이 flow를 타고 들어오는 모든 메시지에 소속 게이트웨이 ID를 표식으로 남기는 헤더 키.
     // devEui 캐시 조회 성공 여부와 무관하게 GatewayPacketInboundHandler가 하트비트를 찍을 수 있도록 함.
@@ -52,7 +50,7 @@ public class DynamicMqttGatewayManager {
         MqttPahoMessageDrivenChannelAdapter adapter = new MqttPahoMessageDrivenChannelAdapter(
                 connectionInfo.clientId(),
                 clientFactory,
-                SUBSCRIBE_TOPICS
+                connectionInfo.topics()
         );
 
         adapter.setCompletionTimeout(30000); // Paho 내부 connectionTimeout(기본 30초)보다 짧으면 SI가 먼저 재시도를 걸어 "연결 이미 진행 중" 충돌 발생
@@ -70,7 +68,7 @@ public class DynamicMqttGatewayManager {
                 .register();
 
         registrations.put(connectionInfo.gatewayId(), registration);
-        log.info("Gateway {} MQTT 클라이언트 등록 완료 ( topics = {} )", connectionInfo.gatewayId(), SUBSCRIBE_TOPICS);
+        log.info("Gateway {} MQTT 클라이언트 등록 완료 ( topics = {} )", connectionInfo.gatewayId(), connectionInfo.topics());
     }
 
     /**
@@ -86,5 +84,28 @@ public class DynamicMqttGatewayManager {
             registration.destroy();
             log.info("Gateway {} MQTT 클라이언트 해제", gatewayId);
         }
+    }
+
+    /**
+     * 이 인스턴스가 해당 게이트웨이의 MQTT 클라이언트를 이미 등록해서 물고 있는지 확인함.
+     * {@code GatewayMqttConnectionReconciler}가 매 tick마다 "새로 시도해야 할지, TTL만
+     * 갱신하면 될지"를 가르는 기준으로 사용함. 실제 연결이 살아있는지(브로커와의 TCP 연결
+     * 상태)까지 확인하는 건 아니고, 로컬 등록 맵에 항목이 있는지만 확인하는 것에 주의.
+     *
+     * @param gatewayId 확인할 게이트웨이 PK
+     * @return 등록되어 있으면 true
+     */
+    public boolean isRegistered(Long gatewayId) {
+        return registrations.containsKey(gatewayId);
+    }
+
+    /**
+     * 이 인스턴스가 현재 물고 있는 전체 게이트웨이 ID 목록을 반환함.
+     * graceful shutdown 시 반납할 락 대상을 정하는 용도로 사용됨.
+     *
+     * @return 등록된 게이트웨이 ID의 방어적 복사본(원본 맵과 독립적인 스냅샷)
+     */
+    public Set<Long> getRegisterGatewayIds() {
+        return Set.copyOf(registrations.keySet());
     }
 }

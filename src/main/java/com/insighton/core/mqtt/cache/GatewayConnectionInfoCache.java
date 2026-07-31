@@ -1,4 +1,4 @@
-package com.insighton.core.mqtt.connection;
+package com.insighton.core.mqtt.cache;
 
 import com.insighton.core.gateway.MqttGatewayConnectionInfo;
 import java.util.Map;
