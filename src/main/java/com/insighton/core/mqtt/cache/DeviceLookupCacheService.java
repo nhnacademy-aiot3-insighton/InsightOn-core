@@ -2,6 +2,8 @@ package com.insighton.core.mqtt.cache;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.insighton.core.mqtt.cache.dto.DeviceCacheEntry;
+import com.insighton.core.sensors.entity.DeviceEntity;
+import com.insighton.core.sensors.repository.DeviceRepository;
 import java.time.Duration;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +24,7 @@ public class DeviceLookupCacheService {
 
     private final Cache<String, DeviceCacheEntry> deviceEuiLocalCache;
     private final RedisTemplate<String, DeviceCacheEntry> deviceRedisTemplate;
-    //TODO: DeviceRepository 주입
+    private final DeviceRepository deviceRepository;
 
     /**
      * devEui로 기기 캐시 항목을 조회함. Caffeine, Redis, PostgreSQL 순으로 확인하며
@@ -45,7 +47,8 @@ public class DeviceLookupCacheService {
             return Optional.of(fromRedis);
         }
 
-        Optional<DeviceCacheEntry> fromDb = Optional.empty(); //TODO: DeviceRepository 호출해 DeviceCacheEntry 반환해주는 메서드 필요
+        Optional<DeviceCacheEntry> fromDb = deviceRepository.findByDeviceEui(deviceEui)
+                .map(this::toCacheEntry);
 
         fromDb.ifPresent(this::populate);
 
@@ -71,5 +74,14 @@ public class DeviceLookupCacheService {
     public void evict(String deviceEui) {
         deviceEuiLocalCache.invalidate(deviceEui);
         deviceRedisTemplate.delete(REDIS_KEY_PREFIX + deviceEui);
+    }
+
+    private DeviceCacheEntry toCacheEntry(DeviceEntity device) {
+        return new DeviceCacheEntry(
+                device.getDeviceId(),
+                device.getDeviceEui(),
+                device.getGatewaysId(),
+                device.getLocationsId()
+        );
     }
 }

@@ -23,8 +23,9 @@ import org.springframework.stereotype.Component;
 
 /**
  * 모든 게이트웨이의 MQTT 인바운드 flow가 공유하는 패킷 진입점.
- * 현재는 본문이 비어 있으며, 추후 메타데이터 필터링 → devEui 캐시 조회 → InfluxDB/RabbitMQ 디스패치
- * 로직이 여기 채워질 예정
+ * {@code DynamicMqttGatewayManager}가 게이트웨이마다 만든 어댑터/flow가 전부 이 핸들러 하나로
+ * 모이며, 하트비트 기록 → 페이로드 파싱 → devEui 캐시 조회 → InfluxDB/RabbitMQ 디스패치까지
+ * 패킷 하나에 대한 처리 전체를 담당함.
  */
 @Component("gatewayPacketHandler")
 @RequiredArgsConstructor
@@ -39,8 +40,19 @@ public class GatewayPacketInboundHandler implements MessageHandler {
     private final TelemetryInfluxWriter influxWriter;
 
     /**
-     * MQTT로부터 수신한 메시지 하나를 처리함.
-     * devEui 조회 성공 여부와 무관하게, 이 flow로 뭔가 도착했다는 사실 자체를 하트비트로 우선 기록함.
+     * MQTT로부터 수신한 메시지 하나를 처리함. 순서대로:
+     * <ol>
+     *     <li>{@code gatewayId} 헤더로 하트비트 기록 — devEui 조회 성공 여부와 무관하게
+     *         "이 게이트웨이로부터 뭔가 도착했다"는 사실 자체를 우선 기록함</li>
+     *     <li>{@link MqttPayloadParser}로 페이로드를 정제된 {@link CleanTelemetryPacket}으로 파싱,
+     *         실패하면 드롭</li>
+     *     <li>devEui로 {@link DeviceLookupCacheService} 조회 — 등록된 기기면 locationId/groupId/
+     *         deviceId를 확정하고(위치 미배치면 드롭), 미등록이면 TEMP 플레이스홀더로 InfluxDB
+     *         파이프라인만 태움(Auto-Provisioning 미구현 상태의 임시 처리)</li>
+     *     <li>InfluxDB에 적재(항상) — {@link TelemetryInfluxWriter}, 비동기</li>
+     *     <li>등록된 기기인 경우에만 RabbitMQ로 발행 — {@link TelemetryPublisher}, 비동기.
+     *         미등록 기기는 devicesId가 없어 Rule Engine 매칭이 의미 없으므로 건너뜀</li>
+     * </ol>
      *
      * @param message 수신한 MQTT 메시지
      */
