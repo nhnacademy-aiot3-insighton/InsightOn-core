@@ -1,5 +1,6 @@
 package com.insighton.core.device_attributes.entity;
 
+import com.insighton.core.groups.entity.Groups;
 import com.insighton.core.sensors.entity.DeviceEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -53,8 +54,9 @@ public class DeviceAttributeEntity {
      */
     private String currentValueStr;
 
-    @Column(name = "group_id", nullable = false)
-    private Long groupId; // 소속 회사/그룹 ID (FK)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name =  "group_id", nullable = false)
+    private Groups groupId; // 소속 회사/그룹 ID (FK)
 
     /**
      * 액추에이터 제어 명령 집행 또는 상태 변경 시 최신 상태값을 업데이트하는 비즈니스 메서드

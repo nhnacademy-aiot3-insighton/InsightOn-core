@@ -7,8 +7,8 @@ import java.time.OffsetDateTime; // OffsetDateTime 임포트
 public record DeviceResponse(
         Long deviceId,         // 장치 PK ID
         DeviceType deviceType, // 장치 종류 (SENSOR / ACTUATOR)
-        Long gatewayId,        // [수정] gatewaysId -> gatewayId 단수형으로 수정 (SENSOR 전용)
-        Long locationId,       // [수정] locationsId -> locationId 단수형으로 수정
+        Long gatewayId,        // gatewayId (SENSOR 전용)
+        Long locationId,       // locationId
         String deviceEui,      // 고유 시리얼 식별자 (SENSOR 전용)
         String deviceName,     // 장치 명칭
         OffsetDateTime createdAt, // 장치 등록 시각

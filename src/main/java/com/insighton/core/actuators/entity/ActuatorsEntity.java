@@ -1,5 +1,6 @@
 package com.insighton.core.actuators.entity;
 
+import com.insighton.core.location.entity.Locations;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,8 +25,9 @@ public class ActuatorsEntity {
     @Column(name = "actuator_id") // DB의 actuator_id 컬럼과 매핑
     private Long actuatorId;
 
-    @Column(name = "location_id", nullable = false) // 설치 구역 식별자(FK) 매핑하며 필수값으로 지정
-    private Long locationId;
+    @JoinColumn(name = "location_id", nullable = false)// 설치 구역 식별자(FK) 매핑하며 필수값으로 지정
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Locations locationId;
 
     @Column(name = "device_name", length = 100, nullable = false) // 장비 이름을 100자 이하의 필수값으로 매핑
     private String deviceName;

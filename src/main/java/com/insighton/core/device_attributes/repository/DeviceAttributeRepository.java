@@ -41,4 +41,6 @@ public interface DeviceAttributeRepository extends JpaRepository<DeviceAttribute
 
     void deleteByDeviceId_DeviceId(Long deviceId);
 
+    void deleteByGroupId_GroupId(Long groupIdGroupId);
+
 }
