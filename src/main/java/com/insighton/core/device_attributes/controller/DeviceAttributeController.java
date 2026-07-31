@@ -22,8 +22,10 @@ public class DeviceAttributeController {
 
     // 기기 속성 전체 목록 조회
     @GetMapping
-    public ResponseEntity<List<DeviceAttribute>> getDeviceAttribute(@PathVariable("deviceId")Long deviceId){
-        List<DeviceAttribute> attributeDto = attributeService.getAllAttributeByDeviceId(deviceId);
+    public ResponseEntity<List<DeviceAttribute>> getDeviceAttribute(
+            @RequestHeader("X-USER-ID") Long userId,
+            @PathVariable("deviceId")Long deviceId){
+        List<DeviceAttribute> attributeDto = attributeService.getAllAttributeByDeviceId(userId, deviceId);
         return ResponseEntity.ok(attributeDto);
     }
 
@@ -43,10 +45,12 @@ public class DeviceAttributeController {
     // 단일 엑충이터 속성 값 변경 제어 API
     @PutMapping("/{metricKey}")
     public ResponseEntity<Void> updateActuatorValue(
+            @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("deviceId") Long deviceId,
             @PathVariable("metricKey") String metricKey,
             @RequestBody @Valid ActuatorUpdateRequest request){
-        attributeService.updateActuatorValue(deviceId, metricKey, request.value());
+
+        attributeService.updateActuatorValue(userId, deviceId, metricKey, request.value());
         return ResponseEntity.noContent().build();
     }
 }

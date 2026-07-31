@@ -1,5 +1,8 @@
 package com.insighton.core.sensors.entity;
 
+import com.insighton.core.gateway.entity.Gateway;
+import com.insighton.core.groups.entity.Groups;
+import com.insighton.core.location.entity.Locations;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,31 +31,34 @@ public class DeviceEntity {
     private DeviceType deviceType;
 
     // ================= [센서 전용 필드들] =================
-    @Column(name = "gateway_id")
-    private Long gatewaysId; // SENSOR 전용 (ACTUATOR는 null)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name =  "gateway_id", nullable = false)
+    private Gateway gatewaysId; // SENSOR 전용 (ACTUATOR는 null)
 
-    @Column(name = "device_eui", unique = true) // nullable=false 제거 (ACTUATOR는 null)
+    @Column(name = "device_eui", unique = true, nullable = false)
     private String deviceEui;
 
     @Column(name = "last_seen_at")
-    private OffsetDateTime lastSeenAt; // SENSOR 전용 (ACTUATOR는 null)
+    private OffsetDateTime lastSeenAt;
 
     // ================= [공통 필드들] =================
 
     @Column(name = "device_name", nullable = false)
     private String deviceName;
 
-    @Column(name = "location_id")
-    private Long locationsId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "location_id")
+    private Locations locationsId;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
     // =================================================
-    @Column(name = "group_id")
-    private Long groupId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name =  "group_id", nullable = false)
+    private Groups groupId;
 
-    public void updateLocation(Long newLocationId){
+    public void updateLocation(Locations newLocationId){
         this.locationsId = newLocationId;
     }
 

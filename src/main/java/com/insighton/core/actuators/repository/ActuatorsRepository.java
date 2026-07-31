@@ -10,8 +10,10 @@ import java.util.List;
 public interface ActuatorsRepository extends JpaRepository<ActuatorsEntity, Long> {
 
     // 특정 위치(locationId)에 속한 모든 액추에이터 조회
-    List<ActuatorsEntity> findByLocationId(Long locationId);
+    List<ActuatorsEntity> findByLocationId_LocationId(Long locationId);
 
     // 액추에이터 종류(ActuatorType)별 목록 조회
     List<ActuatorsEntity> findByActuatorType(ActuatorType actuatorType);
+
+    void deleteAllByLocationId_LocationIdIn(List<Long> locationIds);
 }

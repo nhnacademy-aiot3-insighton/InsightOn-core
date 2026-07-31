@@ -1,8 +1,5 @@
 package com.insighton.core.actuators.controller;
 
-
-import com.insighton.core.actuators.dto.ActuatorNameUpdateRequest;
-import com.insighton.core.actuators.dto.ActuatorStateUpdateRequest;
 import com.insighton.core.actuators.dto.ActuatorsRequest;
 import com.insighton.core.actuators.dto.ActuatorsResponse;
 import com.insighton.core.actuators.service.ActuatorsService;
@@ -12,65 +9,75 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/actuators")
 @RequiredArgsConstructor
+@RequestMapping("/api/v1/groups/{groupsId}/actuators")
 public class ActuatorsController {
 
     private final ActuatorsService actuatorsService;
 
-    // 액추에이터 신규 생성 API (POST /api/v1/actuators)
     @PostMapping
-    public ResponseEntity<Long> createActuator(@RequestBody @Valid ActuatorsRequest request){
-        Long actuatorId = actuatorsService.createActuator(request);
+    public ResponseEntity<Long> createActuator(
+            @RequestHeader("X-USER-ID") Long userId,
+            @PathVariable Long groupsId,
+            @Valid @RequestBody ActuatorsRequest request) {
+        Long actuatorId = actuatorsService.createActuator(userId, groupsId, request);
         return ResponseEntity.ok(actuatorId);
     }
 
-    // 액추에이터 상세 조회 API (GET /api/v1/actuators/{id})
-    @GetMapping("/{id}")
-    public ResponseEntity<ActuatorsResponse> getActuator(@PathVariable("id") Long id){
-        ActuatorsResponse response = actuatorsService.getActuatorById(id);
-        return ResponseEntity.ok(response);
+    @GetMapping("/{actuatorId}")
+    public ResponseEntity<ActuatorsResponse> getActuatorById(
+            @RequestHeader("X-USER-ID") Long userId,
+            @PathVariable Long groupsId,
+            @PathVariable Long actuatorId) {
+        return ResponseEntity.ok(actuatorsService.getActuatorById(userId, groupsId, actuatorId));
     }
 
-    // 구역별(locationId) 목록 조회 API
     @GetMapping("/location/{locationId}")
-    public ResponseEntity<List<ActuatorsResponse>> getActuatorsByLocation(@PathVariable("locationId") Long locationId){
-        List<ActuatorsResponse> responses = actuatorsService.getActuatorsByLocationId(locationId);
-        return ResponseEntity.ok(responses);
+    public ResponseEntity<List<ActuatorsResponse>> getActuatorsByLocationId(
+            @RequestHeader("X-USER-ID") Long userId,
+            @PathVariable Long groupsId,
+            @PathVariable Long locationId) {
+        return ResponseEntity.ok(actuatorsService.getActuatorsByLocationId(userId, groupsId, locationId));
     }
 
-    // 액추에이터 이름 수정 API
-    @PutMapping("/{id}/name")
-    public ResponseEntity<Void> updateActuatorName(
-            @PathVariable("id") Long id,
-            @RequestBody @Valid ActuatorNameUpdateRequest request){
-        actuatorsService.updateActuatorName(id,request.deviceName());
-        return ResponseEntity.noContent().build();
-    }
-
-    // 액추에이터 제어 명령 수정 API
-    @PutMapping("/{id}/state")
+    @PatchMapping("/{actuatorId}/state")
     public ResponseEntity<Void> updateActuatorState(
-            @PathVariable("id") Long id,
-            @RequestBody @Valid ActuatorStateUpdateRequest request){
-        actuatorsService.updateActuatorState(id,request.currentState());
-        return ResponseEntity.noContent().build();
+            @RequestHeader("X-USER-ID") Long userId,
+            @PathVariable Long groupsId,
+            @PathVariable Long actuatorId,
+            @RequestBody Map<String, Object> newState) {
+        // 컨트롤러를 통한 사용자 요청이므로 isSystemRequest = false
+        actuatorsService.updateActuatorState(userId, groupsId, actuatorId, newState, false);
+        return ResponseEntity.ok().build();
     }
 
-
-    @DeleteMapping("/{id}/delete")
-    public ResponseEntity<Void> deleteActuator(@PathVariable("id") Long id){
-        actuatorsService.deleteActuatorById(id);
-        return ResponseEntity.noContent().build();
+    @PatchMapping("/{actuatorId}/name")
+    public ResponseEntity<Void> updateActuatorName(
+            @RequestHeader("X-USER-ID") Long userId,
+            @PathVariable Long groupsId,
+            @PathVariable Long actuatorId,
+            @RequestBody String newName) {
+        actuatorsService.updateActuatorName(userId, groupsId, actuatorId, newName);
+        return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping("/deleteAll")
-    public ResponseEntity<Void> deleteAllActuator(){
-        actuatorsService.deleteAll();
-        return ResponseEntity.noContent().build();
+    @DeleteMapping("/{actuatorId}")
+    public ResponseEntity<Void> deleteActuatorById(
+            @RequestHeader("X-USER-ID") Long userId,
+            @PathVariable Long groupsId,
+            @PathVariable Long actuatorId) {
+        actuatorsService.deleteActuatorById(userId, groupsId, actuatorId);
+        return ResponseEntity.ok().build();
     }
 
-
+    @DeleteMapping
+    public ResponseEntity<Void> deleteAll(
+            @RequestHeader("X-USER-ID") Long userId,
+            @PathVariable Long groupsId) {
+        actuatorsService.deleteAll(userId, groupsId);
+        return ResponseEntity.ok().build();
+    }
 }
