@@ -104,7 +104,14 @@ public class GatewayMqttConnectionReconciler {
                 }
 
                 //선호 인스턴스라면 ttl연장 재시도 횟수 초기화
-                lockService.renew(gatewayId, instanceId);
+                //renew 실패(다른 인스턴스가 이미 락을 채감) 시 로컬 연결이 남의 것과 clientId가
+                //충돌하지 않도록 즉시 해제 — TTL 만료 후 재획득이 늦게 감지되는 걸 방지
+                boolean renewed = lockService.renew(gatewayId, instanceId);
+                if (!renewed) {
+                    gatewayManager.unregisterGateway(gatewayId);
+                    log.warn("Gateway {} 락 갱신 실패 — 로컬 연결 강제 해제 (instance={})", gatewayId, instanceId);
+                    continue;
+                }
                 unclaimedTickCounts.remove(gatewayId);
                 continue;
             }
