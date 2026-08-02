@@ -1,11 +1,9 @@
 package com.insighton.core.actuators.entity;
 
+import com.insighton.core.actuators.converter.HashMapToJsonConverter;
 import com.insighton.core.location.entity.Locations;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -36,7 +34,11 @@ public class ActuatorsEntity {
     @Column(name = "actuator_type", length = 30, nullable = false) // 액추에이터 종류를 구분하는 필수 Enum 컬럼 매핑
     private ActuatorType actuatorType;
 
-    @JdbcTypeCode(SqlTypes.JSON) // 하이버네이트의 JSON 타입 변환기를 사용하도록 지정
+//    @JdbcTypeCode(SqlTypes.JSON) // 하이버네이트의 JSON 타입 변환기를 사용하도록 지정
+//    @Column(name = "current_state", columnDefinition = "jsonb", nullable = false) // PostgreSQL의 jsonb 컬럼과 매핑되는 상태값 데이터
+//    private Map<String, Object> currentState;
+
+    @Convert(converter = HashMapToJsonConverter.class)
     @Column(name = "current_state", columnDefinition = "jsonb", nullable = false) // PostgreSQL의 jsonb 컬럼과 매핑되는 상태값 데이터
     private Map<String, Object> currentState;
 

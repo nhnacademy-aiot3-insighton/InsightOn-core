@@ -1,5 +1,6 @@
 package com.insighton.core.actuators.controller;
 
+import com.insighton.core.actuators.dto.ActuatorNameUpdateRequest;
 import com.insighton.core.actuators.dto.ActuatorsRequest;
 import com.insighton.core.actuators.dto.ActuatorsResponse;
 import com.insighton.core.actuators.service.ActuatorsService;
@@ -43,7 +44,7 @@ public class ActuatorsController {
         return ResponseEntity.ok(actuatorsService.getActuatorsByLocationId(userId, groupsId, locationId));
     }
 
-    @PatchMapping("/{actuatorId}/state")
+    @PutMapping("/{actuatorId}/state")
     public ResponseEntity<Void> updateActuatorState(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable Long groupsId,
@@ -54,13 +55,13 @@ public class ActuatorsController {
         return ResponseEntity.ok().build();
     }
 
-    @PatchMapping("/{actuatorId}/name")
+    @PutMapping("/{actuatorId}/name")
     public ResponseEntity<Void> updateActuatorName(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable Long groupsId,
             @PathVariable Long actuatorId,
-            @RequestBody String newName) {
-        actuatorsService.updateActuatorName(userId, groupsId, actuatorId, newName);
+            @Valid @RequestBody ActuatorNameUpdateRequest request) {
+        actuatorsService.updateActuatorName(userId, groupsId, actuatorId, request.deviceName());
         return ResponseEntity.ok().build();
     }
 

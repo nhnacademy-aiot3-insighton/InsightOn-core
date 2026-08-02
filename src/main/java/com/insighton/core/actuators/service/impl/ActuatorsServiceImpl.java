@@ -96,6 +96,10 @@ public class ActuatorsServiceImpl implements ActuatorsService {
 
         validateGroupMembership(userId, groupId);
 
+        // 위치가 요청 그룹 소속인지 교차 검증
+        locationsRepository.findByLocationIdAndGroups_GroupId(locationId,groupId)
+                .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(locationId));
+
         // 위치 ID를 기준으로 목록 조회 후 DTO 변환[cite: 6]
         return actuatorsRepository.findByLocationId_LocationId(locationId).stream()
                 .map(ActuatorsResponse::from)
