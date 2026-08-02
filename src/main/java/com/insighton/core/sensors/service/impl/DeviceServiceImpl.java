@@ -30,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -69,6 +70,18 @@ public class DeviceServiceImpl implements DeviceService {
             String deviceEui,
             String deviceName,
             Set<String> metricKeys) {
+
+        // 캐시 만료 시 DB 유니크 제약조건(500 에러) 충돌 방어를 위해 EUI 사전 조회
+        Optional<DeviceEntity> existingDevice = deviceRepository.findByDeviceEui(deviceEui);
+        if (existingDevice.isPresent()) {
+            DeviceEntity e = existingDevice.get();
+            DeviceCacheEntry cacheEntry = new DeviceCacheEntry(
+                    e.getDeviceId(), e.getDeviceEui(), gatewayId,
+                    e.getLocationsId() != null ? e.getLocationsId().getLocationId() : null
+            );
+            deviceLookupCacheService.populate(cacheEntry); // 캐시 복구
+            return cacheEntry;
+        }
 
         // 대소문자 졍규화
         String nolDeviceName = nomalizeDeviceName(deviceName);
@@ -134,28 +147,28 @@ public class DeviceServiceImpl implements DeviceService {
         return toDto(deviceEntity);
     }
 
-    @Override
-    @Transactional // 위치 수정 로직
-    public void updateDeviceLocation(Long userId, Long deviceId, Long newLocationId) {
-        if (newLocationId == null) {
-            throw new InvalidDeviceValueException("변경할 위치 ID는 필수입니다.");
-        }
-        DeviceEntity deviceEntity = deviceRepository.findById(deviceId)
-                .orElseThrow(() -> new DeviceNotFoundException("디바이스를 찾을 수 없습니다. (ID: " + deviceId + ")"));
-
-        // 쓰기 작업 권한 체크 (엔티티에 저장된 groupId 기준 - 다른 그룹 디바이스는 조작 불가)
-        validateManagerRole(userId, deviceEntity.getGroupId().getGroupId()); // Groups 객체에서 Long ID 호출
-
-        Locations newLocation = locationsRepository.findById(newLocationId)
-                        .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(newLocationId));
-
-        deviceEntity.updateLocation(newLocation);
-
-        // 캐시도 같이 갱신 (deviceEui가 있는 센서만 캐시에 들어있음)
-        if(deviceEntity.getDeviceEui() != null){
-            deviceLookupCacheService.updateLocation(deviceEntity.getDeviceEui(), newLocationId);
-        }
-    }
+//    @Override
+//    @Transactional // 위치 수정 로직
+//    public void updateDeviceLocation(Long userId, Long deviceId, Long newLocationId) {
+//        if (newLocationId == null) {
+//            throw new InvalidDeviceValueException("변경할 위치 ID는 필수입니다.");
+//        }
+//        DeviceEntity deviceEntity = deviceRepository.findById(deviceId)
+//                .orElseThrow(() -> new DeviceNotFoundException("디바이스를 찾을 수 없습니다. (ID: " + deviceId + ")"));
+//
+//        // 쓰기 작업 권한 체크 (엔티티에 저장된 groupId 기준 - 다른 그룹 디바이스는 조작 불가)
+//        validateManagerRole(userId, deviceEntity.getGroupId().getGroupId()); // Groups 객체에서 Long ID 호출
+//
+//        Locations newLocation = locationsRepository.findById(newLocationId)
+//                        .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(newLocationId));
+//
+//        deviceEntity.updateLocation(newLocation);
+//
+//        // 캐시도 같이 갱신 (deviceEui가 있는 센서만 캐시에 들어있음)
+//        if(deviceEntity.getDeviceEui() != null){
+//            deviceLookupCacheService.updateLocation(deviceEntity.getDeviceEui(), newLocationId);
+//        }
+//    }
 
     @Override
     @Transactional // 이름 수정 로직
