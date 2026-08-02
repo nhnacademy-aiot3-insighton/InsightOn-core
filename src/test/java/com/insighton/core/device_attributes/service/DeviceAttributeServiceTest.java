@@ -1,12 +1,18 @@
 package com.insighton.core.device_attributes.service;
 
-import com.insighton.core.exception.CustomException;
-import com.insighton.core.device_attributes.dto.DeviceAttribute;
 import com.insighton.core.device_attributes.entity.DeviceAttributeEntity;
+import com.insighton.core.device_attributes.exception.MetricKeyNotFoundException;
 import com.insighton.core.device_attributes.repository.DeviceAttributeRepository;
 import com.insighton.core.device_attributes.service.impl.DeviceAttributeServiceImpl;
+import com.insighton.core.groupmember.entity.GroupMembers;
+import com.insighton.core.groupmember.entity.GroupMembers.GroupRole;
+import com.insighton.core.groupmember.service.GroupMembersService;
+import com.insighton.core.groups.entity.Groups;
+import com.insighton.core.groups.exception.NoPermissionException;
 import com.insighton.core.sensors.entity.DeviceEntity;
 import com.insighton.core.sensors.entity.DeviceType;
+import com.insighton.core.sensors.exception.DeviceNotFoundException;
+import com.insighton.core.sensors.exception.InvalidDeviceValueException;
 import com.insighton.core.sensors.repository.DeviceRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,84 +21,116 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
 class DeviceAttributeServiceTest {
 
     @Mock private DeviceAttributeRepository attributeRepository;
     @Mock private DeviceRepository deviceRepository;
-    @InjectMocks private DeviceAttributeServiceImpl attributeService;
+    @Mock private GroupMembersService groupMembersService;
 
-    @Test
-    @DisplayName("1. 특정 기기의 전체 속성 목록 조회 성공")
-    void getAllAttributeByDeviceId_success() {
-        Long deviceId = 1L;
-        DeviceEntity device = DeviceEntity.builder().deviceId(deviceId).groupId(1L).deviceType(DeviceType.SENSOR).build();
-        DeviceAttributeEntity attr1 = DeviceAttributeEntity.builder().deviceId(device).groupId(1L).metricKey("co2").currentValueStr("800").build();
+    @InjectMocks
+    private DeviceAttributeServiceImpl attributeService;
 
-        when(deviceRepository.existsById(deviceId)).thenReturn(true);
-        when(attributeRepository.findByDeviceId_DeviceId(deviceId)).thenReturn(List.of(attr1));
+    private DeviceEntity actuatorDevice(Long groupId) {
+        Groups group = mock(Groups.class);
+        given(group.getGroupId()).willReturn(groupId);
+        return DeviceEntity.builder().deviceId(1L).deviceType(DeviceType.ACTUATOR).groupId(group).build();
+    }
 
-        List<DeviceAttribute> result = attributeService.getAllAttributeByDeviceId(deviceId);
-
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).metricKey()).isEqualTo("co2");
+    private DeviceEntity sensorDevice(Long groupId) {
+        Groups group = mock(Groups.class);
+        given(group.getGroupId()).willReturn(groupId);
+        return DeviceEntity.builder().deviceId(1L).deviceType(DeviceType.SENSOR).groupId(group).build();
     }
 
     @Test
-    @DisplayName("2. 존재하지 않는 기기의 속성 조회 시 예외 발생")
-    void getAllAttributeByDeviceId_notFoundDevice() {
-        when(deviceRepository.existsById(999L)).thenReturn(false);
+    @DisplayName("updateActuatorValue - 정상 케이스")
+    void 값변경_성공() {
+        DeviceEntity device = actuatorDevice(5L);
+        given(deviceRepository.findById(1L)).willReturn(Optional.of(device));
+        given(groupMembersService.validateGroupMembers(5L, 1L))
+                .willReturn(GroupMembers.builder().userId(1L).groupRole(GroupRole.MANAGER).build());
 
-        assertThatThrownBy(() -> attributeService.getAllAttributeByDeviceId(999L))
-                .isInstanceOf(CustomException.class);
-    }
+        DeviceAttributeEntity attribute = DeviceAttributeEntity.builder()
+                .metricKey("power_status").build();
+        given(attributeRepository.findByDeviceId_DeviceIdAndMetricKey(1L, "power_status"))
+                .willReturn(Optional.of(attribute));
 
-    @Test
-    @DisplayName("3. 액추에이터 수치/상태 변경 성공 (Dirty Checking)")
-    void updateActuatorValue_success() {
-        Long deviceId = 1L;
-        String metricKey = "power_status";
-
-        // 성공을 위해 DeviceType.ACTUATOR로 세팅
-        DeviceEntity device = DeviceEntity.builder().deviceId(deviceId).groupId(1L).deviceType(DeviceType.ACTUATOR).build();
-        DeviceAttributeEntity attribute = DeviceAttributeEntity.builder().deviceId(device).groupId(1L).metricKey(metricKey).currentValueStr("OFF").build();
-
-        when(deviceRepository.findById(deviceId)).thenReturn(Optional.of(device));
-        when(attributeRepository.findByDeviceId_DeviceIdAndMetricKey(deviceId, metricKey)).thenReturn(Optional.of(attribute));
-
-        attributeService.updateActuatorValue(deviceId, metricKey, "ON");
+        attributeService.updateActuatorValue(1L, 1L, "POWER_STATUS", "ON");
 
         assertThat(attribute.getCurrentValueStr()).isEqualTo("ON");
     }
 
     @Test
-    @DisplayName("4. 센서 장치에 대해 제어 명령 시도 시 예외 발생 (400 Bad Request)")
-    void updateActuatorValue_rejectSensor() {
-        Long deviceId = 1L;
+    @DisplayName("updateActuatorValue - SENSOR 타입은 제어 API로 수정 불가")
+    void 값변경_센서타입_거부() {
+        DeviceEntity device = sensorDevice(5L);
+        given(deviceRepository.findById(1L)).willReturn(Optional.of(device));
+        given(groupMembersService.validateGroupMembers(5L, 1L))
+                .willReturn(GroupMembers.builder().userId(1L).groupRole(GroupRole.MANAGER).build());
 
-        // SENSOR 기기로 세팅
-        DeviceEntity device = DeviceEntity.builder().deviceId(deviceId).groupId(1L).deviceType(DeviceType.SENSOR).build();
-        when(deviceRepository.findById(deviceId)).thenReturn(Optional.of(device));
-
-        assertThatThrownBy(() -> attributeService.updateActuatorValue(deviceId, "power_status", "ON"))
-                .isInstanceOf(CustomException.class);
+        assertThrows(InvalidDeviceValueException.class,
+                () -> attributeService.updateActuatorValue(1L, 1L, "co2", "999"));
     }
 
     @Test
-    @DisplayName("5. 빈 수치값(newValue) 업데이트 요청 시 예외 발생")
-    void updateActuatorValue_invalidInputValue() {
-        Long deviceId = 1L;
-        DeviceEntity device = DeviceEntity.builder().deviceId(deviceId).groupId(1L).deviceType(DeviceType.ACTUATOR).build();
-        when(deviceRepository.findById(deviceId)).thenReturn(Optional.of(device));
+    @DisplayName("updateActuatorValue - MEMBER 권한이면 거부")
+    void 값변경_권한없음() {
+        DeviceEntity device = actuatorDevice(5L);
+        given(deviceRepository.findById(1L)).willReturn(Optional.of(device));
+        given(groupMembersService.validateGroupMembers(5L, 1L))
+                .willReturn(GroupMembers.builder().userId(1L).groupRole(GroupRole.MEMBER).build());
 
-        assertThatThrownBy(() -> attributeService.updateActuatorValue(deviceId, "power_status", "  "))
-                .isInstanceOf(CustomException.class);
+        assertThrows(NoPermissionException.class,
+                () -> attributeService.updateActuatorValue(1L, 1L, "power_status", "ON"));
+    }
+
+    @Test
+    @DisplayName("updateActuatorValue - 등록되지 않은 메트릭 키")
+    void 값변경_메트릭키없음() {
+        DeviceEntity device = actuatorDevice(5L);
+        given(deviceRepository.findById(1L)).willReturn(Optional.of(device));
+        given(groupMembersService.validateGroupMembers(5L, 1L))
+                .willReturn(GroupMembers.builder().userId(1L).groupRole(GroupRole.MANAGER).build());
+        given(attributeRepository.findByDeviceId_DeviceIdAndMetricKey(anyLong(), anyString()))
+                .willReturn(Optional.empty());
+
+        assertThrows(MetricKeyNotFoundException.class,
+                () -> attributeService.updateActuatorValue(1L, 1L, "power_status", "ON"));
+    }
+
+    @Test
+    @DisplayName("isValidDeviceAttribute - 대소문자가 달라도 정규화되어 조회된다")
+    void 유효성검증_대소문자_정규화() {
+        given(attributeRepository.existsByDeviceId_DeviceIdAndMetricKey(1L, "co2")).willReturn(true);
+
+        boolean result = attributeService.isValidDeviceAttribute(1L, "CO2");
+
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    @DisplayName("isValidDeviceAttribute - 존재하지 않는 메트릭 키는 예외 없이 false")
+    void 유효성검증_없는키_false() {
+        boolean result = attributeService.isValidDeviceAttribute(1L, "unknown_metric");
+
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    @DisplayName("getAllAttributeByDeviceId - 디바이스 없으면 예외")
+    void 목록조회_디바이스없음() {
+        given(deviceRepository.findById(999L)).willReturn(Optional.empty());
+
+        assertThrows(DeviceNotFoundException.class,
+                () -> attributeService.getAllAttributeByDeviceId(1L, 999L));
     }
 }

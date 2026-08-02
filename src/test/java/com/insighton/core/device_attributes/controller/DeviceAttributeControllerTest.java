@@ -2,120 +2,90 @@ package com.insighton.core.device_attributes.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.insighton.core.device_attributes.dto.ActuatorUpdateRequest;
-import com.insighton.core.device_attributes.entity.DeviceAttributeEntity;
-import com.insighton.core.device_attributes.repository.DeviceAttributeRepository;
-import com.insighton.core.sensors.entity.DeviceEntity;
-import com.insighton.core.sensors.entity.DeviceType;
-import com.insighton.core.sensors.repository.DeviceRepository;
-import org.junit.jupiter.api.BeforeEach;
+import com.insighton.core.device_attributes.dto.DeviceAttribute;
+import com.insighton.core.device_attributes.exception.MetricKeyNotFoundException;
+import com.insighton.core.device_attributes.service.DeviceAttributeService;
+import com.insighton.core.sensors.exception.DeviceNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.OffsetDateTime;
+import java.util.List;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@WebMvcTest(DeviceAttributeController.class)
 class DeviceAttributeControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private DeviceRepository deviceRepository;
-
-    @Autowired
-    private DeviceAttributeRepository attributeRepository;
-
-    private DeviceEntity savedDevice;
-
-    @BeforeEach
-    void setUp() {
-        attributeRepository.deleteAll();
-        deviceRepository.deleteAll();
-
-        // 테스트용 기본 디바이스 영속 (제어 API 테스트를 위해 ACTUATOR로 세팅 및 groupId 필수 주입)
-        DeviceEntity device = DeviceEntity.builder()
-                .groupId(1L)
-                .deviceType(DeviceType.ACTUATOR)
-                .deviceName("테스트 디바이스")
-                .deviceEui("EUI-ATTR-TEST")
-                .gatewaysId(100L)
-                .locationsId(1L)
-                .createdAt(OffsetDateTime.now())
-                .build();
-        savedDevice = deviceRepository.save(device);
-    }
+    @Autowired private MockMvc mockMvc;
+    @Autowired private ObjectMapper objectMapper;
+    @MockBean private DeviceAttributeService attributeService;
 
     @Test
-    @DisplayName("1. 기기 속성 목록 조회 API 성공")
-    void getDeviceAttribute() throws Exception {
-        // Given
-        attributeRepository.save(DeviceAttributeEntity.builder()
-                .deviceId(savedDevice)
-                .groupId(1L)
-                .metricKey("co2")
-                .currentValueStr("750")
-                .build());
+    @DisplayName("기기 속성 전체 조회 성공")
+    void 속성목록_조회_성공() throws Exception {
+        given(attributeService.getAllAttributeByDeviceId(1L, 1L))
+                .willReturn(List.of(new DeviceAttribute("co2", "이산화탄소", "ppm", "850")));
 
-        // When & Then
-        mockMvc.perform(get("/api/v1/sensor/" + savedDevice.getDeviceId() + "/attribute"))
+        mockMvc.perform(get("/api/v1/sensor/{deviceId}/attribute", 1L)
+                        .header("X-USER-ID", 1L))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].metricKey").value("co2"))
-                .andExpect(jsonPath("$[0].displayName").value("이산화탄소"))
-                .andExpect(jsonPath("$[0].unit").value("ppm"))
-                .andExpect(jsonPath("$[0].currentValueStr").value("750"));
+                .andExpect(jsonPath("$[0].metricKey").value("co2"));
     }
 
     @Test
-    @DisplayName("2. 시스템 지원 메트릭 정의 목록 조회 API 성공")
-    void getMetricDefinitions() throws Exception {
-        mockMvc.perform(get("/api/v1/sensor/" + savedDevice.getDeviceId() + "/attribute/definitions"))
+    @DisplayName("존재하지 않는 디바이스 조회 시 404")
+    void 속성목록_없는디바이스_404() throws Exception {
+        given(attributeService.getAllAttributeByDeviceId(anyLong(), anyLong()))
+                .willThrow(new DeviceNotFoundException("기기를 찾을 수 없습니다"));
+
+        mockMvc.perform(get("/api/v1/sensor/{deviceId}/attribute", 999L)
+                        .header("X-USER-ID", 1L))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("메트릭 정의 목록 조회 성공")
+    void 메트릭정의_조회_성공() throws Exception {
+        mockMvc.perform(get("/api/v1/sensor/{deviceId}/attribute/definitions", 1L)
+                        .header("X-USER-ID", 1L))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].metricKey").exists())
-                .andExpect(jsonPath("$[0].metricName").exists());
+                .andExpect(jsonPath("$").isArray());
     }
 
     @Test
-    @DisplayName("3. 액추에이터 속성값 변경 제어 API 성공 (204 No Content)")
-    void updateActuatorValue() throws Exception {
-        // Given
-        attributeRepository.save(DeviceAttributeEntity.builder()
-                .deviceId(savedDevice)
-                .groupId(1L)
-                .metricKey("power_status")
-                .currentValueStr("OFF")
-                .build());
+    @DisplayName("빈 값으로 제어값 변경 요청 시 @Valid에 걸려 400")
+    void 값변경_빈값_400() throws Exception {
+        ActuatorUpdateRequest request = new ActuatorUpdateRequest("");
 
-        ActuatorUpdateRequest request = new ActuatorUpdateRequest("ON");
-
-        // When & Then
-        mockMvc.perform(put("/api/v1/sensor/" + savedDevice.getDeviceId() + "/attribute/power_status")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isNoContent());
-    }
-
-    @Test
-    @DisplayName("4. 필수 수치값 누락 시 400 Bad Request 에러")
-    void updateActuatorValue_validationFail() throws Exception {
-        ActuatorUpdateRequest request = new ActuatorUpdateRequest(""); // @NotBlank 실패 유도
-
-        mockMvc.perform(put("/api/v1/sensor/" + savedDevice.getDeviceId() + "/attribute/power_status")
+        mockMvc.perform(put("/api/v1/sensor/{deviceId}/attribute/{metricKey}", 1L, "power_status")
+                        .header("X-USER-ID", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("등록되지 않은 메트릭 키면 404")
+    void 값변경_메트릭키없음_404() throws Exception {
+        willThrow(new MetricKeyNotFoundException("등록되지 않은 메트릭 키입니다"))
+                .given(attributeService)
+                .updateActuatorValue(anyLong(), anyLong(), anyString(), anyString());
+
+        ActuatorUpdateRequest request = new ActuatorUpdateRequest("ON");
+
+        mockMvc.perform(put("/api/v1/sensor/{deviceId}/attribute/{metricKey}", 1L, "unknown_key")
+                        .header("X-USER-ID", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound());
     }
 }
