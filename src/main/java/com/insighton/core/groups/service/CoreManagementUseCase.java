@@ -1,23 +1,23 @@
 package com.insighton.core.groups.service;
 
-import com.insighton.core.dashboards.dto.request.DashboardsRequest;
+import com.insighton.core.dashboards.dto.request.DashboardRequest;
 import com.insighton.core.dashboards.dto.response.DashboardResponse;
-import com.insighton.core.dashboards.service.DashboardsService;
+import com.insighton.core.dashboards.service.DashboardService;
 import com.insighton.core.gateway.service.GatewayService;
-import com.insighton.core.groupmember.dto.request.GroupMembersJoinRequest;
-import com.insighton.core.groupmember.entity.GroupMembers;
-import com.insighton.core.groupmember.service.GroupMembersService;
-import com.insighton.core.groups.dto.request.GroupsRequest;
-import com.insighton.core.groups.dto.response.GroupsResponse;
-import com.insighton.core.groups.entity.Groups;
+import com.insighton.core.groupmember.dto.request.GroupMemberJoinRequest;
+import com.insighton.core.groupmember.entity.GroupMember;
+import com.insighton.core.groupmember.service.GroupMemberService;
+import com.insighton.core.groups.dto.request.GroupRequest;
+import com.insighton.core.groups.dto.response.GroupResponse;
+import com.insighton.core.groups.entity.Group;
 import com.insighton.core.groups.exception.NoPermissionException;
 import com.insighton.core.groups.exception.UnAuthorizedAccessException;
-import com.insighton.core.location.dto.request.LocationsCreateRequest;
-import com.insighton.core.location.dto.request.LocationsUpdateRequest;
-import com.insighton.core.location.dto.response.LocationsListResponse;
-import com.insighton.core.location.dto.response.LocationsResponse;
-import com.insighton.core.location.entity.Locations;
-import com.insighton.core.location.service.LocationsService;
+import com.insighton.core.location.dto.request.LocationCreateRequest;
+import com.insighton.core.location.dto.request.LocationUpdateRequest;
+import com.insighton.core.location.dto.response.LocationListResponse;
+import com.insighton.core.location.dto.response.LocationResponse;
+import com.insighton.core.location.entity.Location;
+import com.insighton.core.location.service.LocationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -28,12 +28,12 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class CoreManagementUseCase {
-    private final GroupsService groupService;
-    private final GroupMembersService groupMembersService;
-    private final LocationsService locationService;
+    private final GroupService groupService;
+    private final GroupMemberService groupMemberService;
+    private final LocationService locationService;
     private final GatewayService gatewayService;
     private final ApplicationEventPublisher eventPublisher;
-    private final DashboardsService dashboardsService;
+    private final DashboardService dashboardService;
 
     // ====================== Group Controller ======================
 
@@ -43,11 +43,11 @@ public class CoreManagementUseCase {
      * @param request 그룹 가입 요청 DTO
      */
     @Transactional
-    public void joinGroupByToken(GroupMembersJoinRequest request) {
+    public void joinGroupByToken(GroupMemberJoinRequest request) {
         // inviteToken으로 대상 그룹이 존재하는지 확인 및 조회
-        Groups groups = groupService.validateGroupByInviteToken(request.inviteToken());
+        Group group = groupService.validateGroupByInviteToken(request.inviteToken());
 
-        groupMembersService.joinGroupByToken(groups, request);
+        groupMemberService.joinGroupByToken(group, request);
     }
 
     /**
@@ -57,10 +57,10 @@ public class CoreManagementUseCase {
      * @param userId              그룹을 생성하는 user의 ID
      */
     @Transactional
-    public void createGroup(GroupsRequest groupsCreateRequest, Long userId) {
-        Groups groups = groupService.createGroup(groupsCreateRequest);
+    public void createGroup(GroupRequest groupsCreateRequest, Long userId) {
+        Group group = groupService.createGroup(groupsCreateRequest);
 
-        groupMembersService.createGroupMember(groups, userId);
+        groupMemberService.createGroupMember(group, userId);
     }
 
 
@@ -72,8 +72,8 @@ public class CoreManagementUseCase {
      * @param groupId 수정하려는 group의 ID
      */
     @Transactional
-    public void updateGroup(GroupsRequest request, Long userId, Long groupId) {
-        if (groupMembersService.isGroupAdmin(groupId, userId)) {
+    public void updateGroup(GroupRequest request, Long userId, Long groupId) {
+        if (groupMemberService.isGroupAdmin(groupId, userId)) {
             groupService.updateGroup(request, groupId);
             return;
         }
@@ -91,9 +91,9 @@ public class CoreManagementUseCase {
      * return 하기 전에 validateUserExists로 검증
      */
     @Transactional(readOnly = true)
-    public GroupsResponse getGroupPreview(String inviteToken, Long userId, Long groupId) {
+    public GroupResponse getGroupPreview(String inviteToken, Long userId, Long groupId) {
         // 유저가 존재하는지 검증(다른 그룹에 가입이 안 되어있어야함 )
-        groupMembersService.validateUserNotInAnyGroup(userId);
+        groupMemberService.validateUserNotInAnyGroup(userId);
 
         return groupService.getGroupPreview(inviteToken, groupId);
     }
@@ -106,17 +106,17 @@ public class CoreManagementUseCase {
      * @return token 정보를 제외한 group의 정보
      */
     @Transactional(readOnly = true)
-    public GroupsResponse getMyGroup(Long userId, Long groupId) {
+    public GroupResponse getMyGroup(Long userId, Long groupId) {
         // 이건 group안에 user가 속해있는지 같이 보기 위한 메서드임...
-        GroupMembers members = groupMembersService.validateGroupMembers(groupId, userId);
+        GroupMember members = groupMemberService.validateGroupMembers(groupId, userId);
 
         // 관리자나 그룹 생성자일 때는
         if (members.isManager() || members.isSuperManager()) {
-            return GroupsResponse.ofAdmin(members.getGroups());
+            return GroupResponse.ofAdmin(members.getGroup());
         }
 
         // 대상 그룹 조회 (없을 시 exception 던지기)
-        return GroupsResponse.ofPublic(members.getGroups());
+        return GroupResponse.ofPublic(members.getGroup());
     }
 
 
@@ -128,10 +128,10 @@ public class CoreManagementUseCase {
      */
     @Transactional
     public void newInviteToken(Long userId, Long groupId) {
-        GroupMembers groupMembers = groupMembersService.validateGroupMembers(groupId, userId);
+        GroupMember groupMember = groupMemberService.validateGroupMembers(groupId, userId);
 
-        if (groupMembers.isMember()) {
-            throw NoPermissionException.forAdmin(groupMembers.getGroupMemberId());
+        if (groupMember.isMember()) {
+            throw NoPermissionException.forAdmin(groupMember.getGroupMemberId());
         }
         groupService.newInviteToken(groupId);
     }
@@ -149,14 +149,14 @@ public class CoreManagementUseCase {
      */
     @Transactional
     public void deleteGroup(Long userId, Long groupId) {
-        GroupMembers groupMembers = groupMembersService.validateGroupMembers(groupId, userId);
+        GroupMember groupMember = groupMemberService.validateGroupMembers(groupId, userId);
 
-        if (!groupMembers.isSuperManager()) {
-            throw NoPermissionException.forAdmin(groupMembers.getGroupMemberId());
+        if (!groupMember.isSuperManager()) {
+            throw NoPermissionException.forAdmin(groupMember.getGroupMemberId());
         }
         gatewayService.deleteByGroupId(groupId);
 
-        groupMembersService.deleteGroupMemberAll(userId, groupId);
+        groupMemberService.deleteGroupMemberAll(userId, groupId);
 
         deleteLocationAll(groupId);
 
@@ -165,7 +165,7 @@ public class CoreManagementUseCase {
 //        eventPublisher.publishEvent(new GroupDeletedEvent(groupId));
     }
 
-    // ====================== Locations Controller ======================
+    // ====================== Location Controller ======================
 
     /**
      * location 생성
@@ -175,21 +175,21 @@ public class CoreManagementUseCase {
      * @param request location 생성 request
      */
     @Transactional
-    public void createLocation(Long userId, Long groupId, LocationsCreateRequest request) {
+    public void createLocation(Long userId, Long groupId, LocationCreateRequest request) {
         // 그룹이 존재한다면 그 그룹 안에 location을 만드려는 사람이 존재하는지 확인하고
-        GroupMembers groupMembers = groupMembersService.validateGroupMembers(groupId, userId);
+        GroupMember groupMember = groupMemberService.validateGroupMembers(groupId, userId);
 
         // member가 member 권한일 때는 에러를 던지고
-        if (groupMembers.isMember()) {
-            throw NoPermissionException.forAdmin(groupMembers.getGroupMemberId());
+        if (groupMember.isMember()) {
+            throw NoPermissionException.forAdmin(groupMember.getGroupMemberId());
         }
 
         // 만들기
-        Locations locations = locationService.createLocation(groupMembers.getGroups(), request);
+        Location location = locationService.createLocation(groupMember.getGroup(), request);
 
-        DashboardsRequest dashboardsRequest = new DashboardsRequest(locations.getLocationId(), request.locationName() + " - dashboard");
+        DashboardRequest dashboardRequest = new DashboardRequest(location.getLocationId(), request.locationName() + " - dashboard");
 
-        dashboardsService.createDashboard(locations, dashboardsRequest);
+        dashboardService.createDashboard(location, dashboardRequest);
     }
 
     /**
@@ -200,9 +200,9 @@ public class CoreManagementUseCase {
      * @return location List 반환
      */
     @Transactional(readOnly = true)
-    public List<LocationsListResponse> getLocationList(Long userId, Long groupId) {
+    public List<LocationListResponse> getLocationList(Long userId, Long groupId) {
         // 그룹에 user가 존재하는지 확인
-        groupMembersService.validateGroupMembers(groupId, userId);
+        groupMemberService.validateGroupMembers(groupId, userId);
 
         return locationService.getLocationList(groupId);
     }
@@ -215,9 +215,9 @@ public class CoreManagementUseCase {
      * @return location 상세 정보 반환
      */
     @Transactional(readOnly = true)
-    public LocationsResponse getLocation(Long userId, Long groupId, Long locationId) {
+    public LocationResponse getLocation(Long userId, Long groupId, Long locationId) {
         // 그룹에 user가 존재하는지 확인
-        groupMembersService.validateGroupMembers(groupId, userId);
+        groupMemberService.validateGroupMembers(groupId, userId);
 
         return locationService.getLocation(locationId, groupId);
     }
@@ -233,11 +233,11 @@ public class CoreManagementUseCase {
     @Transactional
     public void toggleAutoControlMode(Long userId, Long groupId, Long locationId) {
 
-        GroupMembers groupMembers = groupMembersService.validateGroupMembers(groupId, userId);
+        GroupMember groupMember = groupMemberService.validateGroupMembers(groupId, userId);
 
         // member가 member 권한일 때는 에러를 던지고
-        if (groupMembers.isMember()) {
-            throw NoPermissionException.forAdmin(groupMembers.getGroupMemberId());
+        if (groupMember.isMember()) {
+            throw NoPermissionException.forAdmin(groupMember.getGroupMemberId());
         }
 
         locationService.toggleAutoControlMode(locationId, groupId);
@@ -252,23 +252,23 @@ public class CoreManagementUseCase {
      * @param request          수정 할 이름
      */
     @Transactional
-    public void updateName(Long userId, Long groupId, Long targetLocationId, LocationsUpdateRequest request) {
+    public void updateName(Long userId, Long groupId, Long targetLocationId, LocationUpdateRequest request) {
 
-        GroupMembers groupMembers = groupMembersService.validateGroupMembers(groupId, userId);
+        GroupMember groupMember = groupMemberService.validateGroupMembers(groupId, userId);
 
         // member가 member 권한일 때는 에러를 던지고
-        if (groupMembers.isMember()) {
-            throw NoPermissionException.forAdmin(groupMembers.getGroupMemberId());
+        if (groupMember.isMember()) {
+            throw NoPermissionException.forAdmin(groupMember.getGroupMemberId());
         }
 
         locationService.updateName(targetLocationId, groupId, request);
 
-        Locations locations = locationService.getLocationByGroupId(groupId);
+        Location location = locationService.getLocationByGroupId(groupId);
 
         // 이름이 바뀐 location entity 객체를 가져와서 dashboards title에도 적용시켜준다.
-        DashboardsRequest dashboardsRequest = new DashboardsRequest(locations.getLocationId(), locations.getLocationName() + " - dashboard");
+        DashboardRequest dashboardRequest = new DashboardRequest(location.getLocationId(), location.getLocationName() + " - dashboard");
 
-        dashboardsService.updateDashboardTitle(dashboardsRequest);
+        dashboardService.updateDashboardTitle(dashboardRequest);
     }
 
     /**
@@ -284,17 +284,17 @@ public class CoreManagementUseCase {
     @Transactional
     public void deleteLocation(Long userId, Long groupId, Long targetLocationId) {
         // 그룹이 존재한다면 그 그룹 안에 location을 삭제하려는 사람이 존재하는지 확인하고
-        GroupMembers groupMembers = groupMembersService.validateGroupMembers(groupId, userId);
+        GroupMember groupMember = groupMemberService.validateGroupMembers(groupId, userId);
 
         // member가 member 권한일 때는 에러를 던지고
-        if (groupMembers.isMember()) {
-            throw NoPermissionException.forAdmin(groupMembers.getGroupMemberId());
+        if (groupMember.isMember()) {
+            throw NoPermissionException.forAdmin(groupMember.getGroupMemberId());
         }
 
         // devices는 location 값만 null로 바꿔주기
 
         // dashboards 삭제
-        dashboardsService.deleteDashboard(targetLocationId);
+        dashboardService.deleteDashboard(targetLocationId);
 
         locationService.deleteLocation(targetLocationId, groupId);
     }
@@ -305,9 +305,9 @@ public class CoreManagementUseCase {
      * @param groupId 삭제될 group ID
      */
     public void deleteLocationAll(Long groupId) {
-        Locations locations = locationService.getLocationByGroupId(groupId);
+        Location location = locationService.getLocationByGroupId(groupId);
         // dashboards 지우는 로직 추가
-        dashboardsService.deleteDashboard(locations.getLocationId());
+        dashboardService.deleteDashboard(location.getLocationId());
 
         // devices는 location 값만 null로 바꿔주기
 
@@ -319,11 +319,11 @@ public class CoreManagementUseCase {
     @Transactional(readOnly = true)
     public DashboardResponse getDashboard(Long userId, Long groupId, Long locationId) {
         // 조회하려는 user가 해당 그룹의 멤버인지 검증
-        groupMembersService.validateGroupMembers(groupId, userId);
+        groupMemberService.validateGroupMembers(groupId, userId);
 
         // 조회하려는 dashboard가 해당 그룹의 location에 속해있는지 검증
         locationService.getLocation(locationId, groupId);
 
-        return dashboardsService.getDashboard(locationId);
+        return dashboardService.getDashboard(locationId);
     }
 }
