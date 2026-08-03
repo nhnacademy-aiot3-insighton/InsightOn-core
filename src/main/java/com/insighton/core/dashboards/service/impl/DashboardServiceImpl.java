@@ -20,7 +20,7 @@ public class DashboardServiceImpl implements DashboardService {
     @Transactional
     public void createDashboard(Location location, DashboardRequest request) {
         Dashboard dashboard = Dashboard.builder()
-                .locations(location).title(request.title()).build();
+                .location(location).title(request.title()).build();
 
         dashboardRepository.save(dashboard);
     }
@@ -28,14 +28,14 @@ public class DashboardServiceImpl implements DashboardService {
     @Override
     @Transactional(readOnly = true)
     public DashboardResponse getDashboard(Long locationId) {
-        return dashboardRepository.findProjectedByLocations_LocationId(locationId)
+        return dashboardRepository.findProjectedByLocationLocationId(locationId)
                 .orElseThrow(() -> new DashboardNotFoundException(locationId));
     }
 
     @Override
     @Transactional
     public void updateDashboardTitle(DashboardRequest request) {
-        Dashboard dashboard = dashboardRepository.findByLocations_LocationId(request.locationId())
+        Dashboard dashboard = dashboardRepository.findByLocationLocationId(request.locationId())
                 .orElseThrow(() -> new DashboardNotFoundException(request.locationId()));
 
         dashboard.updateTitle(request.title());
@@ -44,7 +44,7 @@ public class DashboardServiceImpl implements DashboardService {
     @Override
     @Transactional
     public void deleteDashboard(Long locationId) {
-        Dashboard dashboard = dashboardRepository.findByLocations_LocationId(locationId)
+        Dashboard dashboard = dashboardRepository.findByLocationLocationId(locationId)
                 .orElseThrow(() -> new DashboardNotFoundException(locationId));
 
         dashboardRepository.delete(dashboard);

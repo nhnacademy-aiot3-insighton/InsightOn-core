@@ -26,12 +26,12 @@ public class LocationServiceImpl implements LocationService {
     @Transactional
     public Location createLocation(Group group, LocationCreateRequest request) {
         // 어떤 검증이 필요할까...
-        if (locationRepository.existsByGroups_GroupIdAndLocationName(group.getGroupId(), request.locationName())) {
+        if (locationRepository.existsByGroupGroupIdAndLocationName(group.getGroupId(), request.locationName())) {
             throw new LocationAlreadyException(request.locationName());
         }
 
         Location newLocation = Location.builder()
-                .groups(group)
+                .group(group)
                 .locationName(request.locationName())
                 .autoControlMode(request.autoControlMode())
                 .build();
@@ -44,14 +44,14 @@ public class LocationServiceImpl implements LocationService {
     @Transactional(readOnly = true)
     public List<LocationListResponse> getLocationList(Long groupId) {
 
-        return locationRepository.findAllByGroups_GroupId(groupId);
+        return locationRepository.findAllByGroupGroupId(groupId);
     }
 
     @Override
     @Transactional(readOnly = true)
     public LocationResponse getLocation(Long locationId, Long groupId) {
         // 어떤 걸 검증해야하나... 흠냐
-        Location location = locationRepository.findByLocationIdAndGroups_GroupId(locationId, groupId)
+        Location location = locationRepository.findByLocationIdAndGroupGroupId(locationId, groupId)
                 .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(locationId));
 
         return LocationResponse.builder()
@@ -67,7 +67,7 @@ public class LocationServiceImpl implements LocationService {
     @Override
     @Transactional
     public void toggleAutoControlMode(Long locationId, Long groupId) {
-        Location location = locationRepository.findByLocationIdAndGroups_GroupId(locationId, groupId)
+        Location location = locationRepository.findByLocationIdAndGroupGroupId(locationId, groupId)
                 .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(locationId));
 
         location.toggleAutoControlMode();
@@ -76,7 +76,7 @@ public class LocationServiceImpl implements LocationService {
     @Override
     @Transactional
     public void updateName(Long locationId, Long groupId, LocationUpdateRequest request) {
-        Location location = locationRepository.findByLocationIdAndGroups_GroupId(locationId, groupId)
+        Location location = locationRepository.findByLocationIdAndGroupGroupId(locationId, groupId)
                 .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(locationId));
 
         location.updateName(request.newLocationName());
@@ -85,7 +85,7 @@ public class LocationServiceImpl implements LocationService {
     @Override
     @Transactional
     public void deleteLocation(Long targetLocationId, Long groupId) {
-        Location location = locationRepository.findByLocationIdAndGroups_GroupId(targetLocationId, groupId)
+        Location location = locationRepository.findByLocationIdAndGroupGroupId(targetLocationId, groupId)
                 .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(targetLocationId));
 
         locationRepository.delete(location);
@@ -95,13 +95,13 @@ public class LocationServiceImpl implements LocationService {
     @Transactional
     public void deleteLocationAll(Long groupId) {
 
-        locationRepository.deleteAllByGroups_GroupId(groupId);
+        locationRepository.deleteAllByGroupGroupId(groupId);
     }
 
     @Override
     @Transactional
     public Location getLocationByGroupId(Long groupId) {
-        return locationRepository.findByGroups_GroupId(groupId)
+        return locationRepository.findByGroupGroupId(groupId)
                 .orElseThrow(() -> LocationNotFoundException.notFoundLocationByGroupId(groupId));
     }
 }
