@@ -17,7 +17,7 @@ public interface DeviceAttributeRepository extends JpaRepository<DeviceAttribute
      * @param deviceId 조회할 장치 ID
      * @return 해당 장치가 보유한 속성 엔티티 리스트
      */
-    List<DeviceAttribute> findByDeviceId_DeviceId(Long deviceId);
+    List<DeviceAttribute> findByDeviceIdDeviceId(Long deviceId);
 
     /**
      * 특정 기기 ID와 메트릭 키(metricKey) 조합에 해당하는 단일 속성을 조회합니다.
@@ -28,7 +28,7 @@ public interface DeviceAttributeRepository extends JpaRepository<DeviceAttribute
      * @param metricKey 메트릭 키 (ex. "co2", "temperature", "power_status")
      * @return 속성 엔티티 Optional 객체
      */
-    Optional<DeviceAttribute> findByDeviceId_DeviceIdAndMetricKey(Long deviceId, String metricKey);
+    Optional<DeviceAttribute> findByDeviceIdDeviceIdAndMetricKey(Long deviceId, String metricKey);
 
     /**
      * 특정 기기에 해당 메트릭 키 속성이 등록되어 존재하는지 여부를 확인합니다.
@@ -37,15 +37,15 @@ public interface DeviceAttributeRepository extends JpaRepository<DeviceAttribute
      * @param metricKey 메트릭 키
      * @return 존재할 경우 true, 그렇지 않으면 false
      */
-    boolean existsByDeviceId_DeviceIdAndMetricKey(Long deviceId, String metricKey);
+    boolean existsByDeviceIdDeviceIdAndMetricKey(Long deviceId, String metricKey);
 
     // 기기 삭제 시 소속 속성 일괄 삭제
-    void deleteByDeviceId_DeviceId(Long deviceId);
+    void deleteByDeviceIdDeviceId(Long deviceId);
 
     // 그룹 삭제 시 소속 속성 일괄 삭제
-    void deleteByGroupId_GroupId(Long groupIdGroupId);
+    void deleteByGroupIdGroupId(Long groupIdGroupId);
 
     // 장소 삭제 시, 그 장소 소속 디바이스들의 속성 일괄 삭제용
-    void deleteAllByDeviceId_DeviceIdIn(List<Long> deviceIds);
+    void deleteAllByDeviceIdDeviceIdIn(List<Long> deviceIds);
 
 }
