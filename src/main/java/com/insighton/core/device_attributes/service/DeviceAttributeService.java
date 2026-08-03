@@ -1,6 +1,6 @@
 package com.insighton.core.device_attributes.service;
 
-import com.insighton.core.device_attributes.dto.DeviceAttribute;
+import com.insighton.core.device_attributes.dto.DeviceAttributeResponse;
 
 import java.util.List;
 
@@ -15,7 +15,7 @@ public interface DeviceAttributeService {
      * @param deviceId 조회할 기기 ID
      * @return 기기의 메트릭 정보 및 상태값이 포함된 DTO 리스트
      */
-    List<DeviceAttribute> getAllAttributeByDeviceId(Long userId ,Long deviceId);
+    List<DeviceAttributeResponse> getAllAttributeByDeviceId(Long userId , Long deviceId);
 
     /**
      * 액추에이터 제어 명령 실행 시 최신 상태값을 갱신합니다. (권한 체크 필요 - userId 추가)
