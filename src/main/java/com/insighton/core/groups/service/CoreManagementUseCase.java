@@ -1,5 +1,8 @@
 package com.insighton.core.groups.service;
 
+import com.insighton.core.dashboards.dto.request.DashboardsRequest;
+import com.insighton.core.dashboards.dto.response.DashboardResponse;
+import com.insighton.core.dashboards.service.DashboardsService;
 import com.insighton.core.gateway.service.GatewayService;
 import com.insighton.core.groupmember.dto.request.GroupMembersJoinRequest;
 import com.insighton.core.groupmember.entity.GroupMembers;
@@ -13,6 +16,7 @@ import com.insighton.core.location.dto.request.LocationsCreateRequest;
 import com.insighton.core.location.dto.request.LocationsUpdateRequest;
 import com.insighton.core.location.dto.response.LocationsListResponse;
 import com.insighton.core.location.dto.response.LocationsResponse;
+import com.insighton.core.location.entity.Locations;
 import com.insighton.core.location.service.LocationsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -23,12 +27,13 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class GroupManagementUseCase {
+public class CoreManagementUseCase {
     private final GroupsService groupService;
     private final GroupMembersService groupMembersService;
     private final LocationsService locationService;
     private final GatewayService gatewayService;
     private final ApplicationEventPublisher eventPublisher;
+    private final DashboardsService dashboardsService;
 
     // ====================== Group Controller ======================
 
@@ -171,9 +176,6 @@ public class GroupManagementUseCase {
      */
     @Transactional
     public void createLocation(Long userId, Long groupId, LocationsCreateRequest request) {
-        // 그룹이 존재하는지 확인하고
-        Groups groups = groupService.groupFindById(groupId);
-
         // 그룹이 존재한다면 그 그룹 안에 location을 만드려는 사람이 존재하는지 확인하고
         GroupMembers groupMembers = groupMembersService.validateGroupMembers(groupId, userId);
 
@@ -183,7 +185,11 @@ public class GroupManagementUseCase {
         }
 
         // 만들기
-        locationService.createLocation(groups, request);
+        Locations locations = locationService.createLocation(groupMembers.getGroups(), request);
+
+        DashboardsRequest dashboardsRequest = new DashboardsRequest(locations.getLocationId(), request.locationName() + " - dashboard");
+
+        dashboardsService.createDashboard(locations, dashboardsRequest);
     }
 
     /**
@@ -256,6 +262,13 @@ public class GroupManagementUseCase {
         }
 
         locationService.updateName(targetLocationId, groupId, request);
+
+        Locations locations = locationService.getLocationByGroupId(groupId);
+
+        // 이름이 바뀐 location entity 객체를 가져와서 dashboards title에도 적용시켜준다.
+        DashboardsRequest dashboardsRequest = new DashboardsRequest(locations.getLocationId(), locations.getLocationName() + " - dashboard");
+
+        dashboardsService.updateDashboardTitle(dashboardsRequest);
     }
 
     /**
@@ -281,18 +294,36 @@ public class GroupManagementUseCase {
         // devices는 location 값만 null로 바꿔주기
 
         // dashboards 삭제
+        dashboardsService.deleteDashboard(targetLocationId);
 
         locationService.deleteLocation(targetLocationId, groupId);
     }
 
+    /**
+     * group이 삭제될 때 location도 전부 삭제
+     *
+     * @param groupId 삭제될 group ID
+     */
     public void deleteLocationAll(Long groupId) {
-
-        // locationID에 해당하는 모든? devices와 dashboards 지우는 로직 추가하기
+        Locations locations = locationService.getLocationByGroupId(groupId);
+        // dashboards 지우는 로직 추가
+        dashboardsService.deleteDashboard(locations.getLocationId());
 
         // devices는 location 값만 null로 바꿔주기
 
         // dashboards 삭제
         locationService.deleteLocationAll(groupId);
     }
+    // ====================== dashboards Controller ======================
 
+    @Transactional(readOnly = true)
+    public DashboardResponse getDashboard(Long userId, Long groupId, Long locationId) {
+        // 조회하려는 user가 해당 그룹의 멤버인지 검증
+        groupMembersService.validateGroupMembers(groupId, userId);
+
+        // 조회하려는 dashboard가 해당 그룹의 location에 속해있는지 검증
+        locationService.getLocation(locationId, groupId);
+
+        return dashboardsService.getDashboard(locationId);
+    }
 }

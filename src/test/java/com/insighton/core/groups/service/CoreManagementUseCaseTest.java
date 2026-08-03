@@ -37,7 +37,7 @@ import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class GroupManagementUseCaseTest {
+class CoreManagementUseCaseTest {
 
     @Mock
     private GroupsService groupService;
@@ -52,7 +52,7 @@ class GroupManagementUseCaseTest {
     private GroupMembersService groupMembersService;
 
     @InjectMocks
-    private GroupManagementUseCase managementUseCase;
+    private CoreManagementUseCase managementUseCase;
 
     // ==================== 그룹 가입 ====================
 
