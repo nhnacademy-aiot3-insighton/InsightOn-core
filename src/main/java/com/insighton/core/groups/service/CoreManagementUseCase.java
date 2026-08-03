@@ -130,9 +130,8 @@ public class CoreManagementUseCase {
     public void newInviteToken(Long userId, Long groupId) {
         GroupMember groupMember = groupMemberService.validateGroupMembers(groupId, userId);
 
-        if (groupMember.isMember()) {
-            throw NoPermissionException.forAdmin(groupMember.getGroupMemberId());
-        }
+        validationIsAdmin(groupMember);
+
         groupService.newInviteToken(groupId);
     }
 
@@ -180,9 +179,7 @@ public class CoreManagementUseCase {
         GroupMember groupMember = groupMemberService.validateGroupMembers(groupId, userId);
 
         // member가 member 권한일 때는 에러를 던지고
-        if (groupMember.isMember()) {
-            throw NoPermissionException.forAdmin(groupMember.getGroupMemberId());
-        }
+        validationIsAdmin(groupMember);
 
         // 만들기
         Location location = locationService.createLocation(groupMember.getGroup(), request);
@@ -236,9 +233,7 @@ public class CoreManagementUseCase {
         GroupMember groupMember = groupMemberService.validateGroupMembers(groupId, userId);
 
         // member가 member 권한일 때는 에러를 던지고
-        if (groupMember.isMember()) {
-            throw NoPermissionException.forAdmin(groupMember.getGroupMemberId());
-        }
+        validationIsAdmin(groupMember);
 
         locationService.toggleAutoControlMode(locationId, groupId);
     }
@@ -257,9 +252,7 @@ public class CoreManagementUseCase {
         GroupMember groupMember = groupMemberService.validateGroupMembers(groupId, userId);
 
         // member가 member 권한일 때는 에러를 던지고
-        if (groupMember.isMember()) {
-            throw NoPermissionException.forAdmin(groupMember.getGroupMemberId());
-        }
+        validationIsAdmin(groupMember);
 
         locationService.updateName(targetLocationId, groupId, request);
 
@@ -287,9 +280,7 @@ public class CoreManagementUseCase {
         GroupMember groupMember = groupMemberService.validateGroupMembers(groupId, userId);
 
         // member가 member 권한일 때는 에러를 던지고
-        if (groupMember.isMember()) {
-            throw NoPermissionException.forAdmin(groupMember.getGroupMemberId());
-        }
+        validationIsAdmin(groupMember);
 
         // devices는 location 값만 null로 바꿔주기
 
@@ -325,5 +316,11 @@ public class CoreManagementUseCase {
         locationService.getLocation(locationId, groupId);
 
         return dashboardService.getDashboard(locationId);
+    }
+
+    private void validationIsAdmin(GroupMember groupMember) {
+        if (groupMember.isMember()) {
+            throw NoPermissionException.forAdmin(groupMember.getGroupMemberId());
+        }
     }
 }
