@@ -147,28 +147,39 @@ public class DeviceServiceImpl implements DeviceService {
         return toDto(deviceEntity);
     }
 
-//    @Override
-//    @Transactional // 위치 수정 로직
-//    public void updateDeviceLocation(Long userId, Long deviceId, Long newLocationId) {
-//        if (newLocationId == null) {
-//            throw new InvalidDeviceValueException("변경할 위치 ID는 필수입니다.");
-//        }
-//        DeviceEntity deviceEntity = deviceRepository.findById(deviceId)
-//                .orElseThrow(() -> new DeviceNotFoundException("디바이스를 찾을 수 없습니다. (ID: " + deviceId + ")"));
-//
-//        // 쓰기 작업 권한 체크 (엔티티에 저장된 groupId 기준 - 다른 그룹 디바이스는 조작 불가)
-//        validateManagerRole(userId, deviceEntity.getGroupId().getGroupId()); // Groups 객체에서 Long ID 호출
-//
-//        Locations newLocation = locationsRepository.findById(newLocationId)
-//                        .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(newLocationId));
-//
-//        deviceEntity.updateLocation(newLocation);
-//
-//        // 캐시도 같이 갱신 (deviceEui가 있는 센서만 캐시에 들어있음)
-//        if(deviceEntity.getDeviceEui() != null){
-//            deviceLookupCacheService.updateLocation(deviceEntity.getDeviceEui(), newLocationId);
-//        }
-//    }
+    @Override
+    @Transactional // 위치 수정 로직
+    public void updateDeviceLocation(Long userId, Long deviceId, Long newLocationId) {
+        if (newLocationId == null) {
+            throw new InvalidDeviceValueException("변경할 위치 ID는 필수입니다.");
+        }
+        DeviceEntity deviceEntity = deviceRepository.findById(deviceId)
+                .orElseThrow(() -> new DeviceNotFoundException("디바이스를 찾을 수 없습니다. (ID: " + deviceId + ")"));
+
+        // 쓰기 작업 권한 체크 (엔티티에 저장된 groupId 기준 - 다른 그룹 디바이스는 조작 불가)
+        validateManagerRole(userId, deviceEntity.getGroupId().getGroupId()); // Groups 객체에서 Long ID 호출
+
+        Locations newLocation = locationsRepository.findById(newLocationId)
+                        .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(newLocationId));
+
+        deviceEntity.updateLocation(newLocation);
+
+        // 캐시도 같이 갱신 (deviceEui가 있는 센서만 캐시에 들어있음)
+        if (deviceEntity.getDeviceEui() != null) {
+            Long gatewayId = deviceEntity.getGatewaysId() != null ? deviceEntity.getGatewaysId().getGatewayId() : null;
+
+            // 변경된 newLocationId를 적용하여 새로운 캐시 엔트리 생성
+            DeviceCacheEntry updatedCacheEntry = new DeviceCacheEntry(
+                    deviceEntity.getDeviceId(),
+                    deviceEntity.getDeviceEui(),
+                    gatewayId,
+                    newLocationId
+            );
+
+            // 캐시 서비스에 최신 정보 적재
+            deviceLookupCacheService.populate(updatedCacheEntry);
+        }
+    }
 
     @Override
     @Transactional // 이름 수정 로직
