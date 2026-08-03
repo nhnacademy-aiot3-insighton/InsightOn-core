@@ -44,16 +44,16 @@ public class DeviceController {
         return ResponseEntity.ok(result);
     }
 
-//    // 장치 위치 이동 API (PUT /api/v1/sensor/{id}/location)
-//    @PutMapping("/{id}/location")
-//    public ResponseEntity<Void> updateDeviceLocation(
-//            @RequestHeader("X-USER-ID") Long userId,
-//            @PathVariable Long id,
-//            @RequestBody @Valid DeviceLocationUpdateRequest request){
-//        // 디바이스 위치 업데이트 수행
-//        deviceService.updateDeviceLocation(userId, id, request.locationId());
-//        return ResponseEntity.noContent().build();
-//    }
+    // 장치 위치 이동 API (PUT /api/v1/sensor/{id}/location)
+    @PutMapping("/{id}/location")
+    public ResponseEntity<Void> updateDeviceLocation(
+            @RequestHeader("X-USER-ID") Long userId,
+            @PathVariable Long id,
+            @RequestBody @Valid DeviceLocationUpdateRequest request){
+        // 디바이스 위치 업데이트 수행
+        deviceService.updateDeviceLocation(userId, id, request.locationId());
+        return ResponseEntity.noContent().build();
+    }
 
     // 장치 이름 수정 API (PUT /api/v1/devices/{id}/name)
     @PutMapping("/{id}/name")
