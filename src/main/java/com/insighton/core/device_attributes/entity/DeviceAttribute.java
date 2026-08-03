@@ -1,7 +1,7 @@
 package com.insighton.core.device_attributes.entity;
 
 import com.insighton.core.groups.entity.Groups;
-import com.insighton.core.sensors.entity.DeviceEntity;
+import com.insighton.core.sensors.entity.Device;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,7 +23,7 @@ import org.jetbrains.annotations.NotNull;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class DeviceAttributeEntity {
+public class DeviceAttribute {
 
     /**
      * 장치 속성 기본키 (PK)
@@ -40,7 +40,7 @@ public class DeviceAttributeEntity {
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "device_id", nullable = false)
-    private DeviceEntity deviceId;
+    private Device deviceId;
 
     /**
      * 수집 패킷 내 JSON Key 또는 제어 명령 필드 식별자 (ex. "co2", "temperature", "power_status")
