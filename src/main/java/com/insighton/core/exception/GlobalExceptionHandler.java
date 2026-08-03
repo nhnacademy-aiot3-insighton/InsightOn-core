@@ -1,5 +1,6 @@
 package com.insighton.core.exception;
 
+import com.insighton.core.dashboards.exception.DashboardNotFoundException;
 import com.insighton.core.gateway.exception.GatewayAccessDeniedException;
 import com.insighton.core.gateway.exception.GatewayNotFoundException;
 import com.insighton.core.groupmember.exception.*;
@@ -7,6 +8,7 @@ import com.insighton.core.groups.exception.GroupNotFoundException;
 import com.insighton.core.groups.exception.InviteTokenNotFoundException;
 import com.insighton.core.groups.exception.NoPermissionException;
 import com.insighton.core.groups.exception.UnAuthorizedAccessException;
+import com.insighton.core.location.exception.EmptyValueException;
 import com.insighton.core.location.exception.LocationNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +24,7 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler({GatewayNotFoundException.class, GroupNotFoundException.class, InviteTokenNotFoundException.class, GroupMemberNotFoundException.class, UserIdNotFoundException.class, LocationNotFoundException.class})
+    @ExceptionHandler({GatewayNotFoundException.class, GroupNotFoundException.class, InviteTokenNotFoundException.class, GroupMemberNotFoundException.class, UserIdNotFoundException.class, LocationNotFoundException.class, DashboardNotFoundException.class})
     public ResponseEntity<ErrorResponse> handleNotFound(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(new ErrorResponse(HttpStatus.NOT_FOUND.value(), e.getMessage()));
@@ -40,7 +42,7 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(HttpStatus.CONFLICT.value(), e.getMessage()));
     }
 
-    @ExceptionHandler({IllegalArgumentException.class, SuperManagerCannotLeaveException.class, NotJoinedAnyGroupException.class, ManagerRoleRequiredForTransferException.class})
+    @ExceptionHandler({IllegalArgumentException.class, SuperManagerCannotLeaveException.class, NotJoinedAnyGroupException.class, ManagerRoleRequiredForTransferException.class, EmptyValueException.class})
     public ResponseEntity<ErrorResponse> handleBadRequest(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage()));
