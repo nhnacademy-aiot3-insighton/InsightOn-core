@@ -1,7 +1,7 @@
 package com.insighton.core.location.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.insighton.core.groups.service.GroupManagementUseCase;
+import com.insighton.core.groups.service.CoreManagementUseCase;
 import com.insighton.core.location.dto.request.LocationsCreateRequest;
 import com.insighton.core.location.dto.request.LocationsUpdateRequest;
 import com.insighton.core.location.dto.response.LocationsListResponse;
@@ -37,7 +37,7 @@ class LocationsControllerTest {
     private ObjectMapper objectMapper;
 
     @MockitoBean
-    private GroupManagementUseCase useCase;
+    private CoreManagementUseCase useCase;
 
     @Nested
     @DisplayName("성공 케이스")

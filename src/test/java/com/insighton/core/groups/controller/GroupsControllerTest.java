@@ -5,7 +5,7 @@ import com.insighton.core.groupmember.dto.request.GroupMembersJoinRequest;
 import com.insighton.core.groups.dto.request.GroupsRequest;
 import com.insighton.core.groups.dto.response.GroupsAdminResponse;
 import com.insighton.core.groups.dto.response.GroupsResponse;
-import com.insighton.core.groups.service.GroupManagementUseCase;
+import com.insighton.core.groups.service.CoreManagementUseCase;
 import com.insighton.core.groups.service.GroupsService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -40,7 +40,7 @@ class GroupsControllerTest {
     private ObjectMapper objectMapper;
 
     @MockitoBean
-    private GroupManagementUseCase groupsUseCase;
+    private CoreManagementUseCase groupsUseCase;
 
     @MockitoBean
     private GroupsService groupsService;

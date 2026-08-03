@@ -4,7 +4,7 @@ import com.insighton.core.groupmember.dto.request.GroupMembersJoinRequest;
 import com.insighton.core.groups.dto.request.GroupsRequest;
 import com.insighton.core.groups.dto.response.GroupsAdminResponse;
 import com.insighton.core.groups.dto.response.GroupsResponse;
-import com.insighton.core.groups.service.GroupManagementUseCase;
+import com.insighton.core.groups.service.CoreManagementUseCase;
 import com.insighton.core.groups.service.GroupsService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 public class GroupsController {
-    private final GroupManagementUseCase groupsUseCase;
+    private final CoreManagementUseCase coreUseCase;
     private final GroupsService groupsService;
 
     /**
@@ -30,7 +30,7 @@ public class GroupsController {
     public ResponseEntity<Void> joinGroupByToken(
             @Valid @RequestBody GroupMembersJoinRequest request) {
         // inviteToken으로 그룹이 존재하는지 확인하고 가입 시키는 로직 호출
-        groupsUseCase.joinGroupByToken(request);
+        coreUseCase.joinGroupByToken(request);
 
         return ResponseEntity.ok().build();
     }
@@ -47,7 +47,7 @@ public class GroupsController {
             @RequestHeader("X-USER-ID") Long userId,
             @Valid @RequestBody GroupsRequest groupsCreateRequest) {
 
-        groupsUseCase.createGroup(groupsCreateRequest, userId);
+        coreUseCase.createGroup(groupsCreateRequest, userId);
 
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
@@ -63,7 +63,7 @@ public class GroupsController {
     public ResponseEntity<GroupsResponse> getMyGroup(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId) {
-        GroupsResponse response = groupsUseCase.getMyGroup(userId, groupId);
+        GroupsResponse response = coreUseCase.getMyGroup(userId, groupId);
 
         return ResponseEntity.ok(response);
     }
@@ -81,7 +81,7 @@ public class GroupsController {
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
             @RequestParam String inviteToken) {
-        GroupsResponse response = groupsUseCase.getGroupPreview(inviteToken, userId, groupId);
+        GroupsResponse response = coreUseCase.getGroupPreview(inviteToken, userId, groupId);
 
         return ResponseEntity.ok(response);
     }
@@ -116,7 +116,7 @@ public class GroupsController {
     public ResponseEntity<Void> newInviteToken(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId) {
-        groupsUseCase.newInviteToken(userId, groupId);
+        coreUseCase.newInviteToken(userId, groupId);
 
         return ResponseEntity.ok().build();
     }
@@ -135,7 +135,7 @@ public class GroupsController {
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
             @Valid @RequestBody GroupsRequest request) {
-        groupsUseCase.updateGroup(request, userId, groupId);
+        coreUseCase.updateGroup(request, userId, groupId);
 
         return ResponseEntity.ok().build();
     }
@@ -151,7 +151,7 @@ public class GroupsController {
     public ResponseEntity<Void> deleteGroup(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId) {
-        groupsUseCase.deleteGroup(userId, groupId);
+        coreUseCase.deleteGroup(userId, groupId);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }

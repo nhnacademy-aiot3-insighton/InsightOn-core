@@ -1,6 +1,6 @@
 package com.insighton.core.location.controller;
 
-import com.insighton.core.groups.service.GroupManagementUseCase;
+import com.insighton.core.groups.service.CoreManagementUseCase;
 import com.insighton.core.location.dto.request.LocationsCreateRequest;
 import com.insighton.core.location.dto.request.LocationsUpdateRequest;
 import com.insighton.core.location.dto.response.LocationsListResponse;
@@ -16,7 +16,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 public class LocationsController {
-    private final GroupManagementUseCase useCase;
+    private final CoreManagementUseCase useCase;
 
     /**
      * location 생성
