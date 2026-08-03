@@ -1,6 +1,7 @@
 package com.insighton.core.exception;
 
 import com.insighton.core.actuators.exception.ActuatorNotFoundException;
+import com.insighton.core.actuators.exception.CouldNotAbleToUpdateByUserToSystem;
 import com.insighton.core.actuators.exception.InvalidActuatorValueException;
 import com.insighton.core.device_attributes.exception.MetricKeyNotFoundException;
 import com.insighton.core.gateway.exception.GatewayAccessDeniedException;
@@ -53,7 +54,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({IllegalArgumentException.class, SuperManagerCannotLeaveException.class,
             NotJoinedAnyGroupException.class, ManagerRoleRequiredForTransferException.class,
-            InvalidActuatorValueException.class, InvalidDeviceValueException.class
+            InvalidActuatorValueException.class, InvalidDeviceValueException.class,
+            CouldNotAbleToUpdateByUserToSystem.class
     })
     public ResponseEntity<ErrorResponse> handleBadRequest(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)

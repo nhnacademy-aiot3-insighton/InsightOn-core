@@ -20,43 +20,43 @@ import java.time.OffsetDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class DeviceEntity {
+public class Device {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long deviceId;
+    private Long deviceId; // 디바이스 PK
 
     @Enumerated(EnumType.STRING)
     @Column(name = "device_type", nullable = false)
-    private DeviceType deviceType;
+    private DeviceType deviceType; // 센서/액추에이터 구분
 
     // ================= [센서 전용 필드들] =================
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name =  "gateway_id", nullable = false)
     private Gateway gatewaysId; // SENSOR 전용 (ACTUATOR는 null)
 
-    @Column(name = "device_eui", unique = true, nullable = false)
-    private String deviceEui;
+    @Column(name = "device_eui", length = 50, unique = true, nullable = false)
+    private String deviceEui; // 하드웨어 고유 시리얼
 
     @Column(name = "last_seen_at")
-    private OffsetDateTime lastSeenAt;
+    private OffsetDateTime lastSeenAt; // 마지막 통신 시간
 
     // ================= [공통 필드들] =================
 
-    @Column(name = "device_name", nullable = false)
-    private String deviceName;
+    @Column(name = "device_name", length = 100, nullable = false)
+    private String deviceName; // 디바이스 이름
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "location_id")
-    private Locations locationsId;
+    private Locations locationsId; // 장소 아이디
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private OffsetDateTime createdAt;
+    private OffsetDateTime createdAt; // 생성 일시
 
     // =================================================
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name =  "group_id", nullable = false)
-    private Groups groupId;
+    private Groups groupId; // 그룹 아이디
 
     public void updateLocation(Locations newLocationId){
         this.locationsId = newLocationId;
