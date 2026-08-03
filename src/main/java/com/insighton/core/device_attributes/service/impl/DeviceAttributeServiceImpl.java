@@ -1,7 +1,7 @@
 package com.insighton.core.device_attributes.service.impl;
 
-import com.insighton.core.device_attributes.dto.DeviceAttribute;
-import com.insighton.core.device_attributes.entity.DeviceAttributeEntity;
+import com.insighton.core.device_attributes.dto.DeviceAttributeResponse;
+import com.insighton.core.device_attributes.entity.DeviceAttribute;
 import com.insighton.core.device_attributes.entity.MetricDefinition;
 import com.insighton.core.device_attributes.exception.MetricKeyNotFoundException;
 import com.insighton.core.device_attributes.repository.DeviceAttributeRepository;
@@ -9,7 +9,7 @@ import com.insighton.core.device_attributes.service.DeviceAttributeService;
 import com.insighton.core.groupmember.entity.GroupMembers;
 import com.insighton.core.groupmember.service.GroupMembersService;
 import com.insighton.core.groups.exception.NoPermissionException;
-import com.insighton.core.sensors.entity.DeviceEntity;
+import com.insighton.core.sensors.entity.Device;
 import com.insighton.core.sensors.entity.DeviceType;
 import com.insighton.core.sensors.exception.DeviceNotFoundException;
 import com.insighton.core.sensors.exception.InvalidDeviceValueException;
@@ -28,11 +28,12 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class DeviceAttributeServiceImpl implements DeviceAttributeService {
 
-    private final DeviceAttributeRepository attributeRepository;
-    private final DeviceRepository deviceRepository;
-    private final GroupMembersService groupMembersService;
+    private final DeviceAttributeRepository attributeRepository; // 속성 조회/저장
+    private final DeviceRepository deviceRepository; // 소속 디바이스 조회
+    private final GroupMembersService groupMembersService; // 그룹 멤버 권한 검증용 서비스
 
 
+    // 요청자가 해당 그룹의 MANGER 이상의 권한을 가졌는지 검증
     private void validateManagerRole(Long userId, Long groupsId) {
         GroupMembers member = groupMembersService.validateGroupMembers(groupsId, userId);
         if (member.isMember()) {
@@ -40,14 +41,16 @@ public class DeviceAttributeServiceImpl implements DeviceAttributeService {
         }
     }
 
+
+    // 조회용 - 그룹 소속만 확인, 역할은 무관
     private void validateGroupMembership(Long userId, Long groupId){
         groupMembersService.validateGroupMembers(groupId, userId);
     }
 
-    public List<DeviceAttribute> getAllAttributeByDeviceId(Long userId, Long deviceId){
+    public List<DeviceAttributeResponse> getAllAttributeByDeviceId(Long userId, Long deviceId){
 
         // 1. 해당 장치의 존재 유무 검증
-        DeviceEntity entity = deviceRepository.findById(deviceId)
+        Device entity = deviceRepository.findById(deviceId)
                         .orElseThrow(() -> new DeviceNotFoundException(deviceId + "기기를 찾을 수 없습니다"));
 
         validateGroupMembership(userId, entity.getGroupId().getGroupId()); // Groups 객체에서 Long ID 호출
@@ -59,7 +62,7 @@ public class DeviceAttributeServiceImpl implements DeviceAttributeService {
                     // Enum에서 메트릭 표준 정의(한글 명칭, 단위) 바인딩
                     MetricDefinition metricDefinition = MetricDefinition.fromKey(attr.getMetricKey());
 
-                    return new DeviceAttribute(
+                    return new DeviceAttributeResponse(
                             attr.getMetricKey(),
                             metricDefinition.getMetricName(),
                             metricDefinition.getUnit(),
@@ -81,7 +84,7 @@ public class DeviceAttributeServiceImpl implements DeviceAttributeService {
 
         // existsById 대신 findById로 직접 조회
         // DB조회 1번으로 줄이기
-        DeviceEntity entity = deviceRepository.findById(deviceId)
+        Device entity = deviceRepository.findById(deviceId)
                 .orElseThrow(() -> new DeviceNotFoundException(" 기기를 찾을 수 없습니다(ID: "+ deviceId +")"));
 
         // 권한 체크
@@ -111,7 +114,7 @@ public class DeviceAttributeServiceImpl implements DeviceAttributeService {
         String normalizedMetricKey = definition.getMetricKey();
 
         // 정규화된 metricKey로 DB 조회
-        DeviceAttributeEntity attribute = attributeRepository
+        DeviceAttribute attribute = attributeRepository
                 .findByDeviceId_DeviceIdAndMetricKey(deviceId, normalizedMetricKey)
                 .orElseThrow(() -> new MetricKeyNotFoundException("매트릭 키를 찾을 수 없습니다 (ID: " + metricKey + ")"));
 

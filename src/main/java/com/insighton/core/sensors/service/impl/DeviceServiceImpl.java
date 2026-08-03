@@ -1,6 +1,6 @@
 package com.insighton.core.sensors.service.impl;
 
-import com.insighton.core.device_attributes.entity.DeviceAttributeEntity;
+import com.insighton.core.device_attributes.entity.DeviceAttribute;
 import com.insighton.core.device_attributes.repository.DeviceAttributeRepository;
 import com.insighton.core.gateway.entity.Gateway;
 import com.insighton.core.gateway.exception.GatewayNotFoundException;
@@ -17,7 +17,7 @@ import com.insighton.core.location.repository.LocationsRepository;
 import com.insighton.core.mqtt.cache.DeviceLookupCacheService;
 import com.insighton.core.mqtt.cache.dto.DeviceCacheEntry;
 import com.insighton.core.sensors.dto.DeviceResponse;
-import com.insighton.core.sensors.entity.DeviceEntity;
+import com.insighton.core.sensors.entity.Device;
 import com.insighton.core.sensors.entity.DeviceType;
 import com.insighton.core.sensors.exception.DeviceNotFoundException;
 import com.insighton.core.sensors.exception.InvalidDeviceValueException;
@@ -38,14 +38,13 @@ import java.util.Set;
 @Transactional(readOnly = true)
 public class DeviceServiceImpl implements DeviceService {
 
-    private final DeviceRepository deviceRepository;
-    private final DeviceAttributeRepository deviceAttributeRepository;
-    private final DeviceLookupCacheService deviceLookupCacheService;
+    private final DeviceRepository deviceRepository; // 디바이스 조회/저장
+    private final DeviceAttributeRepository deviceAttributeRepository; // 디바이스 속성 조회/삭제
+    private final DeviceLookupCacheService deviceLookupCacheService; // EUI 기반 캐시 계층
+    private final GatewayRepository gatewayRepository; // 관계 엔티티 조회용
+    private final GroupsRepository groupsRepository; // 관계 엔티티 조회용
+    private final LocationsRepository locationsRepository; // 관계 엔티티 조회용
     private final GroupMembersService groupMembersService; // 그룹 멤버 권한 검증용 서비스
-    private final GatewayRepository gatewayRepository;
-    private final GroupsRepository groupsRepository;
-    private final LocationsRepository locationsRepository;
-
 
     /**
      * 요청자가 해당 그룹의 MANAGER 이상 권한을 가졌는지 검증하는 내부 헬퍼 메서드
@@ -72,9 +71,9 @@ public class DeviceServiceImpl implements DeviceService {
             Set<String> metricKeys) {
 
         // 캐시 만료 시 DB 유니크 제약조건(500 에러) 충돌 방어를 위해 EUI 사전 조회
-        Optional<DeviceEntity> existingDevice = deviceRepository.findByDeviceEui(deviceEui);
+        Optional<Device> existingDevice = deviceRepository.findByDeviceEui(deviceEui);
         if (existingDevice.isPresent()) {
-            DeviceEntity e = existingDevice.get();
+            Device e = existingDevice.get();
             DeviceCacheEntry cacheEntry = new DeviceCacheEntry(
                     e.getDeviceId(), e.getDeviceEui(), gatewayId,
                     e.getLocationsId() != null ? e.getLocationsId().getLocationId() : null
@@ -93,7 +92,7 @@ public class DeviceServiceImpl implements DeviceService {
                 .orElseThrow(() -> new GroupNotFoundException(groupId));
 
         // 패킷 정보로 센서 엔티티 객체를 조립
-        DeviceEntity deviceEntity = DeviceEntity.builder()
+        Device device = Device.builder()
                 .deviceType(DeviceType.SENSOR) // 센서 타입으로 지정
                 .gatewaysId(gateway) // 패킷이 거쳐온 게이트웨이 ID를 입력
                 .groupId(groups) // 소속 그룹아이디 주입
@@ -105,12 +104,12 @@ public class DeviceServiceImpl implements DeviceService {
                 .build();
 
         // 센서 정보를 sensor_devices DB 테이블에 저장
-        DeviceEntity savedDevice = deviceRepository.save(deviceEntity);
+        Device savedDevice = deviceRepository.save(device);
 
         // 패킷 안에 있던 데이터 항목들(예: ["co2", "temperature"])을 확인해 속성(Attribute) 테이블도 채움
         if (metricKeys != null && !metricKeys.isEmpty()) {
-            List<DeviceAttributeEntity> attributes = metricKeys.stream()
-                    .map(metricKey -> DeviceAttributeEntity.builder()
+            List<DeviceAttribute> attributes = metricKeys.stream()
+                    .map(metricKey -> DeviceAttribute.builder()
                             .deviceId(savedDevice) // 방금 DB에 저장한 센서(부모)와 연결 (FK 매핑).
                             .groupId(groups) // 속성 엔티티에도 그룹 주입
                             .metricKey(metricKey) // 수집 항목 키(예: "co2")를 저장
@@ -138,13 +137,13 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public DeviceResponse getDeviceById(Long userId, Long deviceId) {
-        DeviceEntity deviceEntity = deviceRepository.findById(deviceId)
+        Device device = deviceRepository.findById(deviceId)
                 .orElseThrow(() -> new DeviceNotFoundException("디바이스를 찾을 수 없습니다. (ID: " + deviceId + ")"));
 
         // 조회 권한 체크
-        validateGroupMembership(userId, deviceEntity.getGroupId().getGroupId()); // Groups 객체에서 Long ID 호출
+        validateGroupMembership(userId, device.getGroupId().getGroupId()); // Groups 객체에서 Long ID 호출
 
-        return toDto(deviceEntity);
+        return toDto(device);
     }
 
     @Override
@@ -153,25 +152,25 @@ public class DeviceServiceImpl implements DeviceService {
         if (newLocationId == null) {
             throw new InvalidDeviceValueException("변경할 위치 ID는 필수입니다.");
         }
-        DeviceEntity deviceEntity = deviceRepository.findById(deviceId)
+        Device device = deviceRepository.findById(deviceId)
                 .orElseThrow(() -> new DeviceNotFoundException("디바이스를 찾을 수 없습니다. (ID: " + deviceId + ")"));
 
         // 쓰기 작업 권한 체크 (엔티티에 저장된 groupId 기준 - 다른 그룹 디바이스는 조작 불가)
-        validateManagerRole(userId, deviceEntity.getGroupId().getGroupId()); // Groups 객체에서 Long ID 호출
+        validateManagerRole(userId, device.getGroupId().getGroupId()); // Groups 객체에서 Long ID 호출
 
         Locations newLocation = locationsRepository.findById(newLocationId)
                         .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(newLocationId));
 
-        deviceEntity.updateLocation(newLocation);
+        device.updateLocation(newLocation);
 
         // 캐시도 같이 갱신 (deviceEui가 있는 센서만 캐시에 들어있음)
-        if (deviceEntity.getDeviceEui() != null) {
-            Long gatewayId = deviceEntity.getGatewaysId() != null ? deviceEntity.getGatewaysId().getGatewayId() : null;
+        if (device.getDeviceEui() != null) {
+            Long gatewayId = device.getGatewaysId() != null ? device.getGatewaysId().getGatewayId() : null;
 
             // 변경된 newLocationId를 적용하여 새로운 캐시 엔트리 생성
             DeviceCacheEntry updatedCacheEntry = new DeviceCacheEntry(
-                    deviceEntity.getDeviceId(),
-                    deviceEntity.getDeviceEui(),
+                    device.getDeviceId(),
+                    device.getDeviceEui(),
                     gatewayId,
                     newLocationId
             );
@@ -187,13 +186,13 @@ public class DeviceServiceImpl implements DeviceService {
         if (newDeviceName == null || newDeviceName.trim().isEmpty()) {
             throw new InvalidDeviceValueException("변경할 장치 이름은 필수입니다.");
         }
-        DeviceEntity deviceEntity = deviceRepository.findById(deviceId)
+        Device device = deviceRepository.findById(deviceId)
                 .orElseThrow(() -> new DeviceNotFoundException("디바이스를 찾을 수 없습니다. (ID: " + deviceId + ")"));
 
         // 쓰기 작업 권한 체크
-        validateManagerRole(userId, deviceEntity.getGroupId().getGroupId()); // Groups 객체에서 Long ID 호출
+        validateManagerRole(userId, device.getGroupId().getGroupId()); // Groups 객체에서 Long ID 호출
 
-        deviceEntity.updateName(newDeviceName);
+        device.updateName(newDeviceName);
     }
 
     @Override
@@ -203,25 +202,25 @@ public class DeviceServiceImpl implements DeviceService {
             return;
         }
         deviceRepository.findByDeviceEui(deviceEui)
-                .ifPresent(DeviceEntity::updateLastSeen);
+                .ifPresent(Device::updateLastSeen);
     }
 
     @Override
     @Transactional // 삭제 시 부모/자식 테이블 안전 삭제
     public void deleteDevice(Long userId, Long deviceId) {
-        DeviceEntity deviceEntity = deviceRepository.findById(deviceId)
+        Device device = deviceRepository.findById(deviceId)
                 .orElseThrow(() -> new DeviceNotFoundException("디바이스를 찾을 수 없습니다. (ID: " + deviceId + ")"));
 
         // 삭제 작업 권한 체크
-        validateManagerRole(userId, deviceEntity.getGroupId().getGroupId()); // Groups 객체에서 Long ID 호출
+        validateManagerRole(userId, device.getGroupId().getGroupId()); // Groups 객체에서 Long ID 호출
 
         // @Query 없이 완벽하게 동작하는 자식 테이블 일괄 삭제 메서드 호출
         deviceAttributeRepository.deleteByDeviceId_DeviceId(deviceId);
-        deviceRepository.delete(deviceEntity);
+        deviceRepository.delete(device);
 
         // 캐시에서도 제거
-        if(deviceEntity.getDeviceEui() != null){
-            deviceLookupCacheService.evict(deviceEntity.getDeviceEui());
+        if(device.getDeviceEui() != null){
+            deviceLookupCacheService.evict(device.getDeviceEui());
         }
     }
 
@@ -232,9 +231,9 @@ public class DeviceServiceImpl implements DeviceService {
         validateManagerRole(userId, groupId);
 
         // 캐시 삭제 - groupId 소속 디바이스만 골라서 evict (clear()는 다른 그룹 캐시까지 날려버리므로 사용 금지)
-        List<DeviceEntity> devices = deviceRepository.findByGroupId_GroupId(groupId);
+        List<Device> devices = deviceRepository.findByGroupId_GroupId(groupId);
         devices.stream()
-                .map(DeviceEntity::getDeviceEui) // 각디바이스의 EUI만 추출
+                .map(Device::getDeviceEui) // 각디바이스의 EUI만 추출
                 .filter(Objects::nonNull) // ACTUATOR타입은 EUI가 null이라 걸러냄
                 .forEach(deviceLookupCacheService::evict); // 하나씩 evict 호출
 
@@ -249,7 +248,7 @@ public class DeviceServiceImpl implements DeviceService {
         // 검색은 그룸 범위 자체를 명시적으로 받아서 그 안에서만 조회
         validateGroupMembership(userId, groupId);
 
-        List<DeviceEntity> entities;
+        List<Device> entities;
 
         if (id != null) {
             entities = deviceRepository.findById(id).map(List::of).orElse(List.of());
@@ -272,7 +271,7 @@ public class DeviceServiceImpl implements DeviceService {
                 .toList();
     }
 
-    private DeviceResponse toDto(DeviceEntity e) {
+    private DeviceResponse toDto(Device e) {
         return new DeviceResponse(
                 e.getDeviceId(),
                 e.getDeviceType(),
