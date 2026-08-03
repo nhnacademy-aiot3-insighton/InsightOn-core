@@ -1,12 +1,12 @@
 package com.insighton.core.actuators.dto;
 
 import com.insighton.core.actuators.entity.ActuatorType;
-import com.insighton.core.actuators.entity.ActuatorsEntity;
+import com.insighton.core.actuators.entity.Actuator;
 
 import java.time.OffsetDateTime;
 import java.util.Map;
 
-public record ActuatorsResponse(
+public record ActuatorResponse(
         Long actuatorId, // 액추에이터 PK
         Long locationId, // 설치 구역 ID
         String deviceName, // 장비 이름
@@ -16,8 +16,8 @@ public record ActuatorsResponse(
         OffsetDateTime createdAt // 생성 일시
 ) {
 
-    public static ActuatorsResponse from(ActuatorsEntity entity){
-        return new ActuatorsResponse(
+    public static ActuatorResponse from(Actuator entity){
+        return new ActuatorResponse(
                 entity.getActuatorId(),
                 entity.getLocationId().getLocationId(),
                 entity.getDeviceName(),
