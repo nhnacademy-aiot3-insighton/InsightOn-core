@@ -24,7 +24,7 @@ public class LocationsServiceImpl implements LocationsService {
 
     @Override
     @Transactional
-    public void createLocation(Groups groups, LocationsCreateRequest request) {
+    public Locations createLocation(Groups groups, LocationsCreateRequest request) {
         // 어떤 검증이 필요할까...
         if (locationRepository.existsByGroups_GroupIdAndLocationName(groups.getGroupId(), request.locationName())) {
             throw new LocationAlreadyException(request.locationName());
@@ -36,7 +36,7 @@ public class LocationsServiceImpl implements LocationsService {
                 .autoControlMode(request.autoControlMode())
                 .build();
 
-        locationRepository.save(newLocation);
+        return locationRepository.save(newLocation);
     }
 
 
@@ -96,5 +96,12 @@ public class LocationsServiceImpl implements LocationsService {
     public void deleteLocationAll(Long groupId) {
 
         locationRepository.deleteAllByGroups_GroupId(groupId);
+    }
+
+    @Override
+    @Transactional
+    public Locations getLocationByGroupId(Long groupId) {
+        return locationRepository.findByGroups_GroupId(groupId)
+                .orElseThrow(() -> LocationNotFoundException.notFoundLocationByGroupId(groupId));
     }
 }
