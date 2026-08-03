@@ -41,4 +41,12 @@ public interface LocationsRepository extends JpaRepository<Locations, Long> {
      * @param groupId group ID
      */
     void deleteAllByGroups_GroupId(Long groupId);
+
+    /**
+     * location ID로 location entity 조회
+     *
+     * @param groupId 조회할 location ID
+     * @return location entity 반환
+     */
+    Optional<Locations> findByGroups_GroupId(Long groupId);
 }
