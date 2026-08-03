@@ -5,6 +5,7 @@ import com.insighton.core.location.dto.request.LocationsCreateRequest;
 import com.insighton.core.location.dto.request.LocationsUpdateRequest;
 import com.insighton.core.location.dto.response.LocationsListResponse;
 import com.insighton.core.location.dto.response.LocationsResponse;
+import com.insighton.core.location.entity.Locations;
 
 import java.util.List;
 
@@ -14,7 +15,7 @@ public interface LocationsService {
      *
      * @param request location 생성 request
      */
-    void createLocation(Groups groups, LocationsCreateRequest request);
+    Locations createLocation(Groups groups, LocationsCreateRequest request);
 
     /**
      * location list 조회
@@ -61,4 +62,14 @@ public interface LocationsService {
      * @param groupId 삭제할 group ID
      */
     void deleteLocationAll(Long groupId);
+
+    /**
+     * dashboard 삭제할 때 가져올 location 정보
+     *
+     * @param groupId location이 속해있는 group의 ID
+     * @return location entity 반환
+     */
+    Locations getLocationByGroupId(Long groupId);
+
+
 }
