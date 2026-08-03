@@ -1,7 +1,7 @@
 package com.insighton.core.device_attributes.controller;
 
 import com.insighton.core.device_attributes.dto.ActuatorUpdateRequest;
-import com.insighton.core.device_attributes.dto.DeviceAttribute;
+import com.insighton.core.device_attributes.dto.DeviceAttributeResponse;
 import com.insighton.core.device_attributes.dto.MetricDefinitionResponse;
 import com.insighton.core.device_attributes.entity.MetricDefinition;
 import com.insighton.core.device_attributes.service.DeviceAttributeService;
@@ -22,10 +22,10 @@ public class DeviceAttributeController {
 
     // 기기 속성 전체 목록 조회
     @GetMapping
-    public ResponseEntity<List<DeviceAttribute>> getDeviceAttribute(
+    public ResponseEntity<List<DeviceAttributeResponse>> getDeviceAttribute(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("deviceId")Long deviceId){
-        List<DeviceAttribute> attributeDto = attributeService.getAllAttributeByDeviceId(userId, deviceId);
+        List<DeviceAttributeResponse> attributeDto = attributeService.getAllAttributeByDeviceId(userId, deviceId);
         return ResponseEntity.ok(attributeDto);
     }
 
