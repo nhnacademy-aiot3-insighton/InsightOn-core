@@ -79,6 +79,10 @@ public class LocationServiceImpl implements LocationService {
         Location location = locationRepository.findByLocationIdAndGroupGroupId(locationId, groupId)
                 .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(locationId));
 
+        if (locationRepository.existsByGroupGroupIdAndLocationName(location.getGroup().getGroupId(), request.newLocationName())) {
+            throw new LocationAlreadyException(request.newLocationName());
+        }
+        
         location.updateName(request.newLocationName());
     }
 
