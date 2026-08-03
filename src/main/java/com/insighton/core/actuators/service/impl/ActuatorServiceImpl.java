@@ -208,6 +208,6 @@ public class ActuatorServiceImpl implements ActuatorService {
         List<Long> locationIds = locationsRepository.findAllByGroups_GroupId(groupsId).stream()
                 .map(LocationsListResponse::locationId)
                 .toList();
-        actuatorRepository.deleteAllByLocationId_LocationIdIn(locationIds); // groupsId 소속 location만 스코프
+        actuatorRepository.deleteAllByLocationIdLocationIdIn(locationIds); // groupsId 소속 location만 스코프
     }
 }

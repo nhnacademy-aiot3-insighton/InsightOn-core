@@ -215,7 +215,7 @@ public class DeviceServiceImpl implements DeviceService {
         validateManagerRole(userId, device.getGroupId().getGroupId()); // Groups 객체에서 Long ID 호출
 
         // @Query 없이 완벽하게 동작하는 자식 테이블 일괄 삭제 메서드 호출
-        deviceAttributeRepository.deleteByDeviceId_DeviceId(deviceId);
+        deviceAttributeRepository.deleteByDeviceIdDeviceId(deviceId);
         deviceRepository.delete(device);
 
         // 캐시에서도 제거
@@ -231,14 +231,14 @@ public class DeviceServiceImpl implements DeviceService {
         validateManagerRole(userId, groupId);
 
         // 캐시 삭제 - groupId 소속 디바이스만 골라서 evict (clear()는 다른 그룹 캐시까지 날려버리므로 사용 금지)
-        List<Device> devices = deviceRepository.findByGroupId_GroupId(groupId);
+        List<Device> devices = deviceRepository.findByGroupIdGroupId(groupId);
         devices.stream()
                 .map(Device::getDeviceEui) // 각디바이스의 EUI만 추출
                 .filter(Objects::nonNull) // ACTUATOR타입은 EUI가 null이라 걸러냄
                 .forEach(deviceLookupCacheService::evict); // 하나씩 evict 호출
 
         // DB삭제 (groupId 소속만)
-        deviceAttributeRepository.deleteByGroupId_GroupId(groupId);
+        deviceAttributeRepository.deleteByGroupIdGroupId(groupId);
         deviceRepository.deleteAll(devices);
     }
 
@@ -255,13 +255,13 @@ public class DeviceServiceImpl implements DeviceService {
         } else if (eui != null && !eui.trim().isEmpty()) {
             entities = deviceRepository.findByDeviceEui(eui).map(List::of).orElse(List.of());
         } else if (locationId != null) {
-            entities = deviceRepository.findByLocationsId_LocationId(locationId);
+            entities = deviceRepository.findByLocationsIdLocationId(locationId);
         } else if (gatewayId != null) {
-            entities = deviceRepository.findByGatewaysId_GatewayId(gatewayId);
+            entities = deviceRepository.findByGatewaysIdGatewayId(gatewayId);
         } else if (deviceName != null && !deviceName.trim().isEmpty()) {
             entities = deviceRepository.findByDeviceName(deviceName);
         } else {
-            entities = deviceRepository.findByGroupId_GroupId(groupId);
+            entities = deviceRepository.findByGroupIdGroupId(groupId);
         }
 
         // 위 분기들은 groupId로 안걸렀으니 다른 그룹 결과가 섞이지 않게 마지막에 한번더 필터링

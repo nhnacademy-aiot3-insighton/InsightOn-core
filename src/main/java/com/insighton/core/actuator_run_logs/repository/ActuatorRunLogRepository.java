@@ -13,8 +13,8 @@ public interface ActuatorRunLogRepository extends JpaRepository<ActuatorRunLog, 
     Page<ActuatorRunLog> findByActuatorActuatorIdOrderByExecutedAtDesc(Long actuatorId, Pageable pageAble);
 
     // 위치 목록 범위로 실행 로그 일괄 삭제
-    void deleteAllByActuatorLocationId_LocationIdIn(List<Long> locationIds);
+    void deleteAllByActuatorLocationIdLocationIdIn(List<Long> locationIds);
 
     // 단일 위치 범위로 실행 로그 일괄 삭제
-    void deleteAllByActuatorLocationId_LocationId(Long locationId);
+    void deleteAllByActuatorLocationIdLocationId(Long locationId);
 }
