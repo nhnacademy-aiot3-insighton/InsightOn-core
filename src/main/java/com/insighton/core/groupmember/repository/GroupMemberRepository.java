@@ -25,7 +25,7 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> 
      * @param userId  조회하려는 user의 ID
      * @return group 참여 정보
      */
-    Optional<GroupMember> findByGroup_GroupIdAndUserId(Long groupId, Long userId);
+    Optional<GroupMember> findByGroupGroupIdAndUserId(Long groupId, Long userId);
 
     /**
      * group ID로 Group 내에 있는 GroupMemberList 조회
@@ -33,7 +33,7 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> 
      * @param groupId 조회하고자 하는 group의 ID
      * @return Group 내에 있는 GroupMemberList 반환
      */
-    List<GroupMemberListResponse> findAllByGroup_GroupId(Long groupId);
+    List<GroupMemberListResponse> findAllByGroupGroupId(Long groupId);
 
     /**
      * 이미 그룹에 존재하는 user인지 조회
@@ -42,7 +42,7 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> 
      * @param userId  존재 여부 확인할 user ID
      * @return 존재하면 true, 존재하지 않으면 false
      */
-    boolean existsByGroup_GroupIdAndUserId(Long groupId, Long userId);
+    boolean existsByGroupGroupIdAndUserId(Long groupId, Long userId);
 
 
     /**
@@ -58,7 +58,7 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> 
      *
      * @param groupId 삭제될 group ID
      */
-    void deleteAllByGroup_GroupId(Long groupId);
+    void deleteAllByGroupGroupId(Long groupId);
 
     /**
      * 이 그룹에 이 그룹멤버 아이디를 가진 사람을 보는 게 맞는지(?)
@@ -67,5 +67,5 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> 
      * @param groupsId      조회하고자 하는 member가 속한 group의 ID
      * @return member 정보 반환
      */
-    Optional<GroupMember> findByGroupMemberIdAndGroup_GroupId(Long groupMemberId, Long groupsId);
+    Optional<GroupMember> findByGroupMemberIdAndGroupGroupId(Long groupMemberId, Long groupsId);
 }

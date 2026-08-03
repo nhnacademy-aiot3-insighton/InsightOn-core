@@ -73,7 +73,7 @@ class LocationServiceTest {
 
             List<LocationListResponse> mockList = List.of(response);
 
-            given(locationRepository.findAllByGroups_GroupId(groupId)).willReturn(mockList);
+            given(locationRepository.findAllByGroupGroupId(groupId)).willReturn(mockList);
 
             // when
             List<LocationListResponse> locationListRespons = locationsService.getLocationList(groupId);
@@ -83,7 +83,7 @@ class LocationServiceTest {
             assertThat(locationListRespons.getFirst().locationName()).isEqualTo("Name");
             assertThat(locationListRespons.getFirst().autoControlMode()).isEqualTo(Location.AutoControlMode.SUGGESTION);
 
-            verify(locationRepository, times(1)).findAllByGroups_GroupId(groupId);
+            verify(locationRepository, times(1)).findAllByGroupGroupId(groupId);
         }
 
         @Test
@@ -98,7 +98,7 @@ class LocationServiceTest {
 
             Location location = new Location(group, "name", Location.AutoControlMode.SUGGESTION);
 
-            given(locationRepository.findByLocationIdAndGroups_GroupId(locationId, groupId)).willReturn(Optional.of(location));
+            given(locationRepository.findByLocationIdAndGroupGroupId(locationId, groupId)).willReturn(Optional.of(location));
 
             // when
             LocationResponse found = locationsService.getLocation(locationId, groupId);
@@ -109,7 +109,7 @@ class LocationServiceTest {
             assertThat(found.groupId()).isEqualTo(1L);
             assertThat(found.autoControlMode()).isEqualTo(Location.AutoControlMode.SUGGESTION);
 
-            verify(locationRepository, times(1)).findByLocationIdAndGroups_GroupId(locationId, groupId);
+            verify(locationRepository, times(1)).findByLocationIdAndGroupGroupId(locationId, groupId);
         }
 
         @Test
@@ -124,7 +124,7 @@ class LocationServiceTest {
 
             Location location = new Location(group, "name", Location.AutoControlMode.SUGGESTION);
 
-            given(locationRepository.findByLocationIdAndGroups_GroupId(locationId, groupId)).willReturn(Optional.of(location));
+            given(locationRepository.findByLocationIdAndGroupGroupId(locationId, groupId)).willReturn(Optional.of(location));
 
             // when
             locationsService.toggleAutoControlMode(locationId, groupId);
@@ -132,7 +132,7 @@ class LocationServiceTest {
             //then
             assertThat(location.getAutoControlMode()).isEqualTo(Location.AutoControlMode.AI_DIRECT);
 
-            verify(locationRepository, times(1)).findByLocationIdAndGroups_GroupId(locationId, groupId);
+            verify(locationRepository, times(1)).findByLocationIdAndGroupGroupId(locationId, groupId);
         }
 
         @Test
@@ -147,7 +147,7 @@ class LocationServiceTest {
 
             Location location = new Location(group, "name", Location.AutoControlMode.SUGGESTION);
 
-            given(locationRepository.findByLocationIdAndGroups_GroupId(locationId, groupId)).willReturn(Optional.of(location));
+            given(locationRepository.findByLocationIdAndGroupGroupId(locationId, groupId)).willReturn(Optional.of(location));
 
             LocationUpdateRequest request = new LocationUpdateRequest("new");
 
@@ -157,7 +157,7 @@ class LocationServiceTest {
             //then
             assertThat(location.getLocationName()).isEqualTo("new");
 
-            verify(locationRepository, times(1)).findByLocationIdAndGroups_GroupId(locationId, groupId);
+            verify(locationRepository, times(1)).findByLocationIdAndGroupGroupId(locationId, groupId);
         }
 
         @Test
@@ -172,7 +172,7 @@ class LocationServiceTest {
 
             Location targetLocation = new Location(group, "name", Location.AutoControlMode.SUGGESTION);
 
-            given(locationRepository.findByLocationIdAndGroups_GroupId(targetLocationId, groupId)).willReturn(Optional.of(targetLocation));
+            given(locationRepository.findByLocationIdAndGroupGroupId(targetLocationId, groupId)).willReturn(Optional.of(targetLocation));
 
             // when
             locationsService.deleteLocation(targetLocationId, groupId);
@@ -187,13 +187,13 @@ class LocationServiceTest {
             // given
             Long groupId = 1L;
 
-            willDoNothing().given(locationRepository).deleteAllByGroups_GroupId(groupId);
+            willDoNothing().given(locationRepository).deleteAllByGroupGroupId(groupId);
 
             // when
             locationsService.deleteLocationAll(groupId);
 
             // then
-            verify(locationRepository, times(1)).deleteAllByGroups_GroupId(groupId);
+            verify(locationRepository, times(1)).deleteAllByGroupGroupId(groupId);
         }
     }
 
@@ -210,7 +210,7 @@ class LocationServiceTest {
 
             LocationCreateRequest locationsRequest = new LocationCreateRequest("Test Location", Location.AutoControlMode.SUGGESTION);
 
-            given(locationRepository.existsByGroups_GroupIdAndLocationName(group.getGroupId(), locationsRequest.locationName())).willReturn(true);
+            given(locationRepository.existsByGroupGroupIdAndLocationName(group.getGroupId(), locationsRequest.locationName())).willReturn(true);
 
 
             // when & then
@@ -223,14 +223,14 @@ class LocationServiceTest {
         void getListLocation_empty() {
             // given
             Long nonExistentGroupId = 999L;
-            given(locationRepository.findAllByGroups_GroupId(nonExistentGroupId)).willReturn(List.of());
+            given(locationRepository.findAllByGroupGroupId(nonExistentGroupId)).willReturn(List.of());
 
             // when
             List<LocationListResponse> result = locationsService.getLocationList(nonExistentGroupId);
 
             // then
             assertThat(result).isEmpty();
-            verify(locationRepository, times(1)).findAllByGroups_GroupId(nonExistentGroupId);
+            verify(locationRepository, times(1)).findAllByGroupGroupId(nonExistentGroupId);
         }
 
         @Test
@@ -240,7 +240,7 @@ class LocationServiceTest {
             Long groupId = 1L;
             Long locationId = 999L;
 
-            given(locationRepository.findByLocationIdAndGroups_GroupId(locationId, groupId)).willReturn(Optional.empty());
+            given(locationRepository.findByLocationIdAndGroupGroupId(locationId, groupId)).willReturn(Optional.empty());
 
             // when & then
             assertThatThrownBy(() -> locationsService.getLocation(locationId, groupId))
@@ -254,7 +254,7 @@ class LocationServiceTest {
             Long groupId = 1L;
             Long locationId = 999L;
 
-            given(locationRepository.findByLocationIdAndGroups_GroupId(locationId, groupId)).willReturn(Optional.empty());
+            given(locationRepository.findByLocationIdAndGroupGroupId(locationId, groupId)).willReturn(Optional.empty());
 
             // when & then
             assertThatThrownBy(() -> locationsService.toggleAutoControlMode(locationId, groupId))
@@ -272,7 +272,7 @@ class LocationServiceTest {
             Long locationId = 1L;
             Location targetLocation = new Location(group, "name", Location.AutoControlMode.SUGGESTION);
             LocationUpdateRequest request = new LocationUpdateRequest("");
-            given(locationRepository.findByLocationIdAndGroups_GroupId(locationId, groupId)).willReturn(Optional.of(targetLocation));
+            given(locationRepository.findByLocationIdAndGroupGroupId(locationId, groupId)).willReturn(Optional.of(targetLocation));
 
             // when & then
             assertThatThrownBy(() -> locationsService.updateName(locationId, groupId, request))
@@ -286,7 +286,7 @@ class LocationServiceTest {
             Long groupId = 1L;
             Long locationId = 999L;
 
-            given(locationRepository.findByLocationIdAndGroups_GroupId(locationId, groupId)).willReturn(Optional.empty());
+            given(locationRepository.findByLocationIdAndGroupGroupId(locationId, groupId)).willReturn(Optional.empty());
 
             // when & then
             assertThatThrownBy(() -> locationsService.deleteLocation(locationId, groupId))

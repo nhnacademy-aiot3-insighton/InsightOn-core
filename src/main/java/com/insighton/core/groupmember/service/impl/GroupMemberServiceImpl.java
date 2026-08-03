@@ -67,7 +67,7 @@ public class GroupMemberServiceImpl implements GroupMemberService {
             throw new UnAuthorizedAccessException(userId);
         }
 
-        return groupMemberRepository.findAllByGroup_GroupId(groupId);
+        return groupMemberRepository.findAllByGroupGroupId(groupId);
     }
 
     @Override
@@ -76,7 +76,7 @@ public class GroupMemberServiceImpl implements GroupMemberService {
 
         GroupMember requester = validateGroupMembers(groupId, userId);
 
-        GroupMember members = groupMemberRepository.findByGroupMemberIdAndGroup_GroupId(groupMemberId, groupId)
+        GroupMember members = groupMemberRepository.findByGroupMemberIdAndGroupGroupId(groupMemberId, groupId)
                 .orElseThrow(() -> GroupMemberNotFoundException.byMemberIdAndGroupId(groupMemberId, groupId));
 
         if (requester.isMember() || !Objects.equals(requester.getUserId(), members.getUserId())) {
@@ -112,7 +112,7 @@ public class GroupMemberServiceImpl implements GroupMemberService {
     public void toggleManagerRole(Long groupId, Long targetGroupMemberId, Long adminId) {
         // 1. group id가 존재하는지 확인
         GroupMember adminMember = validateGroupMembers(groupId, adminId);
-        GroupMember targetMember = groupMemberRepository.findByGroupMemberIdAndGroup_GroupId(targetGroupMemberId, groupId)
+        GroupMember targetMember = groupMemberRepository.findByGroupMemberIdAndGroupGroupId(targetGroupMemberId, groupId)
                 .orElseThrow(() -> GroupMemberNotFoundException.byMemberIdAndGroupId(targetGroupMemberId, groupId));
 
         // 2. adminID가 manager나 owner권한을 가진 자인지 확인
@@ -144,7 +144,7 @@ public class GroupMemberServiceImpl implements GroupMemberService {
     public void toggleSuperManagerRole(Long groupId, Long targetGroupMemberId, Long superManagerUserId) {
         // 1. group id가 존재하는지 확인
         GroupMember superManager = validateGroupMembers(groupId, superManagerUserId);
-        GroupMember targetMember = groupMemberRepository.findByGroupMemberIdAndGroup_GroupId(targetGroupMemberId, groupId)
+        GroupMember targetMember = groupMemberRepository.findByGroupMemberIdAndGroupGroupId(targetGroupMemberId, groupId)
                 .orElseThrow(() -> GroupMemberNotFoundException.byMemberIdAndGroupId(targetGroupMemberId, groupId));
 
         // super Manager가 아니면 안 됨!!
@@ -167,7 +167,7 @@ public class GroupMemberServiceImpl implements GroupMemberService {
     public void kickGroupMember(Long adminId, Long groupId, Long targetGroupMemberId) {
 
         GroupMember admin = validateGroupMembers(groupId, adminId);
-        GroupMember target = groupMemberRepository.findByGroupMemberIdAndGroup_GroupId(targetGroupMemberId, groupId)
+        GroupMember target = groupMemberRepository.findByGroupMemberIdAndGroupGroupId(targetGroupMemberId, groupId)
                 .orElseThrow(() -> GroupMemberNotFoundException.byMemberIdAndGroupId(targetGroupMemberId, groupId));
 
         // 삭제를 시도하는 자가 member 권한이면 아무도 삭제할 수 없음
@@ -203,7 +203,7 @@ public class GroupMemberServiceImpl implements GroupMemberService {
         }
 
         // 그들이 속한 그룹(삭제될 예정임) ID로 찾아서 모두 삭제
-        groupMemberRepository.deleteAllByGroup_GroupId(groupId);
+        groupMemberRepository.deleteAllByGroupGroupId(groupId);
     }
 
     @Override
@@ -237,7 +237,7 @@ public class GroupMemberServiceImpl implements GroupMemberService {
      */
     @Override
     public GroupMember validateGroupMembers(Long groupId, Long userId) {
-        return groupMemberRepository.findByGroup_GroupIdAndUserId(groupId, userId)
+        return groupMemberRepository.findByGroupGroupIdAndUserId(groupId, userId)
                 .orElseThrow(() -> GroupMemberNotFoundException.byUserIdAndGroupId(userId, groupId));
     }
 

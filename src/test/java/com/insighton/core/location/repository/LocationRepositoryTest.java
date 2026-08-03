@@ -33,7 +33,7 @@ class LocationRepositoryTest {
         void findAllByGroups_GroupId_success() {
             Long groupId = 1L;
 
-            List<LocationListResponse> found = locationRepository.findAllByGroups_GroupId(groupId);
+            List<LocationListResponse> found = locationRepository.findAllByGroupGroupId(groupId);
 
             assertThat(found).hasSize(1);
             assertThat(found.getFirst().locationName()).isEqualTo("test-name");
@@ -45,7 +45,7 @@ class LocationRepositoryTest {
             Long groupId = 1L;
             Long locationId = 1L;
 
-            Optional<Location> found = locationRepository.findByLocationIdAndGroups_GroupId(locationId, groupId);
+            Optional<Location> found = locationRepository.findByLocationIdAndGroupGroupId(locationId, groupId);
 
             assertThat(found).isPresent();
             assertThat(found.get().getLocationName()).isEqualTo("test-name");
@@ -57,7 +57,7 @@ class LocationRepositoryTest {
             Long groupId = 1L;
             String locationName = "test-name";
 
-            boolean success = locationRepository.existsByGroups_GroupIdAndLocationName(groupId, locationName);
+            boolean success = locationRepository.existsByGroupGroupIdAndLocationName(groupId, locationName);
 
             assertThat(success).isTrue();
         }
@@ -69,10 +69,10 @@ class LocationRepositoryTest {
             Long groupId = 1L;
 
             // when
-            locationRepository.deleteAllByGroups_GroupId(groupId);
+            locationRepository.deleteAllByGroupGroupId(groupId);
 
             // then
-            List<LocationListResponse> found = locationRepository.findAllByGroups_GroupId(groupId);
+            List<LocationListResponse> found = locationRepository.findAllByGroupGroupId(groupId);
             assertThat(found).isEmpty();
         }
     }
@@ -87,7 +87,7 @@ class LocationRepositoryTest {
             Long failGroupId = 999L;
 
             //when
-            List<LocationListResponse> found = locationRepository.findAllByGroups_GroupId(failGroupId);
+            List<LocationListResponse> found = locationRepository.findAllByGroupGroupId(failGroupId);
 
             //then
             assertThat(found).isEmpty();
@@ -101,7 +101,7 @@ class LocationRepositoryTest {
             Long failGroupId = 999L;
 
             // when
-            Optional<Location> found = locationRepository.findByLocationIdAndGroups_GroupId(locationId, failGroupId);
+            Optional<Location> found = locationRepository.findByLocationIdAndGroupGroupId(locationId, failGroupId);
 
             assertThat(found).isEmpty();
         }
@@ -112,7 +112,7 @@ class LocationRepositoryTest {
             Long groupId = 1L;
             String locationName = "no";
 
-            boolean fail = locationRepository.existsByGroups_GroupIdAndLocationName(groupId, locationName);
+            boolean fail = locationRepository.existsByGroupGroupIdAndLocationName(groupId, locationName);
 
             assertThat(fail).isFalse();
         }

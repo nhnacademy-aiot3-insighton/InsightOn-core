@@ -14,7 +14,7 @@ public interface LocationRepository extends JpaRepository<Location, Long> {
      * @param groupsId 조회하고자 하는 location List의 group ID
      * @return location list
      */
-    List<LocationListResponse> findAllByGroups_GroupId(Long groupsId);
+    List<LocationListResponse> findAllByGroupGroupId(Long groupsId);
 
     /**
      * group ID와 LocationID 둘 다 해당하는 location의 상세 정보 조회
@@ -24,7 +24,7 @@ public interface LocationRepository extends JpaRepository<Location, Long> {
      * @return location의 상세 정보
      */
 
-    Optional<Location> findByLocationIdAndGroups_GroupId(Long locationId, Long groupId);
+    Optional<Location> findByLocationIdAndGroupGroupId(Long locationId, Long groupId);
 
     /**
      * group내에 같은 이름의 location이 존재하는지 조회
@@ -33,14 +33,14 @@ public interface LocationRepository extends JpaRepository<Location, Long> {
      * @param locationName 조회하고자 하는 location의 ID
      * @return 존재하면 true, 존재하지 않으면 false
      */
-    boolean existsByGroups_GroupIdAndLocationName(Long groupId, String locationName);
+    boolean existsByGroupGroupIdAndLocationName(Long groupId, String locationName);
 
     /**
      * groupID에 해당하는 모든 location 삭제
      *
      * @param groupId group ID
      */
-    void deleteAllByGroups_GroupId(Long groupId);
+    void deleteAllByGroupGroupId(Long groupId);
 
     /**
      * location ID로 location entity 조회
@@ -48,5 +48,5 @@ public interface LocationRepository extends JpaRepository<Location, Long> {
      * @param groupId 조회할 location ID
      * @return location entity 반환
      */
-    Optional<Location> findByGroups_GroupId(Long groupId);
+    Optional<Location> findByGroupGroupId(Long groupId);
 }

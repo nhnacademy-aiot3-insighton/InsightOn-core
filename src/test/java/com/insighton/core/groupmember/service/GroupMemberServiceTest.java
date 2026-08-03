@@ -93,8 +93,8 @@ class GroupMemberServiceTest {
         // given
         GroupMember requester = mock(GroupMember.class);
         given(requester.isMember()).willReturn(false);
-        given(groupMemberRepository.findByGroup_GroupIdAndUserId(1L, 1L)).willReturn(Optional.of(requester));
-        given(groupMemberRepository.findAllByGroup_GroupId(1L)).willReturn(List.of(mock(GroupMemberListResponse.class)));
+        given(groupMemberRepository.findByGroupGroupIdAndUserId(1L, 1L)).willReturn(Optional.of(requester));
+        given(groupMemberRepository.findAllByGroupGroupId(1L)).willReturn(List.of(mock(GroupMemberListResponse.class)));
 
         // when
         List<GroupMemberListResponse> result = groupMembersService.getGroupMemberList(1L, 1L);
@@ -109,7 +109,7 @@ class GroupMemberServiceTest {
         // given
         GroupMember requester = mock(GroupMember.class);
         given(requester.isMember()).willReturn(true);
-        given(groupMemberRepository.findByGroup_GroupIdAndUserId(1L, 1L)).willReturn(Optional.of(requester));
+        given(groupMemberRepository.findByGroupGroupIdAndUserId(1L, 1L)).willReturn(Optional.of(requester));
 
         // when & then
         assertThatThrownBy(() -> groupMembersService.getGroupMemberList(1L, 1L))
@@ -135,8 +135,8 @@ class GroupMemberServiceTest {
         given(target.getGroup()).willReturn(mockGroup); // 그룹 객체 연결
         given(mockGroup.getGroupId()).willReturn(groupId); // 그룹 ID 설정
 
-        given(groupMemberRepository.findByGroup_GroupIdAndUserId(groupId, userId)).willReturn(Optional.of(requester));
-        given(groupMemberRepository.findByGroupMemberIdAndGroup_GroupId(groupMemberId, groupId)).willReturn(Optional.of(target));
+        given(groupMemberRepository.findByGroupGroupIdAndUserId(groupId, userId)).willReturn(Optional.of(requester));
+        given(groupMemberRepository.findByGroupMemberIdAndGroupGroupId(groupMemberId, groupId)).willReturn(Optional.of(target));
         given(authClient.getUserResponse(userId)).willReturn(new AuthUserResponse(userId, "testUser", "010-0000-0000", "녀어렁"));
 
         // when
@@ -157,8 +157,8 @@ class GroupMemberServiceTest {
         GroupMember target = mock(GroupMember.class);
         given(target.isMember()).willReturn(true);
         given(target.getGroupRole()).willReturn(GroupMember.GroupRole.MEMBER);
-        given(groupMemberRepository.findByGroup_GroupIdAndUserId(1L, 1L)).willReturn(Optional.of(admin));
-        given(groupMemberRepository.findByGroupMemberIdAndGroup_GroupId(1L, 1L)).willReturn(Optional.of(target));
+        given(groupMemberRepository.findByGroupGroupIdAndUserId(1L, 1L)).willReturn(Optional.of(admin));
+        given(groupMemberRepository.findByGroupMemberIdAndGroupGroupId(1L, 1L)).willReturn(Optional.of(target));
 
         // when
         groupMembersService.toggleManagerRole(1L, 1L, 1L);
@@ -181,8 +181,8 @@ class GroupMemberServiceTest {
         given(superAdmin.isSuperManager()).willReturn(true);
         given(targetManager.getGroupRole()).willReturn(GroupMember.GroupRole.MANAGER);
 
-        given(groupMemberRepository.findByGroup_GroupIdAndUserId(1L, 1L)).willReturn(Optional.of(superAdmin));
-        given(groupMemberRepository.findByGroupMemberIdAndGroup_GroupId(2L, 1L)).willReturn(Optional.of(targetManager));
+        given(groupMemberRepository.findByGroupGroupIdAndUserId(1L, 1L)).willReturn(Optional.of(superAdmin));
+        given(groupMemberRepository.findByGroupMemberIdAndGroupGroupId(2L, 1L)).willReturn(Optional.of(targetManager));
 
         // when
         groupMembersService.toggleManagerRole(1L, 2L, 1L);
@@ -200,8 +200,8 @@ class GroupMemberServiceTest {
         given(target.isMember()).willReturn(true);
         given(admin.isMember()).willReturn(true);
 
-        given(groupMemberRepository.findByGroup_GroupIdAndUserId(1L, 1L)).willReturn(Optional.of(admin));
-        given(groupMemberRepository.findByGroupMemberIdAndGroup_GroupId(2L, 1L)).willReturn(Optional.of(target));
+        given(groupMemberRepository.findByGroupGroupIdAndUserId(1L, 1L)).willReturn(Optional.of(admin));
+        given(groupMemberRepository.findByGroupMemberIdAndGroupGroupId(2L, 1L)).willReturn(Optional.of(target));
 
         // when & then
         assertThatThrownBy(() -> groupMembersService.toggleManagerRole(1L, 2L, 1L))
@@ -220,8 +220,8 @@ class GroupMemberServiceTest {
         given(adminManager.isMember()).willReturn(false);
         given(adminManager.isManager()).willReturn(true);
 
-        given(groupMemberRepository.findByGroup_GroupIdAndUserId(1L, 1L)).willReturn(Optional.of(adminManager));
-        given(groupMemberRepository.findByGroupMemberIdAndGroup_GroupId(2L, 1L)).willReturn(Optional.of(targetManager));
+        given(groupMemberRepository.findByGroupGroupIdAndUserId(1L, 1L)).willReturn(Optional.of(adminManager));
+        given(groupMemberRepository.findByGroupMemberIdAndGroupGroupId(2L, 1L)).willReturn(Optional.of(targetManager));
 
         // when & then
         assertThatThrownBy(() -> groupMembersService.toggleManagerRole(1L, 2L, 1L))
@@ -239,8 +239,8 @@ class GroupMemberServiceTest {
         given(superManagerTarget.isManager()).willReturn(false);
         given(superManagerTarget.isSuperManager()).willReturn(true);
 
-        given(groupMemberRepository.findByGroup_GroupIdAndUserId(1L, 1L)).willReturn(Optional.of(admin));
-        given(groupMemberRepository.findByGroupMemberIdAndGroup_GroupId(2L, 1L)).willReturn(Optional.of(superManagerTarget));
+        given(groupMemberRepository.findByGroupGroupIdAndUserId(1L, 1L)).willReturn(Optional.of(admin));
+        given(groupMemberRepository.findByGroupMemberIdAndGroupGroupId(2L, 1L)).willReturn(Optional.of(superManagerTarget));
 
         // when & then
         assertThatThrownBy(() -> groupMembersService.toggleManagerRole(1L, 2L, 1L))
@@ -256,8 +256,8 @@ class GroupMemberServiceTest {
         given(admin.isMember()).willReturn(false);
         given(admin.getUserId()).willReturn(1L);
         given(target.getUserId()).willReturn(2L);
-        given(groupMemberRepository.findByGroup_GroupIdAndUserId(1L, 1L)).willReturn(Optional.of(admin));
-        given(groupMemberRepository.findByGroupMemberIdAndGroup_GroupId(1L, 1L)).willReturn(Optional.of(target));
+        given(groupMemberRepository.findByGroupGroupIdAndUserId(1L, 1L)).willReturn(Optional.of(admin));
+        given(groupMemberRepository.findByGroupMemberIdAndGroupGroupId(1L, 1L)).willReturn(Optional.of(target));
 
         // when
         groupMembersService.kickGroupMember(1L, 1L, 1L);
@@ -275,8 +275,8 @@ class GroupMemberServiceTest {
         given(admin.isMember()).willReturn(false);
         given(admin.getUserId()).willReturn(1L);
         given(target.getUserId()).willReturn(1L);
-        given(groupMemberRepository.findByGroup_GroupIdAndUserId(1L, 1L)).willReturn(Optional.of(admin));
-        given(groupMemberRepository.findByGroupMemberIdAndGroup_GroupId(1L, 1L)).willReturn(Optional.of(target));
+        given(groupMemberRepository.findByGroupGroupIdAndUserId(1L, 1L)).willReturn(Optional.of(admin));
+        given(groupMemberRepository.findByGroupMemberIdAndGroupGroupId(1L, 1L)).willReturn(Optional.of(target));
 
         // when & then
         assertThatThrownBy(() -> groupMembersService.kickGroupMember(1L, 1L, 1L))
@@ -291,13 +291,13 @@ class GroupMemberServiceTest {
         // given
         GroupMember admin = mock(GroupMember.class);
         given(admin.isSuperManager()).willReturn(true);
-        given(groupMemberRepository.findByGroup_GroupIdAndUserId(1L, 1L)).willReturn(Optional.of(admin));
+        given(groupMemberRepository.findByGroupGroupIdAndUserId(1L, 1L)).willReturn(Optional.of(admin));
 
         // when
         groupMembersService.deleteGroupMemberAll(1L, 1L);
 
         // then
-        verify(groupMemberRepository, times(1)).deleteAllByGroup_GroupId(1L);
+        verify(groupMemberRepository, times(1)).deleteAllByGroupGroupId(1L);
     }
 
     @Test
@@ -306,7 +306,7 @@ class GroupMemberServiceTest {
         // given
         GroupMember member = mock(GroupMember.class);
         given(member.isSuperManager()).willReturn(false);
-        given(groupMemberRepository.findByGroup_GroupIdAndUserId(1L, 1L)).willReturn(Optional.of(member));
+        given(groupMemberRepository.findByGroupGroupIdAndUserId(1L, 1L)).willReturn(Optional.of(member));
 
         // when
         groupMembersService.leaveGroup(1L, 1L);
@@ -321,7 +321,7 @@ class GroupMemberServiceTest {
         // given
         GroupMember member = mock(GroupMember.class);
         given(member.isSuperManager()).willReturn(true);
-        given(groupMemberRepository.findByGroup_GroupIdAndUserId(1L, 1L)).willReturn(Optional.of(member));
+        given(groupMemberRepository.findByGroupGroupIdAndUserId(1L, 1L)).willReturn(Optional.of(member));
 
         // when & then
         assertThatThrownBy(() -> groupMembersService.leaveGroup(1L, 1L))

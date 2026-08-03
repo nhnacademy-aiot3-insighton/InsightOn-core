@@ -17,7 +17,7 @@ public interface DashboardRepository extends JpaRepository<Dashboard, Long> {
      * @param locationId 조회할 dashboard의 location ID
      * @return dashboard response 반환
      */
-    Optional<DashboardResponse> findProjectedByLocations_LocationId(Long locationId);
+    Optional<DashboardResponse> findProjectedByLocationLocationId(Long locationId);
 
     /**
      * dashboard 수정하기 위해 entity를 조회하여 반환
@@ -25,5 +25,5 @@ public interface DashboardRepository extends JpaRepository<Dashboard, Long> {
      * @param locationId 찾고 싶은 dashboard가 존재하는 location ID
      * @return dashboard entity 반환
      */
-    Optional<Dashboard> findByLocations_LocationId(Long locationId);
+    Optional<Dashboard> findByLocationLocationId(Long locationId);
 }
