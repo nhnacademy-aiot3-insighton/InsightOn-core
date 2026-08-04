@@ -58,7 +58,12 @@ public class ActuatorRunLogServiceImpl implements ActuatorRunLogService {
                                 groupId, locationId, actuatorId, actuatorType,
                                 logEntity.getCommandValue(),
                                 logEntity.getExecutedAt());
+
+                        actuatorStatusInfluxWriter.writeTransition(
+                                groupId, locationId, actuatorId, actuatorType,
+                                logEntity.getCommandValue(), logEntity.getExecutedAt());
                     }
+
 
                 },
                 // 매핑 안 되는 키는 로그만 남기지 않고 넘어감
