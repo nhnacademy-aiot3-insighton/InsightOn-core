@@ -15,7 +15,7 @@ import java.time.OffsetDateTime;
  * IoT 장치(Device) 마스터 정보를 관리하는 JPA 엔티티 클래스.
  */
 @Entity
-@Table(name = "sensor_devices")
+@Table(name = "sensors")
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
