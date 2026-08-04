@@ -36,11 +36,10 @@ public class DeviceController {
             @RequestParam(required = false) Long id,
             @RequestParam(required = false) String eui,
             @RequestParam(required = false) Long locationId,
-            @RequestParam(required = false) Long gatewayId,
             @RequestParam(required = false) String deviceName) {
 
         // 조건 검색 수행 후 리스트 반환
-        List<DeviceResponse> result = deviceService.searchDevices(userid, groupId, id, eui, locationId, gatewayId, deviceName);
+        List<DeviceResponse> result = deviceService.searchDevices(userid, groupId, id, eui, locationId, deviceName);
         return ResponseEntity.ok(result);
     }
 
