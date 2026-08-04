@@ -12,25 +12,9 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/v1/groups/{group-id}/members")
 public class GroupMemberController {
     private final GroupMemberService groupMemberService;
-
-    /**
-     * 그룹 소속 확인용 내부 API — 서비스 간 호출 전용
-     *
-     * @param groupId 그룹 ID
-     * @param userId  소속 여부를 확인할 유저 ID
-     * @return 멤버면 groupId/groupRole 포함 응답, 아니면 404
-     */
-    @GetMapping("/internal/groups/{group-id}/members/user/{user-id}")
-    public ResponseEntity<GroupMemberResponse> getGroupMemberByUserId(
-            @PathVariable("group-id") Long groupId,
-            @PathVariable("user-id") Long userId
-    ) {
-        GroupMemberResponse response = groupMemberService.getGroupMemberAI(userId, groupId);
-
-        return ResponseEntity.ok(response);
-    }
 
     /**
      * 그룹 멤버 리스트 조회(관리자용(?))
@@ -39,7 +23,7 @@ public class GroupMemberController {
      * @param groupId 조회하려는 group의 ID
      * @return groupMemberList 반환
      */
-    @GetMapping("/api/v1/groups/{group-id}/members")
+    @GetMapping
     public ResponseEntity<List<GroupMemberListResponse>> getGroupMemberList(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId) {
@@ -57,7 +41,7 @@ public class GroupMemberController {
      * @param groupMemberId 조회하려는 member의 ID
      * @return member의 상세 정보 반환
      */
-    @GetMapping("/api/v1/groups/{group-id}/members/{group-member-id}")
+    @GetMapping("/{group-member-id}")
     public ResponseEntity<GroupMemberResponse> getGroupMember(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
@@ -77,7 +61,7 @@ public class GroupMemberController {
      * @param groupMemberId 변경 타겟인 member의 ID
      * @return 성공 시 상태 200 반환
      */
-    @PutMapping("/api/v1/groups/{group-id}/members/{group-member-id}/toggle-manager")
+    @PutMapping("/{group-member-id}/toggle-manager")
     public ResponseEntity<Void> toggleManagerRole(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
@@ -96,7 +80,7 @@ public class GroupMemberController {
      * @param groupMemberId target의 Group Member ID
      * @return 성공 시 상태 200 반환
      */
-    @PutMapping("/api/v1/groups/{group-id}/members/{group-member-id}/toggle-super-manager")
+    @PutMapping("/{group-member-id}/toggle-super-manager")
     public ResponseEntity<Void> toggleSuperManagerRole(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
@@ -115,7 +99,7 @@ public class GroupMemberController {
      * @param groupMemberId 추방하려는 member의 ID
      * @return 성공 시 상태 204 반환
      */
-    @DeleteMapping("/api/v1/groups/{group-id}/members/{group-member-id}/kick-member")
+    @DeleteMapping("/{group-member-id}/kick-member")
     public ResponseEntity<Void> kickGroupMember(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
@@ -133,7 +117,7 @@ public class GroupMemberController {
      * @param groupId 떠나려는 group의 ID
      * @return 성공 시 상태 204 반환
      */
-    @DeleteMapping("/api/v1/groups/{group-id}/members/leave-group")
+    @DeleteMapping("/leave-group")
     public ResponseEntity<Void> deleteGroupMemberAll(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId) {

@@ -15,6 +15,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/v1/groups/{group-id}/location")
 public class LocationController {
     private final CoreManagementUseCase useCase;
 
@@ -26,7 +27,7 @@ public class LocationController {
      * @param request location 생성 요청
      * @return 성공 시 상태 201 반환
      */
-    @PostMapping("/api/v1/groups/{group-id}/location/create")
+    @PostMapping("/create")
     public ResponseEntity<Void> createLocation(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
@@ -44,7 +45,7 @@ public class LocationController {
      * @param groupId location list들이 속해있는 group ID
      * @return location list 반환
      */
-    @GetMapping("/api/v1/groups/{group-id}/locations")
+    @GetMapping("/list")
     public ResponseEntity<List<LocationListResponse>> getLocationList(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId
@@ -62,7 +63,7 @@ public class LocationController {
      * @param locationId 상세 조회 할 location ID
      * @return location 상세 정보 반환
      */
-    @GetMapping("/api/v1/groups/{group-id}/location/{location-id}")
+    @GetMapping("/{location-id}")
     public ResponseEntity<LocationResponse> getLocation(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
@@ -81,7 +82,7 @@ public class LocationController {
      * @param locationId 변경하려는 location의 ID
      * @return 성공 시 상태 200 반환
      */
-    @PutMapping("/api/v1/groups/{group-id}/location/{location-id}/toggle-mode")
+    @PutMapping("/{location-id}/toggle-mode")
     public ResponseEntity<Void> toggleAutoControlMode(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
@@ -101,7 +102,7 @@ public class LocationController {
      * @param request    변경하려는 name이 담겨있는 DTO(?)
      * @return 성공 시 상태 200 반환
      */
-    @PutMapping("/api/v1/groups/{group-id}/location/{location-id}/update")
+    @PutMapping("/{location-id}/update")
     public ResponseEntity<Void> updateName(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
@@ -121,7 +122,7 @@ public class LocationController {
      * @param locationId 삭제하려는 location의 ID
      * @return 성공 시 상태 204 반환
      */
-    @DeleteMapping("/api/v1/groups/{group-id}/location/{location-id}/delete")
+    @DeleteMapping("/{location-id}/delete")
     public ResponseEntity<Void> deleteLocation(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
