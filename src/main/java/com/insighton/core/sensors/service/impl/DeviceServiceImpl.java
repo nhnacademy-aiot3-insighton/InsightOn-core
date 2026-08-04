@@ -1,6 +1,6 @@
 package com.insighton.core.sensors.service.impl;
 
-import com.insighton.core.device_attributes.entity.DeviceAttribute;
+import com.insighton.core.device_attributes.entity.SensorAttribute;
 import com.insighton.core.device_attributes.repository.DeviceAttributeRepository;
 import com.insighton.core.gateway.entity.Gateway;
 import com.insighton.core.gateway.exception.GatewayNotFoundException;
@@ -108,8 +108,8 @@ public class DeviceServiceImpl implements DeviceService {
 
         // 패킷 안에 있던 데이터 항목들(예: ["co2", "temperature"])을 확인해 속성(Attribute) 테이블도 채움
         if (metricKeys != null && !metricKeys.isEmpty()) {
-            List<DeviceAttribute> attributes = metricKeys.stream()
-                    .map(metricKey -> DeviceAttribute.builder()
+            List<SensorAttribute> attributes = metricKeys.stream()
+                    .map(metricKey -> SensorAttribute.builder()
                             .deviceId(savedDevice) // 방금 DB에 저장한 센서(부모)와 연결 (FK 매핑).
                             .groupId(groups) // 속성 엔티티에도 그룹 주입
                             .metricKey(metricKey) // 수집 항목 키(예: "co2")를 저장
@@ -244,7 +244,7 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public List<DeviceResponse> searchDevices(Long userId, Long groupId, Long id, String eui,
-                                              Long locationId, Long gatewayId, String deviceName) {
+                                              Long locationId, String deviceName) {
         // 검색은 그룸 범위 자체를 명시적으로 받아서 그 안에서만 조회
         validateGroupMembership(userId, groupId);
 
@@ -256,8 +256,6 @@ public class DeviceServiceImpl implements DeviceService {
             entities = deviceRepository.findByDeviceEui(eui).map(List::of).orElse(List.of());
         } else if (locationId != null) {
             entities = deviceRepository.findByLocationsIdLocationId(locationId);
-        } else if (gatewayId != null) {
-            entities = deviceRepository.findByGatewaysIdGatewayId(gatewayId);
         } else if (deviceName != null && !deviceName.trim().isEmpty()) {
             entities = deviceRepository.findByDeviceName(deviceName);
         } else {
