@@ -43,7 +43,7 @@ public class ActuatorRunLogServiceImpl implements ActuatorRunLogService {
         newState.forEach((key, value) -> CommandType.fromStateKey(key).ifPresentOrElse(
                 commandType -> {
                     ActuatorRunLog logEntity = ActuatorRunLog.builder()
-                            .actuator(actuator)
+                            .actuatorId(actuator)
                             .commandType(commandType)
                             .commandValue(String.valueOf(value))
                             .executedByType(executedByType)
