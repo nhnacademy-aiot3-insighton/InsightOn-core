@@ -7,7 +7,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * 장치별 세부 속성(메트릭 key, 최신 상태값 등) 정보를 저장하는 JPA 엔티티 클래스.
@@ -45,7 +44,6 @@ public class SensorAttribute {
     /**
      * 수집 패킷 내 JSON Key 또는 제어 명령 필드 식별자 (ex. "co2", "temperature", "power_status")
      */
-    @NotNull
     @Column(name = "metric_key", length = 50, nullable = false)
     private String metricKey;
 
