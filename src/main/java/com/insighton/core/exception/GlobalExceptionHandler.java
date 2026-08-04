@@ -3,6 +3,7 @@ package com.insighton.core.exception;
 import com.insighton.core.actuators.exception.ActuatorNotFoundException;
 import com.insighton.core.actuators.exception.CouldNotAbleToUpdateByUserToSystem;
 import com.insighton.core.actuators.exception.InvalidActuatorValueException;
+import com.insighton.core.actuators.exception.InvalidServiceCredentialException;
 import com.insighton.core.device_attributes.exception.MetricKeyNotFoundException;
 import com.insighton.core.gateway.exception.GatewayAccessDeniedException;
 import com.insighton.core.gateway.exception.GatewayNotFoundException;
@@ -40,7 +41,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler({GatewayAccessDeniedException.class, NoPermissionException.class,
-            UnAuthorizedAccessException.class})
+            UnAuthorizedAccessException.class, InvalidServiceCredentialException.class
+    })
     public ResponseEntity<ErrorResponse> handleAccessDenied(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(new ErrorResponse(HttpStatus.FORBIDDEN.value(), e.getMessage()));
