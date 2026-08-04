@@ -71,6 +71,21 @@ public class DeviceServiceImpl implements DeviceService {
             Set<String> metricKeys) {
 
         // 캐시 만료 시 DB 유니크 제약조건(500 에러) 충돌 방어를 위해 EUI 사전 조회
+        Optional<Device> existingDevice = deviceRepository.findByDeviceEui(deviceEui);
+        if (existingDevice.isPresent()) {
+            Device e = existingDevice.get();
+            if (!Objects.equals(e.getGroupId().getGroupId(), groupId)) {
+                throw new InvalidDeviceValueException(
+                        "이미 다른 그룹에 등록된 EUI입니다. (EUI: " + deviceEui + ")");
+            }
+            Long existingGatewayId = e.getGatewaysId() != null ? e.getGatewaysId().getGatewayId() : gatewayId;
+            DeviceCacheEntry cacheEntry = new DeviceCacheEntry(
+                    e.getDeviceId(), e.getDeviceEui(), existingGatewayId,
+                    e.getLocationsId() != null ? e.getLocationsId().getLocationId() : null
+            );
+            deviceLookupCacheService.populate(cacheEntry); // 캐시 복구
+            return cacheEntry;
+        }
         // 대소문자 졍규화
         String nolDeviceName = nomalizeDeviceName(deviceName);
 
@@ -91,6 +106,7 @@ public class DeviceServiceImpl implements DeviceService {
                 .lastSeenAt(OffsetDateTime.now()) // 첫 데이터가 도착했으니 통신 시각을 현재로 기록
                 .createdAt(OffsetDateTime.now()) // 생성 시각을 현재로 저장
                 .build();
+
 
         // 센서 정보를 sensor_devices DB 테이블에 저장
         Device savedDevice = deviceRepository.save(device);
