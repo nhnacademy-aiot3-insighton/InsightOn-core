@@ -7,14 +7,20 @@ import com.insighton.core.dashboards.exception.DashboardNotFoundException;
 import com.insighton.core.dashboards.repository.DashboardRepository;
 import com.insighton.core.dashboards.service.DashboardService;
 import com.insighton.core.location.entity.Location;
+import com.insighton.core.widgets.dto.response.WidgetsListResponse;
+import com.insighton.core.widgets.exception.WidgetNotFoundException;
+import com.insighton.core.widgets.repository.WidgetRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class DashboardServiceImpl implements DashboardService {
     private final DashboardRepository dashboardRepository;
+    private final WidgetRepository widgetRepository;
 
     @Override
     @Transactional
@@ -28,8 +34,17 @@ public class DashboardServiceImpl implements DashboardService {
     @Override
     @Transactional(readOnly = true)
     public DashboardResponse getDashboard(Long locationId) {
-        return dashboardRepository.findProjectedByLocationLocationId(locationId)
+        Dashboard dashboard = dashboardRepository.findByLocationLocationId(locationId)
                 .orElseThrow(() -> new DashboardNotFoundException(locationId));
+
+        List<WidgetsListResponse> widgetsList = widgetRepository.findByDashboardDashboardsId(dashboard.getDashboardsId())
+                .orElseThrow(() -> WidgetNotFoundException.notFoundWidgetByDashboardId(dashboard.getDashboardsId()));
+
+        return DashboardResponse.builder()
+                .dashboardId(dashboard.getDashboardsId())
+                .title(dashboard.getTitle())
+                .widgetsList(widgetsList)
+                .build();
     }
 
     @Override
