@@ -220,7 +220,7 @@ public class DeviceServiceImpl implements DeviceService {
         validateManagerRole(userId, device.getGroupId().getGroupId()); // Groups 객체에서 Long ID 호출
 
         // @Query 없이 완벽하게 동작하는 자식 테이블 일괄 삭제 메서드 호출
-        deviceAttributeRepository.deleteByDeviceIdDeviceId(deviceId);
+        deviceAttributeRepository.deleteByDeviceId(deviceId);
         deviceRepository.delete(device);
 
         // 캐시에서도 제거
@@ -243,7 +243,7 @@ public class DeviceServiceImpl implements DeviceService {
                 .forEach(deviceLookupCacheService::evict); // 하나씩 evict 호출
 
         // DB삭제 (groupId 소속만)
-        deviceAttributeRepository.deleteByGroupIdGroupId(groupId);
+        deviceAttributeRepository.deleteByGroupId(groupId);
         deviceRepository.deleteAll(devices);
     }
 

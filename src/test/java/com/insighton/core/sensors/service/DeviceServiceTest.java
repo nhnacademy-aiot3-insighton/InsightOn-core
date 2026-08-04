@@ -153,7 +153,7 @@ class DeviceServiceTest {
         deviceService.deleteAll(1L, 5L);
 
         verify(deviceLookupCacheService, times(1)).evict("EUI-001");
-        verify(deviceAttributeRepository).deleteByGroupIdGroupId(5L);
+        verify(deviceAttributeRepository).deleteByGroupId(5L);
         verify(deviceRepository).deleteAll(List.of(withEui, withoutEui));
     }
 }

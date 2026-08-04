@@ -37,15 +37,15 @@ public interface DeviceAttributeRepository extends JpaRepository<SensorAttribute
      * @param metricKey 메트릭 키
      * @return 존재할 경우 true, 그렇지 않으면 false
      */
-    boolean existsByDeviceIdDeviceIdAndMetricKey(Long deviceId, String metricKey);
+    boolean existsByDeviceIdAndMetricKey(Long deviceId, String metricKey);
 
     // 기기 삭제 시 소속 속성 일괄 삭제
-    void deleteByDeviceIdDeviceId(Long deviceId);
+    void deleteByDeviceId(Long deviceId);
 
     // 그룹 삭제 시 소속 속성 일괄 삭제
-    void deleteByGroupIdGroupId(Long groupId);
+    void deleteByGroupId(Long groupId);
 
     // 장소 삭제 시, 그 장소 소속 디바이스들의 속성 일괄 삭제용
-    void deleteAllByDeviceIdDeviceIdIn(List<Long> deviceIds);
+    void deleteAllByDeviceIdIn(List<Long> deviceIds);
 
 }

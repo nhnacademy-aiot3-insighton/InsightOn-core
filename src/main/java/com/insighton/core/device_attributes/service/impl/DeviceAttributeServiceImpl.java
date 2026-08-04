@@ -136,7 +136,7 @@ public class DeviceAttributeServiceImpl implements DeviceAttributeService {
         }
         return MetricDefinition.findFromKey(metricKey)
                 .map(def -> attributeRepository.
-                        existsByDeviceIdDeviceIdAndMetricKey(deviceId, def.getMetricKey()))
+                        existsByDeviceIdAndMetricKey(deviceId, def.getMetricKey()))
                 .orElse(false);
     }
 }
