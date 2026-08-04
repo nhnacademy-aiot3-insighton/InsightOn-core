@@ -71,17 +71,6 @@ public class DeviceServiceImpl implements DeviceService {
             Set<String> metricKeys) {
 
         // 캐시 만료 시 DB 유니크 제약조건(500 에러) 충돌 방어를 위해 EUI 사전 조회
-        Optional<Device> existingDevice = deviceRepository.findByDeviceEui(deviceEui);
-        if (existingDevice.isPresent()) {
-            Device e = existingDevice.get();
-            DeviceCacheEntry cacheEntry = new DeviceCacheEntry(
-                    e.getDeviceId(), e.getDeviceEui(), gatewayId,
-                    e.getLocationsId() != null ? e.getLocationsId().getLocationId() : null
-            );
-            deviceLookupCacheService.populate(cacheEntry); // 캐시 복구
-            return cacheEntry;
-        }
-
         // 대소문자 졍규화
         String nolDeviceName = nomalizeDeviceName(deviceName);
 
