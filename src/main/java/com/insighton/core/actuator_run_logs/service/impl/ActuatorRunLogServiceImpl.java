@@ -25,8 +25,7 @@ import java.util.Map;
 public class ActuatorRunLogServiceImpl implements ActuatorRunLogService {
     // 실행 로그 조회, 저장
     private final ActuatorRunLogRepository actuatorRunLogRepository;
-
-
+    private final ActuatorStatusInfluxWriter actuatorStatusInfluxWriter;
 
 
     @Override
@@ -53,7 +52,13 @@ public class ActuatorRunLogServiceImpl implements ActuatorRunLogService {
                             .build();
                     actuatorRunLogRepository.save(logEntity);
 
-
+                    // 파워 상태 명령만 InfluxDB 시계열로 별도 기록
+                    if(commandType == CommandType.POWER_STATUS){
+                        actuatorStatusInfluxWriter.writeTransition(
+                                groupId, locationId, actuatorId, actuatorType,
+                                logEntity.getCommandValue(),
+                                logEntity.getExecutedAt());
+                    }
 
                 },
                 // 매핑 안 되는 키는 로그만 남기지 않고 넘어감

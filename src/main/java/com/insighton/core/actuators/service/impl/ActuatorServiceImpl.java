@@ -1,6 +1,7 @@
 package com.insighton.core.actuators.service.impl;
 
 import com.insighton.core.actuator_run_logs.entity.ExecutedByType;
+import com.insighton.core.actuator_run_logs.repository.ActuatorRunLogRepository;
 import com.insighton.core.actuator_run_logs.service.ActuatorRunLogService;
 import com.insighton.core.actuators.dto.ActuatorRequest;
 import com.insighton.core.actuators.dto.ActuatorResponse;
@@ -33,6 +34,7 @@ public class ActuatorServiceImpl implements ActuatorService {
     private final ActuatorRepository actuatorRepository; // 액추에이터 조회/저장
     private final GroupMembersService groupMembersService; // 그룹 멤버 권한 검증용 서비스
     private final ActuatorRunLogService actuatorRunLogService; // 제어 이력 기록용
+    private final ActuatorRunLogRepository actuatorRunLogRepository;
 
 
     // 요청자가 해당 그룹의 MANAGER 이상 권한을 가졌는지 검증
@@ -143,31 +145,6 @@ public class ActuatorServiceImpl implements ActuatorService {
 
     }
 
-//    @Override
-//    @Transactional
-//    public void updateActuatorState(Long userId, Long groupsId, Long actuatorId, Map<String, Object> newState, boolean isSystemRequest) {
-//
-//        // AI나 룰엔진 등 시스템 요청인 경우 권한 검증을 생략함
-//        if (!isSystemRequest) {
-//            validateManagerRole(userId, groupsId);
-//        }
-//
-//        // 서비스 계층 방어 코드: 상태값이 비어있다면 400 Bad Request 예외 발생[cite: 6]
-//        if (newState == null || newState.isEmpty()) {
-//            throw new InvalidActuatorValueException("액추에이터 제어 상태 값(newState)은 비어있을 수 없습니다.");
-//        }
-//
-//        // 대상 액추에이터 조회 및 상태 갱신[cite: 6]
-//        ActuatorsEntity entity = actuatorsRepository.findById(actuatorId)
-//                .orElseThrow(() -> new ActuatorNotFoundException("액추에이터를 찾을 수 없습니다. (ID: " + actuatorId + ")"));
-//
-//        // 사용자 요청일때만 소유권 체크 (시스템 요청은 groupId 필요가없을수있음)
-//        if(!isSystemRequest){
-//            validateActuatorOwnership(entity, groupsId);
-//        }
-//
-//        entity.updateState(newState);
-//    }
 
     @Override
     @Transactional
@@ -197,8 +174,10 @@ public class ActuatorServiceImpl implements ActuatorService {
                 .orElseThrow(() -> new ActuatorNotFoundException("삭제할 액추에이터를 찾을 수 없습니다. (ID: " + actuatorId + ")"));
         validateActuatorOwnership(entity, groupsId);
 
-        actuatorRepository.delete(entity);
+        actuatorRunLogRepository.deleteByActuatorActuatorId(actuatorId); // 자식(실행로그)부터 삭제
+        actuatorRepository.delete(entity); // 그 다음 부모(액추에이터) 삭제
     }
+
 
     @Override
     @Transactional
@@ -208,6 +187,9 @@ public class ActuatorServiceImpl implements ActuatorService {
         List<Long> locationIds = locationsRepository.findAllByGroups_GroupId(groupsId).stream()
                 .map(LocationsListResponse::locationId)
                 .toList();
+
+        // 이미 만들어뒀던 위치 범위 삭제 메서드 재사용 (그룹→장소 캐스케이드 삭제 때 쓰던 것과 동일)
+        actuatorRunLogRepository.deleteAllByActuatorLocationIdLocationIdIn(locationIds);
         actuatorRepository.deleteAllByLocationIdLocationIdIn(locationIds); // groupsId 소속 location만 스코프
     }
 }
