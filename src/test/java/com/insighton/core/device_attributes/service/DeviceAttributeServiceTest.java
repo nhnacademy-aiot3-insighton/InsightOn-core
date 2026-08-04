@@ -61,7 +61,7 @@ class DeviceAttributeServiceTest {
 
         SensorAttribute attribute = SensorAttribute.builder()
                 .metricKey("power_status").build();
-        given(attributeRepository.findByDeviceIdDeviceIdAndMetricKey(1L, "power_status"))
+        given(attributeRepository.findByDeviceIdAndMetricKey(1L, "power_status"))
                 .willReturn(Optional.of(attribute));
 
         attributeService.updateActuatorValue(1L, 1L, "POWER_STATUS", "ON");
@@ -100,7 +100,7 @@ class DeviceAttributeServiceTest {
         given(deviceRepository.findById(1L)).willReturn(Optional.of(device));
         given(groupMembersService.validateGroupMembers(5L, 1L))
                 .willReturn(GroupMembers.builder().userId(1L).groupRole(GroupRole.MANAGER).build());
-        given(attributeRepository.findByDeviceIdDeviceIdAndMetricKey(anyLong(), anyString()))
+        given(attributeRepository.findByDeviceIdAndMetricKey(anyLong(), anyString()))
                 .willReturn(Optional.empty());
 
         assertThrows(MetricKeyNotFoundException.class,

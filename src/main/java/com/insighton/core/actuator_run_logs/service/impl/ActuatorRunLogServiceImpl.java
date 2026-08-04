@@ -73,7 +73,7 @@ public class ActuatorRunLogServiceImpl implements ActuatorRunLogService {
 
     @Override
     public Page<ActuatorRunLogResponse> getRunLogsByActuatorId(Long actuatorId, Pageable pageable) {
-        return actuatorRunLogRepository.findByActuatorActuatorIdOrderByExecutedAtDesc(actuatorId, pageable)
+        return actuatorRunLogRepository.findByAActuatorIdOrderByExecutedAtDesc(actuatorId, pageable)
                 .map(ActuatorRunLogResponse::from);
     }
 }

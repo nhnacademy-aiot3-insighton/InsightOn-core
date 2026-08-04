@@ -56,7 +56,7 @@ public class DeviceAttributeServiceImpl implements DeviceAttributeService {
         validateGroupMembership(userId, entity.getGroupId().getGroupId()); // Groups 객체에서 Long ID 호출
 
         // 2. DB에서 장치 속성 목록 조회 후 Enum 정보를 매핑하여 DTO로 변환
-        return attributeRepository.findByDeviceIdDeviceId(deviceId)
+        return attributeRepository.findByDeviceId(deviceId)
                 .stream()
                 .map(attr -> {
                     // Enum에서 메트릭 표준 정의(한글 명칭, 단위) 바인딩
@@ -115,7 +115,7 @@ public class DeviceAttributeServiceImpl implements DeviceAttributeService {
 
         // 정규화된 metricKey로 DB 조회
         SensorAttribute attribute = attributeRepository
-                .findByDeviceIdDeviceIdAndMetricKey(deviceId, normalizedMetricKey)
+                .findByDeviceIdAndMetricKey(deviceId, normalizedMetricKey)
                 .orElseThrow(() -> new MetricKeyNotFoundException("매트릭 키를 찾을 수 없습니다 (ID: " + metricKey + ")"));
 
         attribute.updateCurrentValue(newValue);
