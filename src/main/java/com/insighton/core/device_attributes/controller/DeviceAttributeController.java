@@ -14,7 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/sensor/{deviceId}/attribute")
+@RequestMapping("/api/v1/sensor/{device-id}/attribute")
 @RequiredArgsConstructor
 public class DeviceAttributeController {
 

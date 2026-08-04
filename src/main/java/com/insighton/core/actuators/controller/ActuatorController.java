@@ -6,7 +6,6 @@ import com.insighton.core.actuator_run_logs.service.ActuatorRunLogService;
 import com.insighton.core.actuators.dto.ActuatorNameUpdateRequest;
 import com.insighton.core.actuators.dto.ActuatorRequest;
 import com.insighton.core.actuators.dto.ActuatorResponse;
-import com.insighton.core.actuators.exception.CouldNotAbleToUpdateByUserToSystem;
 import com.insighton.core.actuators.exception.InvalidServiceCredentialException;
 import com.insighton.core.actuators.service.ActuatorService;
 import jakarta.validation.Valid;
@@ -23,7 +22,7 @@ import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/groups/{groupsId}/actuators")
+@RequestMapping("/api/v1/groups/{group-id}/actuators")
 public class ActuatorController {
 
     // Core-내부서비스 간 공유 비밀키 (환경변수로 주입, 코드/git에 값 노출 금지)
