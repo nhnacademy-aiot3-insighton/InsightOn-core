@@ -21,7 +21,7 @@ public record ActuatorRunLogResponse(
     public static ActuatorRunLogResponse from(ActuatorRunLog entity){
         return new ActuatorRunLogResponse(
                 entity.getRunLogId(),
-                entity.getActuator().getActuatorId(),
+                entity.getActuatorId().getActuatorId(),
                 entity.getCommandType(),
                 entity.getCommandValue(),
                 entity.getExecutedByType(),
