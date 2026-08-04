@@ -53,7 +53,7 @@ public class ActuatorServiceImpl implements ActuatorService {
                 .findByLocationIdAndGroups_GroupId(entity.getLocationId().getLocationId(), groupsId)
                 .isPresent();
         if (!belongsToGroup) {
-            throw new ActuatorNotFoundException("액추에이터를 찾을 수 없습니다. (ID: " + entity.getActuatorId() + ")");
+            throw new ActuatorNotFoundException(entity.getActuatorId());
         }
     }
 
@@ -89,7 +89,7 @@ public class ActuatorServiceImpl implements ActuatorService {
     public ActuatorResponse getActuatorById(Long userId, Long groupId, Long actuatorId) {
         // 단건 조회 수행, 없을 시 404 예외 발생[cite: 6]
         Actuator entity = actuatorRepository.findById(actuatorId)
-                .orElseThrow(() -> new ActuatorNotFoundException("액추에이터를 찾을 수 없습니다. (ID: " + actuatorId + ")"));
+                .orElseThrow(() -> new ActuatorNotFoundException(actuatorId));
 
         validateGroupMembership(userId, groupId);
         validateActuatorOwnership(entity, groupId);
@@ -130,7 +130,7 @@ public class ActuatorServiceImpl implements ActuatorService {
 
         // 대상 액추에이터 조회 및 상태 갱신
         Actuator entity = actuatorRepository.findById(actuatorId)
-                .orElseThrow(() -> new ActuatorNotFoundException(actuatorId + "액추에이터를 찾을 수 없습니다"));
+                .orElseThrow(() -> new ActuatorNotFoundException(actuatorId));
 
         // 사용자 요청일때만 소유권 체크 (시스템 요청은 groupId 필요가없을수있음)
         if(isUserRequest){
@@ -158,7 +158,7 @@ public class ActuatorServiceImpl implements ActuatorService {
 
         // 대상 액추에이터 조회 및 이름 수정[cite: 6]
         Actuator entity = actuatorRepository.findById(actuatorId)
-                .orElseThrow(() -> new ActuatorNotFoundException("액추에이터를 찾을 수 없습니다. (ID: " + actuatorId + ")"));
+                .orElseThrow(() -> new ActuatorNotFoundException(actuatorId));
 
         validateActuatorOwnership(entity, groupsId);
 
@@ -171,7 +171,7 @@ public class ActuatorServiceImpl implements ActuatorService {
         validateManagerRole(userId, groupsId);
 
         Actuator entity = actuatorRepository.findById(actuatorId)
-                .orElseThrow(() -> new ActuatorNotFoundException("삭제할 액추에이터를 찾을 수 없습니다. (ID: " + actuatorId + ")"));
+                .orElseThrow(() -> new ActuatorNotFoundException(actuatorId));
         validateActuatorOwnership(entity, groupsId);
 
         actuatorRunLogRepository.deleteByActuatorId(actuatorId); // 자식(실행로그)부터 삭제
