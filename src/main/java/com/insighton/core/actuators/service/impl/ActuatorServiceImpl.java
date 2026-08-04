@@ -174,7 +174,7 @@ public class ActuatorServiceImpl implements ActuatorService {
                 .orElseThrow(() -> new ActuatorNotFoundException("삭제할 액추에이터를 찾을 수 없습니다. (ID: " + actuatorId + ")"));
         validateActuatorOwnership(entity, groupsId);
 
-        actuatorRunLogRepository.deleteByActuatorActuatorId(actuatorId); // 자식(실행로그)부터 삭제
+        actuatorRunLogRepository.deleteByActuatorId(actuatorId); // 자식(실행로그)부터 삭제
         actuatorRepository.delete(entity); // 그 다음 부모(액추에이터) 삭제
     }
 
@@ -189,7 +189,7 @@ public class ActuatorServiceImpl implements ActuatorService {
                 .toList();
 
         // 이미 만들어뒀던 위치 범위 삭제 메서드 재사용 (그룹→장소 캐스케이드 삭제 때 쓰던 것과 동일)
-        actuatorRunLogRepository.deleteAllByActuatorLocationIdLocationIdIn(locationIds);
-        actuatorRepository.deleteAllByLocationIdLocationIdIn(locationIds); // groupsId 소속 location만 스코프
+        actuatorRunLogRepository.deleteAllByActuatorLocationIdIn(locationIds);
+        actuatorRepository.deleteAllByLocationIdList(locationIds); // groupsId 소속 location만 스코프
     }
 }

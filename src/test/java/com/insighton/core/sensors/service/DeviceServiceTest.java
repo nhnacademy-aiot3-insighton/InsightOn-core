@@ -148,7 +148,7 @@ class DeviceServiceTest {
 
         given(groupMembersService.validateGroupMembers(5L, 1L))
                 .willReturn(GroupMembers.builder().userId(1L).groupRole(GroupRole.MANAGER).build());
-        given(deviceRepository.findByGroupIdGroupId(5L)).willReturn(List.of(withEui, withoutEui));
+        given(deviceRepository.findByGroupId(5L)).willReturn(List.of(withEui, withoutEui));
 
         deviceService.deleteAll(1L, 5L);
 
