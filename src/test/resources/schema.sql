@@ -102,6 +102,7 @@ CREATE TABLE core.sensors (
                               device_id                    BIGSERIAL    PRIMARY KEY,
                               gateway_id                   BIGINT       REFERENCES core.gateways(gateway_id),
                               location_id                  BIGINT       REFERENCES core.locations(location_id),
+                              groupd_id                    BIGINT       REFERENCES core.groups(group_id),
                               device_eui                   VARCHAR(50),
                               device_name                  VARCHAR(100) NOT NULL,
                               device_type                  VARCHAR(30)  NOT NULL,
@@ -113,6 +114,7 @@ CREATE TABLE core.sensors (
 CREATE TABLE core.sensor_attributes (
                                         device_attribute_id          BIGSERIAL    PRIMARY KEY,
                                         device_id                    BIGINT       NOT NULL REFERENCES core.sensors(device_id),
+                                        groupd_id                    BIGINT       REFERENCES core.groups(group_id),
                                         metric_key                   VARCHAR(50)  NOT NULL,
                                         current_value_str            VARCHAR(50),
                                         CONSTRAINT uq_device_attributes_device_metric UNIQUE (device_id, metric_key)
