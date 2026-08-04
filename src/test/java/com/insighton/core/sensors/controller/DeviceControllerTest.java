@@ -58,7 +58,7 @@ class DeviceControllerTest {
     @DisplayName("존재하지 않는 디바이스 조회 시 404")
     void 디바이스_조회_실패_404() throws Exception {
         given(deviceService.getDeviceById(anyLong(), anyLong()))
-                .willThrow(new DeviceNotFoundException("디바이스를 찾을 수 없습니다. (ID: 999)"));
+                .willThrow(new DeviceNotFoundException(999L));
 
         mockMvc.perform(get("/api/v1/sensor/{id}", 999L)
                         .header("X-USER-ID", 1L))
