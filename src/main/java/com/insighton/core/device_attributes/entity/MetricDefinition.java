@@ -29,7 +29,8 @@ public enum MetricDefinition {
         return Arrays.stream(values()) // 모든 Enum 상수를 스트림으로 변환
                 .filter(m -> m.getMetricKey().equalsIgnoreCase(metricKey)) // 대소문자 무시 비교 필터링
                 .findFirst() // 조건에 일치하는 첫 번째 항목 탐색
-                .orElseThrow(() -> new MetricKeyNotFoundException("매트릭 키를 찾을 수 없습니다")); // 없을 경우 404 예외 발생
+                .orElseThrow(() -> new MetricKeyNotFoundException(
+                        "메트릭 키를 찾을 수 없습니다. (metricKey: " + metricKey + ")")); // 없을 경우 404 예외 발생
     }
 
 
