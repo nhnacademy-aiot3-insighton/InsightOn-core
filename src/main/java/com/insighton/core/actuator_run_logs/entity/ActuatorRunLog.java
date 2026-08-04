@@ -22,7 +22,7 @@ public class ActuatorRunLog {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "actuator_id", nullable = false)
-    private Actuator actuatorId;
+    private Actuator actuator;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "command_type", length = 50, nullable = false)
