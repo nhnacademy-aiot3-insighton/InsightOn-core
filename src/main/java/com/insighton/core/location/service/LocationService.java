@@ -33,6 +33,15 @@ public interface LocationService {
      */
     LocationResponse getLocation(Long locationId, Long groupId);
 
+
+    /**
+     * AI 쪽에서 요청
+     *
+     * @param locationId 조회하고자 하는 location ID
+     * @return locationResponse 반환
+     */
+    LocationResponse getLocationAI(Long locationId);
+
     /**
      * mode 변경
      *
