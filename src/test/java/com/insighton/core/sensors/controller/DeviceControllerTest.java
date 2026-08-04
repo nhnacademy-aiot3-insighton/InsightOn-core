@@ -1,10 +1,13 @@
 package com.insighton.core.sensors.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.insighton.core.location.exception.LocationNotFoundException;
 import com.insighton.core.sensors.dto.DeviceNameUpdateRequest;
 import com.insighton.core.sensors.dto.DeviceResponse;
+import com.insighton.core.sensors.dto.DeviceUpdateRequest;
 import com.insighton.core.sensors.entity.DeviceType;
 import com.insighton.core.sensors.exception.DeviceNotFoundException;
+import com.insighton.core.sensors.exception.InvalidDeviceValueException;
 import com.insighton.core.sensors.service.DeviceService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,6 +21,7 @@ import java.time.OffsetDateTime;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -73,26 +77,87 @@ class DeviceControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
-    @Test
-    @DisplayName("장치 이름 수정 성공")
-    void 이름수정_성공() throws Exception {
-        DeviceNameUpdateRequest request = new DeviceNameUpdateRequest("새 이름");
+//    @Test
+//    @DisplayName("장치 이름 수정 성공")
+//    void 이름수정_성공() throws Exception {
+//        DeviceNameUpdateRequest request = new DeviceNameUpdateRequest("새 이름");
+//
+//        mockMvc.perform(put("/api/v1/sensor/{id}/name", 1L)
+//                        .header("X-USER-ID", 1L)
+//                        .contentType(MediaType.APPLICATION_JSON)
+//                        .content(objectMapper.writeValueAsString(request)))
+//                .andExpect(status().isNoContent());
+//
+//        verify(deviceService).updateDeviceName(1L, 1L, "새 이름");
+//    }
 
-        mockMvc.perform(put("/api/v1/sensor/{id}/name", 1L)
+    @Test
+    @DisplayName("위치만 수정 - 이름은 null로 그대로 전달됨")
+    void 위치만_수정_성공() throws Exception {
+        DeviceUpdateRequest request = new DeviceUpdateRequest(5L, null);
+
+        mockMvc.perform(put("/api/v1/sensor/{id}", 1L)
                         .header("X-USER-ID", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNoContent());
 
-        verify(deviceService).updateDeviceName(1L, 1L, "새 이름");
+        verify(deviceService).updateDevice(1L, 1L, 5L, null);
     }
 
     @Test
-    @DisplayName("빈 이름으로 수정 요청 시 @Valid에 걸려 400")
-    void 이름수정_빈값_400() throws Exception {
-        DeviceNameUpdateRequest request = new DeviceNameUpdateRequest("  ");
+    @DisplayName("이름만 수정 - 위치는 null로 그대로 전달됨")
+    void 이름만_수정_성공() throws Exception {
+        DeviceUpdateRequest request = new DeviceUpdateRequest(null, "새 이름");
 
-        mockMvc.perform(put("/api/v1/sensor/{id}/name", 1L)
+        mockMvc.perform(put("/api/v1/sensor/{id}", 1L)
+                        .header("X-USER-ID", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNoContent());
+
+        verify(deviceService).updateDevice(1L, 1L, null, "새 이름");
+    }
+
+    @Test
+    @DisplayName("위치와 이름 둘 다 수정 성공")
+    void 위치_이름_둘다_수정_성공() throws Exception {
+        DeviceUpdateRequest request = new DeviceUpdateRequest(5L, "새 이름");
+
+        mockMvc.perform(put("/api/v1/sensor/{id}", 1L)
+                        .header("X-USER-ID", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNoContent());
+
+        verify(deviceService).updateDevice(1L, 1L, 5L, "새 이름");
+    }
+
+    @Test
+    @DisplayName("이름이 100자를 넘으면 @Valid에 걸려 400, 서비스는 호출 안 됨")
+    void 이름_길이초과_400() throws Exception {
+        String tooLong = "가".repeat(101);
+        DeviceUpdateRequest request = new DeviceUpdateRequest(null, tooLong);
+
+        mockMvc.perform(put("/api/v1/sensor/{id}", 1L)
+                        .header("X-USER-ID", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        verify(deviceService, org.mockito.Mockito.never())
+                .updateDevice(anyLong(), anyLong(), any(), anyString());
+    }
+
+    @Test
+    @DisplayName("빈 문자열 이름은 @Valid는 통과하지만 서비스 레이어에서 400")
+    void 빈이름_서비스레이어에서_거부() throws Exception {
+        DeviceUpdateRequest request = new DeviceUpdateRequest(null, "   ");
+
+        willThrow(new InvalidDeviceValueException("변경할 장치 이름은 빈 값일 수 없습니다."))
+                .given(deviceService).updateDevice(anyLong(), anyLong(), any(), anyString());
+
+        mockMvc.perform(put("/api/v1/sensor/{id}", 1L)
                         .header("X-USER-ID", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -100,9 +165,25 @@ class DeviceControllerTest {
     }
 
     @Test
+    @DisplayName("존재하지 않는 위치면 404")
+    void 없는_위치_404() throws Exception {
+        DeviceUpdateRequest request = new DeviceUpdateRequest(999L, null);
+
+        willThrow(LocationNotFoundException.notFoundLocationByLocationId(999L))
+                .given(deviceService).updateDevice(anyLong(), anyLong(), any(), any());
+
+        mockMvc.perform(put("/api/v1/sensor/{id}", 1L)
+                        .header("X-USER-ID", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound());
+    }
+
+
+    @Test
     @DisplayName("단일 디바이스 삭제 성공")
     void 디바이스_삭제_성공() throws Exception {
-        mockMvc.perform(delete("/api/v1/sensor/{id}/delete", 1L)
+        mockMvc.perform(delete("/api/v1/sensor/{id}", 1L)
                         .header("X-USER-ID", 1L))
                 .andExpect(status().isNoContent());
 
@@ -112,7 +193,7 @@ class DeviceControllerTest {
     @Test
     @DisplayName("그룹 전체 디바이스 삭제 성공")
     void 전체삭제_성공() throws Exception {
-        mockMvc.perform(delete("/api/v1/sensor/deleteAll")
+        mockMvc.perform(delete("/api/v1/sensor")
                         .header("X-USER-ID", 1L)
                         .param("groupId", "5"))
                 .andExpect(status().isNoContent());

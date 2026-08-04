@@ -74,7 +74,6 @@ public class DeviceController {
             ){
         deviceService.updateDevice(userId, id, request.locationId(), request.deviceName());
         return ResponseEntity.noContent().build();
-
     }
 
     // 개별 장치 삭제 API (DELETE /api/v1/devices/{id}/delete)
