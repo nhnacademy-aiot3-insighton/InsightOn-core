@@ -158,7 +158,7 @@ public class GroupMemberServiceImpl implements GroupMemberService {
                 throw new ManagerRoleRequiredForTransferException();
             }
         }
-
+        superManager.updateRole(GroupMember.GroupRole.MANAGER);
         targetMember.updateRole(GroupMember.GroupRole.SUPER_MANAGER);
     }
 
