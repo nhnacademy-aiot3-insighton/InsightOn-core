@@ -7,10 +7,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface DeviceRepository extends JpaRepository<Device, Long> {
-    // 연관관계 객체를 뚫고 들어가 ID로 조회하려면 _언더스코어 네비게이션 필요
-    // 게이트웨이 ID로 조회
-    List<Device> findByGatewaysIdGatewayId(Long gatewayId);
 
+    // 연관관계 객체를 뚫고 들어가 ID로 조회하려면 _언더스코어 네비게이션 필요
     // 위치 ID로 조회
     List<Device> findByLocationsIdLocationId(Long locationId);
 
