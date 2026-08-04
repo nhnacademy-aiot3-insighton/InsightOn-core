@@ -28,9 +28,9 @@ public class GroupMemberController {
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId) {
 
-        List<GroupMemberListResponse> groupMemberListRespons = groupMemberService.getGroupMemberList(userId, groupId);
+        List<GroupMemberListResponse> groupMemberListResponse = groupMemberService.getGroupMemberList(userId, groupId);
 
-        return ResponseEntity.ok(groupMemberListRespons);
+        return ResponseEntity.ok(groupMemberListResponse);
     }
 
     /**
