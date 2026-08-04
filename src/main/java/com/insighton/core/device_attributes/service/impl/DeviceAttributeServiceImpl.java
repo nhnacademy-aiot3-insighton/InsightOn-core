@@ -1,7 +1,7 @@
 package com.insighton.core.device_attributes.service.impl;
 
 import com.insighton.core.device_attributes.dto.DeviceAttributeResponse;
-import com.insighton.core.device_attributes.entity.DeviceAttribute;
+import com.insighton.core.device_attributes.entity.SensorAttribute;
 import com.insighton.core.device_attributes.entity.MetricDefinition;
 import com.insighton.core.device_attributes.exception.MetricKeyNotFoundException;
 import com.insighton.core.device_attributes.repository.DeviceAttributeRepository;
@@ -114,7 +114,7 @@ public class DeviceAttributeServiceImpl implements DeviceAttributeService {
         String normalizedMetricKey = definition.getMetricKey();
 
         // 정규화된 metricKey로 DB 조회
-        DeviceAttribute attribute = attributeRepository
+        SensorAttribute attribute = attributeRepository
                 .findByDeviceIdDeviceIdAndMetricKey(deviceId, normalizedMetricKey)
                 .orElseThrow(() -> new MetricKeyNotFoundException("매트릭 키를 찾을 수 없습니다 (ID: " + metricKey + ")"));
 

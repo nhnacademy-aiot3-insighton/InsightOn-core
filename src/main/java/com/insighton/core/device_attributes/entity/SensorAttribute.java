@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
  * 동일한 장치 내에서 중복된 메트릭 키가 생성되지 않도록 (device_id, metric_key) 복합 UNIQUE 제약조건이 걸려있습니다.
  */
 @Entity
-@Table(name = "sensor_device_attributes",
+@Table(name = "sensor_attributes",
     uniqueConstraints = @UniqueConstraint(
             columnNames = {"device_id", "metric_key"}
     ))
@@ -23,7 +23,7 @@ import org.jetbrains.annotations.NotNull;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class DeviceAttribute {
+public class SensorAttribute {
 
     /**
      * 장치 속성 기본키 (PK)
@@ -52,6 +52,7 @@ public class DeviceAttribute {
     /**
      * 액추에이터 및 가상 시뮬레이터 전용 최신 수치/텍스트 상태값 저장 필드 (ex. "ON", "OFF", "COOL", "24.0")
      */
+    @Column(name = "current_value_str", length = 50)
     private String currentValueStr;
 
     @ManyToOne(fetch = FetchType.LAZY)
