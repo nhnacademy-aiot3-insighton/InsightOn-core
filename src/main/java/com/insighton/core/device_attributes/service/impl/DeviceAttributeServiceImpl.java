@@ -51,7 +51,7 @@ public class DeviceAttributeServiceImpl implements DeviceAttributeService {
 
         // 1. 해당 장치의 존재 유무 검증
         Device entity = deviceRepository.findById(deviceId)
-                        .orElseThrow(() -> new DeviceNotFoundException(deviceId + "기기를 찾을 수 없습니다"));
+                        .orElseThrow(() -> new DeviceNotFoundException(deviceId));
 
         validateGroupMembership(userId, entity.getGroupId().getGroupId()); // Groups 객체에서 Long ID 호출
 
@@ -85,7 +85,7 @@ public class DeviceAttributeServiceImpl implements DeviceAttributeService {
         // existsById 대신 findById로 직접 조회
         // DB조회 1번으로 줄이기
         Device entity = deviceRepository.findById(deviceId)
-                .orElseThrow(() -> new DeviceNotFoundException(" 기기를 찾을 수 없습니다(ID: "+ deviceId +")"));
+                .orElseThrow(() -> new DeviceNotFoundException(deviceId));
 
         // 권한 체크
         validateManagerRole(userId, entity.getGroupId().getGroupId()); // Groups 객체에서 Long ID 호출
