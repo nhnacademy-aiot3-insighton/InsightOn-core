@@ -26,6 +26,7 @@ import java.util.Map;
 @RequestMapping("/api/v1/groups/{groupsId}/actuators")
 public class ActuatorController {
 
+    // Core-내부서비스 간 공유 비밀키 (환경변수로 주입, 코드/git에 값 노출 금지)
     @Value("${internal.service.api-key}")
     private String internalServiceApiKey;
 
@@ -76,8 +77,8 @@ public class ActuatorController {
     // 룰엔진/AI 등 내부 시스템 전용 액추에이터 업데이트
     @PutMapping("/internal/{actuatorId}/state")
     public ResponseEntity<Void> updateActuatorStateBySystem(
-            @RequestHeader("X-INTERNAL-API-KEY") String apiKey,
-            @RequestHeader("X-CALLER-SERVICE") String callerService,
+            @RequestHeader("X-INTERNAL-API-KEY") String apiKey, // 호출자가 신뢰된 냅 서비스인지 검증용 공유키
+            @RequestHeader("X-CALLER-SERVICE") String callerService, // 호출자 이름표 룰엔진인지 AI인지
             @PathVariable Long actuatorId,
             @RequestBody Map<String, Object> newState) {
 
