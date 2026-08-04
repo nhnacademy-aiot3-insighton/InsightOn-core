@@ -44,7 +44,7 @@ class ActuatorRepositoryTest {
     @Test
     @DisplayName("deleteAllByLocationIdLocationIdIn - 특정 위치 스코프 삭제 성공")
     void 위치범위로_스코프삭제() {
-        actuatorRepository.deleteAllByLocationIdLocationIdIn(List.of(1L));
+        actuatorRepository.deleteAllByLocationIdIn(List.of(1L));
 
         assertThat(actuatorRepository.findByLocationId_LocationId(1L)).isEmpty();
         assertThat(actuatorRepository.findByLocationId_LocationId(2L)).hasSize(1);

@@ -236,7 +236,7 @@ public class DeviceServiceImpl implements DeviceService {
         validateManagerRole(userId, groupId);
 
         // 캐시 삭제 - groupId 소속 디바이스만 골라서 evict (clear()는 다른 그룹 캐시까지 날려버리므로 사용 금지)
-        List<Device> devices = deviceRepository.findByGroupIdGroupId(groupId);
+        List<Device> devices = deviceRepository.findByGroupId(groupId);
         devices.stream()
                 .map(Device::getDeviceEui) // 각디바이스의 EUI만 추출
                 .filter(Objects::nonNull) // ACTUATOR타입은 EUI가 null이라 걸러냄
@@ -260,11 +260,11 @@ public class DeviceServiceImpl implements DeviceService {
         } else if (eui != null && !eui.trim().isEmpty()) {
             entities = deviceRepository.findByDeviceEui(eui).map(List::of).orElse(List.of());
         } else if (locationId != null) {
-            entities = deviceRepository.findByLocationsIdLocationId(locationId);
+            entities = deviceRepository.findByLocationId(locationId);
         } else if (deviceName != null && !deviceName.trim().isEmpty()) {
             entities = deviceRepository.findByDeviceName(deviceName);
         } else {
-            entities = deviceRepository.findByGroupIdGroupId(groupId);
+            entities = deviceRepository.findByGroupId(groupId);
         }
 
         // 위 분기들은 groupId로 안걸렀으니 다른 그룹 결과가 섞이지 않게 마지막에 한번더 필터링

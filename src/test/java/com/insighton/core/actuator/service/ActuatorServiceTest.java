@@ -128,7 +128,7 @@ class ActuatorServiceTest {
 
         actuatorsService.deleteActuatorById(1L, 10L, 1L);
 
-        verify(actuatorRunLogRepository).deleteByActuatorActuatorId(1L);
+        verify(actuatorRunLogRepository).deleteByActuatorId(1L);
         verify(actuatorRepository).delete(entity);
     }
 
@@ -140,7 +140,7 @@ class ActuatorServiceTest {
 
         actuatorsService.deleteAll(1L, 10L);
 
-        verify(actuatorRunLogRepository).deleteAllByActuatorLocationIdLocationIdIn(List.of());
-        verify(actuatorRepository).deleteAllByLocationIdLocationIdIn(List.of());
+        verify(actuatorRunLogRepository).deleteAllByActuatorLocationIdIn(List.of());
+        verify(actuatorRepository).deleteAllByLocationIdIn(List.of());
     }
 }

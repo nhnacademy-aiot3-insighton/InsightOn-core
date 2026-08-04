@@ -66,7 +66,7 @@ public class DeviceController {
     }
 
     // 개별 장치 삭제 API (DELETE /api/v1/devices/{id}/delete)
-    @DeleteMapping("/{id}/delete")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteDevice(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable Long id){
@@ -76,7 +76,7 @@ public class DeviceController {
     }
 
     // 전체 장치 삭제 API (DELETE /api/v1/devices/deleteAll    ) - groupId 소속만 삭제
-    @DeleteMapping("/deleteAll")
+    @DeleteMapping
     public ResponseEntity<Void> deleteAllDevice(
             @RequestHeader("X-USER-ID") Long userId,
             @RequestParam Long groupId){
