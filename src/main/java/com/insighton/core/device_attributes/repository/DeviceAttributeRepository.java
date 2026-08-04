@@ -43,7 +43,7 @@ public interface DeviceAttributeRepository extends JpaRepository<DeviceAttribute
     void deleteByDeviceIdDeviceId(Long deviceId);
 
     // 그룹 삭제 시 소속 속성 일괄 삭제
-    void deleteByGroupIdGroupId(Long groupIdGroupId);
+    void deleteByGroupIdGroupId(Long groupId);
 
     // 장소 삭제 시, 그 장소 소속 디바이스들의 속성 일괄 삭제용
     void deleteAllByDeviceIdDeviceIdIn(List<Long> deviceIds);
