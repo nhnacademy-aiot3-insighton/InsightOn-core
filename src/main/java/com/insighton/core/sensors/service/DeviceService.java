@@ -31,5 +31,5 @@ public interface DeviceService {
 
     // 조건별 장치 검색 (단순 분기)
     List<DeviceResponse> searchDevices(Long userId, Long groupId, Long id, String eui,
-                                       Long locationId, Long gatewayId, String deviceName);
+                                       Long locationId, String deviceName);
 }
