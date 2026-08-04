@@ -316,7 +316,7 @@ public class CoreManagementUseCase {
         groupMemberService.validateGroupMembers(groupId, userId);
 
         // 조회하려는 dashboard가 해당 그룹의 location에 속해있는지 검증
-        locationService.getLocation(locationId, groupId);
+        locationService.getLocationByGroupId(locationId, groupId);
 
         return dashboardService.getDashboard(locationId);
     }
