@@ -1,6 +1,5 @@
 package com.insighton.core.groups.controller;
 
-import com.insighton.core.groupmember.dto.request.GroupMemberJoinRequest;
 import com.insighton.core.groups.dto.request.GroupRequest;
 import com.insighton.core.groups.dto.response.GroupAdminResponse;
 import com.insighton.core.groups.dto.response.GroupResponse;
@@ -17,23 +16,10 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/v1/groups")
 public class GroupController {
     private final CoreManagementUseCase coreUseCase;
     private final GroupService groupService;
-
-    /**
-     * Auth 서비스에서 호출하는 내부 그룹 가입 API
-     *
-     * @return 성공 시 상태 200 반환
-     */
-    @PostMapping("/internal/v1/groups/join-by-token")
-    public ResponseEntity<Void> joinGroupByToken(
-            @Valid @RequestBody GroupMemberJoinRequest request) {
-        // inviteToken으로 그룹이 존재하는지 확인하고 가입 시키는 로직 호출
-        coreUseCase.joinGroupByToken(request);
-
-        return ResponseEntity.ok().build();
-    }
 
     /**
      * 그룹 생성
@@ -42,7 +28,7 @@ public class GroupController {
      * @param groupsCreateRequest 그룹 생성 요청 정보
      * @return 성공시 상태 201 반환
      */
-    @PostMapping("/api/v1/groups/create")
+    @PostMapping("/create")
     public ResponseEntity<Void> createGroup(
             @RequestHeader("X-USER-ID") Long userId,
             @Valid @RequestBody GroupRequest groupsCreateRequest) {
@@ -59,7 +45,7 @@ public class GroupController {
      * @param groupId 내가 속한 group의 ID
      * @return 토큰 정보가 빠진 그룹 조회 정보 반환
      */
-    @GetMapping("/api/v1/groups/{group-id}/my-group")
+    @GetMapping("/{group-id}/my-group")
     public ResponseEntity<GroupResponse> getMyGroup(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId) {
@@ -76,7 +62,7 @@ public class GroupController {
      * @param groupId     내가 속한 group의 ID
      * @return 초대 받은 회사의 정보 반환(token null)
      */
-    @GetMapping("/api/v1/groups/{group-id}/preview")
+    @GetMapping("/{group-id}/preview")
     public ResponseEntity<GroupResponse> getGroupPreview(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
@@ -93,7 +79,7 @@ public class GroupController {
      * @param userId   시스템 관리자의 ID
      * @return 시스템에 생성된 그룹들 리스트
      */
-    @GetMapping("/api/v1/groups/admin/group-list")
+    @GetMapping("/admin/group-list")
     public ResponseEntity<Page<GroupAdminResponse>> getGroupList(
             @RequestHeader("X-USER-ROLE") String userRole,
             @RequestHeader("X-USER-ID") Long userId,
@@ -112,7 +98,7 @@ public class GroupController {
      * @param groupId 재발급 하려는 group의 ID
      * @return 성공시 상태 200 반환(?)
      */
-    @PutMapping("/api/v1/groups/{group-id}/invite-token/new")
+    @PutMapping("/{group-id}/invite-token/new")
     public ResponseEntity<Void> newInviteToken(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId) {
