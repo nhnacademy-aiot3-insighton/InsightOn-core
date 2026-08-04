@@ -7,6 +7,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.validator.constraints.Length;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -62,7 +63,7 @@ public class Group {
      * [비즈니스 메서드 - 초대 토큰 재발급(로테이션)]
      * - 엔티티의 불필요한 setter 사용을 지양하고, 비즈니스 목적을 명확히 한 로테이션 메서드입니다.
      */
-    public void rotateInviteToken(String newInviteToken) {
+    public void rotateInviteToken(@Length(max = 12) String newInviteToken) {
         if (newInviteToken == null || newInviteToken.isBlank()) {
             throw new EmptyValueException();
         }
