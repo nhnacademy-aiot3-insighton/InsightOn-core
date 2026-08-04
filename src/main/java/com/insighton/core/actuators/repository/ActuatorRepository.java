@@ -15,9 +15,9 @@ public interface ActuatorRepository extends JpaRepository<Actuator, Long> {
     // 액추에이터 종류(ActuatorType)별 목록 조회
     List<Actuator> findByActuatorType(ActuatorType actuatorType);
 
-    // 단일 위치용
+    // 장소 삭제용
     void deleteAllByLocationIdLocationId(Long locationId);
 
-    // 위치 목록 범위로 일괄 삭제
+    // 장소 리스트 = 그룹 삭제용
     void deleteAllByLocationIdLocationIdIn(List<Long> locationIds);
 }
