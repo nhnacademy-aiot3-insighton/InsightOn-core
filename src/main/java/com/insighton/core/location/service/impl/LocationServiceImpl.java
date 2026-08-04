@@ -82,15 +82,14 @@ public class LocationServiceImpl implements LocationService {
         if (locationRepository.existsByGroupGroupIdAndLocationName(location.getGroup().getGroupId(), request.newLocationName())) {
             throw new LocationAlreadyException(request.newLocationName());
         }
-        
+
         location.updateName(request.newLocationName());
     }
 
     @Override
     @Transactional
     public void deleteLocation(Long targetLocationId, Long groupId) {
-        Location location = locationRepository.findByLocationIdAndGroupGroupId(targetLocationId, groupId)
-                .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(targetLocationId));
+        Location location = getLocationByGroupId(targetLocationId, groupId);
 
         locationRepository.delete(location);
     }
@@ -104,7 +103,14 @@ public class LocationServiceImpl implements LocationService {
 
     @Override
     @Transactional
-    public Location getLocationByGroupId(Long groupId) {
+    public Location getLocationByGroupId(Long locationId, Long groupId) {
+        return locationRepository.findByLocationIdAndGroupGroupId(locationId, groupId)
+                .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(locationId));
+    }
+
+    @Override
+    @Transactional
+    public List<Location> getLocationListByGroupId(Long groupId) {
         return locationRepository.findByGroupGroupId(groupId)
                 .orElseThrow(() -> LocationNotFoundException.notFoundLocationByGroupId(groupId));
     }

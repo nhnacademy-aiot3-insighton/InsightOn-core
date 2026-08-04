@@ -48,5 +48,5 @@ public interface LocationRepository extends JpaRepository<Location, Long> {
      * @param groupId 조회할 location ID
      * @return location entity 반환
      */
-    Optional<Location> findByGroupGroupId(Long groupId);
+    Optional<List<Location>> findByGroupGroupId(Long groupId);
 }

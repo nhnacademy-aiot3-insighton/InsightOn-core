@@ -64,12 +64,20 @@ public interface LocationService {
     void deleteLocationAll(Long groupId);
 
     /**
+     * group에 속해있는 location 조회
+     *
+     * @param groupId location이 속해있는 group의 ID
+     * @return location entity 반환
+     */
+    Location getLocationByGroupId(Long locationId, Long groupId);
+
+    /**
      * dashboard 삭제할 때 가져올 location 정보
      *
      * @param groupId location이 속해있는 group의 ID
      * @return location entity 반환
      */
-    Location getLocationByGroupId(Long groupId);
+    List<Location> getLocationListByGroupId(Long groupId);
 
 
 }
