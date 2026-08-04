@@ -17,4 +17,7 @@ public interface ActuatorRunLogRepository extends JpaRepository<ActuatorRunLog, 
 
     // 단일 위치 범위로 실행 로그 일괄 삭제
     void deleteAllByActuatorLocationIdLocationId(Long locationId);
+
+    // 단일 액추에이터 삭제 시 로그 일괄 삭제용
+    void deleteByActuatorActuatorId(Long actuatorId);
 }
