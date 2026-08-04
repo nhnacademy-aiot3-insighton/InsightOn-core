@@ -44,7 +44,7 @@ public class ActuatorController {
     }
 
     // 단일 액추에이터 조회
-    @GetMapping("/{actuatorId}")
+    @GetMapping("/{actuator-id}")
     public ResponseEntity<ActuatorResponse> getActuatorById(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable Long groupsId,
@@ -53,7 +53,7 @@ public class ActuatorController {
     }
 
     // 위치별 액추에이터 목록 조회
-    @GetMapping("/location/{locationId}")
+    @GetMapping("/location/{location-id}")
     public ResponseEntity<List<ActuatorResponse>> getActuatorsByLocationId(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable Long groupsId,
@@ -62,7 +62,7 @@ public class ActuatorController {
     }
 
     // 유저 전용 액추에이터 업데이트
-    @PutMapping("/{actuatorId}/state")
+    @PutMapping("/{actuator-id}/state")
     public ResponseEntity<Void> updateActuatorState(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable Long groupsId,
@@ -74,7 +74,7 @@ public class ActuatorController {
     }
 
     // 룰엔진/AI 등 내부 시스템 전용 액추에이터 업데이트
-    @PutMapping("/internal/{actuatorId}/state")
+    @PutMapping("/internal/{actuator-id}/state")
     public ResponseEntity<Void> updateActuatorStateBySystem(
             @RequestHeader("X-INTERNAL-API-KEY") String apiKey, // 호출자가 신뢰된 냅 서비스인지 검증용 공유키
             @RequestHeader("X-CALLER-SERVICE") String callerService, // 호출자 이름표 룰엔진인지 AI인지
@@ -94,7 +94,7 @@ public class ActuatorController {
     }
 
     // 실행 이력 조회 - getActuatorById의 소유권/권한 검증을 그대로 재사용
-    @GetMapping("/{actuatorId}/logs")
+    @GetMapping("/{actuator-id}/logs")
     public ResponseEntity<Page<ActuatorRunLogResponse>> getActuatorRunLogs(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable Long groupsId,
@@ -106,7 +106,7 @@ public class ActuatorController {
     }
 
     // 액추에이터 이름 수정
-    @PutMapping("/{actuatorId}/name")
+    @PutMapping("/{actuator-id}/name")
     public ResponseEntity<Void> updateActuatorName(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable Long groupsId,
@@ -117,7 +117,7 @@ public class ActuatorController {
     }
 
     // 액추에이터 삭제
-    @DeleteMapping("/{actuatorId}")
+    @DeleteMapping("/{actuator-id}")
     public ResponseEntity<Void> deleteActuatorById(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable Long groupsId,
