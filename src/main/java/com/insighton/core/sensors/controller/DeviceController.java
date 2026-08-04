@@ -3,6 +3,7 @@ package com.insighton.core.sensors.controller;
 import com.insighton.core.sensors.dto.DeviceLocationUpdateRequest;
 import com.insighton.core.sensors.dto.DeviceNameUpdateRequest;
 import com.insighton.core.sensors.dto.DeviceResponse;
+import com.insighton.core.sensors.dto.DeviceUpdateRequest;
 import com.insighton.core.sensors.service.DeviceService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
@@ -43,26 +44,37 @@ public class DeviceController {
         return ResponseEntity.ok(result);
     }
 
-    // 장치 위치 이동 API (PUT /api/v1/sensor/{id}/location)
-    @PutMapping("/{id}/location")
-    public ResponseEntity<Void> updateDeviceLocation(
-            @RequestHeader("X-USER-ID") Long userId,
-            @PathVariable Long id,
-            @RequestBody @Valid DeviceLocationUpdateRequest request){
-        // 디바이스 위치 업데이트 수행
-        deviceService.updateDeviceLocation(userId, id, request.locationId());
-        return ResponseEntity.noContent().build();
-    }
+//    // 장치 위치 이동 API (PUT /api/v1/sensor/{id}/location)
+//    @PutMapping("/{id}/location")
+//    public ResponseEntity<Void> updateDeviceLocation(
+//            @RequestHeader("X-USER-ID") Long userId,
+//            @PathVariable Long id,
+//            @RequestBody @Valid DeviceLocationUpdateRequest request){
+//        // 디바이스 위치 업데이트 수행
+//        deviceService.updateDeviceLocation(userId, id, request.locationId());
+//        return ResponseEntity.noContent().build();
+//    }
+//
+//    // 장치 이름 수정 API (PUT /api/v1/devices/{id}/name)
+//    @PutMapping("/{id}/name")
+//    public ResponseEntity<Void> updateDeviceName(
+//            @RequestHeader("X-USER-ID") Long userId,
+//            @PathVariable Long id,
+//            @RequestBody @Valid DeviceNameUpdateRequest request){
+//        // 디바이스 이름 업데이트 수행
+//        deviceService.updateDeviceName(userId, id, request.deviceName());
+//        return ResponseEntity.noContent().build();
+//    }
 
-    // 장치 이름 수정 API (PUT /api/v1/devices/{id}/name)
-    @PutMapping("/{id}/name")
-    public ResponseEntity<Void> updateDeviceName(
+    @PutMapping("/{id}")
+    public ResponseEntity<Void> updateDevice(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable Long id,
-            @RequestBody @Valid DeviceNameUpdateRequest request){
-        // 디바이스 이름 업데이트 수행
-        deviceService.updateDeviceName(userId, id, request.deviceName());
+            @RequestBody @Valid DeviceUpdateRequest request
+            ){
+        deviceService.updateDevice(userId, id, request.locationId(), request.deviceName());
         return ResponseEntity.noContent().build();
+
     }
 
     // 개별 장치 삭제 API (DELETE /api/v1/devices/{id}/delete)

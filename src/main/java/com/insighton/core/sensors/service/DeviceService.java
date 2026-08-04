@@ -20,6 +20,9 @@ public interface DeviceService {
     // 이름 수정 (권한 체크 필요 - userId 추가)
     void updateDeviceName(Long userId, Long deviceId, String newDeviceName);
 
+    // 업데이트
+    void updateDevice(Long userId, Long deviceId, Long newLocationId, String newDeviceName);
+
     // MQTT/패킷 수신 시 마지막 통신 시각 갱신
     void handlePacketReceived(String deviceEui);
 
