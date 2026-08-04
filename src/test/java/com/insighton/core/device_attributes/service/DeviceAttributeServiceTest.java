@@ -110,7 +110,7 @@ class DeviceAttributeServiceTest {
     @Test
     @DisplayName("isValidDeviceAttribute - 대소문자가 달라도 정규화되어 조회된다")
     void 유효성검증_대소문자_정규화() {
-        given(attributeRepository.existsByDeviceIdDeviceIdAndMetricKey(1L, "co2")).willReturn(true);
+        given(attributeRepository.existsByDeviceIdAndMetricKey(1L, "co2")).willReturn(true);
 
         boolean result = attributeService.isValidDeviceAttribute(1L, "CO2");
 

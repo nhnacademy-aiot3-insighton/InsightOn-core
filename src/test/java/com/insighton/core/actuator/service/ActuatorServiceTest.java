@@ -140,7 +140,7 @@ class ActuatorServiceTest {
 
         actuatorsService.deleteAll(1L, 10L);
 
-        verify(actuatorRunLogRepository).deleteAllByActuatorLocationIdIn(List.of());
-        verify(actuatorRepository).deleteAllByLocationIdIn(List.of());
+        verify(actuatorRunLogRepository).deleteAllByActuatorLocationIdList(List.of());
+        verify(actuatorRepository).deleteAllByLocationIdList(List.of());
     }
 }
