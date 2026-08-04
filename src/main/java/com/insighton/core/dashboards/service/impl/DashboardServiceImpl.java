@@ -61,6 +61,8 @@ public class DashboardServiceImpl implements DashboardService {
     public void deleteDashboard(Long locationId) {
         Dashboard dashboard = dashboardRepository.findByLocationLocationId(locationId)
                 .orElseThrow(() -> new DashboardNotFoundException(locationId));
+        // dashboard 삭제 전 해당 dashboard에 존재하는 widget들을 모두 삭제
+        widgetRepository.deleteAllByDashboardDashboardsId(dashboard.getDashboardsId());
 
         dashboardRepository.delete(dashboard);
     }
