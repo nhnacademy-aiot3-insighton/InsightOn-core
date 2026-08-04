@@ -81,7 +81,7 @@ public class DeviceServiceImpl implements DeviceService {
             Long existingGatewayId = e.getGatewaysId() != null ? e.getGatewaysId().getGatewayId() : gatewayId;
             DeviceCacheEntry cacheEntry = new DeviceCacheEntry(
                     e.getDeviceId(), e.getDeviceEui(), existingGatewayId,
-                    e.getLocationsId() != null ? e.getLocationsId().getLocationId() : null
+                    e.getLocation() != null ? e.getLocation().getLocationId() : null
             );
             deviceLookupCacheService.populate(cacheEntry); // 캐시 복구
             return cacheEntry;
@@ -102,7 +102,7 @@ public class DeviceServiceImpl implements DeviceService {
                 .groupId(groups) // 소속 그룹아이디 주입
                 .deviceEui(deviceEui) // 센서의 고유 시리얼 번호(EUI)를 입력
                 .deviceName(nolDeviceName) // 패킷 정보 기반의 임시 이름(예: "Temp_Sensor_01")을 입력
-                .locationsId(null) // 설치 장소는 아직 모르므로 일단 null로 비움
+                .location(null) // 설치 장소는 아직 모르므로 일단 null로 비움
                 .lastSeenAt(OffsetDateTime.now()) // 첫 데이터가 도착했으니 통신 시각을 현재로 기록
                 .createdAt(OffsetDateTime.now()) // 생성 시각을 현재로 저장
                 .build();
@@ -143,7 +143,7 @@ public class DeviceServiceImpl implements DeviceService {
     @Override
     public DeviceResponse getDeviceById(Long userId, Long deviceId) {
         Device device = deviceRepository.findById(deviceId)
-                .orElseThrow(() -> new DeviceNotFoundException("디바이스를 찾을 수 없습니다. (ID: " + deviceId + ")"));
+                .orElseThrow(() -> new DeviceNotFoundException(deviceId));
 
         // 조회 권한 체크
         validateGroupMembership(userId, device.getGroupId().getGroupId()); // Groups 객체에서 Long ID 호출
@@ -158,7 +158,7 @@ public class DeviceServiceImpl implements DeviceService {
             throw new InvalidDeviceValueException("변경할 위치 ID는 필수입니다.");
         }
         Device device = deviceRepository.findById(deviceId)
-                .orElseThrow(() -> new DeviceNotFoundException("디바이스를 찾을 수 없습니다. (ID: " + deviceId + ")"));
+                .orElseThrow(() -> new DeviceNotFoundException(deviceId));
 
         // 쓰기 작업 권한 체크 (엔티티에 저장된 groupId 기준 - 다른 그룹 디바이스는 조작 불가)
         validateManagerRole(userId, device.getGroupId().getGroupId()); // Groups 객체에서 Long ID 호출
@@ -192,12 +192,47 @@ public class DeviceServiceImpl implements DeviceService {
             throw new InvalidDeviceValueException("변경할 장치 이름은 필수입니다.");
         }
         Device device = deviceRepository.findById(deviceId)
-                .orElseThrow(() -> new DeviceNotFoundException("디바이스를 찾을 수 없습니다. (ID: " + deviceId + ")"));
+                .orElseThrow(() -> new DeviceNotFoundException(deviceId));
 
         // 쓰기 작업 권한 체크
         validateManagerRole(userId, device.getGroupId().getGroupId()); // Groups 객체에서 Long ID 호출
 
         device.updateName(newDeviceName);
+    }
+
+    @Override
+    public void updateDevice(Long userId, Long deviceId, Long newLocationId, String newDeviceName) {
+        // 아무 필드도 안 왔으면 의미없는 요청으로 간주 (정책에 따라 이 체크는 빼셔도 됩니다)
+        if (newLocationId == null && newDeviceName == null) {
+            throw new InvalidDeviceValueException("변경할 값이 하나도 없습니다.");
+        }
+
+        Device device = deviceRepository.findById(deviceId)
+                .orElseThrow(() -> new DeviceNotFoundException(deviceId));
+
+        // 권한 체크는 한 번만 - 위치/이름 둘 다 바꿔도 검증 한 번으로 충분
+        validateManagerRole(userId, device.getGroupId().getGroupId());
+
+        if (newLocationId != null) {
+            Locations location = locationsRepository.findById(newLocationId)
+                    .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(newLocationId));
+            device.updateLocation(location);
+
+            // 캐시도 같이 갱신 (deviceEui가 있는 센서만 캐시에 들어있음)
+            if (device.getDeviceEui() != null) {
+                Long gatewayId = device.getGatewaysId() != null ? device.getGatewaysId().getGatewayId() : null;
+                DeviceCacheEntry updatedCacheEntry = new DeviceCacheEntry(
+                        device.getDeviceId(), device.getDeviceEui(), gatewayId, newLocationId);
+                deviceLookupCacheService.populate(updatedCacheEntry);
+            }
+        }
+
+        if (newDeviceName != null) {
+            if (newDeviceName.isBlank()) {
+                throw new InvalidDeviceValueException("변경할 장치 이름은 빈 값일 수 없습니다.");
+            }
+            device.updateName(newDeviceName);
+        }
     }
 
     @Override
@@ -214,7 +249,7 @@ public class DeviceServiceImpl implements DeviceService {
     @Transactional // 삭제 시 부모/자식 테이블 안전 삭제
     public void deleteDevice(Long userId, Long deviceId) {
         Device device = deviceRepository.findById(deviceId)
-                .orElseThrow(() -> new DeviceNotFoundException("디바이스를 찾을 수 없습니다. (ID: " + deviceId + ")"));
+                .orElseThrow(() -> new DeviceNotFoundException(deviceId));
 
         // 삭제 작업 권한 체크
         validateManagerRole(userId, device.getGroupId().getGroupId()); // Groups 객체에서 Long ID 호출
@@ -279,7 +314,7 @@ public class DeviceServiceImpl implements DeviceService {
                 e.getDeviceId(),
                 e.getDeviceType(),
                 e.getGatewaysId() != null ? e.getGatewaysId().getGatewayId() : null,
-                e.getLocationsId() != null ? e.getLocationsId().getLocationId() : null,
+                e.getLocation() != null ? e.getLocation().getLocationId() : null,
                 e.getDeviceEui(),
                 e.getDeviceName(),
                 e.getCreatedAt(),
