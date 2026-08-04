@@ -17,7 +17,7 @@ public interface DeviceAttributeRepository extends JpaRepository<SensorAttribute
      * @param deviceId 조회할 장치 ID
      * @return 해당 장치가 보유한 속성 엔티티 리스트
      */
-    List<SensorAttribute> findByDeviceIdDeviceId(Long deviceId);
+    List<SensorAttribute> findByDeviceId(Long deviceId);
 
     /**
      * 특정 기기 ID와 메트릭 키(metricKey) 조합에 해당하는 단일 속성을 조회합니다.
@@ -28,7 +28,7 @@ public interface DeviceAttributeRepository extends JpaRepository<SensorAttribute
      * @param metricKey 메트릭 키 (ex. "co2", "temperature", "power_status")
      * @return 속성 엔티티 Optional 객체
      */
-    Optional<SensorAttribute> findByDeviceIdDeviceIdAndMetricKey(Long deviceId, String metricKey);
+    Optional<SensorAttribute> findByDeviceIdAndMetricKey(Long deviceId, String metricKey);
 
     /**
      * 특정 기기에 해당 메트릭 키 속성이 등록되어 존재하는지 여부를 확인합니다.
