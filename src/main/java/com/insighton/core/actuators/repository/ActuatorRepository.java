@@ -10,7 +10,7 @@ import java.util.List;
 public interface ActuatorRepository extends JpaRepository<Actuator, Long> {
 
     // 특정 위치(locationId)에 속한 모든 액추에이터 조회
-    List<Actuator> findByLocationId_LocationId(Long locationId);
+    List<Actuator> findByLocationId(Long locationId);
 
     // 액추에이터 종류(ActuatorType)별 목록 조회
     List<Actuator> findByActuatorType(ActuatorType actuatorType);

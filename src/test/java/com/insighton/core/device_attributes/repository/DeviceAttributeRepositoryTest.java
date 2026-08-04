@@ -43,7 +43,7 @@ class DeviceAttributeRepositoryTest {
     @Test
     @DisplayName("deleteByDeviceIdDeviceId - 기기 삭제 시 속성 일괄 삭제 성공")
     void 기기ID로_일괄삭제() {
-        attributeRepository.deleteByDeviceIdDeviceId(1L);
+        attributeRepository.deleteByDeviceId(1L);
 
         assertThat(attributeRepository.findByDeviceIdDeviceId(1L)).isEmpty();
     }
@@ -51,7 +51,7 @@ class DeviceAttributeRepositoryTest {
     @Test
     @DisplayName("deleteByGroupIdGroupId - 그룹 삭제 시 속성 일괄 삭제 성공")
     void 그룹ID로_일괄삭제() {
-        attributeRepository.deleteByGroupIdGroupId(1L);
+        attributeRepository.deleteByDeviceId(1L);
 
         assertThat(attributeRepository.findByDeviceIdDeviceId(1L)).isEmpty();
     }
