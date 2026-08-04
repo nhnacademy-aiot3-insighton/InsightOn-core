@@ -256,7 +256,7 @@ public class CoreManagementUseCase {
 
         locationService.updateName(targetLocationId, groupId, request);
 
-        Location location = locationService.getLocationByGroupId(groupId);
+        Location location = locationService.getLocationByGroupId(targetLocationId, groupId);
 
         // 이름이 바뀐 location entity 객체를 가져와서 dashboards title에도 적용시켜준다.
         DashboardRequest dashboardRequest = new DashboardRequest(location.getLocationId(), location.getLocationName() + " - dashboard");
@@ -296,12 +296,15 @@ public class CoreManagementUseCase {
      * @param groupId 삭제될 group ID
      */
     public void deleteLocationAll(Long groupId) {
-        Location location = locationService.getLocationByGroupId(groupId);
+        List<Location> locationList = locationService.getLocationListByGroupId(groupId);
         // dashboards 지우는 로직 추가
-        dashboardService.deleteDashboard(location.getLocationId());
+        for (Location location : locationList) {
+            Long locationId = location.getLocationId();
+            // devices는 location 값만 null로 바꿔주기
 
-        // devices는 location 값만 null로 바꿔주기
-
+            // dashboard 다 삭제해주기
+            dashboardService.deleteDashboard(locationId);
+        }
         // dashboards 삭제
         locationService.deleteLocationAll(groupId);
     }
@@ -323,4 +326,8 @@ public class CoreManagementUseCase {
             throw NoPermissionException.forAdmin(groupMember.getGroupMemberId());
         }
     }
+
+    // ====================== widgets Controller ======================
+
+
 }
