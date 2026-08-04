@@ -123,7 +123,7 @@ public class ActuatorServiceImpl implements ActuatorService {
             validateManagerRole(userId, groupsId);
         }
 
-        // 서비스 계층 방어 코드: 상태값이 비어있다면 400 Bad Request 예외 발생[cite: 6]
+        // 서비스 계층 방어 코드: 상태값이 비어있다면 400 Bad Request 예외 발생
         if(newState == null || newState.isEmpty()){
             throw new InvalidActuatorValueException("액추에이터 제어 상태 값(newState)은 비어있음");
         }
