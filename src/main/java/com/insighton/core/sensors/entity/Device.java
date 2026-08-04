@@ -48,7 +48,7 @@ public class Device {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "location_id")
-    private Locations locationsId; // 장소 아이디
+    private Locations location; // 장소 아이디
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt; // 생성 일시
@@ -59,7 +59,7 @@ public class Device {
     private Groups groupId; // 그룹 아이디
 
     public void updateLocation(Locations newLocationId){
-        this.locationsId = newLocationId;
+        this.location = newLocationId;
     }
 
     public void updateLastSeen(){
