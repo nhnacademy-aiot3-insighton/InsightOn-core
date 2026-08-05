@@ -37,7 +37,7 @@ public class ActuatorController {
     @PostMapping
     public ResponseEntity<Long> createActuator(
             @RequestHeader("X-USER-ID") Long userId,
-            @PathVariable Long groupsId,
+            @PathVariable("group-id") Long groupsId,
             @Valid @RequestBody ActuatorRequest request) {
         Long actuatorId = actuatorService.createActuator(userId, groupsId, request);
         return ResponseEntity.ok(actuatorId);
@@ -47,8 +47,8 @@ public class ActuatorController {
     @GetMapping("/{actuator-id}")
     public ResponseEntity<ActuatorResponse> getActuatorById(
             @RequestHeader("X-USER-ID") Long userId,
-            @PathVariable Long groupsId,
-            @PathVariable Long actuatorId) {
+            @PathVariable("group-id") Long groupsId,
+            @PathVariable("actuator-id") Long actuatorId) {
         return ResponseEntity.ok(actuatorService.getActuatorById(userId, groupsId, actuatorId));
     }
 
@@ -56,8 +56,8 @@ public class ActuatorController {
     @GetMapping("/location/{location-id}")
     public ResponseEntity<List<ActuatorResponse>> getActuatorsByLocationId(
             @RequestHeader("X-USER-ID") Long userId,
-            @PathVariable Long groupsId,
-            @PathVariable Long locationId) {
+            @PathVariable ("group-id") Long groupsId,
+            @PathVariable ("location-id") Long locationId) {
         return ResponseEntity.ok(actuatorService.getActuatorsByLocationId(userId, groupsId, locationId));
     }
 
@@ -65,8 +65,8 @@ public class ActuatorController {
     @PutMapping("/{actuator-id}/state")
     public ResponseEntity<Void> updateActuatorState(
             @RequestHeader("X-USER-ID") Long userId,
-            @PathVariable Long groupsId,
-            @PathVariable Long actuatorId,
+            @PathVariable("group-id")Long groupsId,
+            @PathVariable("actuator-id")Long actuatorId,
             @RequestBody Map<String, Object> newState) {
         // 컨트롤러를 통한 사용자 요청이므로 isSystemRequest = false
         actuatorService.updateActuatorState(userId, groupsId, actuatorId, newState, ExecutedByType.USER);
@@ -78,7 +78,7 @@ public class ActuatorController {
     public ResponseEntity<Void> updateActuatorStateBySystem(
             @RequestHeader("X-INTERNAL-API-KEY") String apiKey, // 호출자가 신뢰된 냅 서비스인지 검증용 공유키
             @RequestHeader("X-CALLER-SERVICE") String callerService, // 호출자 이름표 룰엔진인지 AI인지
-            @PathVariable Long actuatorId,
+            @PathVariable ("actuator-id")Long actuatorId,
             @RequestBody Map<String, Object> newState) {
 
         // 서비스 인증 신뢰할 수 있는 내부 서비스만 통과
@@ -97,8 +97,8 @@ public class ActuatorController {
     @GetMapping("/{actuator-id}/logs")
     public ResponseEntity<Page<ActuatorRunLogResponse>> getActuatorRunLogs(
             @RequestHeader("X-USER-ID") Long userId,
-            @PathVariable Long groupsId,
-            @PathVariable Long actuatorId,
+            @PathVariable("group-id")Long groupsId,
+            @PathVariable("actuator-id")Long actuatorId,
             @PageableDefault(size = 20) Pageable pageable) {
         actuatorService.getActuatorById(userId, groupsId, actuatorId);
         return ResponseEntity.ok(actuatorRunLogService.getRunLogsByActuatorId(actuatorId, pageable));
@@ -109,8 +109,8 @@ public class ActuatorController {
     @PutMapping("/{actuator-id}/name")
     public ResponseEntity<Void> updateActuatorName(
             @RequestHeader("X-USER-ID") Long userId,
-            @PathVariable Long groupsId,
-            @PathVariable Long actuatorId,
+            @PathVariable("group-id")Long groupsId,
+            @PathVariable("actuator-id")Long actuatorId,
             @Valid @RequestBody ActuatorNameUpdateRequest request) {
         actuatorService.updateActuatorName(userId, groupsId, actuatorId, request.deviceName());
         return ResponseEntity.ok().build();
@@ -120,8 +120,8 @@ public class ActuatorController {
     @DeleteMapping("/{actuator-id}")
     public ResponseEntity<Void> deleteActuatorById(
             @RequestHeader("X-USER-ID") Long userId,
-            @PathVariable Long groupsId,
-            @PathVariable Long actuatorId) {
+            @PathVariable("group-id")Long groupsId,
+            @PathVariable("actuator-id")Long actuatorId) {
         actuatorService.deleteActuatorById(userId, groupsId, actuatorId);
         return ResponseEntity.ok().build();
     }
@@ -130,7 +130,7 @@ public class ActuatorController {
     @DeleteMapping
     public ResponseEntity<Void> deleteAll(
             @RequestHeader("X-USER-ID") Long userId,
-            @PathVariable Long groupsId) {
+            @PathVariable("group-id")Long groupsId) {
         actuatorService.deleteAll(userId, groupsId);
         return ResponseEntity.ok().build();
     }
