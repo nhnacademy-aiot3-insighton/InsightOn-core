@@ -2,6 +2,7 @@ package com.insighton.core.groups.service;
 
 import com.insighton.core.dashboards.dto.request.DashboardRequest;
 import com.insighton.core.dashboards.dto.response.DashboardResponse;
+import com.insighton.core.dashboards.entity.Dashboard;
 import com.insighton.core.dashboards.service.DashboardService;
 import com.insighton.core.gateway.service.GatewayService;
 import com.insighton.core.groupmember.dto.request.GroupMemberJoinRequest;
@@ -20,12 +21,18 @@ import com.insighton.core.location.dto.response.LocationResponse;
 import com.insighton.core.location.entity.Location;
 import com.insighton.core.location.event.LocationDeletedEvent;
 import com.insighton.core.location.service.LocationService;
+import com.insighton.core.widgets.dto.chart.ChartDataResponse;
+import com.insighton.core.widgets.dto.request.WidgetSaveRequest;
+import com.insighton.core.widgets.dto.response.WidgetsListResponse;
+import com.insighton.core.widgets.service.WidgetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +43,7 @@ public class CoreManagementUseCase {
     private final GatewayService gatewayService;
     private final ApplicationEventPublisher eventPublisher;
     private final DashboardService dashboardService;
+    private final WidgetService widgetService;
 
     // ====================== Group Controller ======================
 
@@ -318,6 +326,14 @@ public class CoreManagementUseCase {
     }
     // ====================== dashboards Controller ======================
 
+    /**
+     * dashboard 조회용 (갖고 있는 widget List까지 반환)
+     *
+     * @param userId     보려고 하는 user
+     * @param groupId    속해있는 Group
+     * @param locationId dashboard와 연결된 location
+     * @return dashboard response 반환
+     */
     @Transactional(readOnly = true)
     public DashboardResponse getDashboard(Long userId, Long groupId, Long locationId) {
         // 조회하려는 user가 해당 그룹의 멤버인지 검증
@@ -329,13 +345,117 @@ public class CoreManagementUseCase {
         return dashboardService.getDashboard(locationId);
     }
 
+    /**
+     * member가 관리자인지 확인
+     */
     private void validationIsAdmin(GroupMember groupMember) {
         if (groupMember.isMember()) {
             throw NoPermissionException.forAdmin(groupMember.getGroupMemberId());
         }
     }
 
+    // ====================== dashboard save ======================
+
+    @Transactional
+    public Map<Long, ChartDataResponse> saveDashboard(Long userId, Long groupId, Long locationId, List<WidgetSaveRequest> requests) {
+        Dashboard dashboard = validateOnlyWidget(userId, groupId, locationId);
+
+        Map<Long, ChartDataResponse> updatedChartDataMap = new HashMap<>();
+
+        for (WidgetSaveRequest request : requests) {
+            Long targetWidgetId;
+            // Create : ID가 없다면 widget 생성 요청임
+            if (request.widgetId() == null) {
+                targetWidgetId = widgetService.createWidget(dashboard, request);
+            } else {
+                // Update : widget ID가 들어왔다면 기존 Widget 찾아서 수정
+                targetWidgetId = request.widgetId();
+                widgetService.updateWidget(dashboard.getDashboardsId(), request.widgetId(), request);
+            }
+
+            ChartDataResponse chartData = widgetService.getWidgetChartData(targetWidgetId);
+            updatedChartDataMap.put(targetWidgetId, chartData);
+        }
+
+        return updatedChartDataMap;
+    }
+
     // ====================== widgets Controller ======================
 
+    /**
+     * widget 생성
+     *
+     * @param userId     생성하려는 user ID
+     * @param groupId    user가 속해있는 group ID
+     * @param locationId widget을 생성하려는 dashboard가 속해있는 location ID
+     * @param request    widget 생성 request DTO
+     */
+    @Transactional
+    public void createWidget(Long userId, Long groupId, Long locationId, WidgetSaveRequest request) {
 
+        Dashboard dashboard = validateOnlyWidget(userId, groupId, locationId);
+
+        // widget 생성
+        widgetService.createWidget(dashboard, request);
+    }
+
+    /**
+     * widget list 조회
+     *
+     * @param userId     조회하려는 user ID
+     * @param groupId    user가 속해있는 group ID
+     * @param locationId widget을 조회하려는 dashboard가 속해있는 location ID
+     * @return widget list 반환
+     */
+    @Transactional(readOnly = true)
+    public List<WidgetsListResponse> getWidgetList(Long userId, Long groupId, Long locationId) {
+
+        groupMemberService.validateGroupMembers(groupId, userId);
+
+        Dashboard dashboard = dashboardService.getDashboardByLocationId(locationId);
+
+        return widgetService.getWidgetList(dashboard.getDashboardsId());
+    }
+
+
+    /**
+     * widget 수정
+     *
+     * @param userId         widget을 수정하려고 시도하는 user ID
+     * @param groupId        user가 속한 group ID
+     * @param locationId     dashboard와 연결된 location ID
+     * @param targetWidgetId 정보 수정하려는 widget ID
+     * @param request        수정하려는 정보가 담긴 dto
+     */
+    @Transactional
+    public void updateWidget(Long userId, Long groupId, Long locationId, Long targetWidgetId, WidgetSaveRequest request) {
+        Dashboard dashboard = validateOnlyWidget(userId, groupId, locationId);
+
+        widgetService.updateWidget(dashboard.getDashboardsId(), targetWidgetId, request);
+    }
+
+    /**
+     * widget 삭제
+     */
+    @Transactional
+    public void deleteWidget(Long userId, Long groupId, Long locationId, Long targetWidgetId) {
+
+        Dashboard dashboard = validateOnlyWidget(userId, groupId, locationId);
+
+        widgetService.deleteWidget(dashboard.getDashboardsId(), targetWidgetId);
+    }
+
+    /**
+     * widget service 로직에서 반복되는 작업(권한 체크나 dashboard 가져오는 작업) 따로 분리
+     */
+    private Dashboard validateOnlyWidget(Long userId, Long groupId, Long locationId) {
+        // user가 group에 속해있는지 확인하고
+        GroupMember member = groupMemberService.validateGroupMembers(groupId, userId);
+
+        // 속해있는 user가 관리자인지 확인하고
+        validationIsAdmin(member);
+
+        // locationID로 연결된 dashboard 가져와서
+        return dashboardService.getDashboardByLocationId(locationId);
+    }
 }
