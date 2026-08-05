@@ -1,14 +1,18 @@
 package com.insighton.core.device_attributes.service.impl;
 
-import com.insighton.core.exception.CustomException;
-import com.insighton.core.exception.ErrorCode;
-import com.insighton.core.device_attributes.dto.DeviceAttribute;
-import com.insighton.core.device_attributes.entity.DeviceAttributeEntity;
+import com.insighton.core.device_attributes.dto.DeviceAttributeResponse;
+import com.insighton.core.device_attributes.entity.SensorAttribute;
 import com.insighton.core.device_attributes.entity.MetricDefinition;
+import com.insighton.core.device_attributes.exception.MetricKeyNotFoundException;
 import com.insighton.core.device_attributes.repository.DeviceAttributeRepository;
 import com.insighton.core.device_attributes.service.DeviceAttributeService;
-import com.insighton.core.sensors.entity.DeviceEntity;
+import com.insighton.core.groupmember.entity.GroupMembers;
+import com.insighton.core.groupmember.service.GroupMembersService;
+import com.insighton.core.groups.exception.NoPermissionException;
+import com.insighton.core.sensors.entity.Device;
 import com.insighton.core.sensors.entity.DeviceType;
+import com.insighton.core.sensors.exception.DeviceNotFoundException;
+import com.insighton.core.sensors.exception.InvalidDeviceValueException;
 import com.insighton.core.sensors.repository.DeviceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,34 +28,41 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class DeviceAttributeServiceImpl implements DeviceAttributeService {
 
-    private final DeviceAttributeRepository attributeRepository;
-    private final DeviceRepository deviceRepository;
+    private final DeviceAttributeRepository attributeRepository; // 속성 조회/저장
+    private final DeviceRepository deviceRepository; // 소속 디바이스 조회
+    private final GroupMembersService groupMembersService; // 그룹 멤버 권한 검증용 서비스
 
-    /**
-     * 특정 기기에 정의된 모든 속성(메트릭) 목록을 조회합니다.
-     * <p>
-     * DB의 {@code metricKey} 정보를 기반으로 Enum({@link MetricDefinition})에서 하드코딩된
-     * 한글 명칭({@code metricName}) 및 단위({@code unit}) 정보를 추출하여 클라이언트용 DTO로 조합합니다.
-     *
-     * @param deviceId 조회할 기기 ID
-     * @return 기기의 메트릭 정보 및 상태값이 포함된 DTO 리스트
-     * @throws CustomException 전달받은 deviceId가 DB에 존재하지 않을 경우 던짐
-     */
-    public List<DeviceAttribute> getAllAttributeByDeviceId(Long deviceId){
+
+    // 요청자가 해당 그룹의 MANGER 이상의 권한을 가졌는지 검증
+    private void validateManagerRole(Long userId, Long groupsId) {
+        GroupMembers member = groupMembersService.validateGroupMembers(groupsId, userId);
+        if (member.isMember()) {
+            throw NoPermissionException.forAdmin(member.getGroupMemberId());
+        }
+    }
+
+
+    // 조회용 - 그룹 소속만 확인, 역할은 무관
+    private void validateGroupMembership(Long userId, Long groupId){
+        groupMembersService.validateGroupMembers(groupId, userId);
+    }
+
+    public List<DeviceAttributeResponse> getAllAttributeByDeviceId(Long userId, Long deviceId){
 
         // 1. 해당 장치의 존재 유무 검증
-        if(!deviceRepository.existsById(deviceId)){
-            throw new CustomException(ErrorCode.DEVICE_NOT_FOUND);
-        }
+        Device entity = deviceRepository.findById(deviceId)
+                        .orElseThrow(() -> new DeviceNotFoundException(deviceId));
+
+        validateGroupMembership(userId, entity.getGroupId().getGroupId()); // Groups 객체에서 Long ID 호출
 
         // 2. DB에서 장치 속성 목록 조회 후 Enum 정보를 매핑하여 DTO로 변환
-        return attributeRepository.findByDeviceId_DeviceId(deviceId)
+        return attributeRepository.findByDeviceId(deviceId)
                 .stream()
                 .map(attr -> {
                     // Enum에서 메트릭 표준 정의(한글 명칭, 단위) 바인딩
                     MetricDefinition metricDefinition = MetricDefinition.fromKey(attr.getMetricKey());
 
-                    return new DeviceAttribute(
+                    return new DeviceAttributeResponse(
                             attr.getMetricKey(),
                             metricDefinition.getMetricName(),
                             metricDefinition.getUnit(),
@@ -60,35 +71,37 @@ public class DeviceAttributeServiceImpl implements DeviceAttributeService {
                 }).toList();
     }
 
+
     /**
      * 액추에이터(조명, 에어컨 등) 제어 명령 실행 시, DB 상의 최신 상태값({@code currentValueStr})을 갱신합니다.
      *
      * @param deviceId 대상 액추에이터 기기 ID
      * @param metricKey 변경 대상 메트릭 키 (ex. "power_status", "ac_mode")
      * @param newValue 변경하고자 하는 상태/수치값 (ex. "ON", "OFF", "24")
-     * @throws CustomException 지정한 기기 ID 및 메트릭 키 조건의 속성을 찾을 수 없을 경우 발생
      */
     @Transactional
-    public void updateActuatorValue(Long deviceId, String metricKey, String newValue){
+    public void updateActuatorValue(Long userId, Long deviceId, String metricKey, String newValue){
 
         // existsById 대신 findById로 직접 조회
         // DB조회 1번으로 줄이기
-        DeviceEntity entity = deviceRepository.findById(deviceId)
-                .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND));
+        Device entity = deviceRepository.findById(deviceId)
+                .orElseThrow(() -> new DeviceNotFoundException(deviceId));
 
-//        if(!deviceRepository.existsById(deviceId)){
-//            throw new CustomException(ErrorCode.DEVICE_NOT_FOUND);
-//        }
+        // 권한 체크
+        validateManagerRole(userId, entity.getGroupId().getGroupId()); // Groups 객체에서 Long ID 호출
 
         // 센서타입인 경우 제어 API를 통한 수치 변경을 거부
         if(entity.getDeviceType() != DeviceType.ACTUATOR){
-            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE,"센서 장치의 수집데이터는 제어 API로 수정 불가");
+            throw new InvalidDeviceValueException(" 센서 장치의 수집데이터는 제어 API로 수정 불가");
         }
 
         // 변경할 수치 값 유효성 검사
+        // MQTT 패킷 수신, 룰엔진 내부 호출, 비동기 이벤트를 통해 직접 호출될 수 있기 때문에
+        // 재활용성을 보장하기 위한 방어적 프로그래밍
         if(newValue == null || newValue.trim().isEmpty()){
-            throw new CustomException(ErrorCode.NO_NEW_ACTUATOR_VALUE);
+            throw new InvalidDeviceValueException("액추에이터 제어 값은 비어있을 수 없습니다");
         }
+
 
         /**
          * 코더레빗 제안
@@ -97,14 +110,13 @@ public class DeviceAttributeServiceImpl implements DeviceAttributeService {
          * CO2처럼 대문자로 들어온 값은 검증을 통과해도 co2로 저장된 행을 못 찾을 수 있으니
          * MetricDefinition.fromKey(metricKey).getMetricKey()를 조회 인자로 쓰세요.
          */
-        // MetricDefinition에서 정규화된 표준 metricKey(예: "co2") 추출
         MetricDefinition definition = MetricDefinition.fromKey(metricKey);
         String normalizedMetricKey = definition.getMetricKey();
 
         // 정규화된 metricKey로 DB 조회
-        DeviceAttributeEntity attribute = attributeRepository
-                .findByDeviceId_DeviceIdAndMetricKey(deviceId, normalizedMetricKey)
-                .orElseThrow(() -> new CustomException(ErrorCode.METRIC_KEY_NOT_FOUND));
+        SensorAttribute attribute = attributeRepository
+                .findByDeviceIdAndMetricKey(deviceId, normalizedMetricKey)
+                .orElseThrow(() -> new MetricKeyNotFoundException("매트릭 키를 찾을 수 없습니다 (ID: " + metricKey + ")"));
 
         attribute.updateCurrentValue(newValue);
     }
@@ -124,7 +136,7 @@ public class DeviceAttributeServiceImpl implements DeviceAttributeService {
         }
         return MetricDefinition.findFromKey(metricKey)
                 .map(def -> attributeRepository.
-                        existsByDeviceId_DeviceIdAndMetricKey(deviceId, def.getMetricKey()))
+                        existsByDeviceIdAndMetricKey(deviceId, def.getMetricKey()))
                 .orElse(false);
     }
 }
