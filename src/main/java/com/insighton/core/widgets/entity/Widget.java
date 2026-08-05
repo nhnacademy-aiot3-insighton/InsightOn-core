@@ -58,7 +58,7 @@ public class Widget {
         this.widgetConfig = widgetConfig;
     }
 
-    public void updateㅣocationWidget(int xPos, int yPos, int width, int height) {
+    public void updateLocationWidget(int xPos, int yPos, int width, int height) {
         this.xPos = xPos;
         this.yPos = yPos;
         this.width = width;
