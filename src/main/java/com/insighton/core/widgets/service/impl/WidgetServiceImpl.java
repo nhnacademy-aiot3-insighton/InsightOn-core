@@ -138,7 +138,7 @@ public class WidgetServiceImpl implements WidgetService {
         Set<String> timeLabels = new LinkedHashSet<>();
         Map<String, List<Object>> datasetMap = new HashMap<>();
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm")
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd HH:mm")
                 .withZone(ZoneId.systemDefault());
 
         if (tables != null) {
@@ -186,7 +186,7 @@ public class WidgetServiceImpl implements WidgetService {
         StringBuilder flux = new StringBuilder();
 
         flux.append("from(bucket: \"").append(BUCKET_NAME).append("\")\n")
-                .append("   |> range(start: -").append(config.range()).append(")\n")
+                .append("   |> range(start: ").append(config.range()).append(")\n")
                 .append("   |> filter(fn: (r) => r._measurement == \"").append(MEASUREMENT_NAME).append("\")\n");
 
         // null이나 빈 값 체크

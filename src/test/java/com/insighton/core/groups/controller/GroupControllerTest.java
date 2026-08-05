@@ -54,7 +54,7 @@ class GroupControllerTest {
         void joinGroupByToken_success() throws Exception {
             GroupMemberJoinRequest request = new GroupMemberJoinRequest("testToken", 1L);
 
-            mockMvc.perform(post("/internal/groups/join-by-token")
+            mockMvc.perform(post("/internal/v1/groups/join-by-token")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk());

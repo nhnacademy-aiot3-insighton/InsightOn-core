@@ -12,7 +12,15 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
 @Entity
-@Table(name = "locations")
+@Table(
+        name = "locations",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_location_group_name",
+                        columnNames = {"group_id", "location_name"}
+                )
+        }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Location {

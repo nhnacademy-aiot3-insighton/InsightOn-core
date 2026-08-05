@@ -96,7 +96,7 @@ public class GroupMemberServiceImpl implements GroupMemberService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public GroupMemberResponse getGroupMemberAI(Long userId, Long groupId) {
         GroupMember members = validateGroupMembers(groupId, userId);
 

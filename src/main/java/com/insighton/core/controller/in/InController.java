@@ -38,10 +38,10 @@ public class InController {
      *
      * @return 멤버면 groupId/groupRole 포함 응답, 아니면 404
      */
-    @GetMapping("groups/{group-id}/members?userId={user-id}")
+    @GetMapping("groups/{group-id}/members")
     public ResponseEntity<GroupMemberResponse> getGroupMemberByUserId(
             @PathVariable("group-id") Long groupId,
-            @PathVariable("user-id") Long userId
+            @RequestParam("user-id") Long userId
     ) {
         GroupMemberResponse response = groupMemberService.getGroupMemberAI(userId, groupId);
 

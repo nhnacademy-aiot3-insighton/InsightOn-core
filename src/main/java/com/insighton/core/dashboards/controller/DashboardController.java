@@ -48,7 +48,10 @@ public class DashboardController {
             @PathVariable("group-id") Long groupId,
             @PathVariable("location-id") Long locationId,
             @RequestBody List<WidgetSaveRequest> requests) {
-        Map<Long, ChartDataResponse> result = useCase.saveDashboard(userId, groupId, locationId, requests);
+
+        List<Long> widgetIds = useCase.saveDashboard(userId, groupId, locationId, requests);
+
+        Map<Long, ChartDataResponse> result = useCase.saveDashboardInfluxDB(widgetIds);
 
         return ResponseEntity.ok(result);
     }
