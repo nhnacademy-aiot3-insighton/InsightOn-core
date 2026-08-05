@@ -10,6 +10,7 @@ import com.insighton.core.groupmember.service.GroupMemberService;
 import com.insighton.core.groups.dto.request.GroupRequest;
 import com.insighton.core.groups.dto.response.GroupResponse;
 import com.insighton.core.groups.entity.Group;
+import com.insighton.core.groups.event.GroupDeletedEvent;
 import com.insighton.core.groups.exception.NoPermissionException;
 import com.insighton.core.groups.exception.UnAuthorizedAccessException;
 import com.insighton.core.location.dto.request.LocationCreateRequest;
@@ -17,6 +18,7 @@ import com.insighton.core.location.dto.request.LocationUpdateRequest;
 import com.insighton.core.location.dto.response.LocationListResponse;
 import com.insighton.core.location.dto.response.LocationResponse;
 import com.insighton.core.location.entity.Location;
+import com.insighton.core.location.event.LocationDeletedEvent;
 import com.insighton.core.location.service.LocationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -157,11 +159,15 @@ public class CoreManagementUseCase {
 
         groupMemberService.deleteGroupMemberAll(userId, groupId);
 
+        List<Long> locationIds = locationService.getLocationListByGroupId(groupId).stream()
+                .map(Location::getLocationId)
+                .toList();
+
         deleteLocationAll(groupId);
 
         groupService.deleteGroup(groupId);
 
-//        eventPublisher.publishEvent(new GroupDeletedEvent(groupId));
+        eventPublisher.publishEvent(new GroupDeletedEvent(groupId, locationIds));
     }
 
     // ====================== Location Controller ======================
@@ -288,6 +294,8 @@ public class CoreManagementUseCase {
         dashboardService.deleteDashboard(targetLocationId);
 
         locationService.deleteLocation(targetLocationId, groupId);
+
+        eventPublisher.publishEvent(new LocationDeletedEvent(targetLocationId));
     }
 
     /**
