@@ -66,7 +66,7 @@ class DeviceAttributeControllerTest {
     void 값변경_빈값_400() throws Exception {
         ActuatorUpdateRequest request = new ActuatorUpdateRequest("");
 
-        mockMvc.perform(put("/api/v1/sensor/{device-id}/attribute/{metricKey}", 1L, "power_status")
+        mockMvc.perform(put("/api/v1/sensor/{device-id}/attribute/{metric-key}", 1L, "power_status")
                         .header("X-USER-ID", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -82,7 +82,7 @@ class DeviceAttributeControllerTest {
 
         ActuatorUpdateRequest request = new ActuatorUpdateRequest("ON");
 
-        mockMvc.perform(put("/api/v1/sensor/{device-id}/attribute/{metricKey}", 1L, "unknown_key")
+        mockMvc.perform(put("/api/v1/sensor/{device-id}/attribute/{metric-key}", 1L, "unknown_key")
                         .header("X-USER-ID", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))

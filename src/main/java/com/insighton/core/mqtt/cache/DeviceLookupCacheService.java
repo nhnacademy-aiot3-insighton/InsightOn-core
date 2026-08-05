@@ -2,7 +2,7 @@ package com.insighton.core.mqtt.cache;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.insighton.core.mqtt.cache.dto.DeviceCacheEntry;
-import com.insighton.core.sensors.entity.DeviceEntity;
+import com.insighton.core.sensors.entity.Device;
 import com.insighton.core.sensors.repository.DeviceRepository;
 import java.time.Duration;
 import java.util.Optional;
@@ -76,12 +76,12 @@ public class DeviceLookupCacheService {
         deviceRedisTemplate.delete(REDIS_KEY_PREFIX + deviceEui);
     }
 
-    private DeviceCacheEntry toCacheEntry(DeviceEntity device) {
+    private DeviceCacheEntry toCacheEntry(Device device) {
         return new DeviceCacheEntry(
                 device.getDeviceId(),
                 device.getDeviceEui(),
-                device.getGatewaysId(),
-                device.getLocationsId()
+                device.getGatewaysId().getGatewayId(),
+                device.getLocation().getLocationId()
         );
     }
 }
