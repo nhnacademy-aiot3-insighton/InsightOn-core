@@ -383,23 +383,6 @@ public class CoreManagementUseCase {
     // ====================== widgets Controller ======================
 
     /**
-     * widget 생성
-     *
-     * @param userId     생성하려는 user ID
-     * @param groupId    user가 속해있는 group ID
-     * @param locationId widget을 생성하려는 dashboard가 속해있는 location ID
-     * @param request    widget 생성 request DTO
-     */
-    @Transactional
-    public void createWidget(Long userId, Long groupId, Long locationId, WidgetSaveRequest request) {
-
-        Dashboard dashboard = validateOnlyWidget(userId, groupId, locationId);
-
-        // widget 생성
-        widgetService.createWidget(dashboard, request);
-    }
-
-    /**
      * widget list 조회
      *
      * @param userId     조회하려는 user ID
@@ -415,23 +398,6 @@ public class CoreManagementUseCase {
         Dashboard dashboard = dashboardService.getDashboardByLocationId(locationId);
 
         return widgetService.getWidgetList(dashboard.getDashboardsId());
-    }
-
-
-    /**
-     * widget 수정
-     *
-     * @param userId         widget을 수정하려고 시도하는 user ID
-     * @param groupId        user가 속한 group ID
-     * @param locationId     dashboard와 연결된 location ID
-     * @param targetWidgetId 정보 수정하려는 widget ID
-     * @param request        수정하려는 정보가 담긴 dto
-     */
-    @Transactional
-    public void updateWidget(Long userId, Long groupId, Long locationId, Long targetWidgetId, WidgetSaveRequest request) {
-        Dashboard dashboard = validateOnlyWidget(userId, groupId, locationId);
-
-        widgetService.updateWidget(dashboard.getDashboardsId(), targetWidgetId, request);
     }
 
     /**
