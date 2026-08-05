@@ -159,6 +159,7 @@ public class WidgetServiceImpl implements WidgetService {
             }
         }
 
+        // map에 모인 데이터를 chartDataset 객체 리스트로 변환
         List<ChartDataset> datasets = datasetMap.entrySet().stream()
                 .map(entry -> new ChartDataset(entry.getKey(), entry.getValue()))
                 .toList();
@@ -181,7 +182,7 @@ public class WidgetServiceImpl implements WidgetService {
      * influxDB query 작성
      */
     private String buildFluxQuery(WidgetConfig config) {
-
+        // 문자열 합치기 작업을 메모리 낭비 없이 빠르게 처리하기 때문에 사용
         StringBuilder flux = new StringBuilder();
 
         flux.append("from(bucket: \"").append(BUCKET_NAME).append("\")\n")
@@ -203,10 +204,12 @@ public class WidgetServiceImpl implements WidgetService {
         if (Objects.nonNull(config.type())) {
             switch (config.type()) {
                 case GAUGE, SINGLE_STAT:
+                    // 가장 최근 데이터 1개만 조회
                     flux.append("   |> last()\n");
                     break;
                 case GRAPH:
                 default:
+                    // 시계열 그래프는 설정한 주기(aggregateWindow)마다 평균(mean) 값으로 묶어서 가져옴
                     if (Objects.nonNull(config.aggregateWindow())) {
                         flux.append("   |> aggregateWindow(every: ").append(config.aggregateWindow())
                                 .append(", fn: mean, createEmpty: false)\n");
