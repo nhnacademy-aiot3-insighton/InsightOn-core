@@ -11,6 +11,7 @@ import com.insighton.core.location.exception.LocationNotFoundException;
 import com.insighton.core.location.repository.LocationRepository;
 import com.insighton.core.location.service.LocationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,7 +37,11 @@ public class LocationServiceImpl implements LocationService {
                 .autoControlMode(request.autoControlMode())
                 .build();
 
-        return locationRepository.save(newLocation);
+        try {
+            return locationRepository.saveAndFlush(newLocation);
+        } catch (DataIntegrityViolationException e) {
+            throw new LocationAlreadyException(request.locationName());
+        }
     }
 
 
