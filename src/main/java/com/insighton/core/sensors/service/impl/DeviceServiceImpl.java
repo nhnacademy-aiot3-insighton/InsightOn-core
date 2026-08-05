@@ -78,7 +78,7 @@ public class DeviceServiceImpl implements DeviceService {
                 throw new InvalidDeviceValueException(
                         "이미 다른 그룹에 등록된 EUI입니다. (EUI: " + deviceEui + ")");
             }
-            Long existingGatewayId = e.getGatewaysId() != null ? e.getGatewaysId().getGatewayId() : gatewayId;
+            Long existingGatewayId = e.getGateway() != null ? e.getGateway().getGatewayId() : gatewayId;
             DeviceCacheEntry cacheEntry = new DeviceCacheEntry(
                     e.getDeviceId(), e.getDeviceEui(), existingGatewayId,
                     e.getLocation() != null ? e.getLocation().getLocationId() : null
@@ -98,7 +98,7 @@ public class DeviceServiceImpl implements DeviceService {
         // 패킷 정보로 센서 엔티티 객체를 조립
         Device device = Device.builder()
                 .deviceType(DeviceType.SENSOR) // 센서 타입으로 지정
-                .gatewaysId(gateway) // 패킷이 거쳐온 게이트웨이 ID를 입력
+                .gateway(gateway) // 패킷이 거쳐온 게이트웨이 ID를 입력
                 .groupId(groups) // 소속 그룹아이디 주입
                 .deviceEui(deviceEui) // 센서의 고유 시리얼 번호(EUI)를 입력
                 .deviceName(nolDeviceName) // 패킷 정보 기반의 임시 이름(예: "Temp_Sensor_01")을 입력
@@ -170,7 +170,7 @@ public class DeviceServiceImpl implements DeviceService {
 
         // 캐시도 같이 갱신 (deviceEui가 있는 센서만 캐시에 들어있음)
         if (device.getDeviceEui() != null) {
-            Long gatewayId = device.getGatewaysId() != null ? device.getGatewaysId().getGatewayId() : null;
+            Long gatewayId = device.getGateway() != null ? device.getGateway().getGatewayId() : null;
 
             // 변경된 newLocationId를 적용하여 새로운 캐시 엔트리 생성
             DeviceCacheEntry updatedCacheEntry = new DeviceCacheEntry(
@@ -220,7 +220,7 @@ public class DeviceServiceImpl implements DeviceService {
 
             // 캐시도 같이 갱신 (deviceEui가 있는 센서만 캐시에 들어있음)
             if (device.getDeviceEui() != null) {
-                Long gatewayId = device.getGatewaysId() != null ? device.getGatewaysId().getGatewayId() : null;
+                Long gatewayId = device.getGateway() != null ? device.getGateway().getGatewayId() : null;
                 DeviceCacheEntry updatedCacheEntry = new DeviceCacheEntry(
                         device.getDeviceId(), device.getDeviceEui(), gatewayId, newLocationId);
                 deviceLookupCacheService.populate(updatedCacheEntry);
@@ -313,7 +313,7 @@ public class DeviceServiceImpl implements DeviceService {
         return new DeviceResponse(
                 e.getDeviceId(),
                 e.getDeviceType(),
-                e.getGatewaysId() != null ? e.getGatewaysId().getGatewayId() : null,
+                e.getGateway() != null ? e.getGateway().getGatewayId() : null,
                 e.getLocation() != null ? e.getLocation().getLocationId() : null,
                 e.getDeviceEui(),
                 e.getDeviceName(),
