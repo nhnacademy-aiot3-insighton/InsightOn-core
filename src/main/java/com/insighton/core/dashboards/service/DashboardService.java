@@ -2,6 +2,7 @@ package com.insighton.core.dashboards.service;
 
 import com.insighton.core.dashboards.dto.request.DashboardRequest;
 import com.insighton.core.dashboards.dto.response.DashboardResponse;
+import com.insighton.core.dashboards.entity.Dashboard;
 import com.insighton.core.location.entity.Location;
 
 public interface DashboardService {
@@ -35,5 +36,13 @@ public interface DashboardService {
      * @param locationId 삭제될 Location ID
      */
     void deleteDashboard(Long locationId);
+
+    /**
+     * widget을 위한 method. api @PathVariable로 받아오는 locationID로 찾아 반환
+     *
+     * @param locationId 찾고 싶은 dashboard와 연결된 locationID
+     * @return dashboard entity 반환
+     */
+    Dashboard getDashboardByLocationId(Long locationId);
 
 }
