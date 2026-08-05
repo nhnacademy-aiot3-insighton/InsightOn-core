@@ -1,23 +1,35 @@
 package com.insighton.core.weather.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 public record WeatherDataDto(
-        //기상청 단기예보 + 실황 통합
-        @JsonProperty("TMP") String temp, // 현재 기온
-        @JsonProperty("TMX") String maxTemp, // 최고 기온
-        @JsonProperty("TMN") String minTemp, // 최저 기온
-        @JsonProperty("SKY") String skyStatus, // 하늘 상태
-        @JsonProperty("PTY") String precipitationType, // 강수 형태
-        @JsonProperty("POP") String rainPrecipitation, // 강수 유무/확률
-        @JsonProperty("PCP") String hourlyRainfall, // 1시간 강수량
-        @JsonProperty("REH") String humidity, // 상대 습도
-        //공공데이터포털 미세먼지 항목
-        String pm10Value,
-        String pm25Value,
-        String pm10Value24,
-        String pm25Value24,
-        String pm10Grade1h,
-        String pm25Grade1h
+        CurrentWeather current, // 초단기실황
+        ForecastWeather forecast, // 단기예보
+        AirQuality airQuality // 미세먼지
 ) {
+
+    public record CurrentWeather(
+            String temp, // 현재기온
+            String humidity, // 습도
+            String hourlyRainFall, // 1시간 강수량
+            String precipitationType // 강수 형태
+    ) {
+    }
+
+    public record ForecastWeather(
+            String maxTemp, // 오늘 최고 기온
+            String minTemp, // 오늘 최저 기온
+            String skyStatus, // 하늘 상태
+            String rainPrecipitation, // 강수 확률
+            String forecastPrecipitationType // 예보상 강수 형태
+    ) {
+    }
+
+    public record AirQuality(
+            String pm10Value, // 미세먼지 농도
+            String pm25Value, // 초미세먼지 농도
+            String pm10Value24, // 미세먼지 24시간 예측농도
+            String pm25Value24, // 초미세먼지 24시간 예측농도
+            String pm10Grade, // 미세먼지 등급
+            String pm25Grade // 초미세먼지 등급
+    ) {
+    }
 }
