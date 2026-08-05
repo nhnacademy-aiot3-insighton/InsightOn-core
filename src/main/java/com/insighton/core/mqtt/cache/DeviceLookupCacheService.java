@@ -2,7 +2,7 @@ package com.insighton.core.mqtt.cache;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.insighton.core.mqtt.cache.dto.DeviceCacheEntry;
-import com.insighton.core.sensors.entity.DeviceEntity;
+import com.insighton.core.sensors.entity.Device;
 import com.insighton.core.sensors.repository.DeviceRepository;
 import java.time.Duration;
 import java.util.Optional;
@@ -76,12 +76,21 @@ public class DeviceLookupCacheService {
         deviceRedisTemplate.delete(REDIS_KEY_PREFIX + deviceEui);
     }
 
-    private DeviceCacheEntry toCacheEntry(DeviceEntity device) {
+    /**
+     * {@code Device} 엔티티에서 캐시에 담을 최소 필드만 뽑아 {@link DeviceCacheEntry}로 변환함.
+     * gateway는 ACTUATOR 타입에서, location은 아직 공간에 배치되지 않은 기기에서 각각 null일 수 있으므로
+     * 반드시 null 가드가 필요함 — 특히 Auto-Provisioning으로 새로 생성된 기기는 항상 location이 null이라,
+     * 가드 없이 접근하면 첫 패킷부터 NPE가 발생하고 그 예외가 MQTT 연결까지 끊게 됨.
+     *
+     * @param device 변환할 기기 엔티티
+     * @return 캐시용 최소 필드 레코드
+     */
+    private DeviceCacheEntry toCacheEntry(Device device) {
         return new DeviceCacheEntry(
                 device.getDeviceId(),
                 device.getDeviceEui(),
-                device.getGatewaysId(),
-                device.getLocationsId()
+                device.getGateway() != null ? device.getGateway().getGatewayId() : null,
+                device.getLocation() != null ? device.getLocation().getLocationId() : null
         );
     }
 }

@@ -77,14 +77,14 @@ class DeviceServiceTest {
         Groups group = mock(Groups.class);
         given(group.getGroupId()).willReturn(5L); // 요청 groupId(5L)와 일치해야 통과
 
-        // gatewaysId는 null로 둬도 됨 - null이면 파라미터로 받은 gatewayId(10L)로 대체되는 로직이라 스텁 불필요
+        // gateway는 null로 둬도 됨 - null이면 파라미터로 받은 gatewayId(10L)로 대체되는 로직이라 스텁 불필요
         Device existing = Device.builder().deviceId(1L).deviceEui("EUI-001").groupId(group).build();
         given(deviceRepository.findByDeviceEui("EUI-001")).willReturn(Optional.of(existing));
 
         DeviceCacheEntry result = deviceService.autoProvision(10L, 5L, "EUI-001", "센서", Set.of("co2"));
 
         assertThat(result.deviceId()).isEqualTo(1L);
-        assertThat(result.gatewayId()).isEqualTo(10L); // gatewaysId null -> 파라미터로 받은 값으로 대체됨
+        assertThat(result.gatewayId()).isEqualTo(10L); // gateway null -> 파라미터로 받은 값으로 대체됨
         verify(deviceRepository, never()).save(any());
         verify(deviceLookupCacheService).populate(any(DeviceCacheEntry.class));
     }
@@ -187,7 +187,7 @@ class DeviceServiceTest {
         Gateway gateway = mock(Gateway.class);
         given(gateway.getGatewayId()).willReturn(10L); // deviceEui != null 분기에서 실제로 호출됨
         Device device = Device.builder()
-                .deviceId(1L).groupId(group).gatewaysId(gateway).deviceEui("EUI-001").build();
+                .deviceId(1L).groupId(group).gateway(gateway).deviceEui("EUI-001").build();
 
         Locations newLocation = mock(Locations.class); // getter 스텁 불필요 - newLocationId 파라미터를 그대로 씀
 
