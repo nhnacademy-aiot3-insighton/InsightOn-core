@@ -8,7 +8,7 @@ package com.insighton.core.device_attributes.dto;
  * @param unit Enum 기반 데이터 물리 정량 단위 (ex. "ppm", "°C", null)
  * @param currentValueStr 액추에이터 전용 최신 상태값 (ex. "ON", "24.0")
  */
-public record DeviceAttribute(
+public record DeviceAttributeResponse(
         String metricKey,
         String displayName,
         String unit,

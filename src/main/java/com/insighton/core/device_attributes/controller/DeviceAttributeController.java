@@ -1,7 +1,7 @@
 package com.insighton.core.device_attributes.controller;
 
 import com.insighton.core.device_attributes.dto.ActuatorUpdateRequest;
-import com.insighton.core.device_attributes.dto.DeviceAttribute;
+import com.insighton.core.device_attributes.dto.DeviceAttributeResponse;
 import com.insighton.core.device_attributes.dto.MetricDefinitionResponse;
 import com.insighton.core.device_attributes.entity.MetricDefinition;
 import com.insighton.core.device_attributes.service.DeviceAttributeService;
@@ -14,7 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/sensor/{deviceId}/attribute")
+@RequestMapping("/api/v1/sensor/{device-id}/attribute")
 @RequiredArgsConstructor
 public class DeviceAttributeController {
 
@@ -22,8 +22,10 @@ public class DeviceAttributeController {
 
     // 기기 속성 전체 목록 조회
     @GetMapping
-    public ResponseEntity<List<DeviceAttribute>> getDeviceAttribute(@PathVariable("deviceId")Long deviceId){
-        List<DeviceAttribute> attributeDto = attributeService.getAllAttributeByDeviceId(deviceId);
+    public ResponseEntity<List<DeviceAttributeResponse>> getDeviceAttribute(
+            @RequestHeader("X-USER-ID") Long userId,
+            @PathVariable("deviceId")Long deviceId){
+        List<DeviceAttributeResponse> attributeDto = attributeService.getAllAttributeByDeviceId(userId, deviceId);
         return ResponseEntity.ok(attributeDto);
     }
 
@@ -43,10 +45,12 @@ public class DeviceAttributeController {
     // 단일 엑충이터 속성 값 변경 제어 API
     @PutMapping("/{metricKey}")
     public ResponseEntity<Void> updateActuatorValue(
+            @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("deviceId") Long deviceId,
             @PathVariable("metricKey") String metricKey,
             @RequestBody @Valid ActuatorUpdateRequest request){
-        attributeService.updateActuatorValue(deviceId, metricKey, request.value());
+
+        attributeService.updateActuatorValue(userId, deviceId, metricKey, request.value());
         return ResponseEntity.noContent().build();
     }
 }
