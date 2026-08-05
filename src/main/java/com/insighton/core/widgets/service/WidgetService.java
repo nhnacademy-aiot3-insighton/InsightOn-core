@@ -32,7 +32,7 @@ public interface WidgetService {
      * @param dashboardId                 위치를 변경하고 싶은 widget이 존재하느 dashboard ID
      * @param widgetLocationUpdateRequest 위치 수정 요청 DTO
      */
-    void updateLocationWidget(Long dashboardId, WidgetLocationUpdateRequest widgetLocationUpdateRequest);
+    void updateLocationWidget(Long dashboardId, Long targetWidgetId, WidgetLocationUpdateRequest widgetLocationUpdateRequest);
 
     /**
      * 위젯 정보 수정
@@ -50,13 +50,6 @@ public interface WidgetService {
      * @param targetWidgetId 삭제할 widget의 ID
      */
     void deleteWidget(Long dashboardId, Long targetWidgetId);
-
-    /**
-     * dashboard가 삭제될 때(사실은 location delete) 속해있는 widget 전부를 삭제
-     *
-     * @param targetDashboardId 삭제될 dashboard ID
-     */
-    void deleteAllWidget(Long targetDashboardId);
 
     /**
      * Controller에서 chart.js가 받아서 그려줄 influxDB 정보를 불러와 DTO로 반환
