@@ -4,8 +4,10 @@ import com.insighton.core.weather.dto.AirQualityResponseDto;
 import com.insighton.core.weather.dto.ForecastBaseDateTime;
 import com.insighton.core.weather.dto.KmaWeatherResponseDto;
 import com.insighton.core.weather.dto.WeatherDataDto;
+import com.insighton.core.weather.dto.WeatherDataDto.ForecastWeather;
 import com.insighton.core.weather.exception.WeatherApiException;
 import com.insighton.core.weather.parser.SidoNameParser;
+import com.insighton.core.weather.util.WeatherCodeMapper;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -62,22 +64,31 @@ public class WeatherIntegrationService {
             // 에어코리아 미세먼지 정보
             Map<String, String> airMap = fetchAirQualityData(parsedSidoName, cityName);
 
-            return new WeatherDataDto(
-                    currentMap.getOrDefault("T1H", forecastMap.getOrDefault("TMP", "N/A")),
+            WeatherDataDto.CurrentWeather currentWeather = new WeatherDataDto.CurrentWeather(
+                    currentMap.getOrDefault("T1H", "N/A"),
+                    currentMap.getOrDefault("REH", "N/A"),
+                    currentMap.getOrDefault("RN1", "N/A"),
+                    WeatherCodeMapper.parsePty(currentMap.get("PTY"))
+            );
+
+            WeatherDataDto.ForecastWeather forecastWeather = new ForecastWeather(
                     forecastMap.getOrDefault("TMX", "N/A"),
                     forecastMap.getOrDefault("TMN", "N/A"),
-                    forecastMap.getOrDefault("SKY", "N/A"),
-                    currentMap.getOrDefault("PTY", forecastMap.getOrDefault("PTY", "N/A")),
+                    WeatherCodeMapper.parseSky(forecastMap.get("SKY")),
                     forecastMap.getOrDefault("POP", "N/A"),
-                    currentMap.getOrDefault("RN1", forecastMap.getOrDefault("PCP", "N/A")),
-                    currentMap.getOrDefault("REH", forecastMap.getOrDefault("REH", "N/A")),
+                    WeatherCodeMapper.parsePty(forecastMap.get("PTY"))
+            );
+
+            WeatherDataDto.AirQuality airQuality = new WeatherDataDto.AirQuality(
                     airMap.getOrDefault("pm10Value", "N/A"),
                     airMap.getOrDefault("pm25Value", "N/A"),
                     airMap.getOrDefault("pm10Value24", "N/A"),
                     airMap.getOrDefault("pm25Value24", "N/A"),
-                    airMap.getOrDefault("pm10Grade1h", "N/A"),
-                    airMap.getOrDefault("pm25Grade1h", "N/A")
+                    WeatherCodeMapper.parseAirGrade(airMap.get("pm10Grade1h")),
+                    WeatherCodeMapper.parseAirGrade(airMap.get("pm25Grade1h"))
             );
+
+            return new WeatherDataDto(currentWeather, forecastWeather, airQuality);
         } catch (Exception e) {
             throw new WeatherApiException("날씨/미세먼지 외부 API 연동 중 오류 발생");
         }
