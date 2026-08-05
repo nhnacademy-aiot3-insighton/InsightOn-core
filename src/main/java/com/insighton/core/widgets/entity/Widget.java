@@ -21,8 +21,7 @@ public class Widget {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
             name = "dashboard_id",
-            nullable = false,
-            unique = true
+            nullable = false
     )
     private Dashboard dashboard;
 
@@ -70,6 +69,6 @@ public class Widget {
     }
 
     public enum Type {
-        LINE_CHART_GAUGE, TOGGLE_SWITCH
+        GAUGE, GRAPH, SINGLE_STAT
     }
 }
