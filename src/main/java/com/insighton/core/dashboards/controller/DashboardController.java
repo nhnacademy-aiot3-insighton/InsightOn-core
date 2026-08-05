@@ -2,9 +2,14 @@ package com.insighton.core.dashboards.controller;
 
 import com.insighton.core.dashboards.dto.response.DashboardResponse;
 import com.insighton.core.groups.service.CoreManagementUseCase;
+import com.insighton.core.widgets.dto.chart.ChartDataResponse;
+import com.insighton.core.widgets.dto.request.WidgetSaveRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -13,12 +18,6 @@ public class DashboardController {
     private final CoreManagementUseCase useCase;
 
     /**
-     * POST   /api/v1/groups/{group-id}/location/{location-id}/dashboard/widgets        위젯 추가
-     * PUT    /api/v1/groups/{group-id}/location/{location-id}/dashboard/widgets/layout 레이아웃 일괄 저장
-     * PUT    /api/v1/groups/{group-id}/location/{location-id}/dashboard/widgets/{widget-id}  위젯 개별 수정
-     * DELETE /api/v1/groups/{group-id}/location/{location-id}/dashboard/widgets/{widget-id}  위젯 삭제
-     * PUT    /api/v1/groups/{group-id}/location/{location-id}/dashboard/title          대시보드 제목 변경
-     *
      * GET /api/v1/groups/{group-id}/location/{location-id}/dashboard
      * {
      *   "dashboardId": 1,
@@ -51,5 +50,22 @@ public class DashboardController {
         DashboardResponse response = useCase.getDashboard(userId, groupId, locationId);
 
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * dashboard에 있는 저장 버튼을 눌렀을 때 반영되는 create와 update
+     *
+     * @param requests widget 생성과 수정 요청 dto
+     * @return influxDB에서 가져온 정보 반환(id와 매칭해서)
+     */
+    @PostMapping("/save")
+    public ResponseEntity<Map<Long, ChartDataResponse>> saveDashboard(
+            @RequestHeader("X-USER-ID") Long userId,
+            @PathVariable("group-id") Long groupId,
+            @PathVariable("location-id") Long locationId,
+            @RequestBody List<WidgetSaveRequest> requests) {
+        Map<Long, ChartDataResponse> result = useCase.saveDashboard(userId, groupId, locationId, requests);
+
+        return ResponseEntity.ok(result);
     }
 }
