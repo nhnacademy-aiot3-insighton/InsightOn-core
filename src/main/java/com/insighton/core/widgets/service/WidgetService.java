@@ -2,9 +2,7 @@ package com.insighton.core.widgets.service;
 
 import com.insighton.core.dashboards.entity.Dashboard;
 import com.insighton.core.widgets.dto.chart.ChartDataResponse;
-import com.insighton.core.widgets.dto.request.WidgetCreateRequest;
-import com.insighton.core.widgets.dto.request.WidgetLocationUpdateRequest;
-import com.insighton.core.widgets.dto.request.WidgetUpdateRequest;
+import com.insighton.core.widgets.dto.request.WidgetSaveRequest;
 import com.insighton.core.widgets.dto.response.WidgetsListResponse;
 
 import java.util.List;
@@ -16,7 +14,7 @@ public interface WidgetService {
      * @param dashboard 위젯을 생성하려는 dashboard
      * @param request   생성 요청 DTO
      */
-    void createWidget(Dashboard dashboard, WidgetCreateRequest request);
+    Long createWidget(Dashboard dashboard, WidgetSaveRequest request);
 
     /**
      * widget들 한눈에 보기
@@ -27,21 +25,13 @@ public interface WidgetService {
     List<WidgetsListResponse> getWidgetList(Long dashboardId);
 
     /**
-     * 위젯 위치 변경
-     *
-     * @param dashboardId                 위치를 변경하고 싶은 widget이 존재하느 dashboard ID
-     * @param widgetLocationUpdateRequest 위치 수정 요청 DTO
-     */
-    void updateLocationWidget(Long dashboardId, Long targetWidgetId, WidgetLocationUpdateRequest widgetLocationUpdateRequest);
-
-    /**
      * 위젯 정보 수정
      *
      * @param dashboardId    정보를 수정하려는 widget이 속한 dashboard ID
      * @param targetWidgetId 수정하려는 widget의 ID
      * @param request        위젯 정보 수정 DTO
      */
-    void updateWidget(Long dashboardId, Long targetWidgetId, WidgetUpdateRequest request);
+    void updateWidget(Long dashboardId, Long targetWidgetId, WidgetSaveRequest request);
 
     /**
      * widget 삭제
