@@ -35,7 +35,7 @@ class GroupMemberRepositoryTest {
         // given
         Group group = groupRepository.findById(1L).orElseThrow();
         GroupMember member = GroupMember.builder()
-                .groups(group)
+                .group(group)
                 .userId(100L)
                 .groupRole(GroupMember.GroupRole.MEMBER)
                 .build();
@@ -55,7 +55,7 @@ class GroupMemberRepositoryTest {
         // given
         Group group = groupRepository.findById(1L).orElseThrow();
         GroupMember member = GroupMember.builder()
-                .groups(group)
+                .group(group)
                 .userId(200L)
                 .groupRole(GroupMember.GroupRole.MEMBER)
                 .build();
@@ -75,7 +75,7 @@ class GroupMemberRepositoryTest {
         // given
         Group group = groupRepository.findById(1L).orElseThrow();
         GroupMember member = GroupMember.builder()
-                .groups(group)
+                .group(group)
                 .userId(300L)
                 .groupRole(GroupMember.GroupRole.MEMBER)
                 .build();
@@ -136,7 +136,7 @@ class GroupMemberRepositoryTest {
     void save() {
         Group group = groupRepository.findById(1L).orElseThrow();
         GroupMember member = GroupMember.builder()
-                .groups(group)
+                .group(group)
                 .userId(99L)
                 .groupRole(GroupMember.GroupRole.MEMBER)
                 .build();

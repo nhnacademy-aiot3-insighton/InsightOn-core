@@ -1,6 +1,9 @@
 package com.insighton.core.groups.service;
 
 import com.insighton.core.gateway.service.GatewayService;
+import com.insighton.core.dashboards.service.DashboardService;
+import com.insighton.core.widgets.service.WidgetService;
+import org.springframework.context.ApplicationEventPublisher;
 import com.insighton.core.groupmember.dto.request.GroupMemberJoinRequest;
 import com.insighton.core.groupmember.entity.GroupMember;
 import com.insighton.core.groupmember.exception.AlreadyJoinedException;
@@ -50,6 +53,15 @@ class CoreManagementUseCaseTest {
 
     @Mock
     private GroupMemberService groupMemberService;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
+    @Mock
+    private DashboardService dashboardService;
+
+    @Mock
+    private WidgetService widgetService;
 
     @InjectMocks
     private CoreManagementUseCase managementUseCase;
