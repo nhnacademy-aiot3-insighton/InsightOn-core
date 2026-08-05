@@ -28,11 +28,6 @@ public class RabbitConfig {
     }
 
     @Bean
-    public MessageConverter rabbitMessageConverter() {
-        return new Jackson2JsonMessageConverter();
-    }
-
-    @Bean
     public TopicExchange coreEventsExchange() {
         return new TopicExchange(CORE_EVENTS_EXCHANGE);
     }

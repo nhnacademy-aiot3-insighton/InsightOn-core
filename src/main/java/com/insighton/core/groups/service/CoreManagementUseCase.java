@@ -30,6 +30,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -357,10 +358,10 @@ public class CoreManagementUseCase {
     // ====================== dashboard save ======================
 
     @Transactional
-    public Map<Long, ChartDataResponse> saveDashboard(Long userId, Long groupId, Long locationId, List<WidgetSaveRequest> requests) {
+    public List<Long> saveDashboard(Long userId, Long groupId, Long locationId, List<WidgetSaveRequest> requests) {
         Dashboard dashboard = validateOnlyWidget(userId, groupId, locationId);
 
-        Map<Long, ChartDataResponse> updatedChartDataMap = new HashMap<>();
+        List<Long> widgetIds = new ArrayList<>();
 
         for (WidgetSaveRequest request : requests) {
             Long targetWidgetId;
@@ -372,12 +373,23 @@ public class CoreManagementUseCase {
                 targetWidgetId = request.widgetId();
                 widgetService.updateWidget(dashboard.getDashboardsId(), request.widgetId(), request);
             }
+            widgetIds.add(targetWidgetId);
+        }
 
-            ChartDataResponse chartData = widgetService.getWidgetChartData(targetWidgetId);
-            updatedChartDataMap.put(targetWidgetId, chartData);
+        return widgetIds;
+    }
+
+    public Map<Long, ChartDataResponse> saveDashboardInfluxDB(List<Long> widgetIds) {
+
+        Map<Long, ChartDataResponse> updatedChartDataMap = new HashMap<>();
+
+        for (Long widgetId : widgetIds) {
+            ChartDataResponse chartData = widgetService.getWidgetChartData(widgetId);
+            updatedChartDataMap.put(widgetId, chartData);
         }
 
         return updatedChartDataMap;
+
     }
 
     // ====================== widgets Controller ======================
@@ -420,6 +432,8 @@ public class CoreManagementUseCase {
 
         // 속해있는 user가 관리자인지 확인하고
         validationIsAdmin(member);
+
+        locationService.getLocationByGroupId(locationId, groupId);
 
         // locationID로 연결된 dashboard 가져와서
         return dashboardService.getDashboardByLocationId(locationId);

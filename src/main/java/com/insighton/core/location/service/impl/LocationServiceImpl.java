@@ -63,6 +63,7 @@ public class LocationServiceImpl implements LocationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public LocationResponse getLocationAI(Long locationId) {
         Location location = locationRepository.findById(locationId)
                 .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(locationId));
@@ -88,7 +89,11 @@ public class LocationServiceImpl implements LocationService {
     public void updateName(Long locationId, Long groupId, LocationUpdateRequest request) {
         Location location = getLocationByGroupId(locationId, groupId);
 
-        if (locationRepository.existsByGroupGroupIdAndLocationName(location.getGroup().getGroupId(), request.newLocationName())) {
+        if (location.getLocationName().equals(request.newLocationName())) {
+            return;
+        }
+
+        if (locationRepository.existsByGroupGroupIdAndLocationName(groupId, request.newLocationName())) {
             throw new LocationAlreadyException(request.newLocationName());
         }
 
@@ -111,6 +116,7 @@ public class LocationServiceImpl implements LocationService {
     }
 
     @Override
+//    @Transactional(readOnly = true)
     public Location getLocationByGroupId(Long locationId, Long groupId) {
         return locationRepository.findByLocationIdAndGroupGroupId(locationId, groupId)
                 .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(locationId));
@@ -119,7 +125,6 @@ public class LocationServiceImpl implements LocationService {
     @Override
     @Transactional
     public List<Location> getLocationListByGroupId(Long groupId) {
-        return locationRepository.findByGroupGroupId(groupId)
-                .orElseThrow(() -> LocationNotFoundException.notFoundLocationByGroupId(groupId));
+        return locationRepository.findByGroupGroupId(groupId);
     }
 }

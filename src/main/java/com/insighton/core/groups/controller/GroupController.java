@@ -116,7 +116,7 @@ public class GroupController {
      * @param request group 수정 요청 정보
      * @return 성공 시 상태 200 반환
      */
-    @PutMapping("/api/v1/groups/{group-id}/update")
+    @PutMapping("/{group-id}/update")
     public ResponseEntity<Void> updateGroup(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
@@ -133,7 +133,7 @@ public class GroupController {
      * @param userId  삭제할 권한을 가진 user ID
      * @return 성공 시 상태 204 반환
      */
-    @DeleteMapping("/api/v1/groups/{group-id}/delete")
+    @DeleteMapping("/{group-id}/delete")
     public ResponseEntity<Void> deleteGroup(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId) {

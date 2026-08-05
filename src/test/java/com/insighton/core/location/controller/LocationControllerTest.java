@@ -67,7 +67,7 @@ class LocationControllerTest {
             given(useCase.getLocationList(1L, 1L)).willReturn(List.of(mockResponse));
 
             // when & then
-            mockMvc.perform(get("/api/v1/groups/{group-id}/locations", 1L)
+            mockMvc.perform(get("/api/v1/groups/{group-id}/location/list", 1L)
                             .header("X-USER-ID", 1L))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(1))
@@ -140,7 +140,7 @@ class LocationControllerTest {
         @Test
         @DisplayName("필수 헤더(X-USER-ID) 누락 시 400 Bad Request")
         void missingHeader_returnsBadRequest() throws Exception {
-            mockMvc.perform(get("/api/v1/groups/{group-id}/locations", 1L))
+            mockMvc.perform(get("/api/v1/groups/{group-id}/location/list", 1L))
                     .andExpect(status().isBadRequest());
         }
 

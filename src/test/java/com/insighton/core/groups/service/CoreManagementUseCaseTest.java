@@ -311,19 +311,22 @@ class CoreManagementUseCaseTest {
             Group mockGroup = mock(Group.class);
             GroupMember mockGroupMember = mock(GroupMember.class);
 
-
-            given(groupService.groupFindById(groupId)).willReturn(mockGroup);
             given(groupMemberService.validateGroupMembers(groupId, userId)).willReturn(mockGroupMember);
 
             given(mockGroupMember.isMember()).willReturn(false);
+            given(mockGroupMember.getGroup()).willReturn(mockGroup);
+
+            Location mockLocation = mock(Location.class);
+            given(mockLocation.getLocationId()).willReturn(1L);
+            given(locationService.createLocation(mockGroup, request)).willReturn(mockLocation);
 
             // when
             managementUseCase.createLocation(userId, groupId, request);
 
             // then
-            verify(groupService, times(1)).groupFindById(groupId);
             verify(groupMemberService, times(1)).validateGroupMembers(groupId, userId);
             verify(locationService, times(1)).createLocation(mockGroup, request);
+            verify(dashboardService, times(1)).createDashboard(any(), any());
         }
 
         @Test
@@ -334,15 +337,12 @@ class CoreManagementUseCaseTest {
             Long groupId = 1L;
             LocationCreateRequest request = new LocationCreateRequest("test", Location.AutoControlMode.SUGGESTION);
 
-            given(groupService.groupFindById(groupId))
-                    .willThrow(GroupNotFoundException.class);
+            given(groupMemberService.validateGroupMembers(groupId, userId))
+                    .willThrow(GroupMemberNotFoundException.byUserIdAndGroupId(userId, groupId));
 
             // when & then
             assertThatThrownBy(() -> managementUseCase.createLocation(userId, groupId, request))
-                    .isInstanceOf(GroupNotFoundException.class);
-
-            verify(groupService).groupFindById(groupId);
-            verifyNoInteractions(groupMemberService, locationService);
+                    .isInstanceOf(GroupMemberNotFoundException.class);
         }
 
         @Test
@@ -353,8 +353,6 @@ class CoreManagementUseCaseTest {
             Long groupId = 1L;
             LocationCreateRequest request = new LocationCreateRequest("test", Location.AutoControlMode.SUGGESTION);
 
-            Group mockGroup = mock(Group.class);
-            given(groupService.groupFindById(groupId)).willReturn(mockGroup);
             given(groupMemberService.validateGroupMembers(groupId, userId))
                     .willThrow(GroupMemberNotFoundException.byUserIdAndGroupId(userId, groupId));
 
@@ -362,7 +360,6 @@ class CoreManagementUseCaseTest {
             assertThatThrownBy(() -> managementUseCase.createLocation(userId, groupId, request))
                     .isInstanceOf(GroupMemberNotFoundException.class);
 
-            verify(groupService).groupFindById(groupId);
             verify(groupMemberService).validateGroupMembers(groupId, userId);
             verifyNoInteractions(locationService);
         }
@@ -375,10 +372,8 @@ class CoreManagementUseCaseTest {
             Long groupId = 1L;
             LocationCreateRequest request = new LocationCreateRequest("test", Location.AutoControlMode.SUGGESTION);
 
-            Group mockGroup = mock(Group.class);
             GroupMember mockGroupMember = mock(GroupMember.class);
 
-            given(groupService.groupFindById(groupId)).willReturn(mockGroup);
             given(groupMemberService.validateGroupMembers(groupId, userId)).willReturn(mockGroupMember);
 
             given(mockGroupMember.isMember()).willReturn(true);
@@ -388,7 +383,6 @@ class CoreManagementUseCaseTest {
             assertThatThrownBy(() -> managementUseCase.createLocation(userId, groupId, request))
                     .isInstanceOf(NoPermissionException.class);
 
-            verify(groupService).groupFindById(groupId);
             verify(groupMemberService).validateGroupMembers(groupId, userId);
             verifyNoInteractions(locationService);
         }
@@ -562,6 +556,10 @@ class CoreManagementUseCaseTest {
             GroupMember mockGroupMember = mock(GroupMember.class);
             given(groupMemberService.validateGroupMembers(groupId, userId)).willReturn(mockGroupMember);
             given(mockGroupMember.isMember()).willReturn(false);
+
+            Location mockLocation = mock(Location.class);
+            given(mockLocation.getLocationId()).willReturn(targetLocationId);
+            given(locationService.getLocationByGroupId(targetLocationId, groupId)).willReturn(mockLocation);
 
             // when
             managementUseCase.updateName(userId, groupId, targetLocationId, request);
