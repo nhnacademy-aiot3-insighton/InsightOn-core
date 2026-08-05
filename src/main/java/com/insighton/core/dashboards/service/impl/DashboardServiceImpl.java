@@ -66,4 +66,11 @@ public class DashboardServiceImpl implements DashboardService {
 
         dashboardRepository.delete(dashboard);
     }
+
+    @Override
+    public Dashboard getDashboardByLocationId(Long locationId) {
+        
+        return dashboardRepository.findByLocationLocationId(locationId)
+                .orElseThrow(() -> new DashboardNotFoundException(locationId));
+    }
 }
