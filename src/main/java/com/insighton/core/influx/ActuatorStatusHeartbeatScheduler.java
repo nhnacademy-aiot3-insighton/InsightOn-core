@@ -30,7 +30,7 @@ public class ActuatorStatusHeartbeatScheduler {
 
         actuators.forEach(actuator -> {
             // 트랜잭션이 살아있는 이 스레드 안에서 지연로딩 값을 미리 다 꺼냄
-            String groupId = String.valueOf(actuator.getLocationId().getGroups().getGroupId());
+            String groupId = String.valueOf(actuator.getLocationId().getGroup().getGroupId());
             String locationId = String.valueOf(actuator.getLocationId().getLocationId());
             String actuatorId = String.valueOf(actuator.getActuatorId());
             String actuatorType = actuator.getActuatorType().name();

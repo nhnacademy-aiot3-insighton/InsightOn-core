@@ -5,15 +5,15 @@ import com.insighton.core.device_attributes.repository.DeviceAttributeRepository
 import com.insighton.core.gateway.entity.Gateway;
 import com.insighton.core.gateway.exception.GatewayNotFoundException;
 import com.insighton.core.gateway.repository.GatewayRepository;
-import com.insighton.core.groupmember.entity.GroupMembers;
-import com.insighton.core.groupmember.service.GroupMembersService;
-import com.insighton.core.groups.entity.Groups;
+import com.insighton.core.groupmember.entity.GroupMember;
+import com.insighton.core.groupmember.service.GroupMemberService;
+import com.insighton.core.groups.entity.Group;
 import com.insighton.core.groups.exception.GroupNotFoundException;
 import com.insighton.core.groups.exception.NoPermissionException;
-import com.insighton.core.groups.repository.GroupsRepository;
-import com.insighton.core.location.entity.Locations;
+import com.insighton.core.groups.repository.GroupRepository;
+import com.insighton.core.location.entity.Location;
 import com.insighton.core.location.exception.LocationNotFoundException;
-import com.insighton.core.location.repository.LocationsRepository;
+import com.insighton.core.location.repository.LocationRepository;
 import com.insighton.core.mqtt.cache.DeviceLookupCacheService;
 import com.insighton.core.mqtt.cache.dto.DeviceCacheEntry;
 import com.insighton.core.sensors.dto.DeviceResponse;
@@ -42,15 +42,15 @@ public class DeviceServiceImpl implements DeviceService {
     private final DeviceAttributeRepository deviceAttributeRepository; // 디바이스 속성 조회/삭제
     private final DeviceLookupCacheService deviceLookupCacheService; // EUI 기반 캐시 계층
     private final GatewayRepository gatewayRepository; // 관계 엔티티 조회용
-    private final GroupsRepository groupsRepository; // 관계 엔티티 조회용
-    private final LocationsRepository locationsRepository; // 관계 엔티티 조회용
-    private final GroupMembersService groupMembersService; // 그룹 멤버 권한 검증용 서비스
+    private final GroupRepository groupsRepository; // 관계 엔티티 조회용
+    private final LocationRepository locationsRepository; // 관계 엔티티 조회용
+    private final GroupMemberService groupMembersService; // 그룹 멤버 권한 검증용 서비스
 
     /**
      * 요청자가 해당 그룹의 MANAGER 이상 권한을 가졌는지 검증하는 내부 헬퍼 메서드
      */
     private void validateManagerRole(Long userId, Long groupId) {
-        GroupMembers member = groupMembersService.validateGroupMembers(groupId, userId);
+        GroupMember member = groupMembersService.validateGroupMembers(groupId, userId);
         if (member.isMember()) {
             throw NoPermissionException.forAdmin(member.getGroupMemberId());
         }
@@ -92,7 +92,7 @@ public class DeviceServiceImpl implements DeviceService {
         Gateway gateway = gatewayRepository.findById(gatewayId)
                 .orElseThrow(() -> new GatewayNotFoundException("게이트웨이를 찾을 수 없습니다"));
 
-        Groups groups = groupsRepository.findById(groupId)
+        Group groups = groupsRepository.findById(groupId)
                 .orElseThrow(() -> new GroupNotFoundException(groupId));
 
         // 패킷 정보로 센서 엔티티 객체를 조립
@@ -163,8 +163,8 @@ public class DeviceServiceImpl implements DeviceService {
         // 쓰기 작업 권한 체크 (엔티티에 저장된 groupId 기준 - 다른 그룹 디바이스는 조작 불가)
         validateManagerRole(userId, device.getGroupId().getGroupId()); // Groups 객체에서 Long ID 호출
 
-        Locations newLocation = locationsRepository.findById(newLocationId)
-                        .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(newLocationId));
+        Location newLocation = locationsRepository.findById(newLocationId)
+                .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(newLocationId));
 
         device.updateLocation(newLocation);
 
@@ -214,7 +214,7 @@ public class DeviceServiceImpl implements DeviceService {
         validateManagerRole(userId, device.getGroupId().getGroupId());
 
         if (newLocationId != null) {
-            Locations location = locationsRepository.findById(newLocationId)
+            Location location = locationsRepository.findById(newLocationId)
                     .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(newLocationId));
             device.updateLocation(location);
 
@@ -259,7 +259,7 @@ public class DeviceServiceImpl implements DeviceService {
         deviceRepository.delete(device);
 
         // 캐시에서도 제거
-        if(device.getDeviceEui() != null){
+        if (device.getDeviceEui() != null) {
             deviceLookupCacheService.evict(device.getDeviceEui());
         }
     }
@@ -323,8 +323,8 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     // 대소문자 졍규화
-    private String nomalizeDeviceName(String name){
-        if(name == null || name.trim().isEmpty()){
+    private String nomalizeDeviceName(String name) {
+        if (name == null || name.trim().isEmpty()) {
             return name;
         }
         return name.trim().toUpperCase();
