@@ -1,13 +1,13 @@
 package com.insighton.core.device_attributes.service.impl;
 
 import com.insighton.core.device_attributes.dto.DeviceAttributeResponse;
-import com.insighton.core.device_attributes.entity.SensorAttribute;
 import com.insighton.core.device_attributes.entity.MetricDefinition;
+import com.insighton.core.device_attributes.entity.SensorAttribute;
 import com.insighton.core.device_attributes.exception.MetricKeyNotFoundException;
 import com.insighton.core.device_attributes.repository.DeviceAttributeRepository;
 import com.insighton.core.device_attributes.service.DeviceAttributeService;
-import com.insighton.core.groupmember.entity.GroupMembers;
-import com.insighton.core.groupmember.service.GroupMembersService;
+import com.insighton.core.groupmember.entity.GroupMember;
+import com.insighton.core.groupmember.service.GroupMemberService;
 import com.insighton.core.groups.exception.NoPermissionException;
 import com.insighton.core.sensors.entity.Device;
 import com.insighton.core.sensors.entity.DeviceType;
@@ -30,12 +30,12 @@ public class DeviceAttributeServiceImpl implements DeviceAttributeService {
 
     private final DeviceAttributeRepository attributeRepository; // 속성 조회/저장
     private final DeviceRepository deviceRepository; // 소속 디바이스 조회
-    private final GroupMembersService groupMembersService; // 그룹 멤버 권한 검증용 서비스
+    private final GroupMemberService groupMembersService; // 그룹 멤버 권한 검증용 서비스
 
 
     // 요청자가 해당 그룹의 MANGER 이상의 권한을 가졌는지 검증
     private void validateManagerRole(Long userId, Long groupsId) {
-        GroupMembers member = groupMembersService.validateGroupMembers(groupsId, userId);
+        GroupMember member = groupMembersService.validateGroupMembers(groupsId, userId);
         if (member.isMember()) {
             throw NoPermissionException.forAdmin(member.getGroupMemberId());
         }
@@ -43,15 +43,15 @@ public class DeviceAttributeServiceImpl implements DeviceAttributeService {
 
 
     // 조회용 - 그룹 소속만 확인, 역할은 무관
-    private void validateGroupMembership(Long userId, Long groupId){
+    private void validateGroupMembership(Long userId, Long groupId) {
         groupMembersService.validateGroupMembers(groupId, userId);
     }
 
-    public List<DeviceAttributeResponse> getAllAttributeByDeviceId(Long userId, Long deviceId){
+    public List<DeviceAttributeResponse> getAllAttributeByDeviceId(Long userId, Long deviceId) {
 
         // 1. 해당 장치의 존재 유무 검증
         Device entity = deviceRepository.findById(deviceId)
-                        .orElseThrow(() -> new DeviceNotFoundException(deviceId));
+                .orElseThrow(() -> new DeviceNotFoundException(deviceId));
 
         validateGroupMembership(userId, entity.getGroupId().getGroupId()); // Groups 객체에서 Long ID 호출
 
@@ -75,12 +75,12 @@ public class DeviceAttributeServiceImpl implements DeviceAttributeService {
     /**
      * 액추에이터(조명, 에어컨 등) 제어 명령 실행 시, DB 상의 최신 상태값({@code currentValueStr})을 갱신합니다.
      *
-     * @param deviceId 대상 액추에이터 기기 ID
+     * @param deviceId  대상 액추에이터 기기 ID
      * @param metricKey 변경 대상 메트릭 키 (ex. "power_status", "ac_mode")
-     * @param newValue 변경하고자 하는 상태/수치값 (ex. "ON", "OFF", "24")
+     * @param newValue  변경하고자 하는 상태/수치값 (ex. "ON", "OFF", "24")
      */
     @Transactional
-    public void updateActuatorValue(Long userId, Long deviceId, String metricKey, String newValue){
+    public void updateActuatorValue(Long userId, Long deviceId, String metricKey, String newValue) {
 
         // existsById 대신 findById로 직접 조회
         // DB조회 1번으로 줄이기
@@ -91,14 +91,14 @@ public class DeviceAttributeServiceImpl implements DeviceAttributeService {
         validateManagerRole(userId, entity.getGroupId().getGroupId()); // Groups 객체에서 Long ID 호출
 
         // 센서타입인 경우 제어 API를 통한 수치 변경을 거부
-        if(entity.getDeviceType() != DeviceType.ACTUATOR){
+        if (entity.getDeviceType() != DeviceType.ACTUATOR) {
             throw new InvalidDeviceValueException(" 센서 장치의 수집데이터는 제어 API로 수정 불가");
         }
 
         // 변경할 수치 값 유효성 검사
         // MQTT 패킷 수신, 룰엔진 내부 호출, 비동기 이벤트를 통해 직접 호출될 수 있기 때문에
         // 재활용성을 보장하기 위한 방어적 프로그래밍
-        if(newValue == null || newValue.trim().isEmpty()){
+        if (newValue == null || newValue.trim().isEmpty()) {
             throw new InvalidDeviceValueException("액추에이터 제어 값은 비어있을 수 없습니다");
         }
 
@@ -124,14 +124,14 @@ public class DeviceAttributeServiceImpl implements DeviceAttributeService {
     /**
      * 외부 수집 엔진/MQTT 등을 통해 입력된 센서 패킷이 유효한 기기 속성인지 검증합니다.
      *
-     * @param deviceId 장치 ID
+     * @param deviceId  장치 ID
      * @param metricKey 메트릭 키
      * @return 해당 기기에 메트릭 키가 정상 등록되어 있으면 true, 없으면 false
      */
     // 등록되지 않는 메트릭키가 전달되어도 예외가 터지지않고 false 반환
     // 대소문자 정규화
-    public boolean isValidDeviceAttribute(Long deviceId, String metricKey){
-        if(deviceId == null || metricKey == null){
+    public boolean isValidDeviceAttribute(Long deviceId, String metricKey) {
+        if (deviceId == null || metricKey == null) {
             return false;
         }
         return MetricDefinition.findFromKey(metricKey)

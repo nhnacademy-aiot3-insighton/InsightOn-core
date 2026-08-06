@@ -1,8 +1,11 @@
 package com.insighton.core.actuators.entity;
 
-import com.insighton.core.location.entity.Locations;
+import com.insighton.core.location.entity.Location;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -24,7 +27,7 @@ public class Actuator {
 
     @JoinColumn(name = "location_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
-    private Locations locationId; // 장소 ID
+    private Location locationId; // 장소 ID
 
     @Column(name = "device_name", length = 100, nullable = false)
     private String deviceName; // 디바이스 이름
