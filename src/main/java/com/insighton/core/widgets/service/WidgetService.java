@@ -48,4 +48,19 @@ public interface WidgetService {
      * @return Chart.js에 보낼 DTO 반환
      */
     ChartDataResponse getWidgetChartData(Long widgetId);
+
+    /**
+     * 외부에서 호출할  캐시 일괄 삭제 메서드
+     *
+     * @param widgetIds 삭제될 widgets
+     */
+    void evictCacheForWidgetIds(List<Long> widgetIds);
+
+
+    /**
+     * dashboard 삭제할 때 dashboard에 해당하는 widget 전부 삭제
+     *
+     * @param dashboardId 삭제 될 dashboard ID
+     */
+    void deleteAllWidget(Long dashboardId);
 }

@@ -4,6 +4,9 @@ import com.insighton.core.dashboards.dto.request.DashboardRequest;
 import com.insighton.core.dashboards.dto.response.DashboardResponse;
 import com.insighton.core.dashboards.entity.Dashboard;
 import com.insighton.core.location.entity.Location;
+import com.insighton.core.widgets.dto.response.WidgetsListResponse;
+
+import java.util.List;
 
 public interface DashboardService {
 
@@ -21,7 +24,7 @@ public interface DashboardService {
      * @param locationId 조회할 dashboards가 속해있는 location ID
      * @return 조회하고자 하는 dashboard의 응답 DTO
      */
-    DashboardResponse getDashboard(Long locationId);
+    DashboardResponse getDashboard(Long locationId, List<WidgetsListResponse> widgetsList);
 
     /**
      * dashboards title update
@@ -44,5 +47,13 @@ public interface DashboardService {
      * @return dashboard entity 반환
      */
     Dashboard getDashboardByLocationId(Long locationId);
+
+    /**
+     * dashboard entity를 반환
+     *
+     * @param locationId dashboard와 연결된 location ID
+     * @return dashboard entity
+     */
+    Dashboard getDashboardEntity(Long locationId);
 
 }

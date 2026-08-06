@@ -8,8 +8,6 @@ import com.insighton.core.dashboards.repository.DashboardRepository;
 import com.insighton.core.dashboards.service.DashboardService;
 import com.insighton.core.location.entity.Location;
 import com.insighton.core.widgets.dto.response.WidgetsListResponse;
-import com.insighton.core.widgets.exception.WidgetNotFoundException;
-import com.insighton.core.widgets.repository.WidgetRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,7 +18,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DashboardServiceImpl implements DashboardService {
     private final DashboardRepository dashboardRepository;
-    private final WidgetRepository widgetRepository;
 
     @Override
     @Transactional
@@ -33,12 +30,9 @@ public class DashboardServiceImpl implements DashboardService {
 
     @Override
     @Transactional(readOnly = true)
-    public DashboardResponse getDashboard(Long locationId) {
+    public DashboardResponse getDashboard(Long locationId, List<WidgetsListResponse> widgetsList) {
         Dashboard dashboard = dashboardRepository.findByLocationLocationId(locationId)
                 .orElseThrow(() -> new DashboardNotFoundException(locationId));
-
-        List<WidgetsListResponse> widgetsList = widgetRepository.findByDashboardDashboardsId(dashboard.getDashboardsId())
-                .orElseThrow(() -> WidgetNotFoundException.notFoundWidgetByDashboardId(dashboard.getDashboardsId()));
 
         return DashboardResponse.builder()
                 .dashboardId(dashboard.getDashboardsId())
@@ -61,8 +55,6 @@ public class DashboardServiceImpl implements DashboardService {
     public void deleteDashboard(Long locationId) {
         Dashboard dashboard = dashboardRepository.findByLocationLocationId(locationId)
                 .orElseThrow(() -> new DashboardNotFoundException(locationId));
-        // dashboard 삭제 전 해당 dashboard에 존재하는 widget들을 모두 삭제
-        widgetRepository.deleteAllByDashboardDashboardsId(dashboard.getDashboardsId());
 
         dashboardRepository.delete(dashboard);
     }
@@ -70,6 +62,13 @@ public class DashboardServiceImpl implements DashboardService {
     @Override
     @Transactional(readOnly = true)
     public Dashboard getDashboardByLocationId(Long locationId) {
+        return dashboardRepository.findByLocationLocationId(locationId)
+                .orElseThrow(() -> new DashboardNotFoundException(locationId));
+    }
+
+    @Override
+    @Transactional
+    public Dashboard getDashboardEntity(Long locationId) {
         return dashboardRepository.findByLocationLocationId(locationId)
                 .orElseThrow(() -> new DashboardNotFoundException(locationId));
     }

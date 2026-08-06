@@ -62,7 +62,7 @@ public class CoreManagementUseCase {
     }
 
     /**
-     * 그룹 생성 시 SUPER_MANAGER로 등록되는
+     * 그룹 생성 시 SUPER_MANAGER로 등록되는 (아무나 생성할 수 없도록 제약을 걸어야 함 - 신청서 작성 받기 (group 이름, 사업자 등록 번호 등등))
      *
      * @param groupsCreateRequest 그룹 생성 요청 정보
      * @param userId              그룹을 생성하는 user의 ID
@@ -300,7 +300,7 @@ public class CoreManagementUseCase {
         // devices는 location 값만 null로 바꿔주기
 
         // dashboards 삭제
-        dashboardService.deleteDashboard(targetLocationId);
+        dashboardDelete(targetLocationId);
 
         locationService.deleteLocation(targetLocationId, groupId);
 
@@ -320,7 +320,7 @@ public class CoreManagementUseCase {
             // devices는 location 값만 null로 바꿔주기
 
             // dashboard 다 삭제해주기
-            dashboardService.deleteDashboard(locationId);
+            dashboardDelete(locationId);
         }
         // dashboards 삭제
         locationService.deleteLocationAll(groupId);
@@ -343,7 +343,26 @@ public class CoreManagementUseCase {
         // 조회하려는 dashboard가 해당 그룹의 location에 속해있는지 검증
         locationService.getLocationByGroupId(locationId, groupId);
 
-        return dashboardService.getDashboard(locationId);
+        Dashboard dashboard = dashboardService.getDashboardEntity(locationId);
+
+        List<WidgetsListResponse> widgetsList = widgetService.getWidgetList(dashboard.getDashboardsId());
+
+        return dashboardService.getDashboard(locationId, widgetsList);
+    }
+
+
+    /**
+     * dashboard delete
+     * < @Transactional 안 붙인 이유는 붙이면 이거 호출해서 이 CoreManageMentUseCase 클래스 내에서 노란줄 뜸
+     *
+     * @param locationId 삭제할 location ID
+     */
+    public void dashboardDelete(Long locationId) {
+        Dashboard dashboard = dashboardService.getDashboardEntity(locationId);
+
+        widgetService.deleteAllWidget(dashboard.getDashboardsId());
+
+        dashboardService.deleteDashboard(locationId);
     }
 
     /**
@@ -379,6 +398,9 @@ public class CoreManagementUseCase {
         return widgetIds;
     }
 
+    /**
+     * 수정하거나 생성된 widget들의 config 값을 받아서 db method와 분리하여 influxDB 정보 불러오기
+     */
     public Map<Long, ChartDataResponse> saveDashboardInfluxDB(List<Long> widgetIds) {
 
         Map<Long, ChartDataResponse> updatedChartDataMap = new HashMap<>();
