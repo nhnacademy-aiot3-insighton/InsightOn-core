@@ -1,5 +1,6 @@
 package com.insighton.core.exception;
 
+import com.insighton.core.dashboards.exception.DashboardNotFoundException;
 import com.insighton.core.actuators.exception.ActuatorNotFoundException;
 import com.insighton.core.actuators.exception.CouldNotAbleToUpdateByUserToSystem;
 import com.insighton.core.actuators.exception.InvalidActuatorValueException;
@@ -12,7 +13,10 @@ import com.insighton.core.groups.exception.GroupNotFoundException;
 import com.insighton.core.groups.exception.InviteTokenNotFoundException;
 import com.insighton.core.groups.exception.NoPermissionException;
 import com.insighton.core.groups.exception.UnAuthorizedAccessException;
+import com.insighton.core.location.exception.EmptyValueException;
 import com.insighton.core.location.exception.LocationNotFoundException;
+import com.insighton.core.widgets.exception.WidgetConfigNotFoundException;
+import com.insighton.core.widgets.exception.WidgetNotFoundException;
 import com.insighton.core.sensors.exception.DeviceNotFoundException;
 import com.insighton.core.sensors.exception.InvalidDeviceValueException;
 import org.springframework.http.HttpStatus;
@@ -33,7 +37,8 @@ public class GlobalExceptionHandler {
             InviteTokenNotFoundException.class, GroupMemberNotFoundException.class,
             UserIdNotFoundException.class, LocationNotFoundException.class,
             DeviceNotFoundException.class, ActuatorNotFoundException.class,
-            MetricKeyNotFoundException.class
+            MetricKeyNotFoundException.class, DashboardNotFoundException.class, 
+            WidgetNotFoundException.class, WidgetConfigNotFoundException.class
     })
     public ResponseEntity<ErrorResponse> handleNotFound(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -57,7 +62,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({IllegalArgumentException.class, SuperManagerCannotLeaveException.class,
             NotJoinedAnyGroupException.class, ManagerRoleRequiredForTransferException.class,
             InvalidActuatorValueException.class, InvalidDeviceValueException.class,
-            CouldNotAbleToUpdateByUserToSystem.class
+            CouldNotAbleToUpdateByUserToSystem.class, EmptyValueException.class
     })
     public ResponseEntity<ErrorResponse> handleBadRequest(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
