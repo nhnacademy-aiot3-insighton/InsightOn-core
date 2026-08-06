@@ -41,4 +41,10 @@ public interface WidgetRepository extends JpaRepository<Widget, Long> {
      */
     void deleteAllByDashboardDashboardsId(Long dashboardId);
 
+    /**
+     * widget 위한 거
+     */
+
+    List<Long> findWidgetIdsByDashboardDashboardsId(Long dashboardId);
+
 }

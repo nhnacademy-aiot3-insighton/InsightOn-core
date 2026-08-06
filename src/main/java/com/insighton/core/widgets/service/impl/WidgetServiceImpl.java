@@ -49,11 +49,6 @@ public class WidgetServiceImpl implements WidgetService {
                 .build();
         Widget newWidget = widgetRepository.save(widget);
 
-        if (newWidget.getWidgetConfig() != null) {
-            configCache.put(newWidget.getWidgetId(), newWidget.getWidgetConfig());
-        }
-
-
         return newWidget.getWidgetId();
 
 
@@ -69,7 +64,7 @@ public class WidgetServiceImpl implements WidgetService {
         if (request.widgetConfig() != null) {
             widget.updateWidget(request.widgetConfig());
 
-            configCache.put(targetWidgetId, request.widgetConfig());
+            configCache.remove(targetWidgetId);
         }
 
         if (request.xPos() != null && request.yPos() != null
@@ -104,6 +99,16 @@ public class WidgetServiceImpl implements WidgetService {
 
     @Override
     @Transactional
+    public void deleteAllWidget(Long dashboardId) {
+        List<Long> widgetIds = widgetRepository.findWidgetIdsByDashboardDashboardsId(dashboardId);
+
+        evictCacheForWidgetIds(widgetIds);
+
+        widgetRepository.deleteAllByDashboardDashboardsId(dashboardId);
+    }
+
+    @Override
+    @Transactional
     public ChartDataResponse getWidgetChartData(Long targetWidgetId) {
 
         WidgetConfig config = getWidgetConfigFromCache(targetWidgetId);
@@ -111,6 +116,13 @@ public class WidgetServiceImpl implements WidgetService {
         List<FluxTable> tables = getWidgetData(config);
 
         return convertToChartData(tables);
+    }
+
+    @Override
+    public void evictCacheForWidgetIds(List<Long> widgetIds) {
+        if (widgetIds != null && !widgetIds.isEmpty()) {
+            widgetIds.forEach(configCache::remove);
+        }
     }
 
     // ===================== private method ========================
@@ -135,8 +147,9 @@ public class WidgetServiceImpl implements WidgetService {
      * List<FluxTable>을 DTO로 변환
      */
     private ChartDataResponse convertToChartData(List<FluxTable> tables) {
-        Set<String> timeLabels = new LinkedHashSet<>();
-        Map<String, List<Object>> datasetMap = new HashMap<>();
+        Set<String> timeLabels = new TreeSet<>(); // 중복 없이 담기 위해
+        Map<String, Map<String, Object>> fieldTimeValueMap = new HashMap<>();
+
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd HH:mm")
                 .withZone(ZoneId.systemDefault());
@@ -148,21 +161,34 @@ public class WidgetServiceImpl implements WidgetService {
                     if (record.getTime() != null) {
                         timeLabels.add(formatter.format(record.getTime()));
                     }
+                    String timeStr = formatter.format(record.getTime());
                     String fieldName = record.getField();
                     Object value = record.getValue();
 
                     // y축 값 가져오기 (예시 : co2, temperature(?))
-                    if (fieldName != null) {
-                        datasetMap.computeIfAbsent(fieldName, k -> new ArrayList<>()).add(value);
-                    }
+                    fieldTimeValueMap
+                            .computeIfAbsent(fieldName, k -> new HashMap<>())
+                            .put(timeStr, value);
                 }
             }
         }
 
         // map에 모인 데이터를 chartDataset 객체 리스트로 변환
-        List<ChartDataset> datasets = datasetMap.entrySet().stream()
-                .map(entry -> new ChartDataset(entry.getKey(), entry.getValue()))
-                .toList();
+        List<ChartDataset> datasets = new ArrayList<>();
+
+        for (Map.Entry<String, Map<String, Object>> entry : fieldTimeValueMap.entrySet()) {
+            String fieldName = entry.getKey(); // co2 등의 센서 이름
+            Map<String, Object> timeValueMap = entry.getValue(); // 센서의 측정 시간별로 담아둔 센서 값 상자
+
+            List<Object> values = new ArrayList<>();
+
+            // 전체 시간 라벨["10:00", "10:05", "10:10"]을 순서대로 순회
+            for (String time : timeLabels) {
+                // 해당 시간에 값이 있으면 넣고, 없으면 null을 넣어서 자리를 추기 위해 getOrDefault 사용
+                values.add(timeValueMap.getOrDefault(time, null));
+            }
+            datasets.add(new ChartDataset(fieldName, values));
+        }
 
 
         return new ChartDataResponse(new ArrayList<>(timeLabels), datasets);
