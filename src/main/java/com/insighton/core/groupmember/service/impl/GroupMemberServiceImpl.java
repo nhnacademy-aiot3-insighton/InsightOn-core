@@ -232,6 +232,18 @@ public class GroupMemberServiceImpl implements GroupMemberService {
         return members.isManager() || members.isSuperManager();
     }
 
+
+    /**
+     * Auth 요청
+     */
+    @Override
+    public boolean existsManagerGroupAuth(Long userId) {
+        GroupMember member = groupMemberRepository.findByUserId(userId)
+                .orElseThrow(() -> GroupMemberNotFoundException.byUserId(userId));
+
+        return member.isMember() || member.isSuperManager();
+    }
+
     /**
      * 특정 그룹에 속한 멤버인지 검증하고 멤버 객체 반환
      */
