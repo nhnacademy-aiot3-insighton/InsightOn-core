@@ -42,13 +42,13 @@ class DeviceAttributeServiceTest {
     private Device actuatorDevice(Long groupId) {
         Groups group = mock(Groups.class);
         given(group.getGroupId()).willReturn(groupId);
-        return Device.builder().deviceId(1L).deviceType(DeviceType.ACTUATOR).groupId(group).build();
+        return Device.builder().deviceId(1L).deviceType(DeviceType.ACTUATOR).group(group).build();
     }
 
     private Device sensorDevice(Long groupId) {
         Groups group = mock(Groups.class);
         given(group.getGroupId()).willReturn(groupId);
-        return Device.builder().deviceId(1L).deviceType(DeviceType.SENSOR).groupId(group).build();
+        return Device.builder().deviceId(1L).deviceType(DeviceType.SENSOR).group(group).build();
     }
 
     @Test
@@ -61,7 +61,7 @@ class DeviceAttributeServiceTest {
 
         SensorAttribute attribute = SensorAttribute.builder()
                 .metricKey("power_status").build();
-        given(attributeRepository.findByDeviceIdAndMetricKey(1L, "power_status"))
+        given(attributeRepository.findByDeviceDeviceIdAndMetricKey(1L, "power_status"))
                 .willReturn(Optional.of(attribute));
 
         attributeService.updateActuatorValue(1L, 1L, "POWER_STATUS", "ON");
@@ -100,7 +100,7 @@ class DeviceAttributeServiceTest {
         given(deviceRepository.findById(1L)).willReturn(Optional.of(device));
         given(groupMembersService.validateGroupMembers(5L, 1L))
                 .willReturn(GroupMembers.builder().userId(1L).groupRole(GroupRole.MANAGER).build());
-        given(attributeRepository.findByDeviceIdAndMetricKey(anyLong(), anyString()))
+        given(attributeRepository.findByDeviceDeviceIdAndMetricKey(anyLong(), anyString()))
                 .willReturn(Optional.empty());
 
         assertThrows(MetricKeyNotFoundException.class,
@@ -110,7 +110,7 @@ class DeviceAttributeServiceTest {
     @Test
     @DisplayName("isValidDeviceAttribute - 대소문자가 달라도 정규화되어 조회된다")
     void 유효성검증_대소문자_정규화() {
-        given(attributeRepository.existsByDeviceIdAndMetricKey(1L, "co2")).willReturn(true);
+        given(attributeRepository.existsByDeviceDeviceIdAndMetricKey(1L, "co2")).willReturn(true);
 
         boolean result = attributeService.isValidDeviceAttribute(1L, "CO2");
 

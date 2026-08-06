@@ -27,7 +27,7 @@ class ActuatorRepositoryTest {
     @Test
     @DisplayName("findByLocationId_LocationId - 위치 ID로 조회 성공")
     void 위치ID로_조회() {
-        List<Actuator> result = actuatorRepository.findByLocationId(1L);
+        List<Actuator> result = actuatorRepository.findByLocationLocationId(1L);
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getDeviceName()).isEqualTo("에어컨1");
@@ -44,9 +44,9 @@ class ActuatorRepositoryTest {
     @Test
     @DisplayName("deleteAllByLocationIdLocationIdIn - 특정 위치 스코프 삭제 성공")
     void 위치범위로_스코프삭제() {
-        actuatorRepository.deleteAllByLocationIdList(List.of(1L));
+        actuatorRepository.deleteAllByLocationLocationIdIn(List.of(1L));
 
-        assertThat(actuatorRepository.findByLocationId(1L)).isEmpty();
-        assertThat(actuatorRepository.findByLocationId(2L)).hasSize(1);
+        assertThat(actuatorRepository.findByLocationLocationId(1L)).isEmpty();
+        assertThat(actuatorRepository.findByLocationLocationId(2L)).hasSize(1);
     }
 }

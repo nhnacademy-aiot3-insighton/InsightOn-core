@@ -38,8 +38,8 @@ class ActuatorServiceTest {
     @Mock private ActuatorRepository actuatorRepository;
     @Mock private LocationsRepository locationsRepository;
     @Mock private GroupMembersService groupMembersService;
-    @Mock private ActuatorRunLogService actuatorRunLogService; // 추가 - 없으면 상태변경 시 NPE
-    @Mock private ActuatorRunLogRepository actuatorRunLogRepository; // 추가 - 없으면 삭제 시 NPE
+    @Mock private ActuatorRunLogService actuatorRunLogService; // 없으면 상태변경 시 NPE
+    @Mock private ActuatorRunLogRepository actuatorRunLogRepository; // 없으면 삭제 시 NPE
 
     @InjectMocks
     private ActuatorServiceImpl actuatorsService;
@@ -82,7 +82,7 @@ class ActuatorServiceTest {
     void 조회_다른그룹_소속아니면_404() {
         Locations location = mock(Locations.class);
         given(location.getLocationId()).willReturn(50L);
-        Actuator entity = Actuator.builder().actuatorId(1L).locationId(location).build();
+        Actuator entity = Actuator.builder().actuatorId(1L).location(location).build();
 
         given(actuatorRepository.findById(1L)).willReturn(Optional.of(entity));
         given(groupMembersService.validateGroupMembers(10L, 1L)).willReturn(manager());
@@ -96,7 +96,7 @@ class ActuatorServiceTest {
     @DisplayName("updateActuatorState - USER가 아닌 시스템 요청이면 권한/소유권 체크를 건너뛴다")
     void 상태변경_시스템요청_권한체크생략() {
         Locations location = mock(Locations.class);
-        Actuator entity = Actuator.builder().actuatorId(1L).locationId(location).build();
+        Actuator entity = Actuator.builder().actuatorId(1L).location(location).build();
         given(actuatorRepository.findById(1L)).willReturn(Optional.of(entity));
 
         actuatorsService.updateActuatorState(null, null, 1L, Map.of("power", "ON"), ExecutedByType.RULE_ENGINE);
@@ -120,7 +120,7 @@ class ActuatorServiceTest {
     void 삭제_성공() {
         Locations location = mock(Locations.class);
         given(location.getLocationId()).willReturn(50L);
-        Actuator entity = Actuator.builder().actuatorId(1L).locationId(location).build();
+        Actuator entity = Actuator.builder().actuatorId(1L).location(location).build();
 
         given(actuatorRepository.findById(1L)).willReturn(Optional.of(entity));
         given(groupMembersService.validateGroupMembers(10L, 1L)).willReturn(manager());
@@ -128,7 +128,7 @@ class ActuatorServiceTest {
 
         actuatorsService.deleteActuatorById(1L, 10L, 1L);
 
-        verify(actuatorRunLogRepository).deleteByActuatorId(1L);
+        verify(actuatorRunLogRepository).deleteByActuatorActuatorId(1L);
         verify(actuatorRepository).delete(entity);
     }
 
@@ -140,7 +140,7 @@ class ActuatorServiceTest {
 
         actuatorsService.deleteAll(1L, 10L);
 
-        verify(actuatorRunLogRepository).deleteAllByActuatorLocationIdList(List.of());
-        verify(actuatorRepository).deleteAllByLocationIdList(List.of());
+        verify(actuatorRunLogRepository).deleteAllByActuatorLocationLocationIdIn(List.of());
+        verify(actuatorRepository).deleteAllByLocationLocationIdIn(List.of());
     }
 }
