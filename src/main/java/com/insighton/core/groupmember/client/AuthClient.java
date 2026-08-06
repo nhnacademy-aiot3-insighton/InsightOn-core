@@ -5,9 +5,9 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-@FeignClient("InsightOn-auth")
+@FeignClient("insighton-auth")
 public interface AuthClient {
-    
-    @GetMapping("/internal/users/{user-id}")
+
+    @GetMapping("/internal/v1/users/{user-id}")
     AuthUserResponse getUserResponse(@PathVariable("user-id") Long userId);
 }
