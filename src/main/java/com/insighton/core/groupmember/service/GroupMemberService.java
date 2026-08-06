@@ -4,6 +4,7 @@ package com.insighton.core.groupmember.service;
 import com.insighton.core.groupmember.dto.request.GroupMemberJoinRequest;
 import com.insighton.core.groupmember.dto.response.GroupMemberListResponse;
 import com.insighton.core.groupmember.dto.response.GroupMemberResponse;
+import com.insighton.core.groupmember.dto.response.ManagerGroupExistsResponse;
 import com.insighton.core.groupmember.entity.GroupMember;
 import com.insighton.core.groups.entity.Group;
 
@@ -128,6 +129,6 @@ public interface GroupMemberService {
      * @param userId 권한을 가진 member로 존재하는지 알고 싶은 user
      * @return 있으면 true, 없으면 false
      */
-    boolean existsManagerGroupAuth(Long userId);
+    ManagerGroupExistsResponse existsManagerGroupAuth(Long userId);
 
 }

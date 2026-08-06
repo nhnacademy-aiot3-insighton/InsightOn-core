@@ -345,7 +345,7 @@ public class CoreManagementUseCase {
 
         Dashboard dashboard = dashboardService.getDashboardEntity(locationId);
 
-        List<WidgetsListResponse> widgetsList = widgetService.getWidgetList(dashboard.getDashboardsId());
+        List<WidgetsListResponse> widgetsList = widgetService.getWidgetList(dashboard.getDashboardId());
 
         return dashboardService.getDashboard(locationId, widgetsList);
     }
@@ -360,7 +360,7 @@ public class CoreManagementUseCase {
     public void dashboardDelete(Long locationId) {
         Dashboard dashboard = dashboardService.getDashboardEntity(locationId);
 
-        widgetService.deleteAllWidget(dashboard.getDashboardsId());
+        widgetService.deleteAllWidget(dashboard.getDashboardId());
 
         dashboardService.deleteDashboard(locationId);
     }
@@ -393,7 +393,7 @@ public class CoreManagementUseCase {
             } else {
                 // Update : widget ID가 들어왔다면 기존 Widget 찾아서 수정
                 targetWidgetId = request.widgetId();
-                widgetService.updateWidget(dashboard.getDashboardsId(), request.widgetId(), request);
+                widgetService.updateWidget(dashboard.getDashboardId(), request.widgetId(), request);
             }
             widgetIds.add(targetWidgetId);
         }
@@ -433,7 +433,7 @@ public class CoreManagementUseCase {
 
         Dashboard dashboard = dashboardService.getDashboardByLocationId(locationId);
 
-        return widgetService.getWidgetList(dashboard.getDashboardsId());
+        return widgetService.getWidgetList(dashboard.getDashboardId());
     }
 
     /**
@@ -444,7 +444,7 @@ public class CoreManagementUseCase {
 
         Dashboard dashboard = validateOnlyWidget(userId, groupId, locationId);
 
-        widgetService.deleteWidget(dashboard.getDashboardsId(), targetWidgetId);
+        widgetService.deleteWidget(dashboard.getDashboardId(), targetWidgetId);
     }
 
     /**

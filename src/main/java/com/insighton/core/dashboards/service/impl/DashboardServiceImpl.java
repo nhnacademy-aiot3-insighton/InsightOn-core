@@ -35,7 +35,7 @@ public class DashboardServiceImpl implements DashboardService {
                 .orElseThrow(() -> new DashboardNotFoundException(locationId));
 
         return DashboardResponse.builder()
-                .dashboardId(dashboard.getDashboardsId())
+                .dashboardId(dashboard.getDashboardId())
                 .title(dashboard.getTitle())
                 .widgetsList(widgetsList)
                 .build();
