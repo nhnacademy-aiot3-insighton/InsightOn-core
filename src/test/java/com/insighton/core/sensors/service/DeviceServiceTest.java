@@ -78,7 +78,7 @@ class DeviceServiceTest {
         given(group.getGroupId()).willReturn(5L); // 요청 groupId(5L)와 일치해야 통과
 
         // gatewaysId는 null로 둬도 됨 - null이면 파라미터로 받은 gatewayId(10L)로 대체되는 로직이라 스텁 불필요
-        Device existing = Device.builder().deviceId(1L).deviceEui("EUI-001").groupId(group).build();
+        Device existing = Device.builder().deviceId(1L).deviceEui("EUI-001").group(group).build();
         given(deviceRepository.findByDeviceEui("EUI-001")).willReturn(Optional.of(existing));
 
         DeviceCacheEntry result = deviceService.autoProvision(10L, 5L, "EUI-001", "센서", Set.of("co2"));
@@ -95,7 +95,7 @@ class DeviceServiceTest {
         Groups otherGroup = mock(Groups.class);
         given(otherGroup.getGroupId()).willReturn(999L); // 요청 groupId(5L)와 다름
 
-        Device existing = Device.builder().deviceId(1L).deviceEui("EUI-001").groupId(otherGroup).build();
+        Device existing = Device.builder().deviceId(1L).deviceEui("EUI-001").group(otherGroup).build();
         given(deviceRepository.findByDeviceEui("EUI-001")).willReturn(Optional.of(existing));
 
         assertThrows(InvalidDeviceValueException.class,
@@ -119,7 +119,7 @@ class DeviceServiceTest {
     void 조회_다른그룹이면_예외() {
         Groups group = mock(Groups.class);
         given(group.getGroupId()).willReturn(5L);
-        Device device = Device.builder().deviceId(1L).groupId(group).build();
+        Device device = Device.builder().deviceId(1L).group(group).build();
 
         given(deviceRepository.findById(1L)).willReturn(Optional.of(device));
         given(groupMembersService.validateGroupMembers(5L, 999L))
@@ -135,7 +135,7 @@ class DeviceServiceTest {
     void 이름수정_권한없음() {
         Groups group = mock(Groups.class);
         given(group.getGroupId()).willReturn(5L);
-        Device device = Device.builder().deviceId(1L).groupId(group).build();
+        Device device = Device.builder().deviceId(1L).group(group).build();
 
         given(deviceRepository.findById(1L)).willReturn(Optional.of(device));
         GroupMembers member = GroupMembers.builder().userId(1L).groupRole(GroupRole.MEMBER).build();
@@ -170,12 +170,12 @@ class DeviceServiceTest {
 
         given(groupMembersService.validateGroupMembers(5L, 1L))
                 .willReturn(GroupMembers.builder().userId(1L).groupRole(GroupRole.MANAGER).build());
-        given(deviceRepository.findByGroupId(5L)).willReturn(List.of(withEui, withoutEui));
+        given(deviceRepository.findByGroupGroupId(5L)).willReturn(List.of(withEui, withoutEui));
 
         deviceService.deleteAll(1L, 5L);
 
         verify(deviceLookupCacheService, times(1)).evict("EUI-001");
-        verify(deviceAttributeRepository).deleteByGroupId(5L);
+        verify(deviceAttributeRepository).deleteByGroupIdGroupId(5L);
         verify(deviceRepository).deleteAll(List.of(withEui, withoutEui));
     }
 
@@ -187,7 +187,7 @@ class DeviceServiceTest {
         Gateway gateway = mock(Gateway.class);
         given(gateway.getGatewayId()).willReturn(10L); // deviceEui != null 분기에서 실제로 호출됨
         Device device = Device.builder()
-                .deviceId(1L).groupId(group).gatewaysId(gateway).deviceEui("EUI-001").build();
+                .deviceId(1L).group(group).gateway(gateway).deviceEui("EUI-001").build();
 
         Locations newLocation = mock(Locations.class); // getter 스텁 불필요 - newLocationId 파라미터를 그대로 씀
 
@@ -207,7 +207,7 @@ class DeviceServiceTest {
     void 업데이트_위치_이름_둘다_성공() {
         Groups group = mock(Groups.class);
         given(group.getGroupId()).willReturn(5L);
-        Device device = Device.builder().deviceId(1L).groupId(group).deviceEui(null).build();
+        Device device = Device.builder().deviceId(1L).group(group).deviceEui(null).build();
 
         Locations newLocation = mock(Locations.class); // 여기도 getter 스텁 불필요
 
@@ -227,7 +227,7 @@ class DeviceServiceTest {
     void 업데이트_이름만_수정() {
         Groups group = mock(Groups.class);
         given(group.getGroupId()).willReturn(5L);
-        Device device = Device.builder().deviceId(1L).groupId(group).deviceName("기존 이름").build();
+        Device device = Device.builder().deviceId(1L).group(group).deviceName("기존 이름").build();
 
         given(deviceRepository.findById(1L)).willReturn(Optional.of(device));
         given(groupMembersService.validateGroupMembers(5L, 1L))
@@ -255,7 +255,7 @@ class DeviceServiceTest {
     void 업데이트_빈이름_거부() {
         Groups group = mock(Groups.class);
         given(group.getGroupId()).willReturn(5L);
-        Device device = Device.builder().deviceId(1L).groupId(group).build();
+        Device device = Device.builder().deviceId(1L).group(group).build();
 
         given(deviceRepository.findById(1L)).willReturn(Optional.of(device));
         given(groupMembersService.validateGroupMembers(5L, 1L))
@@ -279,7 +279,7 @@ class DeviceServiceTest {
     void 업데이트_없는위치() {
         Groups group = mock(Groups.class);
         given(group.getGroupId()).willReturn(5L);
-        Device device = Device.builder().deviceId(1L).groupId(group).build();
+        Device device = Device.builder().deviceId(1L).group(group).build();
 
         given(deviceRepository.findById(1L)).willReturn(Optional.of(device));
         given(groupMembersService.validateGroupMembers(5L, 1L))
@@ -295,7 +295,7 @@ class DeviceServiceTest {
     void 업데이트_권한없음() {
         Groups group = mock(Groups.class);
         given(group.getGroupId()).willReturn(5L);
-        Device device = Device.builder().deviceId(1L).groupId(group).build();
+        Device device = Device.builder().deviceId(1L).group(group).build();
 
         given(deviceRepository.findById(1L)).willReturn(Optional.of(device));
         given(groupMembersService.validateGroupMembers(5L, 1L))

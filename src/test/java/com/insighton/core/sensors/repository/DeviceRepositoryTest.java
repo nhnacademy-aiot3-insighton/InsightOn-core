@@ -35,7 +35,7 @@ class DeviceRepositoryTest {
     @Test
     @DisplayName("findByGroupIdGroupId - 그룹 ID로 조회 성공")
     void 그룹ID로_조회() {
-        List<Device> result = deviceRepository.findByGroupId(1L);
+        List<Device> result = deviceRepository.findByGroupGroupId(1L);
 
         assertThat(result).hasSize(2);
     }
@@ -43,7 +43,7 @@ class DeviceRepositoryTest {
     @Test
     @DisplayName("findByLocationsIdLocationId - 위치 ID로 조회 성공")
     void 위치ID로_조회() {
-        List<Device> result = deviceRepository.findByLocationId(1L);
+        List<Device> result = deviceRepository.findByLocationLocationId(1L);
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getDeviceEui()).isEqualTo("EUI-104");
