@@ -19,7 +19,7 @@ public class Dashboard {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long dashboardsId;
+    private Long dashboardId;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(

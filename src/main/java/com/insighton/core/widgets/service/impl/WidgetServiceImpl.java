@@ -58,7 +58,7 @@ public class WidgetServiceImpl implements WidgetService {
     @Transactional
     public void updateWidget(Long dashboardId, Long targetWidgetId, WidgetSaveRequest request) {
         // 존재하는지 확인
-        Widget widget = widgetRepository.findByWidgetIdAndDashboardDashboardsId(targetWidgetId, dashboardId)
+        Widget widget = widgetRepository.findByWidgetIdAndDashboardDashboardId(targetWidgetId, dashboardId)
                 .orElseThrow(() -> WidgetNotFoundException.notFoundWidgetByWidgetId(targetWidgetId));
 
         if (request.widgetConfig() != null) {
@@ -84,15 +84,37 @@ public class WidgetServiceImpl implements WidgetService {
     @Transactional(readOnly = true)
     public List<WidgetsListResponse> getWidgetList(Long dashboardId) {
 
-        return widgetRepository.findByDashboardDashboardsId(dashboardId)
-                .orElseThrow(() -> WidgetNotFoundException.notFoundWidgetByDashboardId(dashboardId));
+        List<Widget> widgets = widgetRepository.findByDashboardDashboardId(dashboardId);
+
+        if (widgets.isEmpty()) {
+            throw WidgetNotFoundException.notFoundWidgetByDashboardId(dashboardId);
+        }
+
+        List<WidgetsListResponse> responses = new ArrayList<>();
+
+        for (Widget widget : widgets) {
+
+            WidgetsListResponse response = WidgetsListResponse.builder()
+                    .widgetId(widget.getWidgetId())
+                    .dashboardId(widget.getDashboard().getDashboardId())
+                    .xPos(widget.getXPos())
+                    .yPos(widget.getYPos())
+                    .width(widget.getWidth())
+                    .height(widget.getHeight())
+                    .widgetConfig(widget.getWidgetConfig())
+                    .build();
+
+            responses.add(response);
+        }
+
+        return responses;
     }
 
     @Override
     @Transactional
     public void deleteWidget(Long dashboardId, Long targetWidgetId) {
 
-        widgetRepository.deleteByWidgetIdAndDashboardDashboardsId(targetWidgetId, dashboardId);
+        widgetRepository.deleteByWidgetIdAndDashboardDashboardId(targetWidgetId, dashboardId);
 
         configCache.remove(targetWidgetId);
     }
@@ -100,11 +122,11 @@ public class WidgetServiceImpl implements WidgetService {
     @Override
     @Transactional
     public void deleteAllWidget(Long dashboardId) {
-        List<Long> widgetIds = widgetRepository.findWidgetIdsByDashboardDashboardsId(dashboardId);
+        List<Long> widgetIds = widgetRepository.findWidgetIdsByDashboardDashboardId(dashboardId);
 
         evictCacheForWidgetIds(widgetIds);
 
-        widgetRepository.deleteAllByDashboardDashboardsId(dashboardId);
+        widgetRepository.deleteAllByDashboardDashboardId(dashboardId);
     }
 
     @Override
