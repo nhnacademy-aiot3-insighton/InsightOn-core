@@ -126,6 +126,14 @@ public class GatewayServiceImpl implements GatewayService {
         if (!(brokerUrls instanceof List<?> list) || list.isEmpty()) {
             throw new IllegalArgumentException("connection_config에 brokerUrls(문자열 배열)가 필요합니다.");
         }
+
+        // topics 자체는 생략 가능(생략 시 MqttGatewayConnectionInfo.from()에서 ChirpStack 기본 토픽으로
+        // 대체됨). 다만 키를 명시했는데 빈 배열이면, 구독 토픽이 하나도 없는 상태로 연결만 성공해서
+        // 메시지를 전혀 못 받는 조용한 장애가 되므로 여기서 미리 막음.
+        Object topics = connectionConfig.get("topics");
+        if (topics != null && (!(topics instanceof List<?> topicList) || topicList.isEmpty())) {
+            throw new IllegalArgumentException("connection_config의 topics는 비어있지 않은 배열이어야 합니다 (생략하면 기본값 사용).");
+        }
     }
 
 
