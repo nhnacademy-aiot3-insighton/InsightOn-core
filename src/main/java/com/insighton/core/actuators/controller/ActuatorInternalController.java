@@ -46,8 +46,8 @@ public class ActuatorInternalController {
         if (apiKey != null) {
             validateApiKey(apiKey);
             // AI_SYSTEM에서 호출된건지 검증
-            if("AI_SYSTEM".equals(callerService)){
-                throw new InvalidServiceCredentialException("허용되지 않은 호출 서비스: " + callerService);
+            if (callerService != null && !"AI_SYSTEM".equals(callerService)) {
+                throw new InvalidServiceCredentialException("허용되지 않은 호출 서비스입니다: " + callerService);
             }
         }
 
