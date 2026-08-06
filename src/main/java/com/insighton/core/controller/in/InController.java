@@ -61,4 +61,19 @@ public class InController {
 
         return ResponseEntity.ok(locationResponse);
     }
+
+    /**
+     * user 탈퇴 시에 group에서 권한을 가진 member인지 체크하기 위한 API
+     *
+     * @param userId 조회할 user ID
+     * @return 권한이 있으면 true, 없으면 false
+     */
+    @GetMapping("users/{user-id}/manager-groups/exists")
+    public ResponseEntity<Boolean> existsManagerGroup(
+            @PathVariable("user-id") Long userId) {
+
+        boolean isAdmin = groupMemberService.existsManagerGroupAuth(userId);
+
+        return ResponseEntity.ok(isAdmin);
+    }
 }

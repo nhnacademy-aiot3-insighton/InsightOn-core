@@ -121,4 +121,13 @@ public interface GroupMemberService {
      */
     void validateUserNotInAnyGroup(Long userId);
 
+
+    /**
+     * Auth에서 요청한
+     *
+     * @param userId 권한을 가진 member로 존재하는지 알고 싶은 user
+     * @return 있으면 true, 없으면 false
+     */
+    boolean existsManagerGroupAuth(Long userId);
+
 }
