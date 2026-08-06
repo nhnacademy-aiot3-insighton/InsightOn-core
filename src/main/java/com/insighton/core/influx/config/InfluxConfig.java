@@ -14,16 +14,16 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class InfluxConfig {
 
-    @Value("${influx.url}")
+    @Value("${influxdb.url}")
     private String url;
 
-    @Value("${influx.token}")
+    @Value("${influxdb.token}")
     private String token;
 
-    @Value("${influx.org}")
+    @Value("${influxdb.org}")
     private String influxOrg;
 
-    @Value("${influx.bucket}")
+    @Value("${influxdb.bucket}")
     private String bucket;
 
     @Bean(destroyMethod = "close")
