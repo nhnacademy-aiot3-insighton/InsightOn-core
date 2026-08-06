@@ -9,6 +9,7 @@ import com.insighton.core.widgets.dto.request.WidgetSaveRequest;
 import com.insighton.core.widgets.dto.response.WidgetsListResponse;
 import com.insighton.core.widgets.entity.Widget;
 import com.insighton.core.widgets.entity.WidgetConfig;
+import com.insighton.core.widgets.exception.InvalidDateTimeFormatException;
 import com.insighton.core.widgets.exception.WidgetConfigNotFoundException;
 import com.insighton.core.widgets.exception.WidgetNotFoundException;
 import com.insighton.core.widgets.repository.InfluxDbRepository;
@@ -22,18 +23,18 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class WidgetServiceImpl implements WidgetService {
+    private static final Pattern DURATION_PATTERN = Pattern.compile("^-?\\d+[smhdwy]$");
+    private static final String BUCKET_NAME = "insighton-bucket";
+    private static final String MEASUREMENT_NAME = "sensor_data";
     private final WidgetRepository widgetRepository;
     private final InfluxDbRepository influxDbRepository;
-
     private final Map<Long, WidgetConfig> configCache = new ConcurrentHashMap<>();
-
-    private final String BUCKET_NAME = "insighton-bucket";
-    private final String MEASUREMENT_NAME = "sensor_data";
 
     @Override
     @Transactional
@@ -233,18 +234,22 @@ public class WidgetServiceImpl implements WidgetService {
         // 문자열 합치기 작업을 메모리 낭비 없이 빠르게 처리하기 때문에 사용
         StringBuilder flux = new StringBuilder();
 
+        // 입력 값 검증.
+        validateDuration(config.range());
+
         flux.append("from(bucket: \"").append(BUCKET_NAME).append("\")\n")
                 .append("   |> range(start: ").append(config.range()).append(")\n")
                 .append("   |> filter(fn: (r) => r._measurement == \"").append(MEASUREMENT_NAME).append("\")\n");
 
         // null이나 빈 값 체크
         if (Objects.nonNull(config.deviceEui()) && !config.deviceEui().isBlank()) {
-            flux.append("   |> filter(fn: (r) => r.deviceEui == \"").append(config.deviceEui()).append("\")\n");
+            // 이스케이프 처리
+            flux.append("   |> filter(fn: (r) => r.deviceEui == \"").append(sanitize(config.deviceEui())).append("\")\n");
         }
 
         if (Objects.nonNull(config.fields()) && !config.fields().isEmpty()) {
             String fieldFilter = config.fields().stream()
-                    .map(f -> "r._field == \"" + f + "\"")
+                    .map(f -> "r._field == \"" + sanitize(f) + "\"") // << 이스케이프 처리
                     .collect(Collectors.joining(" or ")); // list에 담긴 만큼 꺼내서 쿼리문을 작성하도록 코드 구성 (그래서 1개를 보고 싶던 여러개를 보고 싶던 상관이 없음)
             flux.append("   |> filter(fn: (r) => ").append(fieldFilter).append(")\n");
         }
@@ -257,8 +262,9 @@ public class WidgetServiceImpl implements WidgetService {
                     break;
                 case GRAPH:
                 default:
-                    // 시계열 그래프는 설정한 주기(aggregateWindow)마다 평균(mean) 값으로 묶어서 가져옴
+                    // 시계열 그래프는 설정한 주기(aggregateWindow)마다 평균(mean) 값으로 묶어서 가져옴 & 입력 값 검증
                     if (Objects.nonNull(config.aggregateWindow())) {
+                        validateDuration(config.aggregateWindow());
                         flux.append("   |> aggregateWindow(every: ").append(config.aggregateWindow())
                                 .append(", fn: mean, createEmpty: false)\n");
                     }
@@ -269,5 +275,24 @@ public class WidgetServiceImpl implements WidgetService {
         flux.append("   |> yield(name: \"result\")");
 
         return flux.toString();
+    }
+
+    /**
+     * 기간 / 시간 단위 유효성 검증 (Allowlist 방식)
+     */
+    private void validateDuration(String duration) {
+        if (duration != null && !DURATION_PATTERN.matcher(duration.trim()).matches()) {
+            throw new InvalidDateTimeFormatException(duration);
+        }
+    }
+
+    /**
+     * Flux 문자열 이스케이프 처리 (큰 따옴표 및 역슬래시 탈출 방지)
+     */
+    private String sanitize(String input) {
+        if (input == null) {
+            return "";
+        }
+        return input.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 }
