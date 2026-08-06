@@ -19,7 +19,7 @@ public record ActuatorResponse(
     public static ActuatorResponse from(Actuator entity){
         return new ActuatorResponse(
                 entity.getActuatorId(),
-                entity.getLocationId().getLocationId(),
+                entity.getLocation().getLocationId(),
                 entity.getDeviceName(),
                 entity.getActuatorType(),
                 entity.getCurrentState(),

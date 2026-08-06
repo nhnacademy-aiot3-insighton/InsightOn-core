@@ -80,7 +80,7 @@ public class DeviceLookupCacheService {
         return new DeviceCacheEntry(
                 device.getDeviceId(),
                 device.getDeviceEui(),
-                device.getGatewaysId().getGatewayId(),
+                device.getGateway().getGatewayId(),
                 device.getLocation().getLocationId()
         );
     }
