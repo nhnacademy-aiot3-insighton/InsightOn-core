@@ -6,11 +6,9 @@ import com.insighton.core.actuator_run_logs.service.ActuatorRunLogService;
 import com.insighton.core.actuators.dto.ActuatorNameUpdateRequest;
 import com.insighton.core.actuators.dto.ActuatorRequest;
 import com.insighton.core.actuators.dto.ActuatorResponse;
-import com.insighton.core.actuators.exception.InvalidServiceCredentialException;
 import com.insighton.core.actuators.service.ActuatorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -24,10 +22,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/groups/{group-id}/actuators")
 public class ActuatorController {
-
-    // Core-내부서비스 간 공유 비밀키 (환경변수로 주입, 코드/git에 값 노출 금지)
-    @Value("${internal.service.api-key}")
-    private String internalServiceApiKey;
 
     private final ActuatorService actuatorService; // 액추에이터 서비스
     private final ActuatorRunLogService actuatorRunLogService; // 실행 로그 조회용
@@ -73,25 +67,7 @@ public class ActuatorController {
         return ResponseEntity.ok().build();
     }
 
-    // 룰엔진/AI 등 내부 시스템 전용 액추에이터 업데이트
-    @PutMapping("/internal/{actuator-id}/state")
-    public ResponseEntity<Void> updateActuatorStateBySystem(
-            @RequestHeader("X-INTERNAL-API-KEY") String apiKey, // 호출자가 신뢰된 냅 서비스인지 검증용 공유키
-            @RequestHeader("X-CALLER-SERVICE") String callerService, // 호출자 이름표 룰엔진인지 AI인지
-            @PathVariable ("actuator-id")Long actuatorId,
-            @RequestBody Map<String, Object> newState) {
 
-        // 서비스 인증 신뢰할 수 있는 내부 서비스만 통과
-        if (!internalServiceApiKey.equalsIgnoreCase(apiKey)) {
-            throw new InvalidServiceCredentialException("내부 서비스 인증에 실패했습니다");
-        }
-
-        // executedByType을 요청 파라미터로 안 받고, 인증된 호출자 이름으로만 결정 (클라이언트가 값을 못 고름)
-        ExecutedByType executedByType = resolveExecutedByType(callerService);
-
-        actuatorService.updateActuatorState(null, null, actuatorId, newState, executedByType);
-        return ResponseEntity.ok().build();
-    }
 
     // 실행 이력 조회 - getActuatorById의 소유권/권한 검증을 그대로 재사용
     @GetMapping("/{actuator-id}/logs")
@@ -136,12 +112,5 @@ public class ActuatorController {
     }
 
 
-    // 화이트리스트에 있는 호출자만 허용 - USER는 애초에 나올 수 없는 구조
-    private ExecutedByType resolveExecutedByType(String callerService) {
-        return switch (callerService) {
-            case "RULE_ENGINE" -> ExecutedByType.RULE_ENGINE;
-            case "AI_SYSTEM" -> ExecutedByType.AI_SYSTEM;
-            default -> throw new InvalidServiceCredentialException("허용되지 않은 호출 서비스입니다: " + callerService);
-        };
-    }
+
 }
