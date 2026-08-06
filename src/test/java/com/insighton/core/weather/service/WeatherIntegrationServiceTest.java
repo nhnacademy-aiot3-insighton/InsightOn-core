@@ -1,34 +1,62 @@
 package com.insighton.core.weather.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
 
+import com.insighton.core.weather.dto.AirQualityResponseDto;
+import com.insighton.core.weather.dto.KmaWeatherResponseDto;
 import com.insighton.core.weather.dto.WeatherDataDto;
+import com.insighton.core.weather.exception.WeatherApiException;
+import com.insighton.core.weather.parser.SidoNameParser;
+import java.net.URI;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.web.client.RestClient;
 
 @SpringBootTest
 @TestPropertySource(properties = {
         "weather.api.kma-base-url=http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0",
         "weather.api.air-base-url=http://apis.data.go.kr/B552584/ArpltnInforInqireSvc",
-        "weather.api.kma-key=API KEY",
-        // 실제 사용하는 API KEY 입력 (또는 mock key)
-        "weather.api.air-key=API KEY"
-        // 실제 사용하는 API KEY 입력 (또는 mock key)
+        "weather.api.kma-key=mock-key",
+        "weather.api.air-key=mock-key"
 })
 class WeatherIntegrationServiceTest {
 
     private static final Logger log = LoggerFactory.getLogger(WeatherIntegrationServiceTest.class);
 
-//    @MockBean
-//    private RedisTemplate<String, WeatherDataDto> weatherRedisTemplate;
+    @MockitoBean
+    private RedisTemplate<String, WeatherDataDto> weatherRedisTemplate;
+
+    @MockitoBean(name = "kmaRestClient")
+    private RestClient kmaRestClient;
+
+    @MockitoBean(name = "airQualityRestClient")
+    private RestClient airQualityRestClient;
+
+    @MockitoBean
+    private SidoNameParser sidoNameParser;
+
+    @MockitoBean
+    private RestClient.RequestHeadersUriSpec requestHeadersUriSpec;
+
+    @MockitoBean
+    private RestClient.RequestHeadersSpec requestHeadersSpec;
+
+    @MockitoBean
+    private RestClient.ResponseSpec responseSpec;
 
     @Autowired
     private WeatherIntegrationService weatherIntegrationService;
@@ -43,8 +71,51 @@ class WeatherIntegrationServiceTest {
         String cityName = "동구";
 
         String baseDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        // API 정각 데이터 수신 오차 감안하여 현재 시간 - 1시간 전으로 호출
         String baseTime = LocalTime.now().minusHours(1).format(DateTimeFormatter.ofPattern("HH00"));
+
+        given(sidoNameParser.parse(sidoName)).willReturn("광주");
+        given(kmaRestClient.get()).willReturn(requestHeadersUriSpec);
+        given(airQualityRestClient.get()).willReturn(requestHeadersUriSpec);
+        given(requestHeadersUriSpec.uri(any(URI.class))).willReturn(requestHeadersSpec);
+        given(requestHeadersSpec.retrieve()).willReturn(responseSpec);
+
+        // 초단기실황/단기예보 파싱에 필요한 정확한 Category & Value 조합 Mocking
+        KmaWeatherResponseDto kmaMock = new KmaWeatherResponseDto(
+                new KmaWeatherResponseDto.Response(
+                        new KmaWeatherResponseDto.Header("00", "NORMAL_SERVICE"),
+                        new KmaWeatherResponseDto.Body("JSON", new KmaWeatherResponseDto.Items(List.of(
+                                new KmaWeatherResponseDto.Item(baseDate, baseTime, "T1H", baseDate, baseTime, "20.0",
+                                        "20.0", gridX, gridY),
+                                new KmaWeatherResponseDto.Item(baseDate, baseTime, "REH", baseDate, baseTime, "50",
+                                        "50", gridX, gridY),
+                                new KmaWeatherResponseDto.Item(baseDate, baseTime, "RN1", baseDate, baseTime, "0", "0",
+                                        gridX, gridY),
+                                new KmaWeatherResponseDto.Item(baseDate, baseTime, "PTY", baseDate, baseTime, "0", "0",
+                                        gridX, gridY),
+                                new KmaWeatherResponseDto.Item(baseDate, baseTime, "SKY", baseDate, baseTime, "1", "1",
+                                        gridX, gridY),
+                                new KmaWeatherResponseDto.Item(baseDate, baseTime, "TMX", baseDate, baseTime, "25.0",
+                                        "25.0", gridX, gridY),
+                                new KmaWeatherResponseDto.Item(baseDate, baseTime, "TMN", baseDate, baseTime, "15.0",
+                                        "15.0", gridX, gridY),
+                                new KmaWeatherResponseDto.Item(baseDate, baseTime, "POP", baseDate, baseTime, "0", "0",
+                                        gridX, gridY)
+                        )), 1, 100, 8)
+                )
+        );
+
+        // 에어코리아 Mock 응답
+        AirQualityResponseDto airMock = new AirQualityResponseDto(
+                new AirQualityResponseDto.Response(
+                        new AirQualityResponseDto.Header("00", "NORMAL_SERVICE"),
+                        new AirQualityResponseDto.Body(List.of(
+                                new AirQualityResponseDto.Item("동구", "동구", "15", "8", "15", "8", "1", "1")
+                        ), 1)
+                )
+        );
+
+        given(responseSpec.body(KmaWeatherResponseDto.class)).willReturn(kmaMock);
+        given(responseSpec.body(AirQualityResponseDto.class)).willReturn(airMock);
 
         // when
         WeatherDataDto result = weatherIntegrationService.fetchWeatherData(
@@ -58,10 +129,10 @@ class WeatherIntegrationServiceTest {
         assertThat(result.airQuality()).isNotNull();
 
         // 1. 상태 파싱 검증 (한글 변환 여부)
-        assertThat(result.current().precipitationType()).isNotIn("0", "1", "2", "3", "4"); // 숫자가 아니어야 함
-        assertThat(result.forecast().skyStatus()).isNotIn("1", "3", "4"); // 숫자가 아니어야 함
+        assertThat(result.current().precipitationType()).isNotIn("0", "1", "2", "3", "4"); // '없음'으로 파싱되어야 함
+        assertThat(result.forecast().skyStatus()).isNotIn("1", "3", "4"); // '맑음'으로 파싱되어야 함
 
-        // 2. 콘솔 출력 로직 포함
+        // 2. 콘솔 출력
         log.info("====== [날씨/대기질 통합 API 연동 결과] ======");
         log.info("[초단기실황] 기온: {}℃, 습도: {}%, 1시간강수량: {}mm, 강수형태: {}",
                 result.current().temp(), result.current().humidity(),
@@ -80,7 +151,7 @@ class WeatherIntegrationServiceTest {
     @Test
     @DisplayName("잘못된 입력/응답 누락 시 N/A 또는 기본값 fallback 처리 검증")
     void fetchWeatherData_FallbackToDefault_WhenDataMissing() {
-        // given: 존재하지 않는 지역 입력
+        // given
         int invalidGridX = 999;
         int invalidGridY = 999;
         String invalidSido = "알수없는시";
@@ -88,21 +159,38 @@ class WeatherIntegrationServiceTest {
         String baseDate = "20200101";
         String baseTime = "0000";
 
-        // when & then
-        // 예외가 발생하거나 혹은 N/A 값으로 정제되는지 확인
-        try {
-            WeatherDataDto result = weatherIntegrationService.fetchWeatherData(
-                    invalidGridX, invalidGridY, invalidSido, invalidCity, baseDate, baseTime
-            );
+        given(sidoNameParser.parse(invalidSido)).willReturn("알수없는시");
+        given(kmaRestClient.get()).willReturn(requestHeadersUriSpec);
+        given(airQualityRestClient.get()).willReturn(requestHeadersUriSpec);
+        given(requestHeadersUriSpec.uri(any(URI.class))).willReturn(requestHeadersSpec);
+        given(requestHeadersSpec.retrieve()).willReturn(responseSpec);
 
-            // 데이터가 비어있을 경우 N/A로 채워져야 함
-            assertThat(result.current().temp()).isEqualTo("N/A");
-            assertThat(result.forecast().skyStatus()).isEqualTo("알수없음");
-            assertThat(result.airQuality().pm10Grade()).isEqualTo("정보없음");
+        given(responseSpec.body(KmaWeatherResponseDto.class)).willReturn(new KmaWeatherResponseDto(null));
+        given(responseSpec.body(AirQualityResponseDto.class)).willReturn(new AirQualityResponseDto(null));
 
-            log.info("[Fallback 검증 성공] 수신 불가능한 데이터 N/A 처리 완료: {}", result);
-        } catch (Exception e) {
-            log.info("[Fallback 검증] 외부 API 연동 실패 예외가 정상 발생함: {}", e.getMessage());
-        }
+        // when
+        WeatherDataDto result = weatherIntegrationService.fetchWeatherData(
+                invalidGridX, invalidGridY, invalidSido, invalidCity, baseDate, baseTime
+        );
+
+        // then
+        assertThat(result.current().temp()).isEqualTo("N/A");
+        assertThat(result.forecast().skyStatus()).isEqualTo("알수없음");
+        assertThat(result.airQuality().pm10Grade()).isEqualTo("정보없음");
+
+        log.info("[Fallback 검증 성공] 수신 불가능한 데이터 N/A 처리 완료: {}", result);
+    }
+
+    @Test
+    @DisplayName("외부 RestClient 예외 발생 시 WeatherApiException 던져지는지 정확히 단언")
+    void fetchWeatherData_ThrowsWeatherApiException_WhenApiFails() {
+        // given
+        given(sidoNameParser.parse(any())).willReturn("광주");
+        given(kmaRestClient.get()).willThrow(new RuntimeException("기상청 API 통신 장애"));
+
+        // when & then: 서비스 내부 try-catch에서 감싸져 WeatherApiException이 던져지는지 단언
+        assertThrows(WeatherApiException.class, () ->
+                weatherIntegrationService.fetchWeatherData(999, 999, "오류시", "오류구", "20200101", "0000")
+        );
     }
 }
