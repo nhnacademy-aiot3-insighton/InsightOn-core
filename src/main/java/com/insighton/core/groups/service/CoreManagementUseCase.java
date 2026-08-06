@@ -376,6 +376,9 @@ public class CoreManagementUseCase {
 
     // ====================== dashboard save ======================
 
+    /**
+     * dashboard save 버튼 눌렀을 때 동작
+     */
     @Transactional
     public List<Long> saveDashboard(Long userId, Long groupId, Long locationId, List<WidgetSaveRequest> requests) {
         Dashboard dashboard = validateOnlyWidget(userId, groupId, locationId);
@@ -411,7 +414,6 @@ public class CoreManagementUseCase {
         }
 
         return updatedChartDataMap;
-
     }
 
     // ====================== widgets Controller ======================

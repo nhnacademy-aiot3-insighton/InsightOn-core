@@ -1,9 +1,8 @@
 package com.insighton.core.groups.service;
 
-import com.insighton.core.gateway.service.GatewayService;
+import com.insighton.core.dashboards.entity.Dashboard;
 import com.insighton.core.dashboards.service.DashboardService;
-import com.insighton.core.widgets.service.WidgetService;
-import org.springframework.context.ApplicationEventPublisher;
+import com.insighton.core.gateway.service.GatewayService;
 import com.insighton.core.groupmember.dto.request.GroupMemberJoinRequest;
 import com.insighton.core.groupmember.entity.GroupMember;
 import com.insighton.core.groupmember.exception.AlreadyJoinedException;
@@ -12,7 +11,7 @@ import com.insighton.core.groupmember.service.GroupMemberService;
 import com.insighton.core.groups.dto.request.GroupRequest;
 import com.insighton.core.groups.dto.response.GroupResponse;
 import com.insighton.core.groups.entity.Group;
-import com.insighton.core.groups.exception.GroupNotFoundException;
+import com.insighton.core.groups.event.GroupDeletedEvent;
 import com.insighton.core.groups.exception.InviteTokenNotFoundException;
 import com.insighton.core.groups.exception.NoPermissionException;
 import com.insighton.core.groups.exception.UnAuthorizedAccessException;
@@ -22,6 +21,7 @@ import com.insighton.core.location.dto.response.LocationListResponse;
 import com.insighton.core.location.dto.response.LocationResponse;
 import com.insighton.core.location.entity.Location;
 import com.insighton.core.location.service.LocationService;
+import com.insighton.core.widgets.service.WidgetService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -29,6 +29,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -278,6 +279,8 @@ class CoreManagementUseCaseTest {
             verify(groupMemberService, times(1)).deleteGroupMemberAll(1L, 1L); // 멤버 전체 삭제 검증
             verify(locationService, times(1)).deleteLocationAll(1L);
             verify(groupService, times(1)).deleteGroup(1L); // 그룹 엔티티 삭제 검증
+
+            verify(eventPublisher, times(1)).publishEvent(any(GroupDeletedEvent.class));
         }
 
         @Test
@@ -621,6 +624,10 @@ class CoreManagementUseCaseTest {
             Long groupId = 1L;
             Long targetLocationId = 10L;
 
+            Dashboard mockDashboard = Dashboard.builder().build();
+
+            given(dashboardService.getDashboardEntity(anyLong()))
+                    .willReturn(mockDashboard);
             GroupMember mockGroupMember = mock(GroupMember.class);
             given(groupMemberService.validateGroupMembers(groupId, userId)).willReturn(mockGroupMember);
             given(mockGroupMember.isMember()).willReturn(false);

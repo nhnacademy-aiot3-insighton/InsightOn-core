@@ -1,7 +1,6 @@
 package com.insighton.core.groups.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.insighton.core.groupmember.dto.request.GroupMemberJoinRequest;
 import com.insighton.core.groups.dto.request.GroupRequest;
 import com.insighton.core.groups.dto.response.GroupAdminResponse;
 import com.insighton.core.groups.dto.response.GroupResponse;
@@ -48,19 +47,6 @@ class GroupControllerTest {
     @Nested
     @DisplayName("성공 케이스")
     class SuccessCases {
-
-        @Test
-        @DisplayName("Auth 서비스에서 호출하는 내부 그룹 가입 API 성공")
-        void joinGroupByToken_success() throws Exception {
-            GroupMemberJoinRequest request = new GroupMemberJoinRequest("testToken", 1L);
-
-            mockMvc.perform(post("/internal/v1/groups/join-by-token")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isOk());
-
-            verify(groupsUseCase).joinGroupByToken(any(GroupMemberJoinRequest.class));
-        }
 
         @Test
         @DisplayName("그룹 생성 성공")

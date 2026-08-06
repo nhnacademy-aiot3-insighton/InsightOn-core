@@ -59,7 +59,7 @@ class LocationServiceTest {
 
             locationsService.createLocation(group, locationsRequest);
 
-            verify(locationRepository, times(1)).save(any(Location.class));
+            verify(locationRepository, times(1)).saveAndFlush(any(Location.class));
 
         }
 
@@ -76,12 +76,12 @@ class LocationServiceTest {
             given(locationRepository.findAllByGroupGroupId(groupId)).willReturn(mockList);
 
             // when
-            List<LocationListResponse> locationListRespons = locationsService.getLocationList(groupId);
+            List<LocationListResponse> locationListResponse = locationsService.getLocationList(groupId);
 
             // then
-            assertThat(locationListRespons).hasSize(1);
-            assertThat(locationListRespons.getFirst().locationName()).isEqualTo("Name");
-            assertThat(locationListRespons.getFirst().autoControlMode()).isEqualTo(Location.AutoControlMode.SUGGESTION);
+            assertThat(locationListResponse).hasSize(1);
+            assertThat(locationListResponse.getFirst().locationName()).isEqualTo("Name");
+            assertThat(locationListResponse.getFirst().autoControlMode()).isEqualTo(Location.AutoControlMode.SUGGESTION);
 
             verify(locationRepository, times(1)).findAllByGroupGroupId(groupId);
         }

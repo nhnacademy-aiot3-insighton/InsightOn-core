@@ -22,6 +22,8 @@ public record WidgetConfig(
         String range,
         String aggregateWindow,
         List<String> fields, // 목록을 띄워야하나? (front에 사용자가 볼 수 있도록)
+
+        // front에서 값 받아오도록,,,
         Long groupId,
         Long locationId
 ) {
