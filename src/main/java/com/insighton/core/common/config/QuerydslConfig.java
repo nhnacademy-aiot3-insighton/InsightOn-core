@@ -1,4 +1,4 @@
-package com.insighton.core.config;
+package com.insighton.core.common.config;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
