@@ -3,6 +3,8 @@ package com.insighton.core.widgets.repository;
 import com.insighton.core.widgets.dto.response.WidgetsListResponse;
 import com.insighton.core.widgets.entity.Widget;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -45,6 +47,7 @@ public interface WidgetRepository extends JpaRepository<Widget, Long> {
      * widget 위한 거
      */
 
-    List<Long> findWidgetIdsByDashboardDashboardsId(Long dashboardId);
+    @Query("SELECT w.widgetId FROM Widget w WHERE w.dashboard.dashboardsId = :dashboardId")
+    List<Long> findWidgetIdsByDashboardDashboardsId(@Param("dashboardId") Long dashboardId);
 
 }
