@@ -4,7 +4,7 @@ import com.insighton.core.common.annotation.UseCase;
 import com.insighton.core.groupregistration.dto.GroupRegistrationResponse;
 import com.insighton.core.groupregistration.service.GroupRegistrationService;
 import com.insighton.core.groups.dto.request.GroupRequest;
-import com.insighton.core.groups.service.CoreManagementUseCase;
+import com.insighton.core.usecase.GroupUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class GroupRegistrationApprovalUseCase {
 
     private final GroupRegistrationService groupRegistrationService;
-    private final CoreManagementUseCase coreManagementUseCase;
+    private final GroupUseCase groupUseCase;
 
     @Transactional
     public void approve(Long groupRegistrationId, Long approverId) {
@@ -26,6 +26,6 @@ public class GroupRegistrationApprovalUseCase {
                 groupRegistrationResponse.description(),
                 groupRegistrationResponse.groupRegion()
         );
-        coreManagementUseCase.createGroup(groupRequest, groupRegistrationResponse.requesterId());
+        groupUseCase.createGroup(groupRequest, groupRegistrationResponse.requesterId());
     }
 }

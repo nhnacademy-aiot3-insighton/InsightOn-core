@@ -4,9 +4,9 @@ import com.insighton.core.groupmember.dto.request.GroupMemberJoinRequest;
 import com.insighton.core.groupmember.dto.response.GroupMemberResponse;
 import com.insighton.core.groupmember.dto.response.ManagerGroupExistsResponse;
 import com.insighton.core.groupmember.service.GroupMemberService;
-import com.insighton.core.groups.service.CoreManagementUseCase;
 import com.insighton.core.location.dto.response.LocationResponse;
 import com.insighton.core.location.service.LocationService;
+import com.insighton.core.usecase.GroupUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @RequestMapping("/internal/v1")
 public class InController {
-    private final CoreManagementUseCase coreUseCase;
+    private final GroupUseCase coreUseCase;
     private final GroupMemberService groupMemberService;
     private final LocationService locationService;
 

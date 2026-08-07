@@ -3,8 +3,8 @@ package com.insighton.core.controller.in;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.insighton.core.groupmember.dto.request.GroupMemberJoinRequest;
 import com.insighton.core.groupmember.service.GroupMemberService;
-import com.insighton.core.groups.service.CoreManagementUseCase;
 import com.insighton.core.location.service.LocationService;
+import com.insighton.core.usecase.GroupUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +29,7 @@ class InControllerTest {
     private ObjectMapper objectMapper;
 
     @MockitoBean
-    private CoreManagementUseCase useCase;
+    private GroupUseCase useCase;
 
     @MockitoBean
     private GroupMemberService groupMemberService;

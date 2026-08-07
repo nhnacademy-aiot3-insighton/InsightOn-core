@@ -1,10 +1,10 @@
 package com.insighton.core.location.controller;
 
-import com.insighton.core.groups.service.CoreManagementUseCase;
 import com.insighton.core.location.dto.request.LocationCreateRequest;
 import com.insighton.core.location.dto.request.LocationUpdateRequest;
 import com.insighton.core.location.dto.response.LocationListResponse;
 import com.insighton.core.location.dto.response.LocationResponse;
+import com.insighton.core.usecase.LocationUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,7 +17,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/groups/{group-id}/location")
 public class LocationController {
-    private final CoreManagementUseCase useCase;
+    private final LocationUseCase useCase;
 
     /**
      * location 생성
