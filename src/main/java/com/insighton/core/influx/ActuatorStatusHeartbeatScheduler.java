@@ -1,6 +1,6 @@
 package com.insighton.core.influx;
 
-import com.insighton.core.actuator_run_logs.entity.CommandType;
+import com.insighton.core.actuatorrunlogs.entity.CommandType;
 import com.insighton.core.actuators.entity.Actuator;
 import com.insighton.core.actuators.repository.ActuatorRepository;
 import lombok.RequiredArgsConstructor;
