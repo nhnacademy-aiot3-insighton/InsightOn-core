@@ -2,14 +2,15 @@ package com.insighton.core.mqtt.listener;
 
 import com.insighton.core.influx.TelemetryInfluxWriter;
 import com.insighton.core.influx.dto.DynamicTelemetryMeasurement;
-import com.insighton.core.mqtt.cache.DeviceLookupCacheService;
+import com.insighton.core.mqtt.cache.SensorLookupCacheService;
 import com.insighton.core.mqtt.cache.GatewayGroupMappingCache;
-import com.insighton.core.mqtt.cache.dto.DeviceCacheEntry;
+import com.insighton.core.mqtt.cache.dto.SensorCacheEntry;
 import com.insighton.core.mqtt.connection.DynamicMqttGatewayManager;
 import com.insighton.core.mqtt.connection.GatewayHeartbeatTracker;
 import com.insighton.core.mqtt.listener.dto.CleanTelemetryPacket;
 import com.insighton.core.rabbitmq.TelemetryPublisher;
 import com.insighton.core.rabbitmq.dto.TelemetryEventMessage;
+import com.insighton.core.sensors.service.SensorService;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
@@ -24,8 +25,8 @@ import org.springframework.stereotype.Component;
 /**
  * 모든 게이트웨이의 MQTT 인바운드 flow가 공유하는 패킷 진입점.
  * {@code DynamicMqttGatewayManager}가 게이트웨이마다 만든 어댑터/flow가 전부 이 핸들러 하나로
- * 모이며, 하트비트 기록 → 페이로드 파싱 → devEui 캐시 조회 → InfluxDB/RabbitMQ 디스패치까지
- * 패킷 하나에 대한 처리 전체를 담당함.
+ * 모이며, 하트비트 기록 → 페이로드 파싱 → 센서 조회 / 자동 등록 → InfluxDB/RabbitMQ 디스패치까지
+ * 패킷 하나에 대한 처리 전체를 담당.
  */
 @Component("gatewayPacketHandler")
 @RequiredArgsConstructor
@@ -33,112 +34,116 @@ import org.springframework.stereotype.Component;
 public class GatewayPacketInboundHandler implements MessageHandler {
 
     private final MqttPayloadParser payloadParser;
-    private final DeviceLookupCacheService deviceLookupCacheService;
+    private final SensorLookupCacheService sensorLookupCacheService;
     private final GatewayGroupMappingCache groupMappingCache;
     private final GatewayHeartbeatTracker heartbeatTracker;
     private final TelemetryPublisher telemetryPublisher;
     private final TelemetryInfluxWriter influxWriter;
+    private final SensorService sensorService;
 
     /**
-     * MQTT로부터 수신한 메시지 하나를 처리함. 순서대로:
-     * <ol>
-     *     <li>{@code gatewayId} 헤더로 하트비트 기록 — devEui 조회 성공 여부와 무관하게
-     *         "이 게이트웨이로부터 뭔가 도착했다"는 사실 자체를 우선 기록함</li>
-     *     <li>{@link MqttPayloadParser}로 페이로드를 정제된 {@link CleanTelemetryPacket}으로 파싱,
-     *         실패하면 드롭</li>
-     *     <li>devEui로 {@link DeviceLookupCacheService} 조회 — 등록된 기기면 locationId/groupId/
-     *         deviceId를 확정하고(위치 미배치면 드롭), 미등록이면 TEMP 플레이스홀더로 InfluxDB
-     *         파이프라인만 태움(Auto-Provisioning 미구현 상태의 임시 처리)</li>
-     *     <li>InfluxDB에 적재(항상) — {@link TelemetryInfluxWriter}, 비동기</li>
-     *     <li>등록된 기기인 경우에만 RabbitMQ로 발행 — {@link TelemetryPublisher}, 비동기.
-     *         미등록 기기는 devicesId가 없어 Rule Engine 매칭이 의미 없으므로 건너뜀</li>
-     * </ol>
+     * MQTT로부터 수신한 메시지 하나를 처리함. 실제 로직은 {@link #handlePacket(Message)}에 있고
+     * 이 메서드는 예외 격리만 담당함 — 패킷 처리 중 발생한 예외가 Paho 콜백까지 올라가면
+     * MQTT 연결 자체가 끊기고(Lost connection), Reconciler가 재등록해도 다음 패킷에서 또 터지는
+     * 플래핑이 되므로 여기서 반드시 차단해야 함.
      *
      * @param message 수신한 MQTT 메시지
      */
     @Override
     public void handleMessage(Message<?> message) throws MessagingException {
-        Long gatewaysId = message.getHeaders().get(DynamicMqttGatewayManager.GATEWAY_ID_HEADER, Long.class);
+        try {
+            handlePacket(message);
+        } catch (Exception e) {
+            // 패킷 하나의 처리 실패가 Paho 콜백까지 전파되면 MQTT 연결 자체가 끊기고
+            // (Lost connection → Reconciler 재등록 → 다시 실패) 플래핑이 되므로 여기서 차단하고 드롭함
+            log.error("패킷 처리 실패, 드롭 (topic = {})",
+                    message.getHeaders().get(MqttHeaders.RECEIVED_TOPIC), e);
+        }
+    }
 
-        if (gatewaysId != null) {
-            heartbeatTracker.recordHeartbeat(gatewaysId);
-        } else {
+    /**
+     * 패킷 하나에 대한 실제 처리. 순서대로:
+     * <ol>
+     *     <li>{@code gatewayId} 헤더 확인 — 없으면 groupId를 구할 수 없어 즉시 드롭.
+     *         있으면 파싱 성공 여부와 무관하게 먼저 하트비트를 기록함</li>
+     *     <li>{@link MqttPayloadParser}로 페이로드를 {@link CleanTelemetryPacket}으로 파싱,
+     *         실패하면 드롭</li>
+     *     <li>{@link GatewayGroupMappingCache}로 groupId 확정 — Auto-Provisioning 인자로
+     *         필요해서 센서 조회보다 먼저 구함</li>
+     *     <li>{@link SensorLookupCacheService}로 센서 조회, 캐시에 없으면
+     *         {@link SensorService#autoProvision} 으로 즉시 등록하고 캐시까지 채워서 받음</li>
+     *     <li>location 미배치면 드롭 — 신규 등록 센서는 항상 여기 해당함. 위치를 모르는 측정값은
+     *         대시보드/룰엔진 어디에도 쓸 수 없고, InfluxDB는 location_id가 태그라 나중에
+     *         소급 수정도 불가능하므로 적재 전에 버림</li>
+     *     <li>InfluxDB 적재 + RabbitMQ 발행 (둘 다 비동기, Fail-Silent)</li>
+     * </ol>
+     *
+     * @param message 수신한 MQTT 메시지
+     */
+    private void handlePacket(Message<?> message) {
+        Long gatewayId = message.getHeaders().get(DynamicMqttGatewayManager.GATEWAY_ID_HEADER, Long.class);
+
+        if(gatewayId == null) {
             log.warn("gatewayId 헤더 없음 — DynamicMqttGatewayManager의 enrichHeaders 누락 의심 (topic = {})",
                     message.getHeaders().get(MqttHeaders.RECEIVED_TOPIC));
+            return;   // gatewayId 없이는 groupId도 못 구해 Auto-Provisioning 불가
         }
+
+        heartbeatTracker.recordHeartbeat(gatewayId);
 
         Optional<CleanTelemetryPacket> optionalPacket = payloadParser.parse(message.getPayload());
 
         if(optionalPacket.isEmpty()) {
-            log.warn("MQTT 페이로드 파싱 실패, 패킷 드롭 (topic = {})", message.getHeaders().get(MqttHeaders.RECEIVED_TOPIC));
+            log.warn("MQTT 페이로드 파싱 실패, 패킷 드롭 (topic = {})",
+                    message.getHeaders().get(MqttHeaders.RECEIVED_TOPIC));
             return;
         }
+
         CleanTelemetryPacket packet = optionalPacket.get();
-        String deviceEui = packet.devEui();
+        String sensorEui = packet.sensorEui();
 
-        Optional<DeviceCacheEntry> deviceCacheEntry = deviceLookupCacheService.lookup(deviceEui);
+        Optional<Long> optionalGroupId = groupMappingCache.get(gatewayId);
 
-        Long locationId;
-        Long groupId;
-        Long resolvedDeviceId = null;
+        if(optionalGroupId.isEmpty()) {
+            log.warn("게이트웨이 {}의 group 매핑이 캐시에 없어 패킷 드롭 (sensorEui = {})", gatewayId, sensorEui);
+            return;
+        }
 
-        if (deviceCacheEntry.isPresent()) {
-            DeviceCacheEntry device = deviceCacheEntry.get();
-            locationId = device.locationId();
+        Long groupId = optionalGroupId.get();
 
-            if (locationId == null) {
-                log.debug("공간 미배치 기기 패킷 드롭 (devEui = {}, deviceId = {})", deviceEui, device.deviceId());
-                return;
-            }
+        Map<String, Object> fields = packet.object() != null ? packet.object() : Map.of();
 
-            Optional<Long> optionalGroupId = groupMappingCache.get(device.gatewayId());
+        SensorCacheEntry sensor = sensorLookupCacheService.lookup(sensorEui)
+                .orElseGet(() -> sensorService.autoProvision(
+                        gatewayId,
+                        groupId,
+                        sensorEui,
+                        packet.sensorName(),
+                        fields.keySet()
+                ));
 
-            if (optionalGroupId.isEmpty()) {
-                log.warn("게이트웨이 {}의 group 매핑이 캐시에 없어 패킷 드롭 (devEui = {})", device.gatewayId(), deviceEui);
-                return;
-            }
+        Long locationId = sensor.locationId();
 
-            groupId = optionalGroupId.get();
-            resolvedDeviceId = device.deviceId();
-        } else {
-            // TEMP: Issue04(Auto-Provisioning) 전까지 InfluxDB 적재 파이프라인 테스트용 — 실제 서비스 로직 아님, Issue04 완료 시 제거
-            //TODO: device / device_attributes 생성
-            // deviceLookupCacheService.populate() 호출 캐시 채우기
-            log.info("미등록 기기 패킷 수신, TEMP 플레이스홀더로 InfluxDB만 적재 devEui = {}", deviceEui);
-            locationId = 0L;
-            groupId = 0L;
+        if(locationId == null) {
+            // 신규 등록 센서는 항상 여기서 걸림 — 유저가 대시보드에서 공간을 배치해야 이후 패킷이 흐름.
+            // 위치를 모르는 측정값은 대시보드/룰엔진/리포트 어디에도 못 쓰고, InfluxDB는 location_id가
+            // 태그라 나중에 소급 수정도 불가능하므로 적재 전에 드롭함.
+            log.info("공간 미배치 센서 패킷 드롭 (sensorEui = {}, sensorId = {})", sensorEui, sensor.sensorId());
+            return;
         }
 
         Instant time = Instant.parse(packet.time());
-        Map<String, Object> fields = packet.object();
 
-
-        DynamicTelemetryMeasurement telemetryMeasurement = new DynamicTelemetryMeasurement(
+        influxWriter.write(new DynamicTelemetryMeasurement(
                 time,
                 String.valueOf(groupId),
                 String.valueOf(locationId),
-                deviceEui,
-                packet.deviceName(),
+                sensorEui,
+                packet.sensorName(),
                 fields
-        );
+        ));
 
-        //InfluxDB 적재
-        influxWriter.write(telemetryMeasurement);
-
-        if (resolvedDeviceId == null) {
-            // 미등록 기기는 devices_id가 없어 Rule Engine 매칭이 의미 없으므로 RabbitMQ 발행은 건너뜀
-            return;
-        }
-
-        // RabbitMQ 논블로킹 디스패처로 telemetryMeasurement 전달
-        TelemetryEventMessage telemetryEventMessage = new TelemetryEventMessage(
-                groupId,
-                locationId,
-                resolvedDeviceId,
-                fields,
-                time
-        );
-
-        telemetryPublisher.publish(telemetryEventMessage);
+        telemetryPublisher.publish(new TelemetryEventMessage(
+                groupId, locationId, sensor.sensorId(), fields, time));
     }
 }

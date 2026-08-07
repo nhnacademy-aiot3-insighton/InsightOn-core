@@ -26,7 +26,7 @@ public record MqttGatewayConnectionInfo (
         String password
 ) {
     // connection_config에 topics가 명시되지 않은 게이트웨이를 위한 기본값 — ChirpStack 표준 업링크 토픽 규격.
-    private static final String[] DEFAULT_TOPICS = {"application/+/device/+/event/up"};
+    private static final String[] DEFAULT_TOPICS = {"application/+/sensor/+/event/up"};
 
     /**
      * {@code Gateway} 엔티티의 {@code connectionConfig}(JSONB)를 파싱해 접속 정보 객체로 변환함.
@@ -43,7 +43,7 @@ public record MqttGatewayConnectionInfo (
     public static MqttGatewayConnectionInfo from(Gateway gateway) {
         Map<String, Object> config = gateway.getConnectionConfig();
 
-        String[] brokerUrl = ((List<?>) config.get("broker_urls")).stream()
+        String[] brokerUrl = ((List<?>) config.get("brokerUrls")).stream()
                 .map(String::valueOf)
                 .toArray(String[]::new);
 
