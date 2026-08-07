@@ -21,6 +21,8 @@ import com.insighton.core.location.dto.response.LocationResponse;
 import com.insighton.core.location.entity.Location;
 import com.insighton.core.location.event.LocationDeletedEvent;
 import com.insighton.core.location.service.LocationService;
+import com.insighton.core.sensors.entity.Sensor;
+import com.insighton.core.sensors.service.SensorService;
 import com.insighton.core.widgets.dto.chart.ChartDataResponse;
 import com.insighton.core.widgets.dto.request.WidgetSaveRequest;
 import com.insighton.core.widgets.dto.response.WidgetsListResponse;
@@ -45,6 +47,7 @@ public class CoreManagementUseCase {
     private final ApplicationEventPublisher eventPublisher;
     private final DashboardService dashboardService;
     private final WidgetService widgetService;
+    private final SensorService sensorService;
 
     // ====================== Group Controller ======================
 
@@ -167,6 +170,8 @@ public class CoreManagementUseCase {
         gatewayService.deleteByGroupId(groupId);
 
         groupMemberService.deleteGroupMemberAll(userId, groupId);
+
+        sensorService.deleteAll(userId, groupId);
 
         List<Long> locationIds = locationService.getLocationListByGroupId(groupId).stream()
                 .map(Location::getLocationId)
@@ -298,6 +303,10 @@ public class CoreManagementUseCase {
         validationIsAdmin(groupMember);
 
         // sensors는 location 값만 null로 바꿔주기
+        List<Sensor> sensors = sensorService.getSensorByLocationId(groupId, targetLocationId);
+        for (Sensor sensor : sensors) {
+            sensor.updateLocation(null);
+        }
 
         // dashboards 삭제
         dashboardDelete(targetLocationId);
@@ -317,7 +326,6 @@ public class CoreManagementUseCase {
         // dashboards 지우는 로직 추가
         for (Location location : locationList) {
             Long locationId = location.getLocationId();
-            // sensors는 location 값만 null로 바꿔주기
 
             // dashboard 다 삭제해주기
             dashboardDelete(locationId);
