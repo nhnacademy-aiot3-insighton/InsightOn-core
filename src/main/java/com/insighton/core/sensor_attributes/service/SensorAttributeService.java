@@ -1,5 +1,6 @@
 package com.insighton.core.sensor_attributes.service;
 
+import com.insighton.core.sensor_attributes.dto.MetricDefinitionCreateRequest;
 import com.insighton.core.sensor_attributes.dto.MetricDefinitionResponse;
 import com.insighton.core.sensor_attributes.dto.SensorAttributeResponse;
 
@@ -9,6 +10,9 @@ import java.util.List;
  * 장치 속성(SensorAttribute) 데이터 서빙 및 액추에이터 제어 상태 갱신 인터페이스.
  */
 public interface SensorAttributeService {
+
+    // 메트릭 정의 추가
+    void createMetricDefinition(MetricDefinitionCreateRequest request);
 
     /**
      * 특정 기기에 정의된 모든 속성(메트릭) 목록을 조회합니다.
@@ -28,5 +32,7 @@ public interface SensorAttributeService {
     boolean isValidSensorAttribute(Long sensorId, String metricKey);
 
     List<MetricDefinitionResponse> getAllMetricDefinitions();
+
+    void deleteAttribute(Long userId, Long sensorId, String metricKey);
 
 }
