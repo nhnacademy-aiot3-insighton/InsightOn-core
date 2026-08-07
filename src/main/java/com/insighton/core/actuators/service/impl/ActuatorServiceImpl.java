@@ -50,7 +50,7 @@ public class ActuatorServiceImpl implements ActuatorService {
     private void validateActuatorOwnership(Actuator entity, Long groupsId) {
 
         boolean belongsToGroup = locationsRepository
-                .findByLocationIdAndGroupGroupId(entity.getLocationId().getLocationId(), groupsId)
+                .findByLocationIdAndGroupGroupId(entity.getLocation().getLocationId(), groupsId)
                 .isPresent();
         if (!belongsToGroup) {
             throw new ActuatorNotFoundException(entity.getActuatorId());

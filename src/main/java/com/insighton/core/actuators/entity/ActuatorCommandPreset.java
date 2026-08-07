@@ -1,6 +1,7 @@
-package com.insighton.core.actuator_run_logs.entity;
+package com.insighton.core.actuators.entity;
 
-import com.insighton.core.actuators.entity.ActuatorType;
+import com.insighton.core.actuator_run_logs.entity.CommandType;
+import com.insighton.core.actuator_run_logs.entity.CommandValueRule;
 
 import java.util.Map;
 import java.util.Set;
