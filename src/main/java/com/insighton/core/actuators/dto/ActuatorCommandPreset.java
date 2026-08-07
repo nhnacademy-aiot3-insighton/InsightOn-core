@@ -1,7 +1,7 @@
 package com.insighton.core.actuators.dto;
 
-import com.insighton.core.actuator_run_logs.entity.CommandType;
-import com.insighton.core.actuator_run_logs.entity.CommandValueRule;
+import com.insighton.core.actuatorrunlogs.entity.CommandType;
+import com.insighton.core.actuatorrunlogs.entity.CommandValueRule;
 import com.insighton.core.actuators.entity.ActuatorType;
 
 import java.util.Map;

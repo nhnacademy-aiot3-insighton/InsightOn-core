@@ -1,12 +1,12 @@
 package com.insighton.core.actuators.controller;
 
-import com.insighton.core.actuator_run_logs.dto.ActuatorRunLogInternalResponse;
-import com.insighton.core.actuator_run_logs.entity.CommandType;
-import com.insighton.core.actuator_run_logs.entity.ExecutedByType;
+import com.insighton.core.actuatorrunlogs.dto.ActuatorRunLogInternalResponse;
+import com.insighton.core.actuatorrunlogs.entity.CommandType;
+import com.insighton.core.actuatorrunlogs.entity.ExecutedByType;
 import com.insighton.core.actuators.entity.Actuator;
 import com.insighton.core.actuators.dto.ActuatorCommandPreset;
 import com.insighton.core.actuators.dto.ActuatorCommandRequest;
-import com.insighton.core.actuator_run_logs.service.ActuatorRunLogService;
+import com.insighton.core.actuatorrunlogs.service.ActuatorRunLogService;
 import com.insighton.core.actuators.entity.ActuatorType;
 import com.insighton.core.actuators.exception.ActuatorLocationsActuatorTypeNotFound;
 import com.insighton.core.actuators.exception.InvalidActuatorValueException;
