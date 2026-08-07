@@ -1,6 +1,7 @@
 package com.insighton.core.sensors.service.impl;
 
 import com.insighton.core.sensor_attributes.entity.SensorAttribute;
+import com.insighton.core.sensor_attributes.repository.MetricDefinitionRepository;
 import com.insighton.core.sensor_attributes.repository.SensorAttributeRepository;
 import com.insighton.core.gateway.entity.Gateway;
 import com.insighton.core.gateway.exception.GatewayNotFoundException;
@@ -23,6 +24,7 @@ import com.insighton.core.sensors.exception.InvalidSensorValueException;
 import com.insighton.core.sensors.repository.SensorRepository;
 import com.insighton.core.sensors.service.SensorService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +34,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -44,6 +47,7 @@ public class SensorServiceImpl implements SensorService {
     private final GroupRepository groupsRepository; // 관계 엔티티 조회용
     private final LocationRepository locationsRepository; // 관계 엔티티 조회용
     private final GroupMemberService groupMembersService; // 그룹 멤버 권한 검증용 서비스
+    private final MetricDefinitionRepository metricDefinitionRepository; // 기기속성쪽 메트릭키를 메트릭정의 메트릭키값 주입
 
     /**
      * 요청자가 해당 그룹의 MANAGER 이상 권한을 가졌는지 검증하는 내부 헬퍼 메서드
@@ -112,14 +116,20 @@ public class SensorServiceImpl implements SensorService {
         // 패킷 안에 있던 데이터 항목들(예: ["co2", "temperature"])을 확인해 속성(Attribute) 테이블도 채움
         if (metricKeys != null && !metricKeys.isEmpty()) {
             List<SensorAttribute> attributes = metricKeys.stream()
+                    // metric_definitions에 실제로 등록된 키만 통과시킴 - 없는키는 걸러냄
+                    .filter(metricKey -> metricDefinitionRepository.findByMetricKeyIgnoreCase(metricKey).isPresent())
                     .map(metricKey -> SensorAttribute.builder()
                             .sensor(savedSensor) // 방금 DB에 저장한 센서(부모)와 연결 (FK 매핑).
-                            .groupId(groups) // 속성 엔티티에도 그룹 주입
                             .metricKey(metricKey) // 수집 항목 키(예: "co2")를 저장
                             .build())
                     .toList();
 
-            // sensor_sensor_attributes DB 테이블에 속성들을 한 번에 저장
+            if(attributes.size() < metricKeys.size()){
+                log.warn("등록되지 않은 메트릭키가 패킷에 있음 sensorEui={}, 전체={}, 저장={}건",
+                        sensorEui,  metricKeys.size(), attributes.size());
+            }
+
+            // sensor_attributes DB 테이블에 속성들을 한 번에 저장
             sensorAttributeRepository.saveAll(attributes);
         }
 
@@ -275,8 +285,9 @@ public class SensorServiceImpl implements SensorService {
                 .filter(Objects::nonNull) // ACTUATOR타입은 EUI가 null이라 걸러냄
                 .forEach(sensorLookupCacheService::evict); // 하나씩 evict 호출
 
-        // DB삭제 (groupId 소속만)
-        sensorAttributeRepository.deleteByGroupIdGroupId(groupId);
+        // DB삭제 (groupId 소속만) 기기속성쪽에서 group이 빠져서 코드 재조정
+        List<Long> sensorIds = sensors.stream().map(Sensor::getSensorId).toList();
+        sensorAttributeRepository.deleteAllBySensorSensorIdIn(sensorIds);
         sensorRepository.deleteAll(sensors);
     }
 
