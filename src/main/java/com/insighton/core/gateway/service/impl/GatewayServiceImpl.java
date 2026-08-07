@@ -4,6 +4,7 @@ import com.insighton.core.gateway.dto.GatewayCreateRequest;
 import com.insighton.core.gateway.dto.GatewayResponse;
 import com.insighton.core.gateway.dto.GatewayUpdateRequest;
 import com.insighton.core.gateway.entity.Gateway;
+import com.insighton.core.gateway.event.GatewayBrokerChangedEvent;
 import com.insighton.core.gateway.event.GatewayDeletedEvent;
 import com.insighton.core.gateway.exception.GatewayAccessDeniedException;
 import com.insighton.core.gateway.exception.GatewayNotFoundException;
@@ -11,6 +12,10 @@ import com.insighton.core.gateway.repository.GatewayRepository;
 import com.insighton.core.gateway.service.GatewayService;
 import com.insighton.core.groupmember.entity.GroupMember;
 import com.insighton.core.groupmember.repository.GroupMemberRepository;
+import com.insighton.core.mqtt.cache.SensorLookupCacheService;
+import com.insighton.core.sensor_attributes.repository.SensorAttributeRepository;
+import com.insighton.core.sensors.entity.Sensor;
+import com.insighton.core.sensors.repository.SensorRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -29,6 +34,9 @@ public class GatewayServiceImpl implements GatewayService {
 
     private final GatewayRepository gatewayRepository;
     private final GroupMemberRepository groupMemberRepository;
+    private final SensorRepository sensorRepository;
+    private final SensorAttributeRepository sensorAttributeRepository;
+    private final SensorLookupCacheService sensorLookupCacheService;
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
@@ -89,7 +97,17 @@ public class GatewayServiceImpl implements GatewayService {
 
         requireManagerRole(userId, gateway.getGroupId());
 
+        boolean brokerChanged = !Objects.equals(
+                gateway.getConnectionConfig().get("brokerUrls"),
+                request.connectionConfig().get("brokerUrls")
+        );
+
         gateway.update(request.name(), request.protocolType(), request.connectionConfig());
+
+        if(brokerChanged) {
+            purgeSensorOf(gateway);
+            eventPublisher.publishEvent(new GatewayBrokerChangedEvent(gatewayId));
+        }
     }
 
     @Transactional
@@ -157,5 +175,35 @@ public class GatewayServiceImpl implements GatewayService {
         if (!groupMember.getGroup().getGroupId().equals(groupsId)) {
             throw new GatewayAccessDeniedException("다른 그룹의 리소스입니다.");
         }
+    }
+
+
+    /**
+     * 브로커 주소가 바뀌면 물리적으로 다른 브로커/네트워크를 가리키게 되어 기존 센서의
+     * devEui 매핑이 더 이상 유효하지 않으므로, 해당 게이트웨이 소속 센서와 속성을 전부 삭제한다.
+     * 캐시(Caffeine/Redis)도 함께 비우지 않으면 DB에 없는 센서를 캐시가 계속 들고 있어
+     * 다음 패킷에서 삭제된 sensorId로 RabbitMQ까지 발행되는 정합성 문제가 생긴다.
+     */
+    private void purgeSensorOf(Gateway gateway) {
+        List<Sensor> sensors = sensorRepository.findByGatewayGatewayId(gateway.getGatewayId());
+
+        if(sensors.isEmpty()) {
+            return;
+        }
+
+        List<Long> sensorIds = sensors.stream()
+                .map(Sensor::getSensorId)
+                .toList();
+
+        sensorAttributeRepository.deleteAllBySensorSensorIdIn(sensorIds);
+        sensorRepository.deleteAll(sensors);
+
+        sensors.stream()
+                .map(Sensor::getSensorEui)
+                .filter(Objects::nonNull)
+                .forEach(sensorLookupCacheService::evict);
+
+        log.info("게이트웨이 {} 브로커 주소 변경 — 소속 센서 {}건 삭제 및 캐시 정리",
+                gateway.getGatewayId(), sensors.size());
     }
 }
