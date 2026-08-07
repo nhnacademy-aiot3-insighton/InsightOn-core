@@ -21,6 +21,9 @@ public interface SensorRepository extends JpaRepository<Sensor, Long> {
     // EUI로 단건 조회
     Optional<Sensor> findBySensorEui(String sensorEui);
 
+    // gatewayId로 sensor들 조회 Gateway brokerUrls 삭제 시 사용
+    List<Sensor> findByGatewayGatewayId(Long gatewayId);
+
     // 장소 삭제용
     void deleteAllByLocationLocationId(Long locationId);
 

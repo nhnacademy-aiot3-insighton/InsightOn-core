@@ -1,6 +1,6 @@
 package com.insighton.core.influx;
 
-import com.insighton.core.actuator_run_logs.event.ActuatorStatusChangedEvent;
+import com.insighton.core.actuatorrunlogs.event.ActuatorStatusChangedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;

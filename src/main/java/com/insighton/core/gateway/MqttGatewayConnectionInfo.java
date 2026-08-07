@@ -43,7 +43,7 @@ public record MqttGatewayConnectionInfo (
     public static MqttGatewayConnectionInfo from(Gateway gateway) {
         Map<String, Object> config = gateway.getConnectionConfig();
 
-        String[] brokerUrl = ((List<?>) config.get("broker_urls")).stream()
+        String[] brokerUrl = ((List<?>) config.get("brokerUrls")).stream()
                 .map(String::valueOf)
                 .toArray(String[]::new);
 
