@@ -47,22 +47,4 @@ public class SensorAttribute {
     @Column(name = "metric_key", length = 50, nullable = false)
     private String metricKey;
 
-    /**
-     * 액추에이터 및 가상 시뮬레이터 전용 최신 수치/텍스트 상태값 저장 필드 (ex. "ON", "OFF", "COOL", "24.0")
-     */
-    @Column(name = "current_value_str", length = 50)
-    private String currentValueStr;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "group_id", nullable = false)
-    private Group groupId; // 소속 회사/그룹 ID (FK)
-
-    /**
-     * 액추에이터 제어 명령 집행 또는 상태 변경 시 최신 상태값을 업데이트하는 비즈니스 메서드
-     *
-     * @param newValue 새롭게 변경될 상태/수치 문자열
-     */
-    public void updateCurrentValue(String newValue) {
-        this.currentValueStr = newValue;
-    }
 }
