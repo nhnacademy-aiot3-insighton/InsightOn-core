@@ -2,6 +2,7 @@ package com.insighton.core.sensors.service;
 
 import com.insighton.core.mqtt.cache.dto.SensorCacheEntry;
 import com.insighton.core.sensors.dto.SensorResponse;
+import com.insighton.core.sensors.entity.Sensor;
 
 import java.util.List;
 import java.util.Set;
@@ -35,4 +36,13 @@ public interface SensorService {
     // 조건별 장치 검색 (단순 분기)
     List<SensorResponse> searchSensors(Long userId, Long groupId, Long id, String eui,
                                        Long locationId, String sensorName);
+
+    /**
+     * location 삭제를 위해 만들었습니다
+     *
+     * @param groupId    location이 속해있는 group ID
+     * @param locationId device와 연결되어있는 location
+     * @return sensor response
+     */
+    List<Sensor> getSensorByLocationId(Long groupId, Long locationId);
 }

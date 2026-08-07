@@ -1,7 +1,5 @@
 package com.insighton.core.sensors.service.impl;
 
-import com.insighton.core.sensor_attributes.entity.SensorAttribute;
-import com.insighton.core.sensor_attributes.repository.SensorAttributeRepository;
 import com.insighton.core.gateway.entity.Gateway;
 import com.insighton.core.gateway.exception.GatewayNotFoundException;
 import com.insighton.core.gateway.repository.GatewayRepository;
@@ -16,10 +14,12 @@ import com.insighton.core.location.exception.LocationNotFoundException;
 import com.insighton.core.location.repository.LocationRepository;
 import com.insighton.core.mqtt.cache.SensorLookupCacheService;
 import com.insighton.core.mqtt.cache.dto.SensorCacheEntry;
+import com.insighton.core.sensor_attributes.entity.SensorAttribute;
+import com.insighton.core.sensor_attributes.repository.SensorAttributeRepository;
 import com.insighton.core.sensors.dto.SensorResponse;
 import com.insighton.core.sensors.entity.Sensor;
-import com.insighton.core.sensors.exception.SensorNotFoundException;
 import com.insighton.core.sensors.exception.InvalidSensorValueException;
+import com.insighton.core.sensors.exception.SensorNotFoundException;
 import com.insighton.core.sensors.repository.SensorRepository;
 import com.insighton.core.sensors.service.SensorService;
 import lombok.RequiredArgsConstructor;
@@ -181,6 +181,11 @@ public class SensorServiceImpl implements SensorService {
             // 캐시 서비스에 최신 정보 적재
             sensorLookupCacheService.populate(updatedCacheEntry);
         }
+    }
+
+    @Override
+    public List<Sensor> getSensorByLocationId(Long groupId, Long locationId) {
+        return sensorRepository.findByGroupGroupIdAndLocationLocationId(groupId, locationId);
     }
 
     @Override
