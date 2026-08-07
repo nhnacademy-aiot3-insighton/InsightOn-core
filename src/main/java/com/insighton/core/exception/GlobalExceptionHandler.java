@@ -2,7 +2,7 @@ package com.insighton.core.exception;
 
 import com.insighton.core.actuators.exception.*;
 import com.insighton.core.dashboards.exception.DashboardNotFoundException;
-import com.insighton.core.device_attributes.exception.MetricKeyNotFoundException;
+import com.insighton.core.sensor_attributes.exception.MetricKeyNotFoundException;
 import com.insighton.core.gateway.exception.GatewayAccessDeniedException;
 import com.insighton.core.gateway.exception.GatewayNotFoundException;
 import com.insighton.core.groupmember.exception.*;
@@ -14,8 +14,8 @@ import com.insighton.core.location.exception.EmptyValueException;
 import com.insighton.core.location.exception.LocationNotFoundException;
 import com.insighton.core.widgets.exception.WidgetConfigNotFoundException;
 import com.insighton.core.widgets.exception.WidgetNotFoundException;
-import com.insighton.core.sensors.exception.DeviceNotFoundException;
-import com.insighton.core.sensors.exception.InvalidDeviceValueException;
+import com.insighton.core.sensors.exception.SensorNotFoundException;
+import com.insighton.core.sensors.exception.InvalidSensorValueException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -33,7 +33,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({GatewayNotFoundException.class, GroupNotFoundException.class,
             InviteTokenNotFoundException.class, GroupMemberNotFoundException.class,
             UserIdNotFoundException.class, LocationNotFoundException.class,
-            DeviceNotFoundException.class, ActuatorNotFoundException.class,
+            SensorNotFoundException.class, ActuatorNotFoundException.class,
             MetricKeyNotFoundException.class, DashboardNotFoundException.class, 
             WidgetNotFoundException.class, WidgetConfigNotFoundException.class,
             ActuatorLocationsActuatorTypeNotFound.class
@@ -59,7 +59,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({IllegalArgumentException.class, SuperManagerCannotLeaveException.class,
             NotJoinedAnyGroupException.class, ManagerRoleRequiredForTransferException.class,
-            InvalidActuatorValueException.class, InvalidDeviceValueException.class,
+            InvalidActuatorValueException.class, InvalidSensorValueException.class,
             CouldNotAbleToUpdateByUserToSystem.class, EmptyValueException.class
     })
     public ResponseEntity<ErrorResponse> handleBadRequest(RuntimeException e) {

@@ -88,7 +88,7 @@ public class ActuatorController {
             @PathVariable("group-id")Long groupsId,
             @PathVariable("actuator-id")Long actuatorId,
             @Valid @RequestBody ActuatorNameUpdateRequest request) {
-        actuatorService.updateActuatorName(userId, groupsId, actuatorId, request.deviceName());
+        actuatorService.updateActuatorName(userId, groupsId, actuatorId, request.sensorName());
         return ResponseEntity.ok().build();
     }
 

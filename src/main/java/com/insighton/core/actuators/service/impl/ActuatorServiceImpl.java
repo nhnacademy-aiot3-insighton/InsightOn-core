@@ -76,7 +76,7 @@ public class ActuatorServiceImpl implements ActuatorService {
         // 전달받은 요청 정보로 액추에이터 엔티티 생성 및 저장[cite: 6]
         Actuator entity = Actuator.builder()
                 .location(locations)
-                .deviceName(request.deviceName())
+                .sensorName(request.sensorName())
                 .actuatorType(request.actuatorType())
                 .currentState(request.currentState())
                 .stateUpdatedAt(OffsetDateTime.now())

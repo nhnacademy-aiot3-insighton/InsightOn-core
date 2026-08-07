@@ -39,7 +39,7 @@ class GroupMemberServiceTest {
     private AuthClient authClient;
 
     @InjectMocks
-    private GroupMemberServiceImpl groupMembersService;
+    private GroupMemberServiceImpl groupMemberService;
 
     // ==================== 가입 & 생성 ====================
 
@@ -52,7 +52,7 @@ class GroupMemberServiceTest {
         given(groupMemberRepository.existsByUserId(1L)).willReturn(false);
 
         // when
-        groupMembersService.joinGroupByToken(group, request);
+        groupMemberService.joinGroupByToken(group, request);
 
         // then
         verify(groupMemberRepository, times(1)).save(any(GroupMember.class));
@@ -67,7 +67,7 @@ class GroupMemberServiceTest {
         given(groupMemberRepository.existsByUserId(1L)).willReturn(true);
 
         // when & then
-        assertThatThrownBy(() -> groupMembersService.joinGroupByToken(group, request))
+        assertThatThrownBy(() -> groupMemberService.joinGroupByToken(group, request))
                 .isInstanceOf(AlreadyJoinedException.class);
     }
 
@@ -79,7 +79,7 @@ class GroupMemberServiceTest {
         given(groupMemberRepository.existsByUserId(1L)).willReturn(false);
 
         // when
-        groupMembersService.createGroupMember(group, 1L);
+        groupMemberService.createGroupMember(group, 1L);
 
         // then
         verify(groupMemberRepository, times(1)).save(any(GroupMember.class));
@@ -97,7 +97,7 @@ class GroupMemberServiceTest {
         given(groupMemberRepository.findAllByGroupGroupId(1L)).willReturn(List.of(mock(GroupMemberListResponse.class)));
 
         // when
-        List<GroupMemberListResponse> result = groupMembersService.getGroupMemberList(1L, 1L);
+        List<GroupMemberListResponse> result = groupMemberService.getGroupMemberList(1L, 1L);
 
         // then
         assertThat(result).hasSize(1);
@@ -112,7 +112,7 @@ class GroupMemberServiceTest {
         given(groupMemberRepository.findByGroupGroupIdAndUserId(1L, 1L)).willReturn(Optional.of(requester));
 
         // when & then
-        assertThatThrownBy(() -> groupMembersService.getGroupMemberList(1L, 1L))
+        assertThatThrownBy(() -> groupMemberService.getGroupMemberList(1L, 1L))
                 .isInstanceOf(UnAuthorizedAccessException.class);
     }
 
@@ -140,7 +140,7 @@ class GroupMemberServiceTest {
         given(authClient.getUserResponse(userId)).willReturn(new AuthUserResponse(userId, "testUser", "010-0000-0000", "녀어렁"));
 
         // when
-        GroupMemberResponse result = groupMembersService.getGroupMember(userId, groupId, groupMemberId);
+        GroupMemberResponse result = groupMemberService.getGroupMember(userId, groupId, groupMemberId);
 
         // then
         assertThat(result.userName()).isEqualTo("testUser");
@@ -161,7 +161,7 @@ class GroupMemberServiceTest {
         given(groupMemberRepository.findByGroupMemberIdAndGroupGroupId(1L, 1L)).willReturn(Optional.of(target));
 
         // when
-        groupMembersService.toggleManagerRole(1L, 1L, 1L);
+        groupMemberService.toggleManagerRole(1L, 1L, 1L);
 
         // then
         verify(target, times(1)).updateRole(GroupMember.GroupRole.MANAGER);
@@ -185,7 +185,7 @@ class GroupMemberServiceTest {
         given(groupMemberRepository.findByGroupMemberIdAndGroupGroupId(2L, 1L)).willReturn(Optional.of(targetManager));
 
         // when
-        groupMembersService.toggleManagerRole(1L, 2L, 1L);
+        groupMemberService.toggleManagerRole(1L, 2L, 1L);
 
         // then
         verify(targetManager, times(1)).updateRole(GroupMember.GroupRole.MEMBER);
@@ -204,7 +204,7 @@ class GroupMemberServiceTest {
         given(groupMemberRepository.findByGroupMemberIdAndGroupGroupId(2L, 1L)).willReturn(Optional.of(target));
 
         // when & then
-        assertThatThrownBy(() -> groupMembersService.toggleManagerRole(1L, 2L, 1L))
+        assertThatThrownBy(() -> groupMemberService.toggleManagerRole(1L, 2L, 1L))
                 .isInstanceOf(NoPermissionException.class);
     }
 
@@ -224,7 +224,7 @@ class GroupMemberServiceTest {
         given(groupMemberRepository.findByGroupMemberIdAndGroupGroupId(2L, 1L)).willReturn(Optional.of(targetManager));
 
         // when & then
-        assertThatThrownBy(() -> groupMembersService.toggleManagerRole(1L, 2L, 1L))
+        assertThatThrownBy(() -> groupMemberService.toggleManagerRole(1L, 2L, 1L))
                 .isInstanceOf(NoPermissionException.class);
     }
 
@@ -243,7 +243,7 @@ class GroupMemberServiceTest {
         given(groupMemberRepository.findByGroupMemberIdAndGroupGroupId(2L, 1L)).willReturn(Optional.of(superManagerTarget));
 
         // when & then
-        assertThatThrownBy(() -> groupMembersService.toggleManagerRole(1L, 2L, 1L))
+        assertThatThrownBy(() -> groupMemberService.toggleManagerRole(1L, 2L, 1L))
                 .isInstanceOf(NoPermissionException.class);
     }
 
@@ -260,7 +260,7 @@ class GroupMemberServiceTest {
         given(groupMemberRepository.findByGroupMemberIdAndGroupGroupId(1L, 1L)).willReturn(Optional.of(target));
 
         // when
-        groupMembersService.kickGroupMember(1L, 1L, 1L);
+        groupMemberService.kickGroupMember(1L, 1L, 1L);
 
         // then
         verify(groupMemberRepository, times(1)).delete(target);
@@ -279,7 +279,7 @@ class GroupMemberServiceTest {
         given(groupMemberRepository.findByGroupMemberIdAndGroupGroupId(1L, 1L)).willReturn(Optional.of(target));
 
         // when & then
-        assertThatThrownBy(() -> groupMembersService.kickGroupMember(1L, 1L, 1L))
+        assertThatThrownBy(() -> groupMemberService.kickGroupMember(1L, 1L, 1L))
                 .isInstanceOf(SuperManagerCannotLeaveException.class);
     }
 
@@ -294,7 +294,7 @@ class GroupMemberServiceTest {
         given(groupMemberRepository.findByGroupGroupIdAndUserId(1L, 1L)).willReturn(Optional.of(admin));
 
         // when
-        groupMembersService.deleteGroupMemberAll(1L, 1L);
+        groupMemberService.deleteGroupMemberAll(1L, 1L);
 
         // then
         verify(groupMemberRepository, times(1)).deleteAllByGroupGroupId(1L);
@@ -309,7 +309,7 @@ class GroupMemberServiceTest {
         given(groupMemberRepository.findByGroupGroupIdAndUserId(1L, 1L)).willReturn(Optional.of(member));
 
         // when
-        groupMembersService.leaveGroup(1L, 1L);
+        groupMemberService.leaveGroup(1L, 1L);
 
         // then
         verify(groupMemberRepository, times(1)).delete(member);
@@ -324,7 +324,7 @@ class GroupMemberServiceTest {
         given(groupMemberRepository.findByGroupGroupIdAndUserId(1L, 1L)).willReturn(Optional.of(member));
 
         // when & then
-        assertThatThrownBy(() -> groupMembersService.leaveGroup(1L, 1L))
+        assertThatThrownBy(() -> groupMemberService.leaveGroup(1L, 1L))
                 .isInstanceOf(SuperManagerCannotLeaveException.class);
     }
 
@@ -337,7 +337,7 @@ class GroupMemberServiceTest {
         given(groupMemberRepository.existsByUserId(1L)).willReturn(false);
 
         // when & then
-        groupMembersService.validateUserNotInAnyGroup(1L);
+        groupMemberService.validateUserNotInAnyGroup(1L);
     }
 
     @Test
@@ -347,7 +347,7 @@ class GroupMemberServiceTest {
         given(groupMemberRepository.existsByUserId(1L)).willReturn(true);
 
         // when & then
-        assertThatThrownBy(() -> groupMembersService.validateUserNotInAnyGroup(1L))
+        assertThatThrownBy(() -> groupMemberService.validateUserNotInAnyGroup(1L))
                 .isInstanceOf(AlreadyJoinedException.class);
     }
 }

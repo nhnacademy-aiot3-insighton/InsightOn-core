@@ -6,7 +6,7 @@ import lombok.Builder;
 @Builder
 public record ActuatorCreateServiceDto(
         Long locationId,
-        String deviceName,
+        String sensorName,
         ActuatorType actuatorType
 ) {
 }

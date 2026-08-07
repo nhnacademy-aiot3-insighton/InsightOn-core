@@ -2,7 +2,7 @@ package com.insighton.core.mqtt.cache.config;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import com.insighton.core.mqtt.cache.dto.DeviceCacheEntry;
+import com.insighton.core.mqtt.cache.dto.SensorCacheEntry;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.context.annotation.Bean;
@@ -14,7 +14,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 /**
  * devEui 3계층 캐싱에 필요한 Caffeine/Redis 빈을 등록하는 설정 클래스.
- * 이 클래스가 만드는 빈들은 {@link DeviceLookupCacheService} 전용이며, mqtt 모듈 전역 설정이 아님.
+ * 이 클래스가 만드는 빈들은 {@link SensorLookupCacheService} 전용이며, mqtt 모듈 전역 설정이 아님.
  */
 @Configuration
 public class MqttCacheConfig {
@@ -26,7 +26,7 @@ public class MqttCacheConfig {
      * @return devEui 문자열을 키로 하는 로컬 캐시
      */
     @Bean
-    public Cache<String, DeviceCacheEntry> deviceEuiLocalCache() {
+    public Cache<String, SensorCacheEntry> sensorEuiLocalCache() {
         return Caffeine.newBuilder()
                 .maximumSize(50_000)
                 .expireAfterWrite(10, TimeUnit.MINUTES)
@@ -38,14 +38,14 @@ public class MqttCacheConfig {
      * 키는 문자열로, 값은 JSON으로 직렬화함.
      *
      * @param connectionFactory Redis 연결 팩토리
-     * @return {@link DeviceCacheEntry} 전용 RedisTemplate
+     * @return {@link SensorCacheEntry} 전용 RedisTemplate
      */
     @Bean
-    public RedisTemplate<String, DeviceCacheEntry> devicesRedisTemplate(RedisConnectionFactory connectionFactory) {
-        RedisTemplate<String, DeviceCacheEntry> template = new RedisTemplate<>();
+    public RedisTemplate<String, SensorCacheEntry> sensorRedisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, SensorCacheEntry> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
         template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(new Jackson2JsonRedisSerializer<>(DeviceCacheEntry.class));
+        template.setValueSerializer(new Jackson2JsonRedisSerializer<>(SensorCacheEntry.class));
         return template;
     }
 }

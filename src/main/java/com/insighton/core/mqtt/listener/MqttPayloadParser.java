@@ -23,8 +23,8 @@ public class MqttPayloadParser {
 
     /**
      * 페이로드를 파싱해 정제된 텔레메트리 패킷으로 변환함.
-     * ChirpStack 실제 와이어 포맷은 {@code devEui}/{@code deviceName}이 최상위가 아니라
-     * {@code deviceInfo} 객체 안에 중첩돼 있어서, 우선 그 형태 그대로({@link ChirpStackUplinkPacket})
+     * ChirpStack 실제 와이어 포맷은 {@code sensorEui}/{@code sensorName}이 최상위가 아니라
+     * {@code deviceInfo}(JSON 키) 객체 안에 중첩돼 있어서, 우선 그 형태 그대로({@link ChirpStackUplinkPacket})
      * 역직렬화한 뒤, 이후 로직이 쓰기 편한 평평한 구조로 변환해서 반환함.
      *
      * @param payload MQTT 메시지 본문 (byte[] 또는 String만 지원)
@@ -42,8 +42,8 @@ public class MqttPayloadParser {
 
             return Optional.of(new CleanTelemetryPacket(
                     raw.time(),
-                    raw.deviceInfo().devEui(),
-                    raw.deviceInfo().deviceName(),
+                    raw.sensorInfo().sensorEui(),
+                    raw.sensorInfo().sensorName(),
                     raw.object()
             ));
         } catch (Exception e) {

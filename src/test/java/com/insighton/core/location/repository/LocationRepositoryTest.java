@@ -30,7 +30,7 @@ class LocationRepositoryTest {
     class success {
         @Test
         @DisplayName("그룹의 아이디로 해당하는 모든 location 조회 성공")
-        void findAllByGroups_GroupId_success() {
+        void findAllByGroupGroupId_success() {
             Long groupId = 1L;
 
             List<LocationListResponse> found = locationRepository.findAllByGroupGroupId(groupId);
@@ -41,7 +41,7 @@ class LocationRepositoryTest {
 
         @Test
         @DisplayName("그룹의 아이디와  location 아이디 둘 다 해당하는 location의 상세 정보 조회 성공")
-        void findByLocationIdAndGroups_GroupId_success() {
+        void findByLocationIdAndGroupGroupId_success() {
             Long groupId = 1L;
             Long locationId = 1L;
 
@@ -53,7 +53,7 @@ class LocationRepositoryTest {
 
         @Test
         @DisplayName("그룹의 아이디와 location 이름 둘 다 해당하는 Location이 있는지 확인 성공")
-        void existsByGroups_GroupIdAndLocationName_success() {
+        void existsByGroupGroupIdAndLocationName_success() {
             Long groupId = 1L;
             String locationName = "test-name";
 
@@ -82,7 +82,7 @@ class LocationRepositoryTest {
     class Failure {
         @Test
         @DisplayName("존재하지 않는 그룹 ID로 location 조회 시 빈 리스트 반환")
-        void findAllByGroups_GroupId_empty() {
+        void findAllByGroupGroupId_empty() {
             // given
             Long failGroupId = 999L;
 
@@ -95,7 +95,7 @@ class LocationRepositoryTest {
 
         @Test
         @DisplayName("Location ID가 존재하더라도 Group ID가 일치하지 않으면 조회 실패")
-        void findByLocationIdAndGroups_GroupId_mismatchGroupId() {
+        void findByLocationIdAndGroupGroupId_mismatchGroupId() {
             //given
             Long locationId = 1L;
             Long failGroupId = 999L;
@@ -108,7 +108,7 @@ class LocationRepositoryTest {
 
         @Test
         @DisplayName("그룹의 아이디와 location 이름 둘 다 해당하는 Location이 있는지 확인 실패")
-        void existsByGroups_GroupIdAndLocationName_fail() {
+        void existsByGroupGroupIdAndLocationName_fail() {
             Long groupId = 1L;
             String locationName = "no";
 
