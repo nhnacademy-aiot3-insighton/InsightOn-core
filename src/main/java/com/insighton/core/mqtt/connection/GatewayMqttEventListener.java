@@ -1,5 +1,6 @@
 package com.insighton.core.mqtt.connection;
 
+import com.insighton.core.gateway.event.GatewayBrokerChangedEvent;
 import com.insighton.core.gateway.event.GatewayDeletedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -19,6 +20,14 @@ public class GatewayMqttEventListener {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onGatewayDeleted(GatewayDeletedEvent event) {
+        gatewayManager.unregisterGateway(event.gatewayId());
+    }
+
+    /**
+     * 브로커 주소가 바뀐 게이트웨이의 기존 MQTT 연결 해제
+     */
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onGatewayBrokerChanged(GatewayBrokerChangedEvent event) {
         gatewayManager.unregisterGateway(event.gatewayId());
     }
 }
