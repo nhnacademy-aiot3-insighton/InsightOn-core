@@ -1,45 +1,32 @@
 package com.insighton.core.sensor_attributes.entity;
 
-
-import com.insighton.core.sensor_attributes.exception.MetricKeyNotFoundException;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-
-import java.util.Arrays;
-import java.util.Optional;
+import jakarta.persistence.*;
+import lombok.*;
 
 
+
+@Entity
+@Table(name = "metric_definitions")
 @Getter
-@RequiredArgsConstructor
-public enum MetricDefinition {
-    CO2("co2", "이산화탄소", "ppm"),
-    TEMPERATURE("temperature", "온도", "°C"),
-    HUMIDITY("humidity", "습도", "%"),
-    POWER_STATUS("power_status", "전원상태", null),
-    AC_MODE("ac_mode", "에어컨모드", null),
-    AIR_PURIFIER_MODE("ap_mode", "공기청정기모드", null),
-    VENTILATION_FAN("vf_mode", "환풍기모드", null);
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class MetricDefinition {
+    // TODO: 메트릭정의 삽입
+    //    INSERT INTO metric_definitions (metric_key, metric_name, unit) VALUES
+    //            ('co2', '이산화탄소', 'ppm'),
+    //            ('temperature', '온도', '°C'),
+    //            ('humidity', '습도', '%');
+    //    ON CONFLICT (metric_key) DO NOTHING;
 
-    private final String metricKey;
-    private final String metricName;
-    private final String unit;
+    @Id
+    @Column(name = "metric_key" ,length = 50)
+    private String metricKey;
 
-    // 문자열 metricKey를 전달받아 대소문자 구문 없이 해당하는 MetricDefinition Enum 객체를 찾아 반환하는 정적 메서드
-    public static MetricDefinition fromKey(String metricKey){
-        return Arrays.stream(values()) // 모든 Enum 상수를 스트림으로 변환
-                .filter(m -> m.getMetricKey().equalsIgnoreCase(metricKey)) // 대소문자 무시 비교 필터링
-                .findFirst() // 조건에 일치하는 첫 번째 항목 탐색
-                .orElseThrow(() -> new MetricKeyNotFoundException(metricKey)); // 없을 경우 404 예외 발생
-    }
+    @Column(name = "metric_name", length = 100, nullable = false)
+    private String metricName;
 
+    @Column(name = "unit")
+    private String unit;
 
-    // 예외를 던지지 않고 안전하게 Optional로 메트릭 정의를 탐색하는 메서드
-    public static Optional<MetricDefinition> findFromKey(String metricKey){
-        if(metricKey == null || metricKey.isBlank()){
-            return Optional.empty();
-        }
-        return Arrays.stream(values())
-                .filter(m -> m.getMetricKey().equalsIgnoreCase(metricKey))
-                .findFirst();
-    }
 }
