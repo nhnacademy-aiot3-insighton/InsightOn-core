@@ -1,10 +1,7 @@
 package com.insighton.core.exception;
 
+import com.insighton.core.actuators.exception.*;
 import com.insighton.core.dashboards.exception.DashboardNotFoundException;
-import com.insighton.core.actuators.exception.ActuatorNotFoundException;
-import com.insighton.core.actuators.exception.CouldNotAbleToUpdateByUserToSystem;
-import com.insighton.core.actuators.exception.InvalidActuatorValueException;
-import com.insighton.core.actuators.exception.InvalidServiceCredentialException;
 import com.insighton.core.device_attributes.exception.MetricKeyNotFoundException;
 import com.insighton.core.gateway.exception.GatewayAccessDeniedException;
 import com.insighton.core.gateway.exception.GatewayNotFoundException;
@@ -38,7 +35,8 @@ public class GlobalExceptionHandler {
             UserIdNotFoundException.class, LocationNotFoundException.class,
             DeviceNotFoundException.class, ActuatorNotFoundException.class,
             MetricKeyNotFoundException.class, DashboardNotFoundException.class, 
-            WidgetNotFoundException.class, WidgetConfigNotFoundException.class
+            WidgetNotFoundException.class, WidgetConfigNotFoundException.class,
+            ActuatorLocationsActuatorTypeNotFound.class
     })
     public ResponseEntity<ErrorResponse> handleNotFound(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)

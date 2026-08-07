@@ -41,7 +41,7 @@ public class ActuatorRunLogServiceImpl implements ActuatorRunLogService {
             return;
         }
         // 트랜잭션이 살아있는 이 메서드 안에서 지연로딩 값들을 미리 다 꺼냄 (이벤트 페이로드로 넘기기 전에)
-        String groupId = String.valueOf(actuator.getLocation().getGroups().getGroupId());
+        String groupId = String.valueOf(actuator.getLocation().getGroup().getGroupId());
         String locationId = String.valueOf(actuator.getLocation().getLocationId());
         String actuatorId = String.valueOf(actuator.getActuatorId());
         String actuatorType = actuator.getActuatorType().name();

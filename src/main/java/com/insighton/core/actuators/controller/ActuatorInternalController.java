@@ -1,108 +1,94 @@
 package com.insighton.core.actuators.controller;
 
 import com.insighton.core.actuator_run_logs.dto.ActuatorRunLogInternalResponse;
-import com.insighton.core.actuator_run_logs.entity.ActuatorCommandPreset;
+import com.insighton.core.actuator_run_logs.entity.CommandType;
 import com.insighton.core.actuator_run_logs.entity.ExecutedByType;
+import com.insighton.core.actuators.entity.Actuator;
+import com.insighton.core.actuators.entity.ActuatorCommandPreset;
+import com.insighton.core.actuators.entity.ActuatorCommandRequest;
 import com.insighton.core.actuator_run_logs.service.ActuatorRunLogService;
 import com.insighton.core.actuators.entity.ActuatorType;
+import com.insighton.core.actuators.exception.ActuatorLocationsActuatorTypeNotFound;
+import com.insighton.core.actuators.exception.InvalidActuatorValueException;
 import com.insighton.core.actuators.exception.InvalidServiceCredentialException;
+import com.insighton.core.actuators.repository.ActuatorRepository;
 import com.insighton.core.actuators.service.ActuatorService;
-import com.insighton.core.device_attributes.dto.ActuatorCommandPresetResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.OffsetDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 // 룰엔진/AI 등 신뢰된 내부 서비스 전용 API 모음 - 사용자용 ActuatorController와 완전히 분리
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/internal/actuators")
+@RequestMapping("/internal")
 public class ActuatorInternalController {
 
-    @Value("${internal.service.api-key}")
-    private String internalServiceApiKey;
 
     private final ActuatorRunLogService actuatorRunLogService;
     private final ActuatorService actuatorService;
+    private final ActuatorRepository actuatorRepository;
 
     // AI 리포트 생성 배치 전용 - location 범위/기간별 액추에이터 실행 원본 로그 조회
     // AI 쪽에 아직 인증 헤더 자동부착 인터셉터가 없어서 required=false로 완화 (인터셉터 붙으면 true로 되돌릴 것)
-    @GetMapping("/run-logs")
+    @GetMapping("/actuators/run-logs")
     public ResponseEntity<List<ActuatorRunLogInternalResponse>> getRunLogs(
-            @RequestHeader(value = "X-INTERNAL-API-KEY", required = false) String apiKey,
-            @RequestHeader(value = "X-CALLER-SERVICE", required = false) String callerService,
             @RequestParam List<Long> locationIds,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime to) {
 
-        if (apiKey != null) {
-            validateApiKey(apiKey);
-            // AI_SYSTEM에서 호출된건지 검증
-            if (callerService != null && !"AI_SYSTEM".equals(callerService)) {
-                throw new InvalidServiceCredentialException("허용되지 않은 호출 서비스입니다: " + callerService);
-            }
-        }
-
         return ResponseEntity.ok(actuatorRunLogService.getRunLogsForReport(locationIds, from, to));
     }
 
-    // AI LLM 제안 생성/검증용 - 액추에이터 종류별 지원 명령 목록 조회
-    @GetMapping("/command-presets")
-    public ResponseEntity<ActuatorCommandPresetResponse> getCommandPresets(
-            @RequestHeader(value = "X-INTERNAL-API-KEY", required = false) String apiKey) {
 
-        if (apiKey != null) {
-            validateApiKey(apiKey);
-        }
-
-        Map<String, Set<String>> result = Arrays.stream(ActuatorType.values())
-                .collect(Collectors.toMap(
-                        Enum::name,
-                        type -> ActuatorCommandPreset.getSupportedCommands(type).stream()
-                                .map(Enum::name)
-                                .collect(Collectors.toSet())
-                ));
-        return ResponseEntity.ok(new ActuatorCommandPresetResponse(result));
-    }
 
     // 룰엔진/AI 등 내부 시스템 전용 액추에이터 상태 변경 - 실제 조작(쓰기)이므로 인증 필수 유지
-    @PutMapping("/{actuator-id}/state")
+    @PutMapping("/locations/{location-id}/actuators/state")
     public ResponseEntity<Void> updateActuatorStateBySystem(
-            @RequestHeader("X-INTERNAL-API-KEY") String apiKey,
-            @RequestHeader("X-CALLER-SERVICE") String callerService,
-            @PathVariable("actuator-id") Long actuatorId,
-            @RequestBody Map<String, Object> newState) {
+            @PathVariable("location-id") Long locationId,
+            @RequestBody ActuatorCommandRequest request) {
 
-        validateApiKey(apiKey);
+        if(request.callerService() == ExecutedByType.USER){
+            throw new InvalidServiceCredentialException("이 내부 API는 USER가 호출할 수 없습니다");
+        }
 
-        // executedByType을 요청 파라미터로 안 받고, 인증된 호출자 이름으로만 결정 (클라이언트가 값을 못 고름)
-        ExecutedByType executedByType = resolveExecutedByType(callerService);
+        ActuatorType actuatorType = ActuatorType.valueOf(request.actuatorType());
 
-        actuatorService.updateActuatorState(null, null, actuatorId, newState, executedByType);
+        List<Actuator> actuators = actuatorRepository.findByLocationLocationIdAndActuatorType(locationId, actuatorType);
+
+        if(actuators.isEmpty()){
+            throw new ActuatorLocationsActuatorTypeNotFound(locationId, actuatorType);
+        }
+
+        Map<String, Object> newState = Map.of(request.command(), request.commandValue());
+
+        // 액추에이터 타입의 명령이 맞는지 확인용도
+        for(Actuator actuator : actuators){
+            validateCommandValues(actuatorType, newState);
+        }
+        // 위의 검증이 확인이 되면 업데이트
+        for (Actuator actuator : actuators) {
+            actuatorService.updateActuatorState(null, null, actuator.getActuatorId(), newState, request.callerService());
+        }
+
         return ResponseEntity.ok().build();
     }
 
-    // 공유 비밀키 검증 - 이 컨트롤러의 모든 엔드포인트가 공통으로 사용
-    private void validateApiKey(String apiKey) {
-        if (!internalServiceApiKey.equalsIgnoreCase(apiKey)) {
-            throw new InvalidServiceCredentialException("내부 서비스 인증에 실패했습니다");
-        }
+    // newState의 각 키/값이 이 액추에이터 타입에서 실제로 허용되는 명령/값인지 검증
+    private void validateCommandValues(ActuatorType actuatorType, Map<String, Object> newState) {
+        newState.forEach((key, value) -> {
+            CommandType commandType = CommandType.fromStateKey(key)
+                    .orElseThrow(() -> new InvalidActuatorValueException("알 수 없는 제어 명령키: " + key));
+            String stringValue = String.valueOf(value);
+            if (!ActuatorCommandPreset.isValidValue(actuatorType, commandType, stringValue)) {
+                throw new InvalidActuatorValueException(
+                        "허용되지 않은 명령 값입니다. (commandType=" + commandType + ", value=" + stringValue + ")");
+            }
+        });
     }
 
-    // 화이트리스트에 있는 호출자만 허용 - USER는 애초에 나올 수 없는 구조
-    private ExecutedByType resolveExecutedByType(String callerService) {
-        return switch (callerService) {
-            case "RULE_ENGINE" -> ExecutedByType.RULE_ENGINE;
-            case "AI_SYSTEM" -> ExecutedByType.AI_SYSTEM;
-            default -> throw new InvalidServiceCredentialException("허용되지 않은 호출 서비스입니다: " + callerService);
-        };
-    }
 }

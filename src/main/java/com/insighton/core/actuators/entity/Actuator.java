@@ -27,7 +27,7 @@ public class Actuator {
 
     @JoinColumn(name = "location_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
-    private Locations location; // 장소 ID
+    private Location location; // 장소 ID
 
     @Column(name = "device_name", length = 100, nullable = false)
     private String deviceName; // 디바이스 이름
