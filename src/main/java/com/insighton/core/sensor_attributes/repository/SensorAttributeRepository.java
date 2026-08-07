@@ -45,4 +45,6 @@ public interface SensorAttributeRepository extends JpaRepository<SensorAttribute
     // 장소 삭제 시, 그 장소 소속 센서들의 속성 일괄 삭제용
     void deleteAllBySensorSensorIdIn(List<Long> sensorIds);
 
+    // 특정 센서의 특정 메트릭 속성 하나만 삭제 - (sensorId, metricKey) 유니크 조합으로 정확히 그 행 하나만 지정
+    void deleteBySensorSensorIdAndMetricKey(Long sensorId, String metricKey);
 }

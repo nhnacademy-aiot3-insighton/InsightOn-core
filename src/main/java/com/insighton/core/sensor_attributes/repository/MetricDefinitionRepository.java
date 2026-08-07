@@ -12,4 +12,6 @@ public interface MetricDefinitionRepository extends JpaRepository<MetricDefiniti
     // 기존 enum때 equalsIgnoreCase 비겨 동작을 그대로 유지하기 위해 대소문자 무시 조회
     @Query("SELECT m FROM MetricDefinition m WHERE lower(m.metricKey) = lower(:metricKey) " )
     Optional<MetricDefinition> findByMetricKeyIgnoreCase(@Param("metricKey") String metricKey);
+
+    
 }
