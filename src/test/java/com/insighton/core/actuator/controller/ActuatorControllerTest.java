@@ -1,9 +1,9 @@
 package com.insighton.core.actuator.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.insighton.core.actuator_run_logs.entity.ExecutedByType;
+import com.insighton.core.actuatorrunlogs.entity.ExecutedByType;
+import com.insighton.core.actuatorrunlogs.service.ActuatorRunLogService;
 import com.insighton.core.actuators.controller.ActuatorController;
-import com.insighton.core.actuator_run_logs.service.ActuatorRunLogService;
 import com.insighton.core.actuators.dto.ActuatorNameUpdateRequest;
 import com.insighton.core.actuators.dto.ActuatorRequest;
 import com.insighton.core.actuators.entity.ActuatorType;
