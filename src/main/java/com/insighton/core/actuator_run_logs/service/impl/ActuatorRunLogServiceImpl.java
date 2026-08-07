@@ -61,14 +61,14 @@ public class ActuatorRunLogServiceImpl implements ActuatorRunLogService {
                     actuatorRunLogRepository.save(logEntity);
 
                     // 파워 상태 명령만 InfluxDB 시계열 대상 - 이벤트만 발행하고 실제 쓰기는 트랜잭션 커밋 후로 미룸
-                    if(commandType == CommandType.POWER_STATUS){
+                    if (commandType == CommandType.POWER_STATUS) {
                         eventPublisher.publishEvent(new ActuatorStatusChangedEvent(
                                 groupId, locationId, actuatorId, actuatorType,
                                 logEntity.getCommandValue(), logEntity.getExecutedAt()));
                     }
                 },
                 // 매핑 안 되는 키는 로그만 남기지 않고 넘어감
-                () -> log.info("알 수 없는 제어 명령키 - 실행 로그 남기지 못함: {}",key)
+                () -> log.info("알 수 없는 제어 명령키 - 실행 로그 남기지 못함: {}", key)
         ));
     }
 

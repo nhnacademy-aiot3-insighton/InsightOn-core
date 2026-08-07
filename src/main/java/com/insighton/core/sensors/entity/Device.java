@@ -1,8 +1,8 @@
 package com.insighton.core.sensors.entity;
 
 import com.insighton.core.gateway.entity.Gateway;
-import com.insighton.core.groups.entity.Groups;
-import com.insighton.core.location.entity.Locations;
+import com.insighton.core.groups.entity.Group;
+import com.insighton.core.location.entity.Location;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,7 +32,7 @@ public class Device {
 
     // ================= [센서 전용 필드들] =================
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name =  "gateway_id", nullable = false)
+    @JoinColumn(name = "gateway_id", nullable = false)
     private Gateway gateway; // SENSOR 전용 (ACTUATOR는 null)
 
     @Column(name = "device_eui", length = 50, unique = true, nullable = false)
@@ -48,7 +48,7 @@ public class Device {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "location_id")
-    private Locations location; // 장소 아이디
+    private Location location; // 장소 아이디
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt; // 생성 일시
@@ -58,16 +58,16 @@ public class Device {
     @JoinColumn(name =  "group_id", nullable = false)
     private Groups group; // 그룹 아이디
 
-    public void updateLocation(Locations newLocationId){
+    public void updateLocation(Location newLocationId) {
         this.location = newLocationId;
     }
 
-    public void updateLastSeen(){
+    public void updateLastSeen() {
         this.lastSeenAt = OffsetDateTime.now();
     }
 
-    public void updateName(String newDeviceName){
-        if(newDeviceName != null && !newDeviceName.trim().isEmpty()){
+    public void updateName(String newDeviceName) {
+        if (newDeviceName != null && !newDeviceName.trim().isEmpty()) {
             this.deviceName = newDeviceName;
         }
     }

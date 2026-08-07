@@ -4,21 +4,22 @@ import com.insighton.core.gateway.dto.GatewayCreateRequest;
 import com.insighton.core.gateway.dto.GatewayResponse;
 import com.insighton.core.gateway.dto.GatewayUpdateRequest;
 import com.insighton.core.gateway.entity.Gateway;
-import com.insighton.core.gateway.exception.GatewayAccessDeniedException;
 import com.insighton.core.gateway.event.GatewayDeletedEvent;
+import com.insighton.core.gateway.exception.GatewayAccessDeniedException;
 import com.insighton.core.gateway.exception.GatewayNotFoundException;
 import com.insighton.core.gateway.repository.GatewayRepository;
 import com.insighton.core.gateway.service.GatewayService;
-import com.insighton.core.groupmember.entity.GroupMembers;
-import com.insighton.core.groupmember.repository.GroupMembersRepository;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import com.insighton.core.groupmember.entity.GroupMember;
+import com.insighton.core.groupmember.repository.GroupMemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 @Service
 @Slf4j
@@ -27,7 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class GatewayServiceImpl implements GatewayService {
 
     private final GatewayRepository gatewayRepository;
-    private final GroupMembersRepository groupMembersRepository;
+    private final GroupMemberRepository groupMemberRepository;
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
@@ -69,7 +70,7 @@ public class GatewayServiceImpl implements GatewayService {
 
     @Override
     public List<GatewayResponse> getAll(String userRole) {
-        if(!Objects.equals(userRole, "ADMIN")) {
+        if (!Objects.equals(userRole, "ADMIN")) {
             throw new GatewayAccessDeniedException("관리자만 접근 가능합니다.");
         }
 
@@ -106,6 +107,7 @@ public class GatewayServiceImpl implements GatewayService {
 
     /**
      * group 삭제 시 호출용
+     *
      * @param groupId 그룹ID
      */
     @Transactional
@@ -135,24 +137,24 @@ public class GatewayServiceImpl implements GatewayService {
     }
 
 
-     // 쓰기(생성/수정/삭제)용 — MANAGER/SUPER_MANAGER만 허용, 호출자 소속 그룹과 대상 그룹이 같은지도 확인
+    // 쓰기(생성/수정/삭제)용 — MANAGER/SUPER_MANAGER만 허용, 호출자 소속 그룹과 대상 그룹이 같은지도 확인
     private void requireManagerRole(Long userId, Long groupsId) {
-        GroupMembers groupMember = groupMembersRepository.findByUserId(userId)
+        GroupMember groupMember = groupMemberRepository.findByUserId(userId)
                 .orElseThrow(() -> new GatewayAccessDeniedException("소속된 그룹이 없습니다."));
 
-        if (!groupMember.getGroups().getGroupId().equals(groupsId)) {
+        if (!groupMember.getGroup().getGroupId().equals(groupsId)) {
             throw new GatewayAccessDeniedException("다른 그룹의 리소스입니다.");
         }
-        if (groupMember.getGroupRole() == GroupMembers.GroupRole.MEMBER) {
+        if (groupMember.getGroupRole() == GroupMember.GroupRole.MEMBER) {
             throw new GatewayAccessDeniedException("게이트웨이 관리 권한이 없습니다.");
         }
     }
 
     // 조회용 — 그룹 소속만 확인, role은 무관(MEMBER도 허용)
     private void requireGroupMembership(Long userId, Long groupsId) {
-        GroupMembers groupMember = groupMembersRepository.findByUserId(userId)
+        GroupMember groupMember = groupMemberRepository.findByUserId(userId)
                 .orElseThrow(() -> new GatewayAccessDeniedException("소속된 그룹이 없습니다."));
-        if (!groupMember.getGroups().getGroupId().equals(groupsId)) {
+        if (!groupMember.getGroup().getGroupId().equals(groupsId)) {
             throw new GatewayAccessDeniedException("다른 그룹의 리소스입니다.");
         }
     }
