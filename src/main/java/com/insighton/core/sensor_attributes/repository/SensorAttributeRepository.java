@@ -42,9 +42,6 @@ public interface SensorAttributeRepository extends JpaRepository<SensorAttribute
     // 기기 삭제 시 소속 속성 일괄 삭제
     void deleteBySensorSensorId(Long sensorId);
 
-    // 그룹 삭제 시 소속 속성 일괄 삭제
-    void deleteByGroupIdGroupId(Long groupId);
-
     // 장소 삭제 시, 그 장소 소속 센서들의 속성 일괄 삭제용
     void deleteAllBySensorSensorIdIn(List<Long> sensorIds);
 
