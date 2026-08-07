@@ -7,7 +7,7 @@ import java.util.Map;
  */
 public record CleanTelemetryPacket(
     String time,
-    String devEui,
-    String deviceName,
+    String sensorEui,
+    String sensorName,
     Map<String, Object> object
 ) {}

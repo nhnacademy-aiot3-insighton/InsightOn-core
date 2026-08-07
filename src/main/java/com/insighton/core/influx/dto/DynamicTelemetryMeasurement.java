@@ -10,7 +10,7 @@ public record DynamicTelemetryMeasurement(
     Instant time,
     String groupId,
     String locationId,
-    String deviceEui,
-    String deviceName,
+    String sensorEui,
+    String sensorName,
     Map<String, Object> fields
 ) {}
