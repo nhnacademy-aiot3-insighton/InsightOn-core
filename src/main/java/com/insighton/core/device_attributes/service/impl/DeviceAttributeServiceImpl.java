@@ -53,10 +53,10 @@ public class DeviceAttributeServiceImpl implements DeviceAttributeService {
         Device entity = deviceRepository.findById(deviceId)
                 .orElseThrow(() -> new DeviceNotFoundException(deviceId));
 
-        validateGroupMembership(userId, entity.getGroupId().getGroupId()); // Groups 객체에서 Long ID 호출
+        validateGroupMembership(userId, entity.getGroup().getGroupId()); // Groups 객체에서 Long ID 호출
 
         // 2. DB에서 장치 속성 목록 조회 후 Enum 정보를 매핑하여 DTO로 변환
-        return attributeRepository.findByDeviceId(deviceId)
+        return attributeRepository.findByDeviceDeviceId(deviceId)
                 .stream()
                 .map(attr -> {
                     // Enum에서 메트릭 표준 정의(한글 명칭, 단위) 바인딩
@@ -88,7 +88,7 @@ public class DeviceAttributeServiceImpl implements DeviceAttributeService {
                 .orElseThrow(() -> new DeviceNotFoundException(deviceId));
 
         // 권한 체크
-        validateManagerRole(userId, entity.getGroupId().getGroupId()); // Groups 객체에서 Long ID 호출
+        validateManagerRole(userId, entity.getGroup().getGroupId()); // Groups 객체에서 Long ID 호출
 
         // 센서타입인 경우 제어 API를 통한 수치 변경을 거부
         if (entity.getDeviceType() != DeviceType.ACTUATOR) {
@@ -115,7 +115,7 @@ public class DeviceAttributeServiceImpl implements DeviceAttributeService {
 
         // 정규화된 metricKey로 DB 조회
         SensorAttribute attribute = attributeRepository
-                .findByDeviceIdAndMetricKey(deviceId, normalizedMetricKey)
+                .findByDeviceDeviceIdAndMetricKey(deviceId, normalizedMetricKey)
                 .orElseThrow(() -> new MetricKeyNotFoundException("매트릭 키를 찾을 수 없습니다 (ID: " + metricKey + ")"));
 
         attribute.updateCurrentValue(newValue);
@@ -136,7 +136,7 @@ public class DeviceAttributeServiceImpl implements DeviceAttributeService {
         }
         return MetricDefinition.findFromKey(metricKey)
                 .map(def -> attributeRepository.
-                        existsByDeviceIdAndMetricKey(deviceId, def.getMetricKey()))
+                        existsByDeviceDeviceIdAndMetricKey(deviceId, def.getMetricKey()))
                 .orElse(false);
     }
 }

@@ -39,7 +39,7 @@ public class SensorAttribute {
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "device_id", nullable = false)
-    private Device deviceId;
+    private Device device;
 
     /**
      * 수집 패킷 내 JSON Key 또는 제어 명령 필드 식별자 (ex. "co2", "temperature", "power_status")

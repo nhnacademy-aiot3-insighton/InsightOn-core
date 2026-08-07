@@ -1,5 +1,6 @@
 package com.insighton.core.actuator_run_logs.service.impl;
 
+import com.insighton.core.actuator_run_logs.dto.ActuatorRunLogInternalResponse;
 import com.insighton.core.actuator_run_logs.dto.ActuatorRunLogResponse;
 import com.insighton.core.actuator_run_logs.entity.ActuatorRunLog;
 import com.insighton.core.actuator_run_logs.entity.CommandType;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -33,13 +35,14 @@ public class ActuatorRunLogServiceImpl implements ActuatorRunLogService {
 
     @Override
     @Transactional
-    public void recordRunLogs(Actuator actuator, Map<String, Object> newState, ExecutedByType executedByType, Long executedByUserId) {
-        if (newState == null || newState.isEmpty()) {
+    public void recordRunLogs(Actuator actuator, Map<String, Object> newState,
+                              ExecutedByType executedByType, Long executedByUserId) {
+        if(newState == null || newState.isEmpty()){
             return;
         }
         // 트랜잭션이 살아있는 이 메서드 안에서 지연로딩 값들을 미리 다 꺼냄 (이벤트 페이로드로 넘기기 전에)
-        String groupId = String.valueOf(actuator.getLocationId().getGroup().getGroupId());
-        String locationId = String.valueOf(actuator.getLocationId().getLocationId());
+        String groupId = String.valueOf(actuator.getLocation().getGroups().getGroupId());
+        String locationId = String.valueOf(actuator.getLocation().getLocationId());
         String actuatorId = String.valueOf(actuator.getActuatorId());
         String actuatorType = actuator.getActuatorType().name();
 
@@ -71,7 +74,17 @@ public class ActuatorRunLogServiceImpl implements ActuatorRunLogService {
 
     @Override
     public Page<ActuatorRunLogResponse> getRunLogsByActuatorId(Long actuatorId, Pageable pageable) {
-        return actuatorRunLogRepository.findByAActuatorIdOrderByExecutedAtDesc(actuatorId, pageable)
+        return actuatorRunLogRepository.findByActuatorActuatorIdOrderByExecutedAtDesc(actuatorId, pageable)
                 .map(ActuatorRunLogResponse::from);
     }
+
+
+    @Override
+    public List<ActuatorRunLogInternalResponse> getRunLogsForReport(List<Long> locationIds,
+                                                                    OffsetDateTime from, OffsetDateTime to) {
+        return actuatorRunLogRepository.findForReport(locationIds, from, to).stream()
+                .map(ActuatorRunLogInternalResponse::from)
+                .toList();
+    }
+
 }

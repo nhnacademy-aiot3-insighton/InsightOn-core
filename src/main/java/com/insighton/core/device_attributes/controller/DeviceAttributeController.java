@@ -24,7 +24,7 @@ public class DeviceAttributeController {
     @GetMapping
     public ResponseEntity<List<DeviceAttributeResponse>> getDeviceAttribute(
             @RequestHeader("X-USER-ID") Long userId,
-            @PathVariable("deviceId")Long deviceId){
+            @PathVariable("device-id")Long deviceId){
         List<DeviceAttributeResponse> attributeDto = attributeService.getAllAttributeByDeviceId(userId, deviceId);
         return ResponseEntity.ok(attributeDto);
     }
@@ -43,11 +43,11 @@ public class DeviceAttributeController {
     }
 
     // 단일 엑충이터 속성 값 변경 제어 API
-    @PutMapping("/{metricKey}")
+    @PutMapping("/{metric-key}")
     public ResponseEntity<Void> updateActuatorValue(
             @RequestHeader("X-USER-ID") Long userId,
-            @PathVariable("deviceId") Long deviceId,
-            @PathVariable("metricKey") String metricKey,
+            @PathVariable("device-id") Long deviceId,
+            @PathVariable("metric-key") String metricKey,
             @RequestBody @Valid ActuatorUpdateRequest request){
 
         attributeService.updateActuatorValue(userId, deviceId, metricKey, request.value());

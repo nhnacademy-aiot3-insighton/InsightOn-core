@@ -55,8 +55,8 @@ public class Device {
 
     // =================================================
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "group_id", nullable = false)
-    private Group groupId; // 그룹 아이디
+    @JoinColumn(name =  "group_id", nullable = false)
+    private Groups group; // 그룹 아이디
 
     public void updateLocation(Location newLocationId) {
         this.location = newLocationId;
