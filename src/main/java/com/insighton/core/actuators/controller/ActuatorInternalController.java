@@ -13,6 +13,7 @@ import com.insighton.core.actuators.exception.InvalidActuatorValueException;
 import com.insighton.core.actuators.exception.InvalidServiceCredentialException;
 import com.insighton.core.actuators.repository.ActuatorRepository;
 import com.insighton.core.actuators.service.ActuatorService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -50,33 +51,50 @@ public class ActuatorInternalController {
     @PutMapping("/locations/{location-id}/actuators/state")
     public ResponseEntity<Void> updateActuatorStateBySystem(
             @PathVariable("location-id") Long locationId,
-            @RequestBody ActuatorCommandRequest request) {
+            @Valid @RequestBody ActuatorCommandRequest request) { // @Valid로 actuatorType/command/commandValue/callerService 빈값 여부 자동 검증
 
+        // 이 내부 API는 시스템(AI/RuleEngine)만 호출 가능 - USER가 오면 즉시 차단
         if(request.callerService() == ExecutedByType.USER){
             throw new InvalidServiceCredentialException("이 내부 API는 USER가 호출할 수 없습니다");
         }
 
-        ActuatorType actuatorType = ActuatorType.valueOf(request.actuatorType());
+        // 문자열 actuatorType을 enum으로 변환, 존재하지 않는 값이면 400으로 처리
+        ActuatorType actuatorType = parseActuatorType(request.actuatorType());
 
+        // 요청받은 location+actuatorType 조합에 해당하는 액추에이터 전부 조회 (AI는 개별 actuatorId를 모르므로)
         List<Actuator> actuators = actuatorRepository.findByLocationLocationIdAndActuatorType(locationId, actuatorType);
 
+        // 해당하는 액추에이터가 하나도 없으면 404로 명확히 구분 (AI가 "적용 안 됐다"를 알 수 있어야 함)
         if(actuators.isEmpty()){
             throw new ActuatorLocationsActuatorTypeNotFound(locationId, actuatorType);
         }
 
+        // 요청받은 명령/값을 적용할 상태 맵으로 조립
         Map<String, Object> newState = Map.of(request.command(), request.commandValue());
 
-        // 액추에이터 타입의 명령이 맞는지 확인용도
+        // 검증을 먼저 전부 통과시킴 - 하나라도 실패하면 아래 적용 루프 자체가 안 돌아서 반쪽 적용 방지
         for(Actuator actuator : actuators){
             validateCommandValues(actuatorType, newState);
         }
-        // 위의 검증이 확인이 되면 업데이트
+        // 검증 통과 후 대상 액추에이터 전체에 동일하게 상태 적용 (보통 1개, 같은 타입이 여러 대면 전부)
         for (Actuator actuator : actuators) {
-            actuatorService.updateActuatorState(null, null, actuator.getActuatorId(), newState, request.callerService());
+            actuatorService.updateActuatorState(
+                    null, null, actuator.getActuatorId(), newState, request.callerService());
         }
 
         return ResponseEntity.ok().build();
     }
+
+    // ActuatorType.valueOf()가 정의 안 된 값(오타 등)을 받으면 IllegalArgumentException을 던지는데,
+    // 이건 GlobalExceptionHandler에 등록 안 되어있어서 그대로 두면 500으로 나감 -> 400으로 변환
+    private ActuatorType parseActuatorType(String actuatorType) {
+        try {
+            return ActuatorType.valueOf(actuatorType); // 유효하지 않는 문자열이면 여기서 예외 발생
+        } catch (IllegalArgumentException e) {
+            throw new InvalidActuatorValueException("알 수 없는 actuatorType입니다: " + actuatorType);
+        }
+    }
+
 
     // newState의 각 키/값이 이 액추에이터 타입에서 실제로 허용되는 명령/값인지 검증
     private void validateCommandValues(ActuatorType actuatorType, Map<String, Object> newState) {
