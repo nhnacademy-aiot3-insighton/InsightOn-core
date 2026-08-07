@@ -35,6 +35,8 @@ public class WidgetUseCase {
 
         groupMemberService.validateGroupMembers(groupId, userId);
 
+        locationService.getLocationByGroupId(locationId, groupId);
+
         Dashboard dashboard = dashboardService.getDashboardByLocationId(locationId);
 
         return widgetService.getWidgetList(dashboard.getDashboardId());

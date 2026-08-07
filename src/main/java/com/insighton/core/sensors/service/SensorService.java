@@ -2,7 +2,6 @@ package com.insighton.core.sensors.service;
 
 import com.insighton.core.mqtt.cache.dto.SensorCacheEntry;
 import com.insighton.core.sensors.dto.SensorResponse;
-import com.insighton.core.sensors.entity.Sensor;
 
 import java.util.List;
 import java.util.Set;
@@ -42,7 +41,6 @@ public interface SensorService {
      *
      * @param groupId    location이 속해있는 group ID
      * @param locationId device와 연결되어있는 location
-     * @return sensor response
      */
-    List<Sensor> getSensorByLocationId(Long groupId, Long locationId);
+    void detachLocationFromSensors(Long groupId, Long locationId);
 }

@@ -14,7 +14,6 @@ import com.insighton.core.location.dto.response.LocationResponse;
 import com.insighton.core.location.entity.Location;
 import com.insighton.core.location.event.LocationDeletedEvent;
 import com.insighton.core.location.service.LocationService;
-import com.insighton.core.sensors.entity.Sensor;
 import com.insighton.core.sensors.service.SensorService;
 import com.insighton.core.widgets.service.WidgetService;
 import lombok.RequiredArgsConstructor;
@@ -150,10 +149,7 @@ public class LocationUseCase {
         validationIsAdmin(groupMember);
 
         // sensors는 location 값만 null로 바꿔주기
-        List<Sensor> sensors = sensorService.getSensorByLocationId(groupId, targetLocationId);
-        for (Sensor sensor : sensors) {
-            sensor.updateLocation(null);
-        }
+        sensorService.detachLocationFromSensors(groupId, targetLocationId);
 
         // dashboards 삭제
         dashboardDelete(targetLocationId);

@@ -184,8 +184,14 @@ public class SensorServiceImpl implements SensorService {
     }
 
     @Override
-    public List<Sensor> getSensorByLocationId(Long groupId, Long locationId) {
-        return sensorRepository.findByGroupGroupIdAndLocationLocationId(groupId, locationId);
+    @Transactional
+    public void detachLocationFromSensors(Long groupId, Long locationId) {
+        List<Sensor> sensors = sensorRepository.findByGroupGroupIdAndLocationLocationId(groupId, locationId);
+        for (Sensor sensor : sensors) {
+            sensor.updateLocation(null);
+
+            sensorLookupCacheService.evict(sensor.getSensorEui());
+        }
     }
 
     @Override
