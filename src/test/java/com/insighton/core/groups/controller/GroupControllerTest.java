@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.insighton.core.groups.dto.request.GroupRequest;
 import com.insighton.core.groups.dto.response.GroupAdminResponse;
 import com.insighton.core.groups.dto.response.GroupResponse;
-import com.insighton.core.groups.service.CoreManagementUseCase;
+import com.insighton.core.usecase.GroupUseCase;
 import com.insighton.core.groups.service.GroupService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -39,7 +39,7 @@ class GroupControllerTest {
     private ObjectMapper objectMapper;
 
     @MockitoBean
-    private CoreManagementUseCase groupsUseCase;
+    private GroupUseCase groupsUseCase;
 
     @MockitoBean
     private GroupService groupService;

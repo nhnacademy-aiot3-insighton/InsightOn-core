@@ -30,4 +30,7 @@ public interface SensorRepository extends JpaRepository<Sensor, Long> {
     // 그룹 삭제용
     void deleteAllByGroupGroupId(Long groupId);
 
+    // location 삭제를 위한 찾기
+    List<Sensor> findByGroupGroupIdAndLocationLocationId(Long groupId, Long locationId);
+
 }

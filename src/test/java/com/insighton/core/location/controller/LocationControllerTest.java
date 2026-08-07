@@ -1,12 +1,12 @@
 package com.insighton.core.location.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.insighton.core.groups.service.CoreManagementUseCase;
 import com.insighton.core.location.dto.request.LocationCreateRequest;
 import com.insighton.core.location.dto.request.LocationUpdateRequest;
 import com.insighton.core.location.dto.response.LocationListResponse;
 import com.insighton.core.location.dto.response.LocationResponse;
 import com.insighton.core.location.entity.Location;
+import com.insighton.core.usecase.LocationUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -37,7 +37,7 @@ class LocationControllerTest {
     private ObjectMapper objectMapper;
 
     @MockitoBean
-    private CoreManagementUseCase useCase;
+    private LocationUseCase useCase;
 
     @Nested
     @DisplayName("성공 케이스")
