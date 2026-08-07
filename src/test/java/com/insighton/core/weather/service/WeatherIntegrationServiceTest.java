@@ -22,17 +22,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.client.RestClient;
 
 @SpringBootTest
-@TestPropertySource(properties = {
-        "weather.api.kma-base-url=http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0",
-        "weather.api.air-base-url=http://apis.data.go.kr/B552584/ArpltnInforInqireSvc",
-        "weather.api.kma-key=mock-key",
-        "weather.api.air-key=mock-key"
-})
+@ActiveProfiles("test") // src/test/resources/application-test.properties 환경 설정을 로드
 class WeatherIntegrationServiceTest {
 
     private static final Logger log = LoggerFactory.getLogger(WeatherIntegrationServiceTest.class);
@@ -62,7 +57,7 @@ class WeatherIntegrationServiceTest {
     private WeatherIntegrationService weatherIntegrationService;
 
     @Test
-    @DisplayName("기상청 & 에어코리아 API 실제 호출 연동 검증 및 콘솔 출력")
+    @DisplayName("기상청 & 에어코리아 API 연동 응답 파싱 및 한글 정제 검증")
     void fetchWeatherData_RealApiIntegration_Success() {
         // given: 광주 동구 계림동 기준 (X: 58, Y: 74)
         int gridX = 58;
@@ -73,13 +68,14 @@ class WeatherIntegrationServiceTest {
         String baseDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         String baseTime = LocalTime.now().minusHours(1).format(DateTimeFormatter.ofPattern("HH00"));
 
+        // 외부 RestClient Mocking 세팅 (실제 키 호출 없이 동작)
         given(sidoNameParser.parse(sidoName)).willReturn("광주");
         given(kmaRestClient.get()).willReturn(requestHeadersUriSpec);
         given(airQualityRestClient.get()).willReturn(requestHeadersUriSpec);
         given(requestHeadersUriSpec.uri(any(URI.class))).willReturn(requestHeadersSpec);
         given(requestHeadersSpec.retrieve()).willReturn(responseSpec);
 
-        // 초단기실황/단기예보 파싱에 필요한 정확한 Category & Value 조합 Mocking
+        // 기상청 Mock 응답 세팅
         KmaWeatherResponseDto kmaMock = new KmaWeatherResponseDto(
                 new KmaWeatherResponseDto.Response(
                         new KmaWeatherResponseDto.Header("00", "NORMAL_SERVICE"),
@@ -104,7 +100,7 @@ class WeatherIntegrationServiceTest {
                 )
         );
 
-        // 에어코리아 Mock 응답
+        // 에어코리아 Mock 응답 세팅
         AirQualityResponseDto airMock = new AirQualityResponseDto(
                 new AirQualityResponseDto.Response(
                         new AirQualityResponseDto.Header("00", "NORMAL_SERVICE"),
@@ -128,11 +124,12 @@ class WeatherIntegrationServiceTest {
         assertThat(result.forecast()).isNotNull();
         assertThat(result.airQuality()).isNotNull();
 
-        // 1. 상태 파싱 검증 (한글 변환 여부)
-        assertThat(result.current().precipitationType()).isNotIn("0", "1", "2", "3", "4"); // '없음'으로 파싱되어야 함
-        assertThat(result.forecast().skyStatus()).isNotIn("1", "3", "4"); // '맑음'으로 파싱되어야 함
+        // 1. 상태 파싱 검증 (숫자 코드가 한글로 변경되었는지 확인)
+        assertThat(result.current().precipitationType()).isEqualTo("없음"); // PTY '0' -> '없음'
+        assertThat(result.forecast().skyStatus()).isEqualTo("맑음");        // SKY '1' -> '맑음'
+        assertThat(result.airQuality().pm10Grade()).isEqualTo("좋음");       // Grade '1' -> '좋음'
 
-        // 2. 콘솔 출력
+        // 2. 콘솔 출력 로직
         log.info("====== [날씨/대기질 통합 API 연동 결과] ======");
         log.info("[초단기실황] 기온: {}℃, 습도: {}%, 1시간강수량: {}mm, 강수형태: {}",
                 result.current().temp(), result.current().humidity(),
@@ -182,13 +179,13 @@ class WeatherIntegrationServiceTest {
     }
 
     @Test
-    @DisplayName("외부 RestClient 예외 발생 시 WeatherApiException 던져지는지 정확히 단언")
+    @DisplayName("외부 RestClient 예외 발생 시 WeatherApiException 던져지는지 단언")
     void fetchWeatherData_ThrowsWeatherApiException_WhenApiFails() {
         // given
         given(sidoNameParser.parse(any())).willReturn("광주");
-        given(kmaRestClient.get()).willThrow(new RuntimeException("기상청 API 통신 장애"));
+        given(kmaRestClient.get()).willThrow(new RuntimeException("외부 API 통신 장애"));
 
-        // when & then: 서비스 내부 try-catch에서 감싸져 WeatherApiException이 던져지는지 단언
+        // when & then
         assertThrows(WeatherApiException.class, () ->
                 weatherIntegrationService.fetchWeatherData(999, 999, "오류시", "오류구", "20200101", "0000")
         );
