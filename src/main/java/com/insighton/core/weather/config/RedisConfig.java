@@ -36,4 +36,25 @@ public class RedisConfig {
 
         return redisTemplate;
     }
+
+    @Bean
+    public RedisTemplate<String, WeatherDataDto> weatherRedisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, WeatherDataDto> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(connectionFactory);
+
+        StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
+        redisTemplate.setKeySerializer(stringRedisSerializer);
+        redisTemplate.setHashKeySerializer(stringRedisSerializer);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+
+        Jackson2JsonRedisSerializer<WeatherDataDto> serializer =
+                new Jackson2JsonRedisSerializer<>(objectMapper, WeatherDataDto.class);
+
+        redisTemplate.setValueSerializer(serializer);
+        redisTemplate.setHashValueSerializer(serializer);
+
+        return redisTemplate;
+    }
 }

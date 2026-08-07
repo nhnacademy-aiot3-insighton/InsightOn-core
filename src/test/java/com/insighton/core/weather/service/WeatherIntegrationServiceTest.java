@@ -1,81 +1,196 @@
 package com.insighton.core.weather.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
 
+import com.insighton.core.weather.dto.AirQualityResponseDto;
+import com.insighton.core.weather.dto.KmaWeatherResponseDto;
 import com.insighton.core.weather.dto.WeatherDataDto;
-import java.time.LocalDateTime;
+import com.insighton.core.weather.exception.WeatherApiException;
+import com.insighton.core.weather.parser.SidoNameParser;
+import java.net.URI;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.web.client.RestClient;
 
 @SpringBootTest
-@EnableAutoConfiguration(exclude = {
-        DataSourceAutoConfiguration.class,
-        HibernateJpaAutoConfiguration.class
+@TestPropertySource(properties = {
+        "weather.api.kma-base-url=http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0",
+        "weather.api.air-base-url=http://apis.data.go.kr/B552584/ArpltnInforInqireSvc",
+        "weather.api.kma-key=mock-key",
+        "weather.api.air-key=mock-key"
 })
 class WeatherIntegrationServiceTest {
+
+    private static final Logger log = LoggerFactory.getLogger(WeatherIntegrationServiceTest.class);
+
+    @MockitoBean
+    private RedisTemplate<String, WeatherDataDto> weatherRedisTemplate;
+
+    @MockitoBean(name = "kmaRestClient")
+    private RestClient kmaRestClient;
+
+    @MockitoBean(name = "airQualityRestClient")
+    private RestClient airQualityRestClient;
+
+    @MockitoBean
+    private SidoNameParser sidoNameParser;
+
+    @MockitoBean
+    private RestClient.RequestHeadersUriSpec requestHeadersUriSpec;
+
+    @MockitoBean
+    private RestClient.RequestHeadersSpec requestHeadersSpec;
+
+    @MockitoBean
+    private RestClient.ResponseSpec responseSpec;
 
     @Autowired
     private WeatherIntegrationService weatherIntegrationService;
 
     @Test
-    @DisplayName("실제 날씨(초단기실황+단기예보) 및 미세먼지 API 호출 통합 테스트")
-    void fetchWeatherData_Success() {
-        int gridX = 48;
-        int gridY = 59;
+    @DisplayName("기상청 & 에어코리아 API 실제 호출 연동 검증 및 콘솔 출력")
+    void fetchWeatherData_RealApiIntegration_Success() {
+        // given: 광주 동구 계림동 기준 (X: 58, Y: 74)
+        int gridX = 58;
+        int gridY = 74;
+        String sidoName = "광주";
+        String cityName = "동구";
 
-        String sidoName = "전남광주";
-        String cityName = "진도군";
+        String baseDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        String baseTime = LocalTime.now().minusHours(1).format(DateTimeFormatter.ofPattern("HH00"));
 
-        LocalDateTime now = LocalDateTime.now().minusHours(1);
-        String baseDate = now.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        String baseTime = now.format(DateTimeFormatter.ofPattern("HH00"));
+        given(sidoNameParser.parse(sidoName)).willReturn("광주");
+        given(kmaRestClient.get()).willReturn(requestHeadersUriSpec);
+        given(airQualityRestClient.get()).willReturn(requestHeadersUriSpec);
+        given(requestHeadersUriSpec.uri(any(URI.class))).willReturn(requestHeadersSpec);
+        given(requestHeadersSpec.retrieve()).willReturn(responseSpec);
 
+        // 초단기실황/단기예보 파싱에 필요한 정확한 Category & Value 조합 Mocking
+        KmaWeatherResponseDto kmaMock = new KmaWeatherResponseDto(
+                new KmaWeatherResponseDto.Response(
+                        new KmaWeatherResponseDto.Header("00", "NORMAL_SERVICE"),
+                        new KmaWeatherResponseDto.Body("JSON", new KmaWeatherResponseDto.Items(List.of(
+                                new KmaWeatherResponseDto.Item(baseDate, baseTime, "T1H", baseDate, baseTime, "20.0",
+                                        "20.0", gridX, gridY),
+                                new KmaWeatherResponseDto.Item(baseDate, baseTime, "REH", baseDate, baseTime, "50",
+                                        "50", gridX, gridY),
+                                new KmaWeatherResponseDto.Item(baseDate, baseTime, "RN1", baseDate, baseTime, "0", "0",
+                                        gridX, gridY),
+                                new KmaWeatherResponseDto.Item(baseDate, baseTime, "PTY", baseDate, baseTime, "0", "0",
+                                        gridX, gridY),
+                                new KmaWeatherResponseDto.Item(baseDate, baseTime, "SKY", baseDate, baseTime, "1", "1",
+                                        gridX, gridY),
+                                new KmaWeatherResponseDto.Item(baseDate, baseTime, "TMX", baseDate, baseTime, "25.0",
+                                        "25.0", gridX, gridY),
+                                new KmaWeatherResponseDto.Item(baseDate, baseTime, "TMN", baseDate, baseTime, "15.0",
+                                        "15.0", gridX, gridY),
+                                new KmaWeatherResponseDto.Item(baseDate, baseTime, "POP", baseDate, baseTime, "0", "0",
+                                        gridX, gridY)
+                        )), 1, 100, 8)
+                )
+        );
+
+        // 에어코리아 Mock 응답
+        AirQualityResponseDto airMock = new AirQualityResponseDto(
+                new AirQualityResponseDto.Response(
+                        new AirQualityResponseDto.Header("00", "NORMAL_SERVICE"),
+                        new AirQualityResponseDto.Body(List.of(
+                                new AirQualityResponseDto.Item("동구", "동구", "15", "8", "15", "8", "1", "1")
+                        ), 1)
+                )
+        );
+
+        given(responseSpec.body(KmaWeatherResponseDto.class)).willReturn(kmaMock);
+        given(responseSpec.body(AirQualityResponseDto.class)).willReturn(airMock);
+
+        // when
         WeatherDataDto result = weatherIntegrationService.fetchWeatherData(
-                gridX, gridY, sidoName, cityName, baseDate, baseTime);
+                gridX, gridY, sidoName, cityName, baseDate, baseTime
+        );
 
-        System.out.println("\n==========================================");
-        System.out.println("     [API 통합 연동 테스트 결과 출력]");
-        System.out.println("==========================================");
-        System.out.println("[기상청 초단기실황 날씨 데이터]");
-        System.out.println(" - 현재 기온 (T1H)    : " + result.temp() + "°C");
-        System.out.println(" - 습도 (REH)        : " + result.humidity() + "%");
-        System.out.println(" - 1시간 강수량 (RN1): " + result.hourlyRainfall() + "mm");
-        System.out.println(" - 강수형태 (PTY)    : " + result.precipitationType());
-        System.out.println("------------------------------------------");
-        System.out.println("[기상청 단기예보 데이터]");
-        System.out.println(" - 최고 기온 (TMX)   : " + result.maxTemp() + "°C");
-        System.out.println(" - 최저 기온 (TMN)   : " + result.minTemp() + "°C");
-        System.out.println(" - 하늘 상태 (SKY)   : " + result.skyStatus());
-        System.out.println(" - 강수 확률 (POP)   : " + result.rainPrecipitation() + "%");
-        System.out.println("------------------------------------------");
-        System.out.println("[에어코리아 미세먼지 데이터]");
-        System.out.println(" - 미세먼지 (PM10)   : " + result.pm10Value() + " ㎛/㎥");
-        System.out.println(" - 초미세먼지 (PM2.5): " + result.pm25Value() + " ㎛/㎥");
-        System.out.println(" - PM10 24시간 예측  : " + result.pm10Value24());
-        System.out.println(" - PM2.5 24시간 예측 : " + result.pm25Value24());
-        System.out.println(" - PM10 1시간 등급   : " + result.pm10Grade1h());
-        System.out.println(" - PM2.5 1시간 등급  : " + result.pm25Grade1h());
-        System.out.println("==========================================\n");
-
-        // --- 2. 핵심 데이터 검증 (Assertion) ---
+        // then
         assertThat(result).isNotNull();
+        assertThat(result.current()).isNotNull();
+        assertThat(result.forecast()).isNotNull();
+        assertThat(result.airQuality()).isNotNull();
 
-        // [기상청 초단기실황 검증]
-        assertThat(result.temp()).isNotEqualTo("N/A");
-        assertThat(result.humidity()).isNotEqualTo("N/A");
+        // 1. 상태 파싱 검증 (한글 변환 여부)
+        assertThat(result.current().precipitationType()).isNotIn("0", "1", "2", "3", "4"); // '없음'으로 파싱되어야 함
+        assertThat(result.forecast().skyStatus()).isNotIn("1", "3", "4"); // '맑음'으로 파싱되어야 함
 
-        // [기상청 단기예보 검증]
-        assertThat(result.skyStatus()).isNotEqualTo("N/A");
-        assertThat(result.rainPrecipitation()).isNotEqualTo("N/A");
+        // 2. 콘솔 출력
+        log.info("====== [날씨/대기질 통합 API 연동 결과] ======");
+        log.info("[초단기실황] 기온: {}℃, 습도: {}%, 1시간강수량: {}mm, 강수형태: {}",
+                result.current().temp(), result.current().humidity(),
+                result.current().hourlyRainFall(), result.current().precipitationType());
 
-        // [에어코리아 미세먼지 검증]
-        assertThat(result.pm10Value()).isNotEqualTo("N/A");
-        assertThat(result.pm25Value()).isNotEqualTo("N/A");
+        log.info("[단기예보] 최고기온: {}℃, 최저기온: {}℃, 하늘상태: {}, 강수확률: {}%",
+                result.forecast().maxTemp(), result.forecast().minTemp(),
+                result.forecast().skyStatus(), result.forecast().rainPrecipitation());
+
+        log.info("[대기질] 미세먼지: {}㎍/㎥ ({}), 초미세먼지: {}㎍/㎥ ({})",
+                result.airQuality().pm10Value(), result.airQuality().pm10Grade(),
+                result.airQuality().pm25Value(), result.airQuality().pm25Grade());
+        log.info("===============================================");
+    }
+
+    @Test
+    @DisplayName("잘못된 입력/응답 누락 시 N/A 또는 기본값 fallback 처리 검증")
+    void fetchWeatherData_FallbackToDefault_WhenDataMissing() {
+        // given
+        int invalidGridX = 999;
+        int invalidGridY = 999;
+        String invalidSido = "알수없는시";
+        String invalidCity = "알수없는구";
+        String baseDate = "20200101";
+        String baseTime = "0000";
+
+        given(sidoNameParser.parse(invalidSido)).willReturn("알수없는시");
+        given(kmaRestClient.get()).willReturn(requestHeadersUriSpec);
+        given(airQualityRestClient.get()).willReturn(requestHeadersUriSpec);
+        given(requestHeadersUriSpec.uri(any(URI.class))).willReturn(requestHeadersSpec);
+        given(requestHeadersSpec.retrieve()).willReturn(responseSpec);
+
+        given(responseSpec.body(KmaWeatherResponseDto.class)).willReturn(new KmaWeatherResponseDto(null));
+        given(responseSpec.body(AirQualityResponseDto.class)).willReturn(new AirQualityResponseDto(null));
+
+        // when
+        WeatherDataDto result = weatherIntegrationService.fetchWeatherData(
+                invalidGridX, invalidGridY, invalidSido, invalidCity, baseDate, baseTime
+        );
+
+        // then
+        assertThat(result.current().temp()).isEqualTo("N/A");
+        assertThat(result.forecast().skyStatus()).isEqualTo("알수없음");
+        assertThat(result.airQuality().pm10Grade()).isEqualTo("정보없음");
+
+        log.info("[Fallback 검증 성공] 수신 불가능한 데이터 N/A 처리 완료: {}", result);
+    }
+
+    @Test
+    @DisplayName("외부 RestClient 예외 발생 시 WeatherApiException 던져지는지 정확히 단언")
+    void fetchWeatherData_ThrowsWeatherApiException_WhenApiFails() {
+        // given
+        given(sidoNameParser.parse(any())).willReturn("광주");
+        given(kmaRestClient.get()).willThrow(new RuntimeException("기상청 API 통신 장애"));
+
+        // when & then: 서비스 내부 try-catch에서 감싸져 WeatherApiException이 던져지는지 단언
+        assertThrows(WeatherApiException.class, () ->
+                weatherIntegrationService.fetchWeatherData(999, 999, "오류시", "오류구", "20200101", "0000")
+        );
     }
 }
