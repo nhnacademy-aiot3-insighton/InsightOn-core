@@ -75,7 +75,7 @@ public class ActuatorServiceImpl implements ActuatorService {
 
         // 전달받은 요청 정보로 액추에이터 엔티티 생성 및 저장[cite: 6]
         Actuator entity = Actuator.builder()
-                .locationId(locations)
+                .location(locations)
                 .deviceName(request.deviceName())
                 .actuatorType(request.actuatorType())
                 .currentState(request.currentState())
@@ -107,7 +107,7 @@ public class ActuatorServiceImpl implements ActuatorService {
                 .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(locationId));
 
         // 위치 ID를 기준으로 목록 조회 후 DTO 변환[cite: 6]
-        return actuatorRepository.findByLocationId(locationId).stream()
+        return actuatorRepository.findByLocationLocationId(locationId).stream()
                 .map(ActuatorResponse::from)
                 .toList();
     }
@@ -174,7 +174,7 @@ public class ActuatorServiceImpl implements ActuatorService {
                 .orElseThrow(() -> new ActuatorNotFoundException(actuatorId));
         validateActuatorOwnership(entity, groupsId);
 
-        actuatorRunLogRepository.deleteByActuatorId(actuatorId); // 자식(실행로그)부터 삭제
+        actuatorRunLogRepository.deleteByActuatorActuatorId(actuatorId); // 자식(실행로그)부터 삭제
         actuatorRepository.delete(entity); // 그 다음 부모(액추에이터) 삭제
     }
 
@@ -189,7 +189,7 @@ public class ActuatorServiceImpl implements ActuatorService {
                 .toList();
 
         // 이미 만들어뒀던 위치 범위 삭제 메서드 재사용 (그룹→장소 캐스케이드 삭제 때 쓰던 것과 동일)
-        actuatorRunLogRepository.deleteAllByActuatorLocationIdList(locationIds);
-        actuatorRepository.deleteAllByLocationIdList(locationIds); // groupsId 소속 location만 스코프
+        actuatorRunLogRepository.deleteAllByActuatorLocationLocationIdIn(locationIds);
+        actuatorRepository.deleteAllByLocationLocationIdIn(locationIds); // groupsId 소속 location만 스코프
     }
 }

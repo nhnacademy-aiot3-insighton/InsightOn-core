@@ -74,7 +74,7 @@ public class DeviceServiceImpl implements DeviceService {
         Optional<Device> existingDevice = deviceRepository.findByDeviceEui(deviceEui);
         if (existingDevice.isPresent()) {
             Device e = existingDevice.get();
-            if (!Objects.equals(e.getGroupId().getGroupId(), groupId)) {
+            if (!Objects.equals(e.getGroup().getGroupId(), groupId)) {
                 throw new InvalidDeviceValueException(
                         "이미 다른 그룹에 등록된 EUI입니다. (EUI: " + deviceEui + ")");
             }
@@ -99,7 +99,7 @@ public class DeviceServiceImpl implements DeviceService {
         Device device = Device.builder()
                 .deviceType(DeviceType.SENSOR) // 센서 타입으로 지정
                 .gateway(gateway) // 패킷이 거쳐온 게이트웨이 ID를 입력
-                .groupId(groups) // 소속 그룹아이디 주입
+                .group(groups) // 소속 그룹아이디 주입
                 .deviceEui(deviceEui) // 센서의 고유 시리얼 번호(EUI)를 입력
                 .deviceName(nolDeviceName) // 패킷 정보 기반의 임시 이름(예: "Temp_Sensor_01")을 입력
                 .location(null) // 설치 장소는 아직 모르므로 일단 null로 비움
@@ -115,7 +115,7 @@ public class DeviceServiceImpl implements DeviceService {
         if (metricKeys != null && !metricKeys.isEmpty()) {
             List<SensorAttribute> attributes = metricKeys.stream()
                     .map(metricKey -> SensorAttribute.builder()
-                            .deviceId(savedDevice) // 방금 DB에 저장한 센서(부모)와 연결 (FK 매핑).
+                            .device(savedDevice) // 방금 DB에 저장한 센서(부모)와 연결 (FK 매핑).
                             .groupId(groups) // 속성 엔티티에도 그룹 주입
                             .metricKey(metricKey) // 수집 항목 키(예: "co2")를 저장
                             .build())
@@ -146,7 +146,7 @@ public class DeviceServiceImpl implements DeviceService {
                 .orElseThrow(() -> new DeviceNotFoundException(deviceId));
 
         // 조회 권한 체크
-        validateGroupMembership(userId, device.getGroupId().getGroupId()); // Groups 객체에서 Long ID 호출
+        validateGroupMembership(userId, device.getGroup().getGroupId()); // Groups 객체에서 Long ID 호출
 
         return toDto(device);
     }
@@ -161,7 +161,7 @@ public class DeviceServiceImpl implements DeviceService {
                 .orElseThrow(() -> new DeviceNotFoundException(deviceId));
 
         // 쓰기 작업 권한 체크 (엔티티에 저장된 groupId 기준 - 다른 그룹 디바이스는 조작 불가)
-        validateManagerRole(userId, device.getGroupId().getGroupId()); // Groups 객체에서 Long ID 호출
+        validateManagerRole(userId, device.getGroup().getGroupId()); // Groups 객체에서 Long ID 호출
 
         Location newLocation = locationsRepository.findById(newLocationId)
                 .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(newLocationId));
@@ -195,7 +195,7 @@ public class DeviceServiceImpl implements DeviceService {
                 .orElseThrow(() -> new DeviceNotFoundException(deviceId));
 
         // 쓰기 작업 권한 체크
-        validateManagerRole(userId, device.getGroupId().getGroupId()); // Groups 객체에서 Long ID 호출
+        validateManagerRole(userId, device.getGroup().getGroupId()); // Groups 객체에서 Long ID 호출
 
         device.updateName(newDeviceName);
     }
@@ -204,14 +204,14 @@ public class DeviceServiceImpl implements DeviceService {
     public void updateDevice(Long userId, Long deviceId, Long newLocationId, String newDeviceName) {
         // 아무 필드도 안 왔으면 의미없는 요청으로 간주 (정책에 따라 이 체크는 빼셔도 됩니다)
         if (newLocationId == null && newDeviceName == null) {
-            throw new InvalidDeviceValueException("변경할 값이 하나도 없습니다.");
+            throw new InvalidDeviceValueException("변경할 값이 없습니다.");
         }
 
         Device device = deviceRepository.findById(deviceId)
                 .orElseThrow(() -> new DeviceNotFoundException(deviceId));
 
         // 권한 체크는 한 번만 - 위치/이름 둘 다 바꿔도 검증 한 번으로 충분
-        validateManagerRole(userId, device.getGroupId().getGroupId());
+        validateManagerRole(userId, device.getGroup().getGroupId());
 
         if (newLocationId != null) {
             Location location = locationsRepository.findById(newLocationId)
@@ -252,10 +252,10 @@ public class DeviceServiceImpl implements DeviceService {
                 .orElseThrow(() -> new DeviceNotFoundException(deviceId));
 
         // 삭제 작업 권한 체크
-        validateManagerRole(userId, device.getGroupId().getGroupId()); // Groups 객체에서 Long ID 호출
+        validateManagerRole(userId, device.getGroup().getGroupId()); // Groups 객체에서 Long ID 호출
 
         // @Query 없이 완벽하게 동작하는 자식 테이블 일괄 삭제 메서드 호출
-        deviceAttributeRepository.deleteByDeviceId(deviceId);
+        deviceAttributeRepository.deleteByDeviceDeviceId(deviceId);
         deviceRepository.delete(device);
 
         // 캐시에서도 제거
@@ -271,14 +271,14 @@ public class DeviceServiceImpl implements DeviceService {
         validateManagerRole(userId, groupId);
 
         // 캐시 삭제 - groupId 소속 디바이스만 골라서 evict (clear()는 다른 그룹 캐시까지 날려버리므로 사용 금지)
-        List<Device> devices = deviceRepository.findByGroupId(groupId);
+        List<Device> devices = deviceRepository.findByGroupGroupId(groupId);
         devices.stream()
                 .map(Device::getDeviceEui) // 각디바이스의 EUI만 추출
                 .filter(Objects::nonNull) // ACTUATOR타입은 EUI가 null이라 걸러냄
                 .forEach(deviceLookupCacheService::evict); // 하나씩 evict 호출
 
         // DB삭제 (groupId 소속만)
-        deviceAttributeRepository.deleteByGroupId(groupId);
+        deviceAttributeRepository.deleteByGroupIdGroupId(groupId);
         deviceRepository.deleteAll(devices);
     }
 
@@ -295,16 +295,16 @@ public class DeviceServiceImpl implements DeviceService {
         } else if (eui != null && !eui.trim().isEmpty()) {
             entities = deviceRepository.findByDeviceEui(eui).map(List::of).orElse(List.of());
         } else if (locationId != null) {
-            entities = deviceRepository.findByLocationId(locationId);
+            entities = deviceRepository.findByLocationLocationId(locationId);
         } else if (deviceName != null && !deviceName.trim().isEmpty()) {
             entities = deviceRepository.findByDeviceName(deviceName);
         } else {
-            entities = deviceRepository.findByGroupId(groupId);
+            entities = deviceRepository.findByGroupGroupId(groupId);
         }
 
         // 위 분기들은 groupId로 안걸렀으니 다른 그룹 결과가 섞이지 않게 마지막에 한번더 필터링
         return entities.stream()
-                .filter(e -> Objects.equals(e.getGroupId().getGroupId(), groupId))
+                .filter(e -> Objects.equals(e.getGroup().getGroupId(), groupId))
                 .map(this::toDto)
                 .toList();
     }

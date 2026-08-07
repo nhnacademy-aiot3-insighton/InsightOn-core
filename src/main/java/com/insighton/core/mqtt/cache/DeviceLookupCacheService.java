@@ -89,8 +89,8 @@ public class DeviceLookupCacheService {
         return new DeviceCacheEntry(
                 device.getDeviceId(),
                 device.getDeviceEui(),
-                device.getGateway() != null ? device.getGateway().getGatewayId() : null,
-                device.getLocation() != null ? device.getLocation().getLocationId() : null
+                device.getGateway().getGatewayId(),
+                device.getLocation().getLocationId()
         );
     }
 }

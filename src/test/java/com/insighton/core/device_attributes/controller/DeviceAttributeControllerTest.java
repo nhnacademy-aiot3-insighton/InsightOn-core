@@ -32,11 +32,11 @@ class DeviceAttributeControllerTest {
     @Test
     @DisplayName("기기 속성 전체 조회 성공")
     void 속성목록_조회_성공() throws Exception {
-        given(attributeService.getAllAttributeByDeviceId(1L, 1L))
+        given(attributeService.getAllAttributeByDeviceId(42L, 10L))
                 .willReturn(List.of(new DeviceAttributeResponse("co2", "이산화탄소", "ppm", "850")));
 
-        mockMvc.perform(get("/api/v1/sensor/{device-id}/attribute", 1L)
-                        .header("X-USER-ID", 1L))
+        mockMvc.perform(get("/api/v1/sensor/{deviceId}/attribute", 10L)
+                        .header("X-USER-ID", 42L))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].metricKey").value("co2"));
     }
@@ -66,7 +66,7 @@ class DeviceAttributeControllerTest {
     void 값변경_빈값_400() throws Exception {
         ActuatorUpdateRequest request = new ActuatorUpdateRequest("");
 
-        mockMvc.perform(put("/api/v1/sensor/{device-id}/attribute/{metricKey}", 1L, "power_status")
+        mockMvc.perform(put("/api/v1/sensor/{device-id}/attribute/{metric-key}", 1L, "power_status")
                         .header("X-USER-ID", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -82,7 +82,7 @@ class DeviceAttributeControllerTest {
 
         ActuatorUpdateRequest request = new ActuatorUpdateRequest("ON");
 
-        mockMvc.perform(put("/api/v1/sensor/{device-id}/attribute/{metricKey}", 1L, "unknown_key")
+        mockMvc.perform(put("/api/v1/sensor/{device-id}/attribute/{metric-key}", 1L, "unknown_key")
                         .header("X-USER-ID", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))

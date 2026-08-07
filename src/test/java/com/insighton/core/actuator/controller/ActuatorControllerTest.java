@@ -85,7 +85,7 @@ class ActuatorControllerTest {
     @Test
     @DisplayName("단일 삭제 성공")
     void 삭제_성공() throws Exception {
-        mockMvc.perform(delete("/api/v1/groups/{groupsId}/actuators/{id}", 10L, 1L)
+        mockMvc.perform(delete("/api/v1/groups/{group-id}/actuators/{id}", 10L, 1L)
                         .header("X-USER-ID", 1L))
                 .andExpect(status().isOk());
 

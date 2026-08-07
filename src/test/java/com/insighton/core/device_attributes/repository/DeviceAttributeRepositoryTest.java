@@ -26,7 +26,7 @@ class DeviceAttributeRepositoryTest {
     @Test
     @DisplayName("findByDeviceIdDeviceId - 기기 소속 속성 전체 조회 성공")
     void 기기속성_전체조회() {
-        List<SensorAttribute> result = attributeRepository.findByDeviceId(1L);
+        List<SensorAttribute> result = attributeRepository.findByDeviceDeviceId(1L);
 
         assertThat(result).hasSize(2);
     }
@@ -35,7 +35,7 @@ class DeviceAttributeRepositoryTest {
     @DisplayName("findByDeviceIdDeviceIdAndMetricKey - 복합 조건 단건 조회 성공")
     void 기기와_메트릭키로_단건조회() {
         Optional<SensorAttribute> found =
-                attributeRepository.findByDeviceIdAndMetricKey(1L, "humidity");
+                attributeRepository.findByDeviceDeviceIdAndMetricKey(1L, "humidity");
 
         assertThat(found).isPresent();
     }
@@ -43,16 +43,16 @@ class DeviceAttributeRepositoryTest {
     @Test
     @DisplayName("deleteByDeviceIdDeviceId - 기기 삭제 시 속성 일괄 삭제 성공")
     void 기기ID로_일괄삭제() {
-        attributeRepository.deleteByDeviceId(1L);
+        attributeRepository.deleteByDeviceDeviceId(1L);
 
-        assertThat(attributeRepository.findByDeviceId(1L)).isEmpty();
+        assertThat(attributeRepository.findByDeviceDeviceId(1L)).isEmpty();
     }
 
     @Test
     @DisplayName("deleteByGroupIdGroupId - 그룹 삭제 시 속성 일괄 삭제 성공")
     void 그룹ID로_일괄삭제() {
-        attributeRepository.deleteByDeviceId(1L);
+        attributeRepository.deleteByDeviceDeviceId(1L);
 
-        assertThat(attributeRepository.findByDeviceId(1L)).isEmpty();
+        assertThat(attributeRepository.findByDeviceDeviceId(1L)).isEmpty();
     }
 }

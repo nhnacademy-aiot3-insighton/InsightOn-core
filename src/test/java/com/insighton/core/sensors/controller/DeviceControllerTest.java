@@ -2,7 +2,6 @@ package com.insighton.core.sensors.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.insighton.core.location.exception.LocationNotFoundException;
-import com.insighton.core.sensors.dto.DeviceNameUpdateRequest;
 import com.insighton.core.sensors.dto.DeviceResponse;
 import com.insighton.core.sensors.dto.DeviceUpdateRequest;
 import com.insighton.core.sensors.entity.DeviceType;
