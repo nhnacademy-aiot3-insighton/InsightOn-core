@@ -35,4 +35,12 @@ public interface SensorService {
     // 조건별 장치 검색 (단순 분기)
     List<SensorResponse> searchSensors(Long userId, Long groupId, Long id, String eui,
                                        Long locationId, String sensorName);
+
+    /**
+     * location 삭제를 위해 만들었습니다
+     *
+     * @param groupId    location이 속해있는 group ID
+     * @param locationId device와 연결되어있는 location
+     */
+    void detachLocationFromSensors(Long groupId, Long locationId);
 }

@@ -51,7 +51,7 @@ class SensorAttributeRepositoryTest {
     @Test
     @DisplayName("deleteByGroupIdGroupId - 그룹 삭제 시 속성 일괄 삭제 성공")
     void 그룹ID로_일괄삭제() {
-        attributeRepository.deleteBySensorSensorId(1L);
+        attributeRepository.deleteByGroupIdGroupId(1L);
 
         assertThat(attributeRepository.findBySensorSensorId(1L)).isEmpty();
     }

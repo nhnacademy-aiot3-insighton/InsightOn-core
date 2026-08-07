@@ -1,7 +1,8 @@
 package com.insighton.core.dashboards.controller;
 
 import com.insighton.core.dashboards.dto.response.DashboardResponse;
-import com.insighton.core.groups.service.CoreManagementUseCase;
+import com.insighton.core.usecase.DashboardSaveUseCase;
+import com.insighton.core.usecase.DashboardUseCase;
 import com.insighton.core.widgets.dto.chart.ChartDataResponse;
 import com.insighton.core.widgets.dto.request.WidgetSaveRequest;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +16,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/groups/{group-id}/location/{location-id}/dashboard")
 public class DashboardController {
-    private final CoreManagementUseCase useCase;
+    private final DashboardUseCase dashboardUseCase;
+    private final DashboardSaveUseCase dashboardSaveUseCase;
 
     /**
      * dashboard 조회
@@ -31,7 +33,7 @@ public class DashboardController {
             @PathVariable("group-id") Long groupId,
             @PathVariable("location-id") Long locationId
     ) {
-        DashboardResponse response = useCase.getDashboard(userId, groupId, locationId);
+        DashboardResponse response = dashboardUseCase.getDashboard(userId, groupId, locationId);
 
         return ResponseEntity.ok(response);
     }
@@ -49,9 +51,9 @@ public class DashboardController {
             @PathVariable("location-id") Long locationId,
             @RequestBody List<WidgetSaveRequest> requests) {
 
-        List<Long> widgetIds = useCase.saveDashboard(userId, groupId, locationId, requests);
+        List<Long> widgetIds = dashboardSaveUseCase.saveDashboard(userId, groupId, locationId, requests);
 
-        Map<Long, ChartDataResponse> result = useCase.saveDashboardInfluxDB(widgetIds);
+        Map<Long, ChartDataResponse> result = dashboardSaveUseCase.saveDashboardInfluxDB(widgetIds);
 
         return ResponseEntity.ok(result);
     }
