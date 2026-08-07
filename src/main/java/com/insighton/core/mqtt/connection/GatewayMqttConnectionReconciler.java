@@ -21,11 +21,9 @@ import org.springframework.stereotype.Component;
 
 /**
  * 다중 인스턴스 환경에서 게이트웨이별 MQTT 연결 소유권을 주기적으로 조정하는 러너
- *
  * 게이트웨이마다 소유자 지정 (gatewayId % 2)
  * 평상시엔 선호 소유자가 즉시 락 획득 경쟁 없이 동작
  * 소유자가 아닌 인스턴스는 해당 게이트웨이가 일정 tick동안 계속 미등록 상태로 남아있을 때만 백업으로 채감
- *
  * 최초 부팅 시 워밍업
  */
 @Slf4j
@@ -129,6 +127,23 @@ public class GatewayMqttConnectionReconciler {
             tryRegister(gateway, isPreferredOwner);
         }
         unclaimedTickCounts.keySet().retainAll(stillExisting);
+        releaseDroppedGateways(stillExisting);
+    }
+
+    private void releaseDroppedGateways(Set<Long> stillExisting) {
+        for(Long ownerId : gatewayManager.getRegisterGatewayIds()) {
+            if(stillExisting.contains(ownerId)) {
+                continue;
+            }
+
+            gatewayManager.unregisterGateway(ownerId);
+            lockService.release(ownerId, instanceId);
+            connectionInfoCache.remove(ownerId);
+            groupMappingCache.evict(ownerId);
+
+            log.info("Gateway {} 대상에서 제외됨(삭제 또는 protocolType 변경) — 연결 해제 및 락 반납 (instance={})",
+                    ownerId, instanceId);
+        }
     }
 
     /**
