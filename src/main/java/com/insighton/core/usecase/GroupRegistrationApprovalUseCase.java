@@ -1,9 +1,9 @@
 package com.insighton.core.usecase;
 
 import com.insighton.core.common.annotation.UseCase;
-import com.insighton.core.groupregistration.dto.GroupRegistrationResponse;
-import com.insighton.core.groupregistration.service.GroupRegistrationService;
-import com.insighton.core.groups.dto.request.GroupRequest;
+import com.insighton.core.domain.groupregistration.dto.GroupRegistrationResponse;
+import com.insighton.core.domain.groupregistration.service.GroupRegistrationService;
+import com.insighton.core.domain.groups.dto.request.GroupRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 

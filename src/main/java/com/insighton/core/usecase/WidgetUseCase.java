@@ -1,14 +1,14 @@
 package com.insighton.core.usecase;
 
 import com.insighton.core.common.annotation.UseCase;
-import com.insighton.core.dashboards.entity.Dashboard;
-import com.insighton.core.dashboards.service.DashboardService;
-import com.insighton.core.groupmember.entity.GroupMember;
-import com.insighton.core.groupmember.service.GroupMemberService;
-import com.insighton.core.groups.exception.NoPermissionException;
-import com.insighton.core.location.service.LocationService;
-import com.insighton.core.widgets.dto.response.WidgetsListResponse;
-import com.insighton.core.widgets.service.WidgetService;
+import com.insighton.core.domain.dashboards.entity.Dashboard;
+import com.insighton.core.domain.dashboards.service.DashboardService;
+import com.insighton.core.domain.groupmember.entity.GroupMember;
+import com.insighton.core.domain.groupmember.service.GroupMemberService;
+import com.insighton.core.domain.groups.exception.NoPermissionException;
+import com.insighton.core.domain.location.service.LocationService;
+import com.insighton.core.domain.widgets.dto.response.WidgetsListResponse;
+import com.insighton.core.domain.widgets.service.WidgetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 

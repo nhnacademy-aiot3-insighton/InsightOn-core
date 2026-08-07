@@ -1,9 +1,10 @@
 package com.insighton.core.groupmember.controller;
 
-import com.insighton.core.groupmember.dto.response.GroupMemberListResponse;
-import com.insighton.core.groupmember.dto.response.GroupMemberResponse;
-import com.insighton.core.groupmember.entity.GroupMember;
-import com.insighton.core.groupmember.service.GroupMemberService;
+import com.insighton.core.controller.api.GroupMemberController;
+import com.insighton.core.domain.groupmember.dto.response.GroupMemberListResponse;
+import com.insighton.core.domain.groupmember.dto.response.GroupMemberResponse;
+import com.insighton.core.domain.groupmember.entity.GroupMember;
+import com.insighton.core.domain.groupmember.service.GroupMemberService;
 import com.insighton.core.usecase.GroupUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

@@ -1,8 +1,8 @@
 package com.insighton.core.actuator.repository;
 
-import com.insighton.core.actuators.entity.Actuator;
-import com.insighton.core.actuators.entity.ActuatorType;
-import com.insighton.core.actuators.repository.ActuatorRepository;
+import com.insighton.core.domain.actuators.entity.Actuator;
+import com.insighton.core.domain.actuators.entity.ActuatorType;
+import com.insighton.core.domain.actuators.repository.ActuatorRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
