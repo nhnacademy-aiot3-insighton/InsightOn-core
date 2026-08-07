@@ -15,7 +15,7 @@ import java.util.List;
 public class GroupEventProducer {
 
     private final RabbitTemplate rabbitTemplate;
-    
+
     public void sendGroupDeleteEvent(Long groupId, List<Long> locationIds) {
         GroupDeletedEvent event = new GroupDeletedEvent(groupId, locationIds);
 
@@ -30,9 +30,9 @@ public class GroupEventProducer {
             log.info("[GroupEventProducer] 그룹 삭제 메시지 발행 완료 - Group ID: {}", groupId);
 
         } catch (AmqpException e) {
-
             log.error("[GroupEventProducer] 그룹 삭제 메시지 발행 실패 - Group ID: {}, Location IDs: {}, Error: {}",
                     groupId, locationIds, e.getMessage(), e);
+            throw e;
         }
     }
 }

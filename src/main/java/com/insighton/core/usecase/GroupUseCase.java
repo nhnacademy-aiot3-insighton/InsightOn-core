@@ -156,8 +156,6 @@ public class GroupUseCase {
         }
         gatewayService.deleteByGroupId(groupId);
 
-        groupMemberService.deleteGroupMemberAll(userId, groupId);
-
         sensorService.deleteAll(userId, groupId);
 
         List<Long> locationIds = locationService.getLocationListByGroupId(groupId).stream()
@@ -165,6 +163,8 @@ public class GroupUseCase {
                 .toList();
 
         deleteLocationAll(groupId);
+
+        groupMemberService.deleteGroupMemberAll(userId, groupId);
 
         groupService.deleteGroup(groupId);
 

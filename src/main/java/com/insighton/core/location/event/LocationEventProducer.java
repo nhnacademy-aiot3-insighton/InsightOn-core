@@ -30,6 +30,7 @@ public class LocationEventProducer {
         } catch (AmqpException e) {
             log.error("[LocationEventProducer] Location 삭제 이벤트 전송 실패 - locationId: {}, error: {}",
                     locationId, e.getMessage(), e);
+            throw e;
         }
     }
 }

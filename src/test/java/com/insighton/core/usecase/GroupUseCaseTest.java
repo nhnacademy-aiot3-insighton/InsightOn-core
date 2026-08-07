@@ -16,6 +16,7 @@ import com.insighton.core.groups.exception.NoPermissionException;
 import com.insighton.core.groups.exception.UnAuthorizedAccessException;
 import com.insighton.core.groups.service.GroupService;
 import com.insighton.core.location.service.LocationService;
+import com.insighton.core.sensors.service.SensorService;
 import com.insighton.core.widgets.service.WidgetService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -55,6 +56,9 @@ class GroupUseCaseTest {
 
     @Mock
     private WidgetService widgetService;
+
+    @Mock
+    private SensorService sensorService;
 
     @InjectMocks
     private GroupUseCase managementUseCase;

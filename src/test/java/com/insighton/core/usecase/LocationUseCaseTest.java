@@ -13,6 +13,8 @@ import com.insighton.core.location.dto.response.LocationListResponse;
 import com.insighton.core.location.dto.response.LocationResponse;
 import com.insighton.core.location.entity.Location;
 import com.insighton.core.location.service.LocationService;
+import com.insighton.core.sensors.service.SensorService;
+import com.insighton.core.widgets.service.WidgetService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -20,6 +22,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -43,6 +46,13 @@ class LocationUseCaseTest {
     @Mock
     private DashboardService dashboardService;
 
+    @Mock
+    private SensorService sensorService;
+
+    @Mock
+    private WidgetService widgetService;
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private LocationUseCase managementUseCase;

@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("//dashboard")
+@RequestMapping("/dashboard")
 public class ChartDataController {
     private final WidgetService widgetService;
 
