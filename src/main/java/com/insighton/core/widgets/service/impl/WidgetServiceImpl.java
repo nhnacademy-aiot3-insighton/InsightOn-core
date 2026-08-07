@@ -242,9 +242,9 @@ public class WidgetServiceImpl implements WidgetService {
                 .append("   |> filter(fn: (r) => r._measurement == \"").append(MEASUREMENT_NAME).append("\")\n");
 
         // null이나 빈 값 체크
-        if (Objects.nonNull(config.deviceEui()) && !config.deviceEui().isBlank()) {
+        if (Objects.nonNull(config.sensorEui()) && !config.sensorEui().isBlank()) {
             // 이스케이프 처리
-            flux.append("   |> filter(fn: (r) => r.deviceEui == \"").append(sanitize(config.deviceEui())).append("\")\n");
+            flux.append("   |> filter(fn: (r) => r.sensorEui == \"").append(sanitize(config.sensorEui())).append("\")\n");
         }
 
         if (Objects.nonNull(config.fields()) && !config.fields().isEmpty()) {

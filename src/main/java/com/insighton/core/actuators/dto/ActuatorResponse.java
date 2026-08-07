@@ -9,7 +9,7 @@ import java.util.Map;
 public record ActuatorResponse(
         Long actuatorId, // 액추에이터 PK
         Long locationId, // 설치 구역 ID
-        String deviceName, // 장비 이름
+        String sensorName, // 장비 이름
         ActuatorType actuatorType, // 액추에이터 종류
         Map<String, Object> currentState, // 현재 상태 JSON Map
         OffsetDateTime stateUpdatedAt, // 상태 변경 일시
@@ -20,7 +20,7 @@ public record ActuatorResponse(
         return new ActuatorResponse(
                 entity.getActuatorId(),
                 entity.getLocation().getLocationId(),
-                entity.getDeviceName(),
+                entity.getSensorName(),
                 entity.getActuatorType(),
                 entity.getCurrentState(),
                 entity.getStateUpdatedAt(),

@@ -37,7 +37,7 @@ class LocationServiceTest {
     private LocationRepository locationRepository;
 
     @Mock
-    private GroupServiceImpl groupsService;
+    private GroupServiceImpl groupService;
 
     @InjectMocks
     private LocationServiceImpl locationsService;

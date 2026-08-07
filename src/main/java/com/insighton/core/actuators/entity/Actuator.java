@@ -29,8 +29,8 @@ public class Actuator {
     @ManyToOne(fetch = FetchType.LAZY)
     private Location location; // 장소 ID
 
-    @Column(name = "device_name", length = 100, nullable = false)
-    private String deviceName; // 디바이스 이름
+    @Column(name = "sensor_name", length = 100, nullable = false)
+    private String sensorName; // 센서 이름
 
     @Enumerated(EnumType.STRING)
     @Column(name = "actuator_type", length = 30, nullable = false)
@@ -53,9 +53,9 @@ public class Actuator {
     }
 
     // 유효한 값일 때만 이름 변경
-    public void updateName(String newDeviceName) {
-        if (newDeviceName != null && !newDeviceName.trim().isEmpty()) {
-            this.deviceName = newDeviceName;
+    public void updateName(String newSensorName) {
+        if (newSensorName != null && !newSensorName.trim().isEmpty()) {
+            this.sensorName = newSensorName;
         }
     }
 }

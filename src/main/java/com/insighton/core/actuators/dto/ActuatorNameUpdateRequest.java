@@ -7,6 +7,6 @@ import jakarta.validation.constraints.Size;
 public record ActuatorNameUpdateRequest(
         @NotBlank(message = "변경할 장비 이름은 필수입니다")
         @Size(max = 100, message = "장비 이름은 100자를 넘을 수 없습니다")
-        String deviceName
+        String sensorName
 ) {
 }

@@ -37,7 +37,7 @@ public class GroupServiceTest {
     private GroupRepository groupRepository;
 
     @InjectMocks
-    private GroupServiceImpl groupsService;
+    private GroupServiceImpl groupService;
 
     @Nested
     @DisplayName("성공 케이스")
@@ -50,7 +50,7 @@ public class GroupServiceTest {
             GroupRequest request = new GroupRequest("Test Group", "Desc", "Loc");
 
             // when
-            groupsService.createGroup(request);
+            groupService.createGroup(request);
 
             // then
             verify(groupRepository, times(1)).save(any(Group.class));
@@ -65,7 +65,7 @@ public class GroupServiceTest {
             given(groupRepository.findById(groupId)).willReturn(Optional.of(mockGroup));
 
             // when
-            groupsService.deleteGroup(groupId);
+            groupService.deleteGroup(groupId);
 
             // then
             verify(groupRepository, times(1)).delete(mockGroup);
@@ -81,7 +81,7 @@ public class GroupServiceTest {
             given(groupRepository.findById(groupId)).willReturn(Optional.of(mockGroup));
 
             // when
-            groupsService.updateGroup(request, groupId);
+            groupService.updateGroup(request, groupId);
 
             // then
             verify(mockGroup, times(1)).update(request);
@@ -97,7 +97,7 @@ public class GroupServiceTest {
             given(groupRepository.findByInviteTokenAndGroupId(token, groupId)).willReturn(Optional.of(mockGroup));
 
             // when
-            GroupResponse response = groupsService.getGroupPreview(token, groupId);
+            GroupResponse response = groupService.getGroupPreview(token, groupId);
 
             // then
             assertThat(response.name()).isEqualTo("T");
@@ -121,7 +121,7 @@ public class GroupServiceTest {
             given(groupRepository.findAll(pageable)).willReturn(mockGroupPage);
 
             // when
-            Page<GroupAdminResponse> list = groupsService.getGroupList("ADMIN", 1L, pageable);
+            Page<GroupAdminResponse> list = groupService.getGroupList("ADMIN", 1L, pageable);
 
             // then
             assertThat(list).hasSize(1);
@@ -137,7 +137,7 @@ public class GroupServiceTest {
             given(groupRepository.findById(groupId)).willReturn(Optional.of(mockGroup));
 
             // when
-            groupsService.newInviteToken(groupId);
+            groupService.newInviteToken(groupId);
 
             // then
             verify(mockGroup, times(1)).rotateInviteToken(any(String.class));
@@ -156,7 +156,7 @@ public class GroupServiceTest {
             given(groupRepository.findById(groupId)).willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> groupsService.deleteGroup(groupId))
+            assertThatThrownBy(() -> groupService.deleteGroup(groupId))
                     .isInstanceOf(GroupNotFoundException.class);
         }
 
@@ -169,7 +169,7 @@ public class GroupServiceTest {
             given(groupRepository.findById(groupId)).willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> groupsService.updateGroup(request, groupId))
+            assertThatThrownBy(() -> groupService.updateGroup(request, groupId))
                     .isInstanceOf(GroupNotFoundException.class);
         }
 
@@ -180,7 +180,7 @@ public class GroupServiceTest {
             given(groupRepository.findByInviteTokenAndGroupId("bad-token", 1L)).willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> groupsService.getGroupPreview("bad-token", 1L))
+            assertThatThrownBy(() -> groupService.getGroupPreview("bad-token", 1L))
                     .isInstanceOf(InviteTokenNotFoundException.class);
         }
 
@@ -191,7 +191,7 @@ public class GroupServiceTest {
             Pageable pageable = PageRequest.of(0, 10);
 
             // when & then
-            assertThatThrownBy(() -> groupsService.getGroupList("USER", 1L, pageable))
+            assertThatThrownBy(() -> groupService.getGroupList("USER", 1L, pageable))
                     .isInstanceOf(UnAuthorizedAccessException.class);
         }
 
@@ -203,7 +203,7 @@ public class GroupServiceTest {
             given(groupRepository.findById(groupId)).willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> groupsService.newInviteToken(groupId))
+            assertThatThrownBy(() -> groupService.newInviteToken(groupId))
                     .isInstanceOf(GroupNotFoundException.class);
         }
     }

@@ -14,7 +14,7 @@ public record ActuatorRequest(
 
         @NotBlank(message = "장비 이름 필수")
         @Size(max = 100, message = "장비 이름은 100자를 넘을 수 없습니다")
-        String deviceName, // 장비 명칭
+        String sensorName, // 장비 명칭
 
         @NotNull(message = "액추에이터 타입 필수")
         ActuatorType actuatorType, // 액추에이터 종류

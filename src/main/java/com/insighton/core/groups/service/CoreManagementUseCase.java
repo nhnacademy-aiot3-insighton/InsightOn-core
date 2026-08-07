@@ -282,7 +282,7 @@ public class CoreManagementUseCase {
     /**
      * location 삭제
      * 하위에 있는 것들을 먼저 차근차근 삭제하시오 여기서.
-     * 센서 디바이스는 삭제 말고 locations_id를 null 값으로 바꿔주셔?
+     * 센서 센서는 삭제 말고 locations_id를 null 값으로 바꿔주셔?
      *
      * @param userId           삭제하려는 user의 ID
      * @param groupId          삭제될 location이 속해있는 group ID
@@ -297,7 +297,7 @@ public class CoreManagementUseCase {
         // member가 member 권한일 때는 에러를 던지고
         validationIsAdmin(groupMember);
 
-        // devices는 location 값만 null로 바꿔주기
+        // sensors는 location 값만 null로 바꿔주기
 
         // dashboards 삭제
         dashboardDelete(targetLocationId);
@@ -317,7 +317,7 @@ public class CoreManagementUseCase {
         // dashboards 지우는 로직 추가
         for (Location location : locationList) {
             Long locationId = location.getLocationId();
-            // devices는 location 값만 null로 바꿔주기
+            // sensors는 location 값만 null로 바꿔주기
 
             // dashboard 다 삭제해주기
             dashboardDelete(locationId);

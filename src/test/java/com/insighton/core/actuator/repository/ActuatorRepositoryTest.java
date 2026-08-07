@@ -30,7 +30,7 @@ class ActuatorRepositoryTest {
         List<Actuator> result = actuatorRepository.findByLocationLocationId(1L);
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).getDeviceName()).isEqualTo("에어컨1");
+        assertThat(result.get(0).getSensorName()).isEqualTo("에어컨1");
     }
 
     @Test
