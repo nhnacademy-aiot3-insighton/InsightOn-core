@@ -7,7 +7,7 @@ public class LocationNotFoundException extends RuntimeException {
 
     public static LocationNotFoundException notFoundLocationByLocationId(Long locationId) {
         return new LocationNotFoundException(
-                String.format("location not found. Locations ID : " + locationId)
+                String.format("location not found. Location ID : " + locationId)
         );
     }
 

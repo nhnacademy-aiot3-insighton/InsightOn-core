@@ -1,6 +1,6 @@
 package com.insighton.core.device_attributes.entity;
 
-import com.insighton.core.groups.entity.Groups;
+import com.insighton.core.groups.entity.Group;
 import com.insighton.core.sensors.entity.Device;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -15,9 +15,9 @@ import lombok.NoArgsConstructor;
  */
 @Entity
 @Table(name = "sensor_attributes",
-    uniqueConstraints = @UniqueConstraint(
-            columnNames = {"device_id", "metric_key"}
-    ))
+        uniqueConstraints = @UniqueConstraint(
+                columnNames = {"device_id", "metric_key"}
+        ))
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -54,15 +54,15 @@ public class SensorAttribute {
     private String currentValueStr;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name =  "group_id", nullable = false)
-    private Groups groupId; // 소속 회사/그룹 ID (FK)
+    @JoinColumn(name = "group_id", nullable = false)
+    private Group groupId; // 소속 회사/그룹 ID (FK)
 
     /**
      * 액추에이터 제어 명령 집행 또는 상태 변경 시 최신 상태값을 업데이트하는 비즈니스 메서드
      *
      * @param newValue 새롭게 변경될 상태/수치 문자열
      */
-    public void updateCurrentValue(String newValue){
+    public void updateCurrentValue(String newValue) {
         this.currentValueStr = newValue;
     }
 }

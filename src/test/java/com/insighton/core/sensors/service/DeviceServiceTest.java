@@ -84,7 +84,7 @@ class DeviceServiceTest {
         DeviceCacheEntry result = deviceService.autoProvision(10L, 5L, "EUI-001", "센서", Set.of("co2"));
 
         assertThat(result.deviceId()).isEqualTo(1L);
-        assertThat(result.gatewayId()).isEqualTo(10L); // gatewaysId null -> 파라미터로 받은 값으로 대체됨
+        assertThat(result.gatewayId()).isEqualTo(10L); // gateway null -> 파라미터로 받은 값으로 대체됨
         verify(deviceRepository, never()).save(any());
         verify(deviceLookupCacheService).populate(any(DeviceCacheEntry.class));
     }

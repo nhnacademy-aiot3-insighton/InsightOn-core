@@ -10,13 +10,13 @@ import com.insighton.core.actuators.exception.ActuatorNotFoundException;
 import com.insighton.core.actuators.exception.InvalidActuatorValueException;
 import com.insighton.core.actuators.repository.ActuatorRepository;
 import com.insighton.core.actuators.service.ActuatorService;
-import com.insighton.core.groupmember.entity.GroupMembers;
-import com.insighton.core.groupmember.service.GroupMembersService;
+import com.insighton.core.groupmember.entity.GroupMember;
+import com.insighton.core.groupmember.service.GroupMemberService;
 import com.insighton.core.groups.exception.NoPermissionException;
-import com.insighton.core.location.dto.response.LocationsListResponse;
-import com.insighton.core.location.entity.Locations;
+import com.insighton.core.location.dto.response.LocationListResponse;
+import com.insighton.core.location.entity.Location;
 import com.insighton.core.location.exception.LocationNotFoundException;
-import com.insighton.core.location.repository.LocationsRepository;
+import com.insighton.core.location.repository.LocationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,16 +30,16 @@ import java.util.Map;
 @Transactional(readOnly = true)
 public class ActuatorServiceImpl implements ActuatorService {
 
-    private final LocationsRepository locationsRepository; // 소유권 교차검증용
+    private final LocationRepository locationsRepository; // 소유권 교차검증용
     private final ActuatorRepository actuatorRepository; // 액추에이터 조회/저장
-    private final GroupMembersService groupMembersService; // 그룹 멤버 권한 검증용 서비스
+    private final GroupMemberService groupMembersService; // 그룹 멤버 권한 검증용 서비스
     private final ActuatorRunLogService actuatorRunLogService; // 제어 이력 기록용
     private final ActuatorRunLogRepository actuatorRunLogRepository;
 
 
     // 요청자가 해당 그룹의 MANAGER 이상 권한을 가졌는지 검증
     private void validateManagerRole(Long userId, Long groupsId) {
-        GroupMembers member = groupMembersService.validateGroupMembers(groupsId, userId);
+        GroupMember member = groupMembersService.validateGroupMembers(groupsId, userId);
         if (member.isMember()) {
             throw NoPermissionException.forAdmin(member.getGroupMemberId());
         }
@@ -50,15 +50,15 @@ public class ActuatorServiceImpl implements ActuatorService {
     private void validateActuatorOwnership(Actuator entity, Long groupsId) {
 
         boolean belongsToGroup = locationsRepository
-                .findByLocationIdAndGroups_GroupId(entity.getLocation().getLocationId(), groupsId)
+                .findByLocationIdAndGroupGroupId(entity.getLocationId().getLocationId(), groupsId)
                 .isPresent();
         if (!belongsToGroup) {
             throw new ActuatorNotFoundException(entity.getActuatorId());
         }
     }
 
-    private void validateGroupMembership(Long userId, Long groupId){
-        groupMembersService.validateGroupMembers(groupId,userId);
+    private void validateGroupMembership(Long userId, Long groupId) {
+        groupMembersService.validateGroupMembers(groupId, userId);
     }
 
     @Override
@@ -69,8 +69,8 @@ public class ActuatorServiceImpl implements ActuatorService {
         validateManagerRole(userId, groupsId);
 
         // 조회 및 검증
-        Locations locations = locationsRepository.findByLocationIdAndGroups_GroupId(request.locationId(), groupsId)
-                        .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(request.locationId()));
+        Location locations = locationsRepository.findByLocationIdAndGroupGroupId(request.locationId(), groupsId)
+                .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(request.locationId()));
 
 
         // 전달받은 요청 정보로 액추에이터 엔티티 생성 및 저장[cite: 6]
@@ -103,7 +103,7 @@ public class ActuatorServiceImpl implements ActuatorService {
         validateGroupMembership(userId, groupId);
 
         // 위치가 요청 그룹 소속인지 교차 검증
-        locationsRepository.findByLocationIdAndGroups_GroupId(locationId,groupId)
+        locationsRepository.findByLocationIdAndGroupGroupId(locationId, groupId)
                 .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(locationId));
 
         // 위치 ID를 기준으로 목록 조회 후 DTO 변환[cite: 6]
@@ -119,12 +119,12 @@ public class ActuatorServiceImpl implements ActuatorService {
         boolean isUserRequest = executedByType == ExecutedByType.USER;
 
         // AI나 룰엔진 등 시스템 요청인 경우 권한 검증을 생략함
-        if(isUserRequest){
+        if (isUserRequest) {
             validateManagerRole(userId, groupsId);
         }
 
         // 서비스 계층 방어 코드: 상태값이 비어있다면 400 Bad Request 예외 발생
-        if(newState == null || newState.isEmpty()){
+        if (newState == null || newState.isEmpty()) {
             throw new InvalidActuatorValueException("액추에이터 제어 상태 값(newState)은 비어있음");
         }
 
@@ -133,7 +133,7 @@ public class ActuatorServiceImpl implements ActuatorService {
                 .orElseThrow(() -> new ActuatorNotFoundException(actuatorId));
 
         // 사용자 요청일때만 소유권 체크 (시스템 요청은 groupId 필요가없을수있음)
-        if(isUserRequest){
+        if (isUserRequest) {
             validateActuatorOwnership(entity, groupsId);
         }
 
@@ -184,8 +184,8 @@ public class ActuatorServiceImpl implements ActuatorService {
     public void deleteAll(Long userId, Long groupsId) {
         validateManagerRole(userId, groupsId);
 
-        List<Long> locationIds = locationsRepository.findAllByGroups_GroupId(groupsId).stream()
-                .map(LocationsListResponse::locationId)
+        List<Long> locationIds = locationsRepository.findAllByGroupGroupId(groupsId).stream()
+                .map(LocationListResponse::locationId)
                 .toList();
 
         // 이미 만들어뒀던 위치 범위 삭제 메서드 재사용 (그룹→장소 캐스케이드 삭제 때 쓰던 것과 동일)
