@@ -18,8 +18,6 @@ import com.insighton.core.location.exception.LocationNotFoundException;
 import com.insighton.core.location.repository.LocationRepository;
 import com.insighton.core.mqtt.cache.SensorLookupCacheService;
 import com.insighton.core.mqtt.cache.dto.SensorCacheEntry;
-import com.insighton.core.sensor_attributes.entity.SensorAttribute;
-import com.insighton.core.sensor_attributes.repository.SensorAttributeRepository;
 import com.insighton.core.sensors.dto.SensorResponse;
 import com.insighton.core.sensors.entity.Sensor;
 import com.insighton.core.sensors.exception.InvalidSensorValueException;

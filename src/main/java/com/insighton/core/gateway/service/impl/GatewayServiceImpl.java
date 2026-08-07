@@ -13,7 +13,7 @@ import com.insighton.core.gateway.service.GatewayService;
 import com.insighton.core.groupmember.entity.GroupMember;
 import com.insighton.core.groupmember.repository.GroupMemberRepository;
 import com.insighton.core.mqtt.cache.SensorLookupCacheService;
-import com.insighton.core.sensor_attributes.repository.SensorAttributeRepository;
+import com.insighton.core.sensorattributes.repository.SensorAttributeRepository;
 import com.insighton.core.sensors.entity.Sensor;
 import com.insighton.core.sensors.repository.SensorRepository;
 import lombok.RequiredArgsConstructor;
