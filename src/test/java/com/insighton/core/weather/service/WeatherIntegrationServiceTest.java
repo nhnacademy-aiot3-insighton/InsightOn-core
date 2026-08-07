@@ -24,10 +24,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.web.client.RestClient;
 
 @SpringBootTest
-@ActiveProfiles("test") // src/test/resources/application-test.properties 환경 설정을 로드
+@ActiveProfiles("test")
+@Sql(scripts = "classpath:weather-test.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 class WeatherIntegrationServiceTest {
 
     private static final Logger log = LoggerFactory.getLogger(WeatherIntegrationServiceTest.class);
