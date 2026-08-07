@@ -1,14 +1,14 @@
 package com.insighton.core.actuator.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.insighton.core.actuatorrunlogs.entity.ExecutedByType;
-import com.insighton.core.actuatorrunlogs.service.ActuatorRunLogService;
-import com.insighton.core.actuators.controller.ActuatorController;
-import com.insighton.core.actuators.dto.ActuatorNameUpdateRequest;
-import com.insighton.core.actuators.dto.ActuatorRequest;
-import com.insighton.core.actuators.entity.ActuatorType;
-import com.insighton.core.actuators.exception.ActuatorNotFoundException;
-import com.insighton.core.actuators.service.ActuatorService;
+import com.insighton.core.domain.actuatorrunlogs.entity.ExecutedByType;
+import com.insighton.core.domain.actuatorrunlogs.service.ActuatorRunLogService;
+import com.insighton.core.controller.api.ActuatorController;
+import com.insighton.core.domain.actuators.dto.ActuatorNameUpdateRequest;
+import com.insighton.core.domain.actuators.dto.ActuatorRequest;
+import com.insighton.core.domain.actuators.entity.ActuatorType;
+import com.insighton.core.domain.actuators.exception.ActuatorNotFoundException;
+import com.insighton.core.domain.actuators.service.ActuatorService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

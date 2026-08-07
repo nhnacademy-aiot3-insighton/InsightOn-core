@@ -1,11 +1,12 @@
 package com.insighton.core.groups.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.insighton.core.groups.dto.request.GroupRequest;
-import com.insighton.core.groups.dto.response.GroupAdminResponse;
-import com.insighton.core.groups.dto.response.GroupResponse;
+import com.insighton.core.controller.api.GroupController;
+import com.insighton.core.domain.groups.dto.request.GroupRequest;
+import com.insighton.core.domain.groups.dto.response.GroupAdminResponse;
+import com.insighton.core.domain.groups.dto.response.GroupResponse;
 import com.insighton.core.usecase.GroupUseCase;
-import com.insighton.core.groups.service.GroupService;
+import com.insighton.core.domain.groups.service.GroupService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

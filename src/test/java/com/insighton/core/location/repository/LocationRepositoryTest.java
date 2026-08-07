@@ -1,7 +1,8 @@
 package com.insighton.core.location.repository;
 
-import com.insighton.core.location.dto.response.LocationListResponse;
-import com.insighton.core.location.entity.Location;
+import com.insighton.core.domain.location.dto.response.LocationListResponse;
+import com.insighton.core.domain.location.entity.Location;
+import com.insighton.core.domain.location.repository.LocationRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

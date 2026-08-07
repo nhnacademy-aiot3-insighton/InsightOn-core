@@ -1,0 +1,32 @@
+package com.insighton.core.domain.gateway.dto;
+
+import com.insighton.core.domain.gateway.entity.Gateway;
+import com.insighton.core.domain.gateway.entity.GatewayStatus;
+import com.insighton.core.domain.gateway.entity.ProtocolType;
+import java.time.OffsetDateTime;
+
+/**
+ * connection_config은 의도적으로 노출하지 않음 — 브로커 인증정보(username/password 등)를 담고 있어
+ * 목록/단건 조회 응답에 그대로 내보내면 안 됨. 필요해지면 별도 상세 조회 경로에서 권한 체크 후 노출 검토.
+ */
+public record GatewayResponse(
+        Long id,
+        Long groupsId,
+        String name,
+        ProtocolType protocolType,
+        GatewayStatus status,
+        OffsetDateTime lastHeartbeatAt,
+        OffsetDateTime createdAt
+) {
+    public static GatewayResponse from(Gateway gateway) {
+        return new GatewayResponse(
+                gateway.getGatewayId(),
+                gateway.getGroupId(),
+                gateway.getName(),
+                gateway.getProtocolType(),
+                gateway.getStatus(),
+                gateway.getLastHeartbeatAt(),
+                gateway.getCreatedAt()
+        );
+    }
+}
