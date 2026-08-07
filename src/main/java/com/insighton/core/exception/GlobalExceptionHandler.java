@@ -2,7 +2,8 @@ package com.insighton.core.exception;
 
 import com.insighton.core.actuators.exception.*;
 import com.insighton.core.dashboards.exception.DashboardNotFoundException;
-import com.insighton.core.sensor_attributes.exception.MetricKeyNotFoundException;
+import com.insighton.core.sensorattributes.exception.MetricKeyAlreadyExistsException;
+import com.insighton.core.sensorattributes.exception.MetricKeyNotFoundException;
 import com.insighton.core.gateway.exception.GatewayAccessDeniedException;
 import com.insighton.core.gateway.exception.GatewayNotFoundException;
 import com.insighton.core.groupmember.exception.*;
@@ -51,7 +52,7 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(HttpStatus.FORBIDDEN.value(), e.getMessage()));
     }
 
-    @ExceptionHandler(AlreadyJoinedException.class)
+    @ExceptionHandler({AlreadyJoinedException.class, MetricKeyAlreadyExistsException.class})
     public ResponseEntity<ErrorResponse> handleConflict(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ErrorResponse(HttpStatus.CONFLICT.value(), e.getMessage()));
