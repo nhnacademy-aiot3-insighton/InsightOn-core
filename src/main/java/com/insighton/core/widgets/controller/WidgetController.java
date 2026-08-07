@@ -1,6 +1,6 @@
 package com.insighton.core.widgets.controller;
 
-import com.insighton.core.groups.service.CoreManagementUseCase;
+import com.insighton.core.usecase.WidgetUseCase;
 import com.insighton.core.widgets.dto.response.WidgetsListResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -13,7 +13,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/groups/{group-id}/location/{location-id}/dashboard/widgets")
 public class WidgetController {
-    private final CoreManagementUseCase useCase;
+    private final WidgetUseCase useCase;
 
     @GetMapping
     public ResponseEntity<List<WidgetsListResponse>> getWidgetList(

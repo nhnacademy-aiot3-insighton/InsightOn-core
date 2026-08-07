@@ -3,8 +3,8 @@ package com.insighton.core.groups.controller;
 import com.insighton.core.groups.dto.request.GroupRequest;
 import com.insighton.core.groups.dto.response.GroupAdminResponse;
 import com.insighton.core.groups.dto.response.GroupResponse;
-import com.insighton.core.groups.service.CoreManagementUseCase;
 import com.insighton.core.groups.service.GroupService;
+import com.insighton.core.usecase.GroupUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/groups")
 public class GroupController {
-    private final CoreManagementUseCase coreUseCase;
+    private final GroupUseCase coreUseCase;
     private final GroupService groupService;
 
     /**
