@@ -1,6 +1,6 @@
 package com.insighton.core.actuators.dto;
 
-import com.insighton.core.actuator_run_logs.entity.ExecutedByType;
+import com.insighton.core.actuatorrunlogs.entity.ExecutedByType;
 
 // location+actuatorType 기반 상태변경 API의 요청 바디 - AI/RuleEngine이 어떤 명령을 어떤 값으로 실행할지 담음
 public record ActuatorCommandRequest(

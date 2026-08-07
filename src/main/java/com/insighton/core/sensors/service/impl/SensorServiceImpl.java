@@ -1,8 +1,8 @@
 package com.insighton.core.sensors.service.impl;
 
-import com.insighton.core.sensor_attributes.entity.SensorAttribute;
-import com.insighton.core.sensor_attributes.repository.MetricDefinitionRepository;
-import com.insighton.core.sensor_attributes.repository.SensorAttributeRepository;
+import com.insighton.core.sensorattributes.entity.SensorAttribute;
+import com.insighton.core.sensorattributes.repository.MetricDefinitionRepository;
+import com.insighton.core.sensorattributes.repository.SensorAttributeRepository;
 import com.insighton.core.gateway.entity.Gateway;
 import com.insighton.core.gateway.exception.GatewayNotFoundException;
 import com.insighton.core.gateway.repository.GatewayRepository;

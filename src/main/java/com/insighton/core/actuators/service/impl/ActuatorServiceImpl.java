@@ -1,8 +1,8 @@
 package com.insighton.core.actuators.service.impl;
 
-import com.insighton.core.actuator_run_logs.entity.ExecutedByType;
-import com.insighton.core.actuator_run_logs.repository.ActuatorRunLogRepository;
-import com.insighton.core.actuator_run_logs.service.ActuatorRunLogService;
+import com.insighton.core.actuatorrunlogs.entity.ExecutedByType;
+import com.insighton.core.actuatorrunlogs.repository.ActuatorRunLogRepository;
+import com.insighton.core.actuatorrunlogs.service.ActuatorRunLogService;
 import com.insighton.core.actuators.dto.ActuatorRequest;
 import com.insighton.core.actuators.dto.ActuatorResponse;
 import com.insighton.core.actuators.entity.Actuator;
