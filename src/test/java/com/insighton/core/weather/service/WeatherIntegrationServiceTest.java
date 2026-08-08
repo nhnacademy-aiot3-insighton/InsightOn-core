@@ -5,11 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
-import com.insighton.core.weather.dto.AirQualityResponseDto;
-import com.insighton.core.weather.dto.KmaWeatherResponseDto;
-import com.insighton.core.weather.dto.WeatherDataDto;
-import com.insighton.core.weather.exception.WeatherApiException;
-import com.insighton.core.weather.parser.SidoNameParser;
+import com.insighton.core.adapter.client.external.WeatherIntegrationService;
+import com.insighton.core.domain.weather.dto.AirQualityResponseDto;
+import com.insighton.core.domain.weather.dto.KmaWeatherResponseDto;
+import com.insighton.core.domain.weather.dto.WeatherDataDto;
+import com.insighton.core.domain.weather.exception.WeatherApiException;
+import com.insighton.core.domain.weather.parser.SidoNameParser;
 import java.net.URI;
 import java.time.LocalDate;
 import java.time.LocalTime;

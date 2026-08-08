@@ -1,14 +1,14 @@
 package com.insighton.core.groups.service;
 
-import com.insighton.core.groups.dto.request.GroupRequest;
-import com.insighton.core.groups.dto.response.GroupAdminResponse;
-import com.insighton.core.groups.dto.response.GroupResponse;
-import com.insighton.core.groups.entity.Group;
-import com.insighton.core.groups.exception.GroupNotFoundException;
-import com.insighton.core.groups.exception.InviteTokenNotFoundException;
-import com.insighton.core.groups.exception.UnAuthorizedAccessException;
-import com.insighton.core.groups.repository.GroupRepository;
-import com.insighton.core.groups.service.impl.GroupServiceImpl;
+import com.insighton.core.domain.groups.dto.request.GroupRequest;
+import com.insighton.core.domain.groups.dto.response.GroupAdminResponse;
+import com.insighton.core.domain.groups.dto.response.GroupResponse;
+import com.insighton.core.domain.groups.entity.Group;
+import com.insighton.core.domain.groups.exception.GroupNotFoundException;
+import com.insighton.core.domain.groups.exception.InviteTokenNotFoundException;
+import com.insighton.core.domain.groups.exception.UnAuthorizedAccessException;
+import com.insighton.core.domain.groups.repository.GroupRepository;
+import com.insighton.core.domain.groups.service.impl.GroupServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

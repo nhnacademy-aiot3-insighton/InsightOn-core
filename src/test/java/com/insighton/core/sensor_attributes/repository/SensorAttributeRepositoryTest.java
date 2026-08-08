@@ -1,7 +1,7 @@
 package com.insighton.core.sensor_attributes.repository;
 
-import com.insighton.core.sensorattributes.entity.SensorAttribute;
-import com.insighton.core.sensorattributes.repository.SensorAttributeRepository;
+import com.insighton.core.domain.sensorattributes.entity.SensorAttribute;
+import com.insighton.core.domain.sensorattributes.repository.SensorAttributeRepository;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

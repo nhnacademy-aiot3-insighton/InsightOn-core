@@ -10,8 +10,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import com.insighton.core.weather.dto.WeatherDataDto;
-import com.insighton.core.weather.util.CacheTimeUtils;
+import com.insighton.core.adapter.client.external.WeatherIntegrationService;
+import com.insighton.core.domain.weather.dto.WeatherDataDto;
+import com.insighton.core.domain.weather.service.WeatherCacheService;
+import com.insighton.core.domain.weather.util.CacheTimeUtils;
 import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

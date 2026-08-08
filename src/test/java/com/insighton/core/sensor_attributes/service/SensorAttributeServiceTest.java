@@ -1,18 +1,13 @@
 package com.insighton.core.sensor_attributes.service;
 
 
-import com.insighton.core.groupmember.entity.GroupMember;
-import com.insighton.core.groupmember.entity.GroupMember.GroupRole;
-import com.insighton.core.groupmember.service.GroupMemberService;
-import com.insighton.core.groups.entity.Group;
-import com.insighton.core.groups.exception.NoPermissionException;
-import com.insighton.core.sensorattributes.entity.SensorAttribute;
-import com.insighton.core.sensorattributes.repository.SensorAttributeRepository;
-import com.insighton.core.sensorattributes.service.impl.SensorAttributeServiceImpl;
-import com.insighton.core.sensors.entity.Sensor;
-import com.insighton.core.sensors.exception.SensorNotFoundException;
-import com.insighton.core.sensors.exception.InvalidSensorValueException;
-import com.insighton.core.sensors.repository.SensorRepository;
+import com.insighton.core.domain.groupmember.service.GroupMemberService;
+import com.insighton.core.domain.groups.entity.Group;
+import com.insighton.core.domain.sensorattributes.repository.SensorAttributeRepository;
+import com.insighton.core.domain.sensorattributes.service.impl.SensorAttributeServiceImpl;
+import com.insighton.core.domain.sensors.entity.Sensor;
+import com.insighton.core.domain.sensors.exception.SensorNotFoundException;
+import com.insighton.core.domain.sensors.repository.SensorRepository;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,7 +20,6 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 

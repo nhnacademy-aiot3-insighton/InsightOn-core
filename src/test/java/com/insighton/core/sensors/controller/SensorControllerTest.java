@@ -1,12 +1,13 @@
 package com.insighton.core.sensors.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.insighton.core.location.exception.LocationNotFoundException;
-import com.insighton.core.sensors.dto.SensorResponse;
-import com.insighton.core.sensors.dto.SensorUpdateRequest;
-import com.insighton.core.sensors.exception.SensorNotFoundException;
-import com.insighton.core.sensors.exception.InvalidSensorValueException;
-import com.insighton.core.sensors.service.SensorService;
+import com.insighton.core.domain.location.exception.LocationNotFoundException;
+import com.insighton.core.controller.api.SensorController;
+import com.insighton.core.domain.sensors.dto.SensorResponse;
+import com.insighton.core.domain.sensors.dto.SensorUpdateRequest;
+import com.insighton.core.domain.sensors.exception.SensorNotFoundException;
+import com.insighton.core.domain.sensors.exception.InvalidSensorValueException;
+import com.insighton.core.domain.sensors.service.SensorService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
