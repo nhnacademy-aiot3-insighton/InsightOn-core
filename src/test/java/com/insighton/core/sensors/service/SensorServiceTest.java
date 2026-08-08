@@ -1,23 +1,24 @@
 package com.insighton.core.sensors.service;
 
-import com.insighton.core.gateway.entity.Gateway;
-import com.insighton.core.gateway.exception.GatewayNotFoundException;
-import com.insighton.core.gateway.repository.GatewayRepository;
-import com.insighton.core.groupmember.entity.GroupMember;
-import com.insighton.core.groupmember.entity.GroupMember.GroupRole;
-import com.insighton.core.groupmember.service.GroupMemberService;
-import com.insighton.core.groups.entity.Group;
-import com.insighton.core.groups.exception.NoPermissionException;
-import com.insighton.core.groups.repository.GroupRepository;
-import com.insighton.core.location.repository.LocationRepository;
-import com.insighton.core.mqtt.cache.SensorLookupCacheService;
-import com.insighton.core.mqtt.cache.dto.SensorCacheEntry;
-import com.insighton.core.sensorattributes.repository.SensorAttributeRepository;
-import com.insighton.core.sensors.entity.Sensor;
-import com.insighton.core.sensors.exception.SensorNotFoundException;
-import com.insighton.core.sensors.exception.InvalidSensorValueException;
-import com.insighton.core.sensors.repository.SensorRepository;
-import com.insighton.core.sensors.service.impl.SensorServiceImpl;
+import com.insighton.core.domain.groupmember.exception.GroupMemberNotFoundException;
+import com.insighton.core.domain.gateway.entity.Gateway;
+import com.insighton.core.domain.gateway.exception.GatewayNotFoundException;
+import com.insighton.core.domain.gateway.repository.GatewayRepository;
+import com.insighton.core.domain.groupmember.entity.GroupMember;
+import com.insighton.core.domain.groupmember.entity.GroupMember.GroupRole;
+import com.insighton.core.domain.groupmember.service.GroupMemberService;
+import com.insighton.core.domain.groups.entity.Group;
+import com.insighton.core.domain.groups.exception.NoPermissionException;
+import com.insighton.core.domain.groups.repository.GroupRepository;
+import com.insighton.core.domain.location.repository.LocationRepository;
+import com.insighton.core.adapter.mqtt.cache.SensorLookupCacheService;
+import com.insighton.core.adapter.mqtt.cache.dto.SensorCacheEntry;
+import com.insighton.core.domain.sensorattributes.repository.SensorAttributeRepository;
+import com.insighton.core.domain.sensors.entity.Sensor;
+import com.insighton.core.domain.sensors.exception.SensorNotFoundException;
+import com.insighton.core.domain.sensors.exception.InvalidSensorValueException;
+import com.insighton.core.domain.sensors.repository.SensorRepository;
+import com.insighton.core.domain.sensors.service.impl.SensorServiceImpl;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,8 +31,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import com.insighton.core.location.entity.Location;
-import com.insighton.core.location.exception.LocationNotFoundException;
+import com.insighton.core.domain.location.entity.Location;
+import com.insighton.core.domain.location.exception.LocationNotFoundException;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
@@ -125,10 +126,9 @@ class SensorServiceTest {
 
         given(sensorRepository.findById(1L)).willReturn(Optional.of(sensor));
         given(groupMemberService.validateGroupMembers(5L, 999L))
-                .willThrow(com.insighton.core.groupmember.exception
-                        .GroupMemberNotFoundException.byMemberIdAndGroupId(999L, 5L));
+                .willThrow(GroupMemberNotFoundException.byMemberIdAndGroupId(999L, 5L));
 
-        assertThrows(com.insighton.core.groupmember.exception.GroupMemberNotFoundException.class,
+        assertThrows(GroupMemberNotFoundException.class,
                 () -> sensorService.getSensorById(999L, 1L));
     }
 

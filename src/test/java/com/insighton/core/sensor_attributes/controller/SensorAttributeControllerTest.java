@@ -2,20 +2,16 @@ package com.insighton.core.sensor_attributes.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.insighton.core.sensorattributes.controller.SensorAttributeController;
-import com.insighton.core.sensorattributes.dto.SensorAttributeResponse;
-import com.insighton.core.sensorattributes.service.SensorAttributeService;
-import com.insighton.core.sensors.exception.SensorNotFoundException;
+import com.insighton.core.controller.api.SensorAttributeController;
+import com.insighton.core.domain.sensorattributes.service.SensorAttributeService;
+import com.insighton.core.domain.sensors.exception.SensorNotFoundException;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
