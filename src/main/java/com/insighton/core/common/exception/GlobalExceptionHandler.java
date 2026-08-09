@@ -3,6 +3,10 @@ package com.insighton.core.common.exception;
 import com.insighton.core.domain.dashboards.exception.DashboardNotFoundException;
 import com.insighton.core.domain.actuators.exception.*;
 import com.insighton.core.domain.groupmember.exception.*;
+import com.insighton.core.domain.groupregistration.exception.AlreadyProcessedException;
+import com.insighton.core.domain.groupregistration.exception.AlreadyRequestedException;
+import com.insighton.core.domain.groupregistration.exception.GroupRegistrationNotFoundException;
+import com.insighton.core.domain.groupregistration.exception.UnauthorizedGroupRegistrationAccessException;
 import com.insighton.core.domain.sensorattributes.exception.MetricKeyAlreadyExistsException;
 import com.insighton.core.domain.sensorattributes.exception.MetricKeyNotFoundException;
 import com.insighton.core.domain.gateway.exception.GatewayAccessDeniedException;
@@ -35,9 +39,10 @@ public class GlobalExceptionHandler {
             InviteTokenNotFoundException.class, GroupMemberNotFoundException.class,
             UserIdNotFoundException.class, LocationNotFoundException.class,
             SensorNotFoundException.class, ActuatorNotFoundException.class,
-            MetricKeyNotFoundException.class, DashboardNotFoundException.class, 
+            MetricKeyNotFoundException.class, DashboardNotFoundException.class,
             WidgetNotFoundException.class, WidgetConfigNotFoundException.class,
-            ActuatorLocationsActuatorTypeNotFound.class
+            ActuatorLocationsActuatorTypeNotFound.class,
+            GroupRegistrationNotFoundException.class
     })
     public ResponseEntity<ErrorResponse> handleNotFound(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -45,14 +50,16 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler({GatewayAccessDeniedException.class, NoPermissionException.class,
-            UnAuthorizedAccessException.class, InvalidServiceCredentialException.class
+            UnAuthorizedAccessException.class, InvalidServiceCredentialException.class,
+            UnauthorizedGroupRegistrationAccessException.class
     })
     public ResponseEntity<ErrorResponse> handleAccessDenied(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(new ErrorResponse(HttpStatus.FORBIDDEN.value(), e.getMessage()));
     }
 
-    @ExceptionHandler({AlreadyJoinedException.class, MetricKeyAlreadyExistsException.class})
+    @ExceptionHandler({AlreadyJoinedException.class, MetricKeyAlreadyExistsException.class,
+            AlreadyRequestedException.class, AlreadyProcessedException.class})
     public ResponseEntity<ErrorResponse> handleConflict(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ErrorResponse(HttpStatus.CONFLICT.value(), e.getMessage()));

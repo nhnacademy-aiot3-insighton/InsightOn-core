@@ -1,6 +1,5 @@
 package com.insighton.core.adapter.rabbitmq;
 
-import com.insighton.core.common.config.RabbitConfig;
 import com.insighton.core.adapter.rabbitmq.dto.TelemetryEventMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

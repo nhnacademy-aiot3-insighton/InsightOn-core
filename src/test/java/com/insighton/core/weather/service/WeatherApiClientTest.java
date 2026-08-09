@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
-import com.insighton.core.adapter.client.external.WeatherIntegrationService;
+import com.insighton.core.adapter.client.external.WeatherApiClient;
 import com.insighton.core.domain.weather.dto.AirQualityResponseDto;
 import com.insighton.core.domain.weather.dto.KmaWeatherResponseDto;
 import com.insighton.core.domain.weather.dto.WeatherDataDto;
@@ -31,9 +31,9 @@ import org.springframework.web.client.RestClient;
 @SpringBootTest
 @ActiveProfiles("test")
 @Sql(scripts = "classpath:weather-test.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-class WeatherIntegrationServiceTest {
+class WeatherApiClientTest {
 
-    private static final Logger log = LoggerFactory.getLogger(WeatherIntegrationServiceTest.class);
+    private static final Logger log = LoggerFactory.getLogger(WeatherApiClientTest.class);
 
     @MockitoBean
     private RedisTemplate<String, WeatherDataDto> weatherRedisTemplate;
@@ -57,7 +57,7 @@ class WeatherIntegrationServiceTest {
     private RestClient.ResponseSpec responseSpec;
 
     @Autowired
-    private WeatherIntegrationService weatherIntegrationService;
+    private WeatherApiClient weatherApiClient;
 
     @Test
     @DisplayName("기상청 & 에어코리아 API 연동 응답 파싱 및 한글 정제 검증")
@@ -117,7 +117,7 @@ class WeatherIntegrationServiceTest {
         given(responseSpec.body(AirQualityResponseDto.class)).willReturn(airMock);
 
         // when
-        WeatherDataDto result = weatherIntegrationService.fetchWeatherData(
+        WeatherDataDto result = weatherApiClient.fetchWeatherData(
                 gridX, gridY, sidoName, cityName, baseDate, baseTime
         );
 
@@ -169,7 +169,7 @@ class WeatherIntegrationServiceTest {
         given(responseSpec.body(AirQualityResponseDto.class)).willReturn(new AirQualityResponseDto(null));
 
         // when
-        WeatherDataDto result = weatherIntegrationService.fetchWeatherData(
+        WeatherDataDto result = weatherApiClient.fetchWeatherData(
                 invalidGridX, invalidGridY, invalidSido, invalidCity, baseDate, baseTime
         );
 
@@ -190,7 +190,7 @@ class WeatherIntegrationServiceTest {
 
         // when & then
         assertThrows(WeatherApiException.class, () ->
-                weatherIntegrationService.fetchWeatherData(999, 999, "오류시", "오류구", "20200101", "0000")
+                weatherApiClient.fetchWeatherData(999, 999, "오류시", "오류구", "20200101", "0000")
         );
     }
 }

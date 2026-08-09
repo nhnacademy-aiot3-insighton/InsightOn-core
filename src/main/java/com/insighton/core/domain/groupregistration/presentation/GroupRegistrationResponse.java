@@ -1,4 +1,4 @@
-package com.insighton.core.domain.groupregistration.dto;
+package com.insighton.core.domain.groupregistration.presentation;
 
 import com.insighton.core.domain.groupregistration.entity.GroupRegistrationStatus;
 
