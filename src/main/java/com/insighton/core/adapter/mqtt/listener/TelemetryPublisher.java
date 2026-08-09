@@ -1,7 +1,7 @@
-package com.insighton.core.adapter.rabbitmq;
+package com.insighton.core.adapter.mqtt.listener;
 
 import com.insighton.core.common.config.RabbitConfig;
-import com.insighton.core.adapter.rabbitmq.dto.TelemetryEventMessage;
+import com.insighton.core.adapter.mqtt.listener.dto.TelemetryEventMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.AmqpException;
