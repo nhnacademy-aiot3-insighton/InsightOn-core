@@ -32,6 +32,7 @@ public class ActuatorInternalController {
 
     private final ActuatorRunLogService actuatorRunLogService;
     private final ActuatorService actuatorService;
+    // location+type으로 대상을 직접 찾아야 해서 리포지토리를 컨트롤러가 직접 참조
     private final ActuatorRepository actuatorRepository;
 
     // AI 리포트 생성 배치 전용 - location 범위/기간별 액추에이터 실행 원본 로그 조회
@@ -41,7 +42,7 @@ public class ActuatorInternalController {
             @RequestParam List<Long> locationIds,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime to) {
-
+        // AI 리포트 배치가 정기적으로 대량 조회하는 API라 - 집계는 여기서 안 하고 원본 그대로 넘김 (집계 로직은 AI 쪽 책임)
         return ResponseEntity.ok(actuatorRunLogService.getRunLogsForReport(locationIds, from, to));
     }
 
@@ -61,7 +62,7 @@ public class ActuatorInternalController {
         // 문자열 actuatorType을 enum으로 변환, 존재하지 않는 값이면 400으로 처리
         ActuatorType actuatorType = parseActuatorType(request.actuatorType());
 
-        // 요청받은 location+actuatorType 조합에 해당하는 액추에이터 전부 조회 (AI는 개별 actuatorId를 모르므로)
+        // 그 위치의 그 타입 액추에이터를 전부 찾음 - 대부분 1개지만, 여러 대인 경우 전부 같은 명령을 받게 하기 위함
         List<Actuator> actuators = actuatorRepository.findByLocationLocationIdAndActuatorType(locationId, actuatorType);
 
         // 해당하는 액추에이터가 하나도 없으면 404로 명확히 구분 (AI가 "적용 안 됐다"를 알 수 있어야 함)
@@ -89,8 +90,9 @@ public class ActuatorInternalController {
     // 이건 GlobalExceptionHandler에 등록 안 되어있어서 그대로 두면 500으로 나감 -> 400으로 변환
     private ActuatorType parseActuatorType(String actuatorType) {
         try {
-            return ActuatorType.valueOf(actuatorType); // 유효하지 않는 문자열이면 여기서 예외 발생
+            return ActuatorType.valueOf(actuatorType);
         } catch (IllegalArgumentException e) {
+            // 유효하지 않는 문자열이면 여기서 예외 발생
             throw new InvalidActuatorValueException("알 수 없는 actuatorType입니다: " + actuatorType);
         }
     }
@@ -98,6 +100,7 @@ public class ActuatorInternalController {
 
     // newState의 각 키/값이 이 액추에이터 타입에서 실제로 허용되는 명령/값인지 검증
     private void validateCommandValues(ActuatorType actuatorType, Map<String, Object> newState) {
+        // LLM이 명령을 직접 생성하는 구조라, 존재 안 하는 명령/허용 안 되는 값이 올 가능성이 실제로 있어서 저장 직전에 한 번 더 방어
         newState.forEach((key, value) -> {
             CommandType commandType = CommandType.fromStateKey(key)
                     .orElseThrow(() -> new InvalidActuatorValueException("알 수 없는 제어 명령키: " + key));
