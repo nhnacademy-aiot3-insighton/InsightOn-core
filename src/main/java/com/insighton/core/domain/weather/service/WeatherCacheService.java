@@ -1,6 +1,6 @@
 package com.insighton.core.domain.weather.service;
 
-import com.insighton.core.adapter.client.external.WeatherIntegrationService;
+import com.insighton.core.adapter.client.external.WeatherApiClient;
 import com.insighton.core.domain.weather.dto.WeatherDataDto;
 import com.insighton.core.domain.weather.exception.WeatherApiException;
 import com.insighton.core.domain.weather.util.CacheTimeUtils;
@@ -27,7 +27,7 @@ public class WeatherCacheService {
 
     private final RedisTemplate<String, WeatherDataDto> weatherRedisTemplate;
     private final StringRedisTemplate stringRedisTemplate;
-    private final WeatherIntegrationService weatherIntegrationService;
+    private final WeatherApiClient weatherApiClient;
 
     public WeatherDataDto getWeatherDate(int gridX, int gridY, String sidoName, String cityName, String baseDate,
                                          String baseTime) {
@@ -74,7 +74,7 @@ public class WeatherCacheService {
         }
 
         log.info("[Cache Miss Validated] key: {} - 외부 API 호출 실행", cacheKey);
-        WeatherDataDto freshData = weatherIntegrationService.fetchWeatherData(gridX, gridY, sidoName, cityName,
+        WeatherDataDto freshData = weatherApiClient.fetchWeatherData(gridX, gridY, sidoName, cityName,
                 baseDate, baseTime);
 
         if (freshData != null) {
