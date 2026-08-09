@@ -8,6 +8,7 @@ import com.insighton.core.domain.gateway.event.GatewayBrokerChangedEvent;
 import com.insighton.core.domain.gateway.event.GatewayDeletedEvent;
 import com.insighton.core.domain.gateway.exception.GatewayAccessDeniedException;
 import com.insighton.core.domain.gateway.exception.GatewayNotFoundException;
+import com.insighton.core.domain.gateway.exception.InvalidGatewayConnectionConfigException;
 import com.insighton.core.domain.gateway.repository.GatewayRepository;
 import com.insighton.core.domain.gateway.service.GatewayService;
 import com.insighton.core.domain.groupmember.entity.GroupMember;
@@ -142,7 +143,7 @@ public class GatewayServiceImpl implements GatewayService {
     private void validateConnectionConfig(Map<String, Object> connectionConfig) {
         Object brokerUrls = connectionConfig.get("brokerUrls");
         if (!(brokerUrls instanceof List<?> list) || list.isEmpty()) {
-            throw new IllegalArgumentException("connection_config에 brokerUrls(문자열 배열)가 필요합니다.");
+            throw new InvalidGatewayConnectionConfigException("connection_config에 brokerUrls(문자열 배열)가 필요합니다.");
         }
 
         // topics 자체는 생략 가능(생략 시 MqttGatewayConnectionInfo.from()에서 ChirpStack 기본 토픽으로
@@ -150,7 +151,7 @@ public class GatewayServiceImpl implements GatewayService {
         // 메시지를 전혀 못 받는 조용한 장애가 되므로 여기서 미리 막음.
         Object topics = connectionConfig.get("topics");
         if (topics != null && (!(topics instanceof List<?> topicList) || topicList.isEmpty())) {
-            throw new IllegalArgumentException("connection_config의 topics는 비어있지 않은 배열이어야 합니다 (생략하면 기본값 사용).");
+            throw new InvalidGatewayConnectionConfigException("connection_config의 topics는 비어있지 않은 배열이어야 합니다 (생략하면 기본값 사용).");
         }
     }
 
