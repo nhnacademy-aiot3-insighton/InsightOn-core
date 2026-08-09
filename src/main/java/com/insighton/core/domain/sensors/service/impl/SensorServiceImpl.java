@@ -83,6 +83,7 @@ public class SensorServiceImpl implements SensorService {
                         "이미 다른 그룹에 등록된 EUI입니다. (EUI: " + sensorEui + ")");
             }
             Long existingGatewayId = e.getGateway() != null ? e.getGateway().getGatewayId() : gatewayId;
+            // 신규 저장 없이 캐시만 복구 - 이미 DB에 있는 걸 또 저장하면 유니크 제약 위반
             SensorCacheEntry cacheEntry = new SensorCacheEntry(
                     e.getSensorId(), e.getSensorEui(), existingGatewayId,
                     e.getLocation() != null ? e.getLocation().getLocationId() : null
@@ -129,6 +130,7 @@ public class SensorServiceImpl implements SensorService {
                     .toList();
 
             if (attributes.size() < metricKeys.size()) {
+                // .filter(Optional::isPresent) 여기서 값을 못 찾은 것이 걸러진걸 남은 개수와 원래 개수를 보고 비교
                 log.warn("등록되지 않은 메트릭키가 패킷에 있음 sensorEui={}, 전체={}, 저장={}건",
                         sensorEui, metricKeys.size(), attributes.size());
             }
@@ -199,6 +201,7 @@ public class SensorServiceImpl implements SensorService {
     @Override
     @Transactional
     public void detachLocationFromSensors(Long groupId, Long locationId) {
+        // 장소가 삭제될때 그 장소에서 있던 센서들을 삭제하지 않고 위치 정보만 때어내는 일
         List<Sensor> sensors = sensorRepository.findByGroupGroupIdAndLocationLocationId(groupId, locationId);
         for (Sensor sensor : sensors) {
             sensor.updateLocation(null);
@@ -257,15 +260,6 @@ public class SensorServiceImpl implements SensorService {
         }
     }
 
-    @Override
-    @Transactional // 센서 통신 시각 최신화 로직
-    public void handlePacketReceived(String sensorEui) {
-        if (sensorEui == null || sensorEui.trim().isEmpty()) {
-            return;
-        }
-        sensorRepository.findBySensorEui(sensorEui)
-                .ifPresent(Sensor::updateLastSeen);
-    }
 
     @Override
     @Transactional // 삭제 시 부모/자식 테이블 안전 삭제
@@ -332,6 +326,7 @@ public class SensorServiceImpl implements SensorService {
                 .toList();
     }
 
+    // 엔티티 -> DTO 변환기
     private SensorResponse toDto(Sensor e) {
         return new SensorResponse(
                 e.getSensorId(),
