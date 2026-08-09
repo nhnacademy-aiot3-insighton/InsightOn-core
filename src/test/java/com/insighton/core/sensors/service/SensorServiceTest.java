@@ -1,5 +1,7 @@
 package com.insighton.core.sensors.service;
 
+import com.insighton.core.domain.sensorattributes.entity.MetricDefinition;
+import com.insighton.core.domain.sensorattributes.repository.MetricDefinitionRepository;
 import com.insighton.core.domain.groupmember.exception.GroupMemberNotFoundException;
 import com.insighton.core.domain.gateway.entity.Gateway;
 import com.insighton.core.domain.gateway.exception.GatewayNotFoundException;
@@ -19,7 +21,6 @@ import com.insighton.core.domain.sensors.exception.SensorNotFoundException;
 import com.insighton.core.domain.sensors.exception.InvalidSensorValueException;
 import com.insighton.core.domain.sensors.repository.SensorRepository;
 import com.insighton.core.domain.sensors.service.impl.SensorServiceImpl;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,7 +40,6 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
-@Disabled
 @ExtendWith(MockitoExtension.class)
 class SensorServiceTest {
 
@@ -50,6 +50,7 @@ class SensorServiceTest {
     @Mock private GatewayRepository gatewayRepository;
     @Mock private GroupRepository groupRepository;
     @Mock private LocationRepository locationRepository;
+    @Mock private MetricDefinitionRepository metricDefinitionRepository;
 
     @InjectMocks
     private SensorServiceImpl sensorService;
@@ -60,6 +61,8 @@ class SensorServiceTest {
         given(sensorRepository.findBySensorEui("EUI-001")).willReturn(Optional.empty());
         given(gatewayRepository.findById(10L)).willReturn(Optional.of(mock(Gateway.class)));
         given(groupRepository.findById(5L)).willReturn(Optional.of(mock(Group.class)));
+        given(metricDefinitionRepository.findByMetricKeyIgnoreCase("co2"))
+                .willReturn(Optional.of(MetricDefinition.builder().metricKey("co2").build()));
 
         Sensor saved = Sensor.builder()
                 .sensorId(100L)
