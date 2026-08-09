@@ -7,6 +7,7 @@ import com.insighton.core.domain.sensorattributes.exception.MetricKeyAlreadyExis
 import com.insighton.core.domain.sensorattributes.exception.MetricKeyNotFoundException;
 import com.insighton.core.domain.gateway.exception.GatewayAccessDeniedException;
 import com.insighton.core.domain.gateway.exception.GatewayNotFoundException;
+import com.insighton.core.domain.gateway.exception.InvalidGatewayConnectionConfigException;
 import com.insighton.core.domain.groups.exception.GroupNotFoundException;
 import com.insighton.core.domain.groups.exception.InviteTokenNotFoundException;
 import com.insighton.core.domain.groups.exception.NoPermissionException;
@@ -61,7 +62,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({IllegalArgumentException.class, SuperManagerCannotLeaveException.class,
             NotJoinedAnyGroupException.class, ManagerRoleRequiredForTransferException.class,
             InvalidActuatorValueException.class, InvalidSensorValueException.class,
-            CouldNotAbleToUpdateByUserToSystem.class, EmptyValueException.class
+            CouldNotAbleToUpdateByUserToSystem.class, EmptyValueException.class,
+            InvalidGatewayConnectionConfigException.class
     })
     public ResponseEntity<ErrorResponse> handleBadRequest(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
