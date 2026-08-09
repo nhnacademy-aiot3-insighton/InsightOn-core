@@ -8,7 +8,6 @@ import com.insighton.core.domain.groupmember.dto.response.GroupMemberResponse;
 import com.insighton.core.domain.groupmember.dto.response.ManagerGroupExistsResponse;
 import com.insighton.core.domain.groupmember.entity.GroupMember;
 import com.insighton.core.domain.groupmember.exception.*;
-import com.insighton.core.groupmember.exception.*;
 import com.insighton.core.domain.groupmember.repository.GroupMemberRepository;
 import com.insighton.core.domain.groupmember.service.GroupMemberService;
 import com.insighton.core.domain.groups.entity.Group;
