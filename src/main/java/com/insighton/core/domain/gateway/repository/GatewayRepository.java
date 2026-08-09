@@ -13,5 +13,4 @@ public interface GatewayRepository extends JpaRepository<Gateway, Long> {
     List<Gateway> findAllByProtocolType(ProtocolType protocolType);
     Optional<Gateway> findByGatewayId(Long gatewayId);
     Optional<Gateway> findByGroupId(Long groupId);
-    void deleteByGroupId(Long groupId);
 }
