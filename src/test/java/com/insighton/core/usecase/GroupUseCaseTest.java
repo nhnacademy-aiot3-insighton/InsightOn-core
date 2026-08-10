@@ -7,6 +7,7 @@ import com.insighton.core.domain.groupmember.entity.GroupMember;
 import com.insighton.core.domain.groupmember.exception.AlreadyJoinedException;
 import com.insighton.core.domain.groupmember.exception.GroupMemberNotFoundException;
 import com.insighton.core.domain.groupmember.service.GroupMemberService;
+import com.insighton.core.domain.groupregistration.service.GroupRegistrationService;
 import com.insighton.core.domain.groups.dto.request.GroupRequest;
 import com.insighton.core.domain.groups.dto.response.GroupResponse;
 import com.insighton.core.domain.groups.entity.Group;
@@ -59,6 +60,9 @@ class GroupUseCaseTest {
 
     @Mock
     private SensorService sensorService;
+
+    @Mock
+    private GroupRegistrationService groupRegistrationService;
 
     @InjectMocks
     private GroupUseCase managementUseCase;
