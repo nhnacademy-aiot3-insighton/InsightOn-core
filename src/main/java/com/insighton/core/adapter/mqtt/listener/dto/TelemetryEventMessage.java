@@ -1,0 +1,12 @@
+package com.insighton.core.adapter.mqtt.listener.dto;
+
+import java.time.Instant;
+import java.util.Map;
+
+public record TelemetryEventMessage(
+    Long groupId,
+    Long locationId,
+    Long sensorId,
+    Map<String, Object> metrics,
+    Instant timestamp
+) {}

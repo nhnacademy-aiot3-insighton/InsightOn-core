@@ -1,6 +1,7 @@
 package com.insighton.core.groups.repository;
 
-import com.insighton.core.groups.entity.Group;
+import com.insighton.core.domain.groups.entity.Group;
+import com.insighton.core.domain.groups.repository.GroupRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

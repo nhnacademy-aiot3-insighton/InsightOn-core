@@ -1,0 +1,65 @@
+### 전역 변수 설정
+@baseUrl = http://localhost:8080
+@userId = 2
+@groupId = 2
+@locationId = 1
+@widgetId = 10
+
+### 1-3. 위젯 생성 (대시보드 저장 API를 통해 위젯 생성)
+POST {{baseUrl}}/api/v1/groups/{{groupId}}/location/{{locationId}}/dashboard/save
+Content-Type: application/json
+X-USER-ID: {{userId}}
+
+[
+  {
+    "widgetId": null,
+    "x": 0,
+    "y": 0,
+    "w": 4,
+    "h": 4,
+    "widgetConfig": {
+      "type": "GAUGE",
+      "sensorEui": "DEV_LOCATION_01",
+      "range": "-24h",
+      "aggregateWindow": "15m",
+      "fields": [
+        "temperature",
+        "humidity"
+      ],
+      "groupId": 2,
+      "locationId": 1
+    }
+  },
+  {
+    "widgetId": 2,
+    "x": 0,
+    "y": 0,
+    "w": 4,
+    "h": 4,
+    "widgetConfig": {
+      "type": "GRAPH",
+      "sensorEui": "DEV_LOCATION_01",
+      "range": "-24h",
+      "aggregateWindow": "15m",
+      "fields": [
+        "temperature",
+        "humidity"
+      ],
+      "groupId": 2,
+      "locationId": 1
+    }
+  }
+]
+
+
+
+
+
+### 2-1. 위젯 리스트 조회
+GET {{baseUrl}}/api/v1/groups/{{groupId}}/location/{{locationId}}/dashboard/widgets
+X-USER-ID: {{userId}}
+
+### 2-2. 위젯 삭제
+# 주의: 삭제 실행 후 해당 widgetId는 DB에서 제거되므로 2-1 조회 시 제외됩니다.
+DELETE {{baseUrl}}/api/v1/groups/{{groupId}}/location/{{locationId}}/dashboard/widgets/{{widgetId}}/delete
+X-USER-ID: {{userId}}
