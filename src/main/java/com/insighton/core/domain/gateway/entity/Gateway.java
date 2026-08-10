@@ -85,4 +85,13 @@ public class Gateway {
     protected void onCreate() {
         this.createdAt = OffsetDateTime.now();
     }
+
+    public void recordHeartbeat(OffsetDateTime seenAt) {
+        this.lastHeartbeatAt = seenAt;
+        this.status = GatewayStatus.ACTIVE;
+    }
+
+    public void markFault() {
+        this.status = GatewayStatus.FAULT;
+    }
 }

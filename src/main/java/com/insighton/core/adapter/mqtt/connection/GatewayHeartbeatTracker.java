@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component;
  * DB(last_heartbeat_at)에는 쓰지 않음 — 패킷마다 DB를 건드리면 핫패스가 막히므로,
  * 실제 영속화/FAULT 판정은 스케줄러가 이 트래커를 주기적으로 읽어서 처리
  */
-//TODO: 트래커 읽을 스케줄러 구현 필요
 @Component
 public class GatewayHeartbeatTracker {
 
