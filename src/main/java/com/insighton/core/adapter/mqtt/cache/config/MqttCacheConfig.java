@@ -2,6 +2,7 @@ package com.insighton.core.adapter.mqtt.cache.config;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.insighton.core.adapter.mqtt.cache.SensorLookupCacheService;
 import com.insighton.core.adapter.mqtt.cache.dto.SensorCacheEntry;
 import java.util.concurrent.TimeUnit;
 
