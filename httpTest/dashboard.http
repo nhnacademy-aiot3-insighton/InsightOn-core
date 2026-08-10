@@ -1,0 +1,30 @@
+### 전역 변수 설정
+@baseUrl = http://localhost:8080
+@userId = 2
+@groupId = 2
+@locationId = 1
+
+
+### 2-1. 대시보드 정보 조회
+# (위의 1-1, 1-2가 완료되어야 404 없이 정상 응답)
+GET {{baseUrl}}/api/v1/groups/{{groupId}}/location/{{locationId}}/dashboard
+X-USER-ID: {{userId}}
+
+### 2-2. 대시보드 위젯 저장 및 InfluxDB 차트 데이터 조회
+# (신규 생성 시 widgetId는 null로 전달)
+POST {{baseUrl}}/api/v1/groups/{{groupId}}/location/{{locationId}}/dashboard/save
+Content-Type: application/json
+X-USER-ID: {{userId}}
+
+[
+  {
+    "widgetId": null,
+    "title": "실시간 온도 모니터링",
+    "widgetType": "LINE_CHART",
+    "sensorId": 101,
+    "x": 0,
+    "y": 0,
+    "w": 6,
+    "h": 4
+  }
+]
