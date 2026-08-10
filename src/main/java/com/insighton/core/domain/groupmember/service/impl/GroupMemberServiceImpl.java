@@ -80,7 +80,10 @@ public class GroupMemberServiceImpl implements GroupMemberService {
         GroupMember members = groupMemberRepository.findByGroupMemberIdAndGroupGroupId(groupMemberId, groupId)
                 .orElseThrow(() -> GroupMemberNotFoundException.byMemberIdAndGroupId(groupMemberId, groupId));
 
-        if (requester.isMember() || !Objects.equals(requester.getUserId(), members.getUserId())) {
+        boolean isSelf = Objects.equals(requester.getUserId(), members.getUserId());
+
+        // 둘 다 해당하지 않으면 에러
+        if (requester.isMember() && !isSelf) {
             throw new UnAuthorizedAccessException(userId);
         }
 
@@ -137,7 +140,7 @@ public class GroupMemberServiceImpl implements GroupMemberService {
         }
 
         // 3. targetUser가 Member권한일 때 Manager로 변경
-        targetMember.updateRole(targetMember.getGroupRole() == GroupMember.GroupRole.MEMBER ? GroupMember.GroupRole.MANAGER : GroupMember.GroupRole.MEMBER);
+        targetMember.updateRole(targetMember.getGroupRole() == GroupMember.GroupRole.MANAGER ? GroupMember.GroupRole.MANAGER : GroupMember.GroupRole.MEMBER);
     }
 
     @Override

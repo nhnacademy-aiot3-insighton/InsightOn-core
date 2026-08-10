@@ -7,6 +7,7 @@ import com.insighton.core.domain.gateway.service.GatewayService;
 import com.insighton.core.domain.groupmember.dto.request.GroupMemberJoinRequest;
 import com.insighton.core.domain.groupmember.entity.GroupMember;
 import com.insighton.core.domain.groupmember.service.GroupMemberService;
+import com.insighton.core.domain.groupregistration.service.GroupRegistrationService;
 import com.insighton.core.domain.groups.dto.request.GroupRequest;
 import com.insighton.core.domain.groups.dto.response.GroupResponse;
 import com.insighton.core.domain.groups.entity.Group;
@@ -35,6 +36,7 @@ public class GroupUseCase {
     private final DashboardService dashboardService;
     private final WidgetService widgetService;
     private final SensorService sensorService;
+    private final GroupRegistrationService groupRegistrationService;
 
     // ====================== Group Controller ======================
 
@@ -47,6 +49,9 @@ public class GroupUseCase {
     public void joinGroupByToken(GroupMemberJoinRequest request) {
         // inviteToken으로 대상 그룹이 존재하는지 확인 및 조회
         Group group = groupService.validateGroupByInviteToken(request.inviteToken());
+
+        // 그룹 신청서가 대기중 상태인 것이 존재하면 가입 불가능 예외(AlreadyRequestedException)
+        groupRegistrationService.validateNoPendingRequest(request.userId());
 
         groupMemberService.joinGroupByToken(group, request);
     }
