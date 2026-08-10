@@ -5,6 +5,7 @@ import com.insighton.core.adapter.mqtt.cache.GatewayGroupMappingCache;
 import com.insighton.core.domain.gateway.event.GatewayBrokerChangedEvent;
 import com.insighton.core.domain.gateway.event.GatewayDeletedEvent;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -14,6 +15,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
  * 커밋 전에 해제하면, 이후 같은 트랜잭션에서 예외가 나 롤백되더라도
  * 이미 끊어진 MQTT 클라이언트는 복구되지 않아 DB와 상태가 어긋나게 됨.
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class GatewayMqttEventListener {
@@ -30,9 +32,15 @@ public class GatewayMqttEventListener {
      */
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onGatewayDeleted(GatewayDeletedEvent event) {
-        gatewayManager.unregisterGateway(event.gatewayId());
-        groupMappingCache.evict(event.gatewayId());
-        connectionInfoCache.remove(event.gatewayId());
+        try {
+            gatewayManager.unregisterGateway(event.gatewayId());
+        } finally {
+            groupMappingCache.evict(event.gatewayId());
+            connectionInfoCache.remove(event.gatewayId());
+        }
+        // 이 리스너 자체가 AFTER_COMMIT에서만 실행되므로, 여기서 로그를 찍는 것만으로도
+        // "삭제됨" 로그가 실제 커밋 성공을 보장받음 — 서비스 메서드에서 직접 찍지 않음.
+        log.info("gateway 삭제 처리 완료 - gatewayId: {}", event.gatewayId());
     }
 
     /**
