@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
 
@@ -15,6 +16,7 @@ import java.time.ZoneId;
 @Entity
 @Table(name = "group_registrations")
 @Getter
+@DynamicUpdate
 @OptimisticLocking(type = OptimisticLockType.DIRTY)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class GroupRegistration {
