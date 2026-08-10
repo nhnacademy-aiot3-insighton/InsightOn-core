@@ -2,11 +2,9 @@ package com.insighton.core.domain.groupregistration.repository;
 
 import com.insighton.core.domain.groupregistration.entity.GroupRegistration;
 import com.insighton.core.domain.groupregistration.entity.GroupRegistrationStatus;
-import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
 
 public interface GroupRegistrationRepository extends JpaRepository<GroupRegistration, Long> {
 

@@ -29,7 +29,9 @@ public class GroupRegistrationService {
 
     @Transactional
     public GroupRegistrationResponse createRequest(Long requesterId, CreateGroupRegistrationRequest request) {
-        validateNoPendingRequest(requesterId);
+        if (groupRegistrationRepository.existsByRequesterIdAndStatus(requesterId, GroupRegistrationStatus.PENDING)) {
+            throw AlreadyRequestedException.of();
+        }
         GroupRegistration groupRegistration = GroupRegistration.create(requesterId, request.groupName(), request.description(), request.groupRegion());
         try {
             GroupRegistration saved = groupRegistrationRepository.save(groupRegistration);
@@ -102,7 +104,8 @@ public class GroupRegistrationService {
         return groupRegistrationMapper.toResponse(groupRegistration);
     }
 
-    private void validateNoPendingRequest(Long requesterId) {
+    @Transactional(readOnly = true)
+    public void validateNoPendingRequest(Long requesterId) {
         if (groupRegistrationRepository.existsByRequesterIdAndStatus(requesterId, GroupRegistrationStatus.PENDING)) {
             throw AlreadyRequestedException.of();
         }
