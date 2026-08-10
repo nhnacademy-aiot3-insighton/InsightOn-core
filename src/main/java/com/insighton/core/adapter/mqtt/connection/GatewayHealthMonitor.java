@@ -54,7 +54,7 @@ public class GatewayHealthMonitor {
 
             long idleSeconds = Duration.between(lastSeen, now).getSeconds();
 
-            if(idleSeconds > faultThresholdSeconds) {
+            if(idleSeconds >= faultThresholdSeconds) {
                 if(gateway.getStatus() != GatewayStatus.FAULT) {
                     gateway.markFault();
                     log.warn("Gateway {} 마지막 수신 {}초 전 - FAULT 전환", gateway.getGatewayId(), idleSeconds);
