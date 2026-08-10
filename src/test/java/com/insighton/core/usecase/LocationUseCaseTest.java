@@ -13,6 +13,7 @@ import com.insighton.core.domain.location.dto.response.LocationListResponse;
 import com.insighton.core.domain.location.dto.response.LocationResponse;
 import com.insighton.core.domain.location.entity.Location;
 import com.insighton.core.domain.location.service.LocationService;
+import com.insighton.core.domain.actuators.service.ActuatorService;
 import com.insighton.core.domain.sensors.service.SensorService;
 import com.insighton.core.domain.widgets.service.WidgetService;
 import org.junit.jupiter.api.DisplayName;
@@ -48,6 +49,9 @@ class LocationUseCaseTest {
 
     @Mock
     private SensorService sensorService;
+
+    @Mock
+    private ActuatorService actuatorService;
 
     @Mock
     private WidgetService widgetService;
@@ -395,6 +399,7 @@ class LocationUseCaseTest {
 
             // then
             verify(groupMemberService).validateGroupMembers(groupId, userId);
+            verify(actuatorService).deleteAllByLocationId(targetLocationId);
             verify(locationService).deleteLocation(targetLocationId, groupId);
         }
 

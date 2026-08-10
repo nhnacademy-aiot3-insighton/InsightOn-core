@@ -1,4 +1,4 @@
-package com.insighton.core.sensor_attributes.controller;
+package com.insighton.core.sensorattributes.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
