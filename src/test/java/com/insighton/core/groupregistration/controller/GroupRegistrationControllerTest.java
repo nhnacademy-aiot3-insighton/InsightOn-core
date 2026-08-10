@@ -2,8 +2,8 @@ package com.insighton.core.groupregistration.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.insighton.core.controller.api.GroupRegistrationController;
-import com.insighton.core.domain.groupregistration.presentation.CreateGroupRegistrationRequest;
-import com.insighton.core.domain.groupregistration.presentation.GroupRegistrationResponse;
+import com.insighton.core.domain.groupregistration.dto.CreateGroupRegistrationRequest;
+import com.insighton.core.domain.groupregistration.dto.GroupRegistrationResponse;
 import com.insighton.core.domain.groupregistration.entity.GroupRegistrationStatus;
 import com.insighton.core.domain.groupregistration.exception.GroupRegistrationNotFoundException;
 import com.insighton.core.domain.groupregistration.exception.UnauthorizedGroupRegistrationAccessException;

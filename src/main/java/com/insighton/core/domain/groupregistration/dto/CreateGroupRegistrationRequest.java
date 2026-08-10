@@ -1,4 +1,4 @@
-package com.insighton.core.domain.groupregistration.presentation;
+package com.insighton.core.domain.groupregistration.dto;
 
 import jakarta.validation.constraints.NotBlank;
 
