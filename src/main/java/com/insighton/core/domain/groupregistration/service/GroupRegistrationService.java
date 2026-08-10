@@ -1,7 +1,7 @@
 package com.insighton.core.domain.groupregistration.service;
 
-import com.insighton.core.domain.groupregistration.presentation.CreateGroupRegistrationRequest;
-import com.insighton.core.domain.groupregistration.presentation.GroupRegistrationResponse;
+import com.insighton.core.domain.groupregistration.dto.CreateGroupRegistrationRequest;
+import com.insighton.core.domain.groupregistration.dto.GroupRegistrationResponse;
 import com.insighton.core.domain.groupregistration.entity.GroupRegistration;
 import com.insighton.core.domain.groupregistration.entity.GroupRegistrationStatus;
 import com.insighton.core.domain.groupregistration.exception.AlreadyProcessedException;

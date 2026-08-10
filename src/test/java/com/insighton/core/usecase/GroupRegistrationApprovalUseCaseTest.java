@@ -1,6 +1,6 @@
 package com.insighton.core.usecase;
 
-import com.insighton.core.domain.groupregistration.presentation.GroupRegistrationResponse;
+import com.insighton.core.domain.groupregistration.dto.GroupRegistrationResponse;
 import com.insighton.core.domain.groupregistration.entity.GroupRegistrationStatus;
 import com.insighton.core.domain.groupregistration.exception.AlreadyProcessedException;
 import com.insighton.core.domain.groupregistration.exception.GroupRegistrationNotFoundException;
