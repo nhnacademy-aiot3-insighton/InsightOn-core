@@ -6,7 +6,10 @@ import com.insighton.core.domain.groupmember.exception.*;
 import com.insighton.core.domain.sensorattributes.exception.MetricKeyAlreadyExistsException;
 import com.insighton.core.domain.sensorattributes.exception.MetricKeyNotFoundException;
 import com.insighton.core.domain.gateway.exception.GatewayAccessDeniedException;
+import com.insighton.core.domain.gateway.exception.GatewayAlreadyExistsException;
 import com.insighton.core.domain.gateway.exception.GatewayNotFoundException;
+import com.insighton.core.domain.gateway.exception.InvalidGatewayConnectionConfigException;
+import com.insighton.core.domain.gateway.exception.InvalidGatewayValueException;
 import com.insighton.core.domain.groups.exception.GroupNotFoundException;
 import com.insighton.core.domain.groups.exception.InviteTokenNotFoundException;
 import com.insighton.core.domain.groups.exception.NoPermissionException;
@@ -52,7 +55,7 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(HttpStatus.FORBIDDEN.value(), e.getMessage()));
     }
 
-    @ExceptionHandler({AlreadyJoinedException.class, MetricKeyAlreadyExistsException.class})
+    @ExceptionHandler({AlreadyJoinedException.class, MetricKeyAlreadyExistsException.class, GatewayAlreadyExistsException.class})
     public ResponseEntity<ErrorResponse> handleConflict(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ErrorResponse(HttpStatus.CONFLICT.value(), e.getMessage()));
@@ -61,7 +64,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({IllegalArgumentException.class, SuperManagerCannotLeaveException.class,
             NotJoinedAnyGroupException.class, ManagerRoleRequiredForTransferException.class,
             InvalidActuatorValueException.class, InvalidSensorValueException.class,
-            CouldNotAbleToUpdateByUserToSystem.class, EmptyValueException.class
+            CouldNotAbleToUpdateByUserToSystem.class, EmptyValueException.class,
+            InvalidGatewayConnectionConfigException.class, InvalidGatewayValueException.class
     })
     public ResponseEntity<ErrorResponse> handleBadRequest(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)

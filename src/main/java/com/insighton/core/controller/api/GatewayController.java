@@ -5,8 +5,10 @@ import com.insighton.core.domain.gateway.dto.GatewayResponse;
 import com.insighton.core.domain.gateway.dto.GatewayUpdateRequest;
 import com.insighton.core.domain.gateway.service.GatewayService;
 import jakarta.validation.Valid;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 실제 권한 검증은 GatewayService에서 처리함(Controller는 헤더 추출만 담당).
  */
 @RestController
-@RequestMapping("/api/gateways")
+@RequestMapping("/api/v1/gateways")
 @RequiredArgsConstructor
 public class GatewayController {
 
@@ -49,14 +51,15 @@ public class GatewayController {
     }
 
     @GetMapping("/admin")
-    public ResponseEntity<List<GatewayResponse>> getAll(@RequestHeader("X-User-Role") String userRole) {
-        return ResponseEntity.ok(gatewayService.getAll(userRole));
+    public ResponseEntity<Page<GatewayResponse>> getAll(@RequestHeader("X-User-Role") String userRole,
+                                                         @PageableDefault(size = 20) Pageable pageable) {
+        return ResponseEntity.ok(gatewayService.getAll(userRole, pageable));
     }
 
     @PutMapping("/{gatewayId}")
     public ResponseEntity<Void> update(@RequestHeader("X-User-Id") Long userId,
                                                   @PathVariable Long gatewayId,
-                                                  @Valid @RequestBody GatewayUpdateRequest request) {
+                                                  @RequestBody GatewayUpdateRequest request) {
         gatewayService.update(userId, gatewayId, request);
         return ResponseEntity.noContent().build();
     }

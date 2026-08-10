@@ -65,10 +65,20 @@ public class Gateway {
         this.status = GatewayStatus.ACTIVE;
     }
 
+    /**
+     * 부분 수정 — null인 필드는 기존 값을 유지함. 세 필드 중 무엇을 바꿀지는 호출자가
+     * null 여부로 결정하고, "null이면 유지"라는 병합 규칙은 이 엔티티가 책임짐.
+     */
     public void update(String name, ProtocolType protocolType, Map<String, Object> connectionConfig) {
-        this.name = name;
-        this.protocolType = protocolType;
-        this.connectionConfig = connectionConfig;
+        if (name != null) {
+            this.name = name;
+        }
+        if (protocolType != null) {
+            this.protocolType = protocolType;
+        }
+        if (connectionConfig != null) {
+            this.connectionConfig = connectionConfig;
+        }
     }
 
     @PrePersist
