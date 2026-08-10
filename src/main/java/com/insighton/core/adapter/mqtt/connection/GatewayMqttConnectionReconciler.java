@@ -8,9 +8,12 @@ import com.insighton.core.adapter.mqtt.cache.GatewayConnectionInfoCache;
 import com.insighton.core.adapter.mqtt.cache.GatewayGroupMappingCache;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
@@ -87,6 +90,22 @@ public class GatewayMqttConnectionReconciler {
 
             //manager에 gateway가 등록되어 있다면 해당 gateway의 선호 인스턴스가 누군지 확인
             if(gatewayManager.isRegistered(gatewayId)) {
+
+                // 등록 시점에 캐싱해둔 connection_config와 이번 tick에 새로 읽은 DB 값을 비교.
+                // REST로 브로커 주소가 바뀌어도 그 요청을 처리한 인스턴스와 이 게이트웨이의 실제
+                // MQTT 연결 소유 인스턴스가 다르면 GatewayBrokerChangedEvent(로컬 이벤트)가 소유
+                // 인스턴스에는 전달되지 않으므로, 이벤트 전달과 무관하게 매 tick마다 스스로 확인해
+                // 자가 치유되도록 함. 여기서 해제만 하고, 재등록은 다음 tick의 "미등록" 분기가
+                // 자연스럽게 담당함.
+                if (connectionConfigChanged(gatewayId, gateway)) {
+                    gatewayManager.unregisterGateway(gatewayId);
+                    lockService.release(gatewayId, instanceId);
+                    connectionInfoCache.remove(gatewayId);
+                    log.info("Gateway {} connection_config 변경 감지, 재등록 대상으로 전환 (instance={})",
+                            gatewayId, instanceId);
+                    continue;
+                }
+
                 boolean isPreferredOwner = (gatewayId % instanceTotalCount) == instanceSlotIndex;
 
                 //내가 선호 인스턴스가 아니라면
@@ -136,14 +155,42 @@ public class GatewayMqttConnectionReconciler {
                 continue;
             }
 
-            gatewayManager.unregisterGateway(ownerId);
-            lockService.release(ownerId, instanceId);
-            connectionInfoCache.remove(ownerId);
-            groupMappingCache.evict(ownerId);
+            try {
+                gatewayManager.unregisterGateway(ownerId);
+            } finally {
+                lockService.release(ownerId, instanceId);
+                connectionInfoCache.remove(ownerId);
+                groupMappingCache.evict(ownerId);
+            }
 
             log.info("Gateway {} 대상에서 제외됨(삭제 또는 protocolType 변경) — 연결 해제 및 락 반납 (instance={})",
                     ownerId, instanceId);
         }
+    }
+
+    /**
+     * 등록 시점에 {@link GatewayConnectionInfoCache}에 저장해둔 접속 정보와, 이번 tick에 DB에서
+     * 새로 읽은 {@code connection_config}를 비교해 실제로 바뀐 게 있는지 확인함.
+     * 캐시에 없으면(비정상 상태) 안전하게 "안 바뀜"으로 취급함 — 여기서 잘못 true를 반환하면
+     * 불필요한 재연결이 반복될 수 있음.
+     *
+     * @param gatewayId 확인할 게이트웨이 PK
+     * @param gateway   이번 tick에 DB에서 새로 조회한 게이트웨이 엔티티
+     * @return brokerUrls/topics/username/password 중 하나라도 다르면 true
+     */
+    private boolean connectionConfigChanged(Long gatewayId, Gateway gateway) {
+        Optional<MqttGatewayConnectionInfo> cached = connectionInfoCache.get(gatewayId);
+        if (cached.isEmpty()) {
+            return false;
+        }
+
+        MqttGatewayConnectionInfo fresh = MqttGatewayConnectionInfo.from(gateway);
+        MqttGatewayConnectionInfo old = cached.get();
+
+        return !Arrays.equals(old.brokerUrls(), fresh.brokerUrls())
+                || !Arrays.equals(old.topics(), fresh.topics())
+                || !Objects.equals(old.username(), fresh.username())
+                || !Objects.equals(old.password(), fresh.password());
     }
 
     /**
