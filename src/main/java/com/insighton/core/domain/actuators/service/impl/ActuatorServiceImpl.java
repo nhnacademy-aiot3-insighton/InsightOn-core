@@ -57,6 +57,7 @@ public class ActuatorServiceImpl implements ActuatorService {
         }
     }
 
+    // 조회 전용 - 역할 무관, 그룹에 속해있기만 하면 통과
     private void validateGroupMembership(Long userId, Long groupId) {
         groupMembersService.validateGroupMembers(groupId, userId);
     }
@@ -68,7 +69,7 @@ public class ActuatorServiceImpl implements ActuatorService {
         // 쓰기 작업 권한 체크
         validateManagerRole(userId, groupsId);
 
-        // 조회 및 검증
+        // locationId가 진짜 이 그룹 소속인지 여기서 먼저 확인 - 아니면 다른 그룹 위치에 액추에이터를 몰래 심는 게 가능해짐
         Location locations = locationsRepository.findByLocationIdAndGroupGroupId(request.locationId(), groupsId)
                 .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(request.locationId()));
 
@@ -78,7 +79,7 @@ public class ActuatorServiceImpl implements ActuatorService {
                 .location(locations)
                 .sensorName(request.sensorName())
                 .actuatorType(request.actuatorType())
-                .currentState(request.currentState())
+                .currentState(request.currentState()) // 생성 시점 초기 상태를 그대로 저장 (별도 기본값 로직 없음)
                 .stateUpdatedAt(OffsetDateTime.now())
                 .createdAt(OffsetDateTime.now())
                 .build();
@@ -92,7 +93,7 @@ public class ActuatorServiceImpl implements ActuatorService {
                 .orElseThrow(() -> new ActuatorNotFoundException(actuatorId));
 
         validateGroupMembership(userId, groupId);
-        validateActuatorOwnership(entity, groupId);
+        validateActuatorOwnership(entity, groupId); // 그룹 소속이어도, 그 액추에이터가 이 그룹 건지는 별개라 두 검증을 다 함
 
         return ActuatorResponse.from(entity);
     }
@@ -118,7 +119,7 @@ public class ActuatorServiceImpl implements ActuatorService {
 
         boolean isUserRequest = executedByType == ExecutedByType.USER;
 
-        // AI나 룰엔진 등 시스템 요청인 경우 권한 검증을 생략함
+        // 시스템(AI/RuleEngine) 요청은 userId/groupsId 자체가 null로 들어오므로, 권한 체크를 시도하면 오히려 NPE가 남 - 그래서 조건부 스킵
         if (isUserRequest) {
             validateManagerRole(userId, groupsId);
         }
@@ -132,14 +133,14 @@ public class ActuatorServiceImpl implements ActuatorService {
         Actuator entity = actuatorRepository.findById(actuatorId)
                 .orElseThrow(() -> new ActuatorNotFoundException(actuatorId));
 
-        // 사용자 요청일때만 소유권 체크 (시스템 요청은 groupId 필요가없을수있음)
+        // 시스템 요청은 groupsId가 없어서 소유권 검증 자체가 불가능 - AI/RuleEngine 쪽에서 이미 location 기준으로 걸러온 걸 신뢰
         if (isUserRequest) {
             validateActuatorOwnership(entity, groupsId);
         }
 
         entity.updateState(newState);
 
-        // 실행 이력 기록 (누가 어떤걸 어떻게 바꿨는지)
+        // 실행 이력을 여기서 남기는 이유: 상태변경이 성공한 직후에만 기록해야 실제로 반영된 것만 이력에 남음
         actuatorRunLogService.recordRunLogs(entity, newState, executedByType, isUserRequest ? userId : null);
 
 
