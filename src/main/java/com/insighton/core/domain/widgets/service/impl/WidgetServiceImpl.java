@@ -85,7 +85,7 @@ public class WidgetServiceImpl implements WidgetService {
     @Transactional(readOnly = true)
     public List<WidgetsListResponse> getWidgetList(Long dashboardId) {
 
-        List<Widget> widgets = widgetRepository.findByDashboardDashboardId(dashboardId);
+        List<Widget> widgets = widgetRepository.findAllByDashboardDashboardId(dashboardId);
 
         if (widgets.isEmpty()) {
             throw WidgetNotFoundException.notFoundWidgetByDashboardId(dashboardId);
@@ -123,11 +123,22 @@ public class WidgetServiceImpl implements WidgetService {
     @Override
     @Transactional
     public void deleteAllWidget(Long dashboardId) {
-        List<Long> widgetIds = widgetRepository.findWidgetIdsByDashboardDashboardId(dashboardId);
+        List<Long> widgetIds = widgetRepository.findAllByDashboardDashboardId(dashboardId)
+                .stream()
+                .map(Widget::getWidgetId)
+                .toList();
 
         evictCacheForWidgetIds(widgetIds);
 
         widgetRepository.deleteAllByDashboardDashboardId(dashboardId);
+    }
+
+    @Override
+    public List<Long> getWidgetIdsByDashboardId(Long dashboardId) {
+        return widgetRepository.findAllByDashboardDashboardId(dashboardId)
+                .stream()
+                .map(Widget::getWidgetId)
+                .toList();
     }
 
     @Override
