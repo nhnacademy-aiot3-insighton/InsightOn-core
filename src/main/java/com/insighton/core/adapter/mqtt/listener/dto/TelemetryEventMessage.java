@@ -1,4 +1,4 @@
-package com.insighton.core.adapter.rabbitmq.dto;
+package com.insighton.core.adapter.mqtt.listener.dto;
 
 import java.time.Instant;
 import java.util.Map;

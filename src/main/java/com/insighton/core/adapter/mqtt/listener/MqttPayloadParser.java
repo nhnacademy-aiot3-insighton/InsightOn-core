@@ -3,6 +3,7 @@ package com.insighton.core.adapter.mqtt.listener;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.insighton.core.adapter.mqtt.listener.dto.ChirpStackUplinkPacket;
 import com.insighton.core.adapter.mqtt.listener.dto.CleanTelemetryPacket;
+import com.insighton.core.adapter.mqtt.listener.exception.UnsupportedMqttPayloadException;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +36,7 @@ public class MqttPayloadParser {
             byte[] bytes = switch (payload) {
                 case byte[] b -> b;
                 case String s -> s.getBytes(StandardCharsets.UTF_8);
-                default -> throw new IllegalArgumentException("지원하지 않는 페이로드 타입 " + payload.getClass());
+                default -> throw new UnsupportedMqttPayloadException(payload.getClass());
             };
 
             ChirpStackUplinkPacket raw = objectMapper.readValue(bytes, ChirpStackUplinkPacket.class);
