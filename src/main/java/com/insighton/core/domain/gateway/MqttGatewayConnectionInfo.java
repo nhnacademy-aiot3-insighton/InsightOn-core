@@ -1,6 +1,7 @@
 package com.insighton.core.domain.gateway;
 
 import com.insighton.core.domain.gateway.entity.Gateway;
+import com.insighton.core.domain.gateway.exception.InvalidGatewayConnectionConfigException;
 import java.util.List;
 import java.util.Map;
 
@@ -30,12 +31,15 @@ public record MqttGatewayConnectionInfo (
 
     /**
      * {@code Gateway} 엔티티의 {@code connectionConfig}(JSONB)를 파싱해 접속 정보 객체로 변환함.
-     * {@code broker_urls} 키의 배열을 브로커 URI 목록으로 뽑아내고, clientId는 다른 팀과
+     * {@code brokerUrls} 키의 배열을 브로커 URI 목록으로 뽑아내고, clientId는 다른 팀과
      * 공유하는 브로커에서 겹치지 않도록 {@code "insighton-" + gatewayId}로 조립함 — 인스턴스와
      * 무관하게 항상 같은 값이 나오는 게 의도된 동작임(다중 인스턴스 소유권 조율은
      * {@code GatewayMqttLockService}가 별도로 담당).
      * {@code topics} 키가 없으면 ChirpStack 표준 규격을 기본값으로 사용함 — 지금까지 등록된
      * 게이트웨이들이 전부 ChirpStack이라 이 키 없이도 기존과 동일하게 동작함.
+     * {@code brokerUrls}가 없거나 형식이 안 맞으면 {@link InvalidGatewayConnectionConfigException}을
+     * 던짐 — {@code GatewayServiceImpl.validateConnectionConfig()}가 REST 생성/수정 시점에 걸러내지만,
+     * 그 검증이 생기기 전에 저장된 데이터나 DB 직접 수정으로 형식이 깨진 경우를 대비한 방어임.
      *
      * @param gateway 접속 정보를 뽑아낼 게이트웨이 엔티티
      * @return 파싱된 MQTT 접속 정보
@@ -43,7 +47,11 @@ public record MqttGatewayConnectionInfo (
     public static MqttGatewayConnectionInfo from(Gateway gateway) {
         Map<String, Object> config = gateway.getConnectionConfig();
 
-        String[] brokerUrl = ((List<?>) config.get("brokerUrls")).stream()
+        if (!(config.get("brokerUrls") instanceof List<?> brokerUrlsRaw) || brokerUrlsRaw.isEmpty()) {
+            throw new InvalidGatewayConnectionConfigException(
+                    "게이트웨이 " + gateway.getGatewayId() + "의 connection_config에 brokerUrls가 없습니다.");
+        }
+        String[] brokerUrl = brokerUrlsRaw.stream()
                 .map(String::valueOf)
                 .toArray(String[]::new);
 

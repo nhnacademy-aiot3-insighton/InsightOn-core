@@ -78,12 +78,19 @@ public class DynamicMqttGatewayManager {
      * @param gatewayId 해제할 게이트웨이 PK
      */
     public void unregisterGateway(Long gatewayId) {
-        IntegrationFlowRegistration registration = registrations.remove(gatewayId);
+        IntegrationFlowRegistration registration = registrations.get(gatewayId);
 
-        if (registration != null) {
-            registration.destroy();
-            log.info("Gateway {} MQTT 클라이언트 해제", gatewayId);
+        if(registration == null) {
+            return;
         }
+
+        // destroy()가 예외를 던지면 registrations에서 제거하지 않음 — 여기서 먼저 지워버리면
+        // isRegistered()가 false를 반환해 다음 tick에 재등록을 시도하는데, destroy 실패로 완전히
+        // 안 내려간 옛 빈/Paho 클라이언트가 남아있을 경우 같은 clientId로 이중 연결이 생길 수 있음.
+        registration.destroy();
+        registrations.remove(gatewayId);
+
+        log.info("Gateway {} MQTT 클라이언트 해제", gatewayId);
     }
 
     /**
