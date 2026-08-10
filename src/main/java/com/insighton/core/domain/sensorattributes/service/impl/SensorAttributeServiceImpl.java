@@ -80,7 +80,7 @@ public class SensorAttributeServiceImpl implements SensorAttributeService {
         return attributeRepository.findBySensorSensorId(sensorId)
                 .stream()
                 .map(attr -> {
-                    // Enum에서 메트릭 표준 정의(한글 명칭, 단위) 바인딩
+                    // metricKey만으로는 한글명/단위를 모르니, metric_definitions에서 표준 정의를 조인해서 붙여줌
                     MetricDefinition metricDefinition = metricDefinitionRepository
                             .findByMetricKeyIgnoreCase(attr.getMetricKey())
                             .orElseThrow(() -> new MetricKeyNotFoundException(attr.getMetricKey()));
@@ -99,7 +99,7 @@ public class SensorAttributeServiceImpl implements SensorAttributeService {
     public List<MetricDefinitionResponse> getAllMetricDefinitions() {
         return metricDefinitionRepository.findAll().stream()
                 .map(MetricDefinitionResponse::from)
-                .toList();
+                .toList(); // 특정 센서와 무관한 전체 조회
     }
 
     @Override

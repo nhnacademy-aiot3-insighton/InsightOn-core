@@ -23,8 +23,6 @@ public interface SensorService {
     // 업데이트
     void updateSensor(Long userId, Long sensorId, Long newLocationId, String newSensorName);
 
-    // MQTT/패킷 수신 시 마지막 통신 시각 갱신
-    void handlePacketReceived(String sensorEui);
 
     // 단일 장치 삭제 (권한 체크 필요 - userId 추가)
     void deleteSensor(Long userId, Long sensorId);
