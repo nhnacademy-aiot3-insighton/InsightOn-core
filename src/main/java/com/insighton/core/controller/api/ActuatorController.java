@@ -89,7 +89,7 @@ public class ActuatorController {
             @PathVariable("actuator-id")Long actuatorId,
             @Valid @RequestBody ActuatorNameUpdateRequest request) {
         actuatorService.updateActuatorName(userId, groupsId, actuatorId, request.sensorName());
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     // 액추에이터 삭제
@@ -99,7 +99,7 @@ public class ActuatorController {
             @PathVariable("group-id")Long groupsId,
             @PathVariable("actuator-id")Long actuatorId) {
         actuatorService.deleteActuatorById(userId, groupsId, actuatorId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     // 그룹 소속 액추에이터 전체 삭제
@@ -108,7 +108,7 @@ public class ActuatorController {
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id")Long groupsId) {
         actuatorService.deleteAll(userId, groupsId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
 
