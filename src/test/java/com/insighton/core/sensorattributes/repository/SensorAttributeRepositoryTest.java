@@ -1,4 +1,4 @@
-package com.insighton.core.sensor_attributes.repository;
+package com.insighton.core.sensorattributes.repository;
 
 import com.insighton.core.domain.sensorattributes.entity.SensorAttribute;
 import com.insighton.core.domain.sensorattributes.repository.SensorAttributeRepository;
@@ -51,12 +51,4 @@ class SensorAttributeRepositoryTest {
         assertThat(attributeRepository.findBySensorSensorId(1L)).isEmpty();
     }
 
-    // FIXME: sensor_attributes의 current_value_str / group_id 컬럼 제거로
-    // SensorAttributeResponse(4-arg) / updateActuatorValue / deleteByGroupIdGroupId 가 사라져 컴파일 불가.
-    // 액추에이터 제어가 actuators 테이블 기준으로 재설계되면 다시 살릴 것.
-//    void 그룹ID로_일괄삭제() {
-//        attributeRepository.deleteByGroupIdGroupId(1L);
-//
-//        assertThat(attributeRepository.findBySensorSensorId(1L)).isEmpty();
-//    }
 }

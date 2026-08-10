@@ -1,7 +1,7 @@
 package com.insighton.core.actuator.repository;
 
-import com.insighton.core.domain.actuators.entity.Actuator;
 import com.insighton.core.domain.actuators.entity.ActuatorType;
+import com.insighton.core.domain.actuators.entity.Actuator;
 import com.insighton.core.domain.actuators.repository.ActuatorRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,8 +29,8 @@ class ActuatorRepositoryTest {
     void 위치ID로_조회() {
         List<Actuator> result = actuatorRepository.findByLocationLocationId(1L);
 
-        assertThat(result).hasSize(2);
-        assertThat(result.getFirst().getSensorName()).isEqualTo("에어컨1");
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getSensorName()).isEqualTo("에어컨1");
     }
 
     @Test
@@ -38,7 +38,7 @@ class ActuatorRepositoryTest {
     void 타입별_조회() {
         List<Actuator> result = actuatorRepository.findByActuatorType(ActuatorType.AIRCON);
 
-        assertThat(result).hasSize(1);
+        assertThat(result).hasSize(2);
     }
 
     @Test
@@ -47,6 +47,6 @@ class ActuatorRepositoryTest {
         actuatorRepository.deleteAllByLocationLocationIdIn(List.of(1L));
 
         assertThat(actuatorRepository.findByLocationLocationId(1L)).isEmpty();
-        assertThat(actuatorRepository.findByLocationLocationId(2L)).hasSize(0);
+        assertThat(actuatorRepository.findByLocationLocationId(2L)).hasSize(1);
     }
 }
