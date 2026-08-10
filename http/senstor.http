@@ -1,0 +1,46 @@
+### === 변수 ===
+@baseUrl = http://localhost:8080
+@userId = 1
+@groupId = 1
+@locationId = 1
+@actuatorId = 1
+@sensorId = 1
+
+
+### =========================================
+### 1. 센서(디바이스) API
+### =========================================
+
+### 센서 단건 조회
+GET {{baseUrl}}/api/v1/sensor/{{sensorId}}
+X-USER-ID: {{userId}}
+
+### 센서 검색 - groupId 필수
+GET {{baseUrl}}/api/v1/sensor/search?groupId={{groupId}}
+X-USER-ID: {{userId}}
+
+### 센서 검색 - locationId 조건 추가
+GET {{baseUrl}}/api/v1/sensor/search?groupId={{groupId}}&locationId={{locationId}}
+X-USER-ID: {{userId}}
+
+### 센서 검색 - id로 좁혀서 조회
+GET {{baseUrl}}/api/v1/sensor/search?groupId={{groupId}}&id=1
+X-USER-ID: {{userId}}
+
+### 센서 위치/이름 수정 (204 기대)
+PUT {{baseUrl}}/api/v1/sensor/{{sensorId}}
+X-USER-ID: {{userId}}
+Content-Type: application/json
+
+{
+  "locationId": 2,
+  "sensorName": "수정된 센서 이름"
+}
+
+### 센서 단건 삭제 (204 기대)
+DELETE {{baseUrl}}/api/v1/sensor/{{sensorId}}
+X-USER-ID: {{userId}}
+
+### 센서 그룹 전체 삭제 (204 기대)
+DELETE {{baseUrl}}/api/v1/sensor?groupId={{groupId}}
+X-USER-ID: {{userId}}
