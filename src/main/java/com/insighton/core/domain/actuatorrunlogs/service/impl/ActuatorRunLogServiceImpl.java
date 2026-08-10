@@ -37,7 +37,7 @@ public class ActuatorRunLogServiceImpl implements ActuatorRunLogService {
     @Transactional
     public void recordRunLogs(Actuator actuator, Map<String, Object> newState,
                               ExecutedByType executedByType, Long executedByUserId) {
-        if(newState == null || newState.isEmpty()){
+        if (newState == null || newState.isEmpty()) {
             return;
         }
         // 트랜잭션이 살아있는 이 메서드 안에서 지연로딩 값들을 미리 다 꺼냄 (이벤트 페이로드로 넘기기 전에)
@@ -86,5 +86,4 @@ public class ActuatorRunLogServiceImpl implements ActuatorRunLogService {
                 .map(ActuatorRunLogInternalResponse::from)
                 .toList();
     }
-
 }

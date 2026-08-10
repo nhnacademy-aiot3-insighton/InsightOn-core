@@ -1,6 +1,6 @@
 package com.insighton.core.domain.location.event;
 
-import com.insighton.core.common.config.RabbitConfig;
+import com.insighton.core.adapter.rabbitmq.RabbitConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.AmqpException;
