@@ -1,6 +1,7 @@
 package com.insighton.core.sensors.repository;
 
-import com.insighton.core.sensors.entity.Sensor;
+import com.insighton.core.domain.sensors.entity.Sensor;
+import com.insighton.core.domain.sensors.repository.SensorRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

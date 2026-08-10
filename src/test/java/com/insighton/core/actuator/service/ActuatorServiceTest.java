@@ -1,22 +1,23 @@
 package com.insighton.core.actuator.service;
 
 
-import com.insighton.core.actuatorrunlogs.entity.ExecutedByType;
-import com.insighton.core.actuatorrunlogs.repository.ActuatorRunLogRepository;
-import com.insighton.core.actuatorrunlogs.service.ActuatorRunLogService;
-import com.insighton.core.actuators.dto.ActuatorRequest;
-import com.insighton.core.actuators.entity.ActuatorType;
-import com.insighton.core.actuators.entity.Actuator;
-import com.insighton.core.actuators.exception.ActuatorNotFoundException;
-import com.insighton.core.actuators.exception.InvalidActuatorValueException;
-import com.insighton.core.actuators.repository.ActuatorRepository;
-import com.insighton.core.actuators.service.impl.ActuatorServiceImpl;
-import com.insighton.core.groupmember.entity.GroupMember;
-import com.insighton.core.groupmember.entity.GroupMember.GroupRole;
-import com.insighton.core.groupmember.service.GroupMemberService;
-import com.insighton.core.location.entity.Location;
-import com.insighton.core.location.exception.LocationNotFoundException;
-import com.insighton.core.location.repository.LocationRepository;
+import com.insighton.core.domain.actuatorrunlogs.entity.ExecutedByType;
+import com.insighton.core.domain.actuatorrunlogs.repository.ActuatorRunLogRepository;
+import com.insighton.core.domain.actuatorrunlogs.service.ActuatorRunLogService;
+import com.insighton.core.domain.actuators.dto.ActuatorRequest;
+import com.insighton.core.domain.actuators.entity.ActuatorType;
+import com.insighton.core.domain.actuators.entity.Actuator;
+import com.insighton.core.domain.actuators.exception.ActuatorNotFoundException;
+import com.insighton.core.domain.actuators.exception.InvalidActuatorValueException;
+import com.insighton.core.domain.actuators.repository.ActuatorRepository;
+import com.insighton.core.domain.actuators.service.impl.ActuatorServiceImpl;
+import com.insighton.core.domain.groupmember.entity.GroupMember;
+import com.insighton.core.domain.groupmember.entity.GroupMember.GroupRole;
+import com.insighton.core.domain.groupmember.service.GroupMemberService;
+import com.insighton.core.domain.groups.exception.NoPermissionException;
+import com.insighton.core.domain.location.entity.Location;
+import com.insighton.core.domain.location.exception.LocationNotFoundException;
+import com.insighton.core.domain.location.repository.LocationRepository;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,7 +35,6 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
-@Disabled
 @ExtendWith(MockitoExtension.class)
 class ActuatorServiceTest {
 
@@ -76,7 +76,7 @@ class ActuatorServiceTest {
 
         ActuatorRequest request = new ActuatorRequest(1L, "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"));
 
-        assertThrows(com.insighton.core.groups.exception.NoPermissionException.class,
+        assertThrows(NoPermissionException.class,
                 () -> actuatorsService.createActuator(1L, 10L, request));
     }
 

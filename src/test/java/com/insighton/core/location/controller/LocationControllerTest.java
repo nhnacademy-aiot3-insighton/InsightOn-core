@@ -1,11 +1,12 @@
 package com.insighton.core.location.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.insighton.core.location.dto.request.LocationCreateRequest;
-import com.insighton.core.location.dto.request.LocationUpdateRequest;
-import com.insighton.core.location.dto.response.LocationListResponse;
-import com.insighton.core.location.dto.response.LocationResponse;
-import com.insighton.core.location.entity.Location;
+import com.insighton.core.controller.api.LocationController;
+import com.insighton.core.domain.location.dto.request.LocationCreateRequest;
+import com.insighton.core.domain.location.dto.request.LocationUpdateRequest;
+import com.insighton.core.domain.location.dto.response.LocationListResponse;
+import com.insighton.core.domain.location.dto.response.LocationResponse;
+import com.insighton.core.domain.location.entity.Location;
 import com.insighton.core.usecase.LocationUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

@@ -1,23 +1,24 @@
 package com.insighton.core.usecase;
 
 import com.insighton.core.common.annotation.UseCase;
-import com.insighton.core.dashboards.entity.Dashboard;
-import com.insighton.core.dashboards.service.DashboardService;
-import com.insighton.core.gateway.service.GatewayService;
-import com.insighton.core.groupmember.dto.request.GroupMemberJoinRequest;
-import com.insighton.core.groupmember.entity.GroupMember;
-import com.insighton.core.groupmember.service.GroupMemberService;
-import com.insighton.core.groups.dto.request.GroupRequest;
-import com.insighton.core.groups.dto.response.GroupResponse;
-import com.insighton.core.groups.entity.Group;
-import com.insighton.core.groups.event.GroupDeletedEvent;
-import com.insighton.core.groups.exception.NoPermissionException;
-import com.insighton.core.groups.exception.UnAuthorizedAccessException;
-import com.insighton.core.groups.service.GroupService;
-import com.insighton.core.location.entity.Location;
-import com.insighton.core.location.service.LocationService;
-import com.insighton.core.sensors.service.SensorService;
-import com.insighton.core.widgets.service.WidgetService;
+import com.insighton.core.domain.dashboards.entity.Dashboard;
+import com.insighton.core.domain.dashboards.service.DashboardService;
+import com.insighton.core.domain.gateway.service.GatewayService;
+import com.insighton.core.domain.groupmember.dto.request.GroupMemberJoinRequest;
+import com.insighton.core.domain.groupmember.entity.GroupMember;
+import com.insighton.core.domain.groupmember.service.GroupMemberService;
+import com.insighton.core.domain.groupregistration.service.GroupRegistrationService;
+import com.insighton.core.domain.groups.dto.request.GroupRequest;
+import com.insighton.core.domain.groups.dto.response.GroupResponse;
+import com.insighton.core.domain.groups.entity.Group;
+import com.insighton.core.domain.groups.event.GroupDeletedEvent;
+import com.insighton.core.domain.groups.exception.NoPermissionException;
+import com.insighton.core.domain.groups.exception.UnAuthorizedAccessException;
+import com.insighton.core.domain.groups.service.GroupService;
+import com.insighton.core.domain.location.entity.Location;
+import com.insighton.core.domain.location.service.LocationService;
+import com.insighton.core.domain.sensors.service.SensorService;
+import com.insighton.core.domain.widgets.service.WidgetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +36,7 @@ public class GroupUseCase {
     private final DashboardService dashboardService;
     private final WidgetService widgetService;
     private final SensorService sensorService;
+    private final GroupRegistrationService groupRegistrationService;
 
     // ====================== Group Controller ======================
 
@@ -47,6 +49,9 @@ public class GroupUseCase {
     public void joinGroupByToken(GroupMemberJoinRequest request) {
         // inviteToken으로 대상 그룹이 존재하는지 확인 및 조회
         Group group = groupService.validateGroupByInviteToken(request.inviteToken());
+
+        // 그룹 신청서가 대기중 상태인 것이 존재하면 가입 불가능 예외(AlreadyRequestedException)
+        groupRegistrationService.validateNoPendingRequest(request.userId());
 
         groupMemberService.joinGroupByToken(group, request);
     }

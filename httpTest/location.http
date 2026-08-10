@@ -1,0 +1,52 @@
+### 전역 변수 설정
+@baseUrl = http://localhost:8080
+@userId = 2
+@groupId = 2
+@locationId = 1
+
+### 2-1-1. Location 생성 (성공 시 DB에 locationId = 1 생성됨)
+POST {{baseUrl}}/api/v1/groups/{{groupId}}/location/create
+Content-Type: application/json
+X-USER-ID: {{userId}}
+
+{
+  "locationName": "1층 회의실 A",
+  "description": "본관 1층 메인 회의실",
+  "autoControlMode": "SUGGESTION"
+}
+
+### 2-1-2. Location 생성 (성공 시 DB에 locationId = 1 생성됨)
+POST {{baseUrl}}/api/v1/groups/{{groupId}}/location/create
+Content-Type: application/json
+X-USER-ID: {{userId}}
+
+{
+  "locationName": "2층 회의실 B",
+  "description": "본관 1층 메인 회의실",
+  "autoControlMode": "SUGGESTION"
+}
+
+### 2-2. Location 리스트 조회
+GET {{baseUrl}}/api/v1/groups/{{groupId}}/location/list
+X-USER-ID: {{userId}}
+
+### 2-3. Location 상세 조회 (생성된 locationId = 1 조회)
+GET {{baseUrl}}/api/v1/groups/{{groupId}}/location/{{locationId}}
+X-USER-ID: {{userId}}
+
+### 2-4. Auto Control Mode 토글
+PUT {{baseUrl}}/api/v1/groups/{{groupId}}/location/{{locationId}}/toggle-mode
+X-USER-ID: {{userId}}
+
+### 2-5. Location 이름 수정
+PUT {{baseUrl}}/api/v1/groups/{{groupId}}/location/{{locationId}}/update
+Content-Type: application/json
+X-USER-ID: {{userId}}
+
+{
+  "newLocationName": "1층 대회의실"
+}
+
+### 2-6. Location 삭제
+DELETE {{baseUrl}}/api/v1/groups/{{groupId}}/location/{{locationId}}/delete
+X-USER-ID: {{userId}}
