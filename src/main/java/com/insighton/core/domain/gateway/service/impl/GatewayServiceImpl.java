@@ -44,6 +44,7 @@ public class GatewayServiceImpl implements GatewayService {
     private final SensorLookupCacheService sensorLookupCacheService;
     private final ApplicationEventPublisher eventPublisher;
 
+    @Transactional
     @Override
     public GatewayResponse create(Long userId, GatewayCreateRequest request) {
         validateConnectionConfig(request.connectionConfig());
@@ -165,9 +166,10 @@ public class GatewayServiceImpl implements GatewayService {
             purgeSensorOf(gateway, "게이트웨이 삭제(그룹 삭제 cascade)");
             gatewayRepository.deleteById(gateway.getGatewayId());
 
-            // 로그/이벤트를 실제 삭제 성공 뒤로 옮김 — 삭제가 예외로 실패해 트랜잭션이 롤백되면
-            // 이 줄까지 도달하지 않으므로, 로그에 "삭제"가 찍혔다는 건 실제로 삭제됐다는 뜻이 됨
-            log.info("gateway 삭제 - gatewayId: {}, groupId: {}", gateway.getGatewayId(), groupId);
+            // 삭제 확인 로그는 여기서 찍지 않음 — deleteById()가 예외 없이 끝나도 실제 커밋은
+            // 이 메서드가 리턴한 뒤(더 큰 트랜잭션의 일부라면 그 트랜잭션이 끝난 뒤)에야 일어남.
+            // GatewayDeletedEvent는 이미 AFTER_COMMIT으로 처리되므로, 로그도 그 리스너
+            // (GatewayMqttEventListener.onGatewayDeleted)로 옮겨서 커밋 보장을 그대로 물려받음.
             eventPublisher.publishEvent(new GatewayDeletedEvent(gateway.getGatewayId()));
         });
     }
