@@ -10,7 +10,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import com.insighton.core.adapter.client.external.WeatherIntegrationService;
+import com.insighton.core.adapter.client.external.WeatherApiClient;
 import com.insighton.core.domain.weather.dto.WeatherDataDto;
 import com.insighton.core.domain.weather.service.WeatherCacheService;
 import com.insighton.core.domain.weather.util.CacheTimeUtils;
@@ -39,7 +39,7 @@ class WeatherCacheServiceTest {
     private StringRedisTemplate stringRedisTemplate;
 
     @Mock
-    private WeatherIntegrationService weatherIntegrationService;
+    private WeatherApiClient weatherApiClient;
 
     @Mock
     private ValueOperations<String, WeatherDataDto> weatherValueOps;
@@ -64,7 +64,7 @@ class WeatherCacheServiceTest {
         weatherCacheService = new WeatherCacheService(
                 weatherRedisTemplate,
                 stringRedisTemplate,
-                weatherIntegrationService
+                weatherApiClient
         );
 
         dummyData = new WeatherDataDto(
@@ -86,7 +86,7 @@ class WeatherCacheServiceTest {
         // then
         assertThat(result).isNotNull();
         assertThat(result.current().temp()).isEqualTo("20.0");
-        verify(weatherIntegrationService, never()).fetchWeatherData(anyInt(), anyInt(), anyString(), anyString(),
+        verify(weatherApiClient, never()).fetchWeatherData(anyInt(), anyInt(), anyString(), anyString(),
                 anyString(), anyString());
     }
 
@@ -98,7 +98,7 @@ class WeatherCacheServiceTest {
         lenient().when(stringValueOps.setIfAbsent(eq(lockKey), anyString(), any(Duration.class)))
                 .thenReturn(Boolean.TRUE);
         lenient().when(
-                        weatherIntegrationService.fetchWeatherData(anyInt(), anyInt(), anyString(), anyString(), anyString(),
+                        weatherApiClient.fetchWeatherData(anyInt(), anyInt(), anyString(), anyString(), anyString(),
                                 anyString()))
                 .thenReturn(dummyData);
 
@@ -140,7 +140,7 @@ class WeatherCacheServiceTest {
         // then
         assertThat(result).isNotNull();
         assertThat(result.current().temp()).isEqualTo("20.0");
-        verify(weatherIntegrationService, never()).fetchWeatherData(anyInt(), anyInt(), anyString(), anyString(),
+        verify(weatherApiClient, never()).fetchWeatherData(anyInt(), anyInt(), anyString(), anyString(),
                 anyString(), anyString());
     }
 
@@ -155,7 +155,7 @@ class WeatherCacheServiceTest {
                 .thenReturn(Boolean.FALSE, Boolean.TRUE);
 
         lenient().when(
-                        weatherIntegrationService.fetchWeatherData(anyInt(), anyInt(), anyString(), anyString(), anyString(),
+                        weatherApiClient.fetchWeatherData(anyInt(), anyInt(), anyString(), anyString(), anyString(),
                                 anyString()))
                 .thenReturn(dummyData);
 
@@ -164,7 +164,7 @@ class WeatherCacheServiceTest {
 
         // then
         assertThat(result).isNotNull();
-        verify(weatherIntegrationService, times(1)).fetchWeatherData(58, 74, "광주", "동구", "20260806", "1200");
+        verify(weatherApiClient, times(1)).fetchWeatherData(58, 74, "광주", "동구", "20260806", "1200");
 
         ArgumentCaptor<Duration> ttlCaptor = ArgumentCaptor.forClass(Duration.class);
         verify(weatherValueOps, times(1)).set(eq(cacheKey), eq(dummyData), ttlCaptor.capture());

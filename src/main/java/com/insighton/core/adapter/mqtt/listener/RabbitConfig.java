@@ -1,4 +1,4 @@
-package com.insighton.core.common.config;
+package com.insighton.core.adapter.rabbitmq;
 
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;

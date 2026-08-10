@@ -1,7 +1,7 @@
 package com.insighton.core.controller.in;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.insighton.core.controller.internal.InController;
+import com.insighton.core.controller.internal.InternalController;
 import com.insighton.core.domain.groupmember.dto.request.GroupMemberJoinRequest;
 import com.insighton.core.domain.groupmember.service.GroupMemberService;
 import com.insighton.core.domain.location.service.LocationService;
@@ -20,7 +20,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(InController.class)
+@WebMvcTest(InternalController.class)
 class InControllerTest {
 
     @Autowired

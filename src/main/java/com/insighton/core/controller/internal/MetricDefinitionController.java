@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("internal/metric-definitions")
+@RequestMapping("/internal/v1/metric-definitions")
 @RequiredArgsConstructor
 public class MetricDefinitionController {
 

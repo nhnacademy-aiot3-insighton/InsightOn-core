@@ -15,10 +15,8 @@ public class GroupRegistrationApprovalUseCase {
     private final GroupUseCase groupUseCase;
 
     @Transactional
-    public void approve(Long groupRegistrationId, Long approverId) {
-        groupRegistrationService.approveGroupRegistration(groupRegistrationId, approverId);
-
-        GroupRegistrationResponse groupRegistrationResponse = groupRegistrationService.getGroupRegistration(groupRegistrationId);
+    public void approve(String userRole, Long groupRegistrationId, Long approverId) {
+        GroupRegistrationResponse groupRegistrationResponse = groupRegistrationService.approveGroupRegistration(userRole, groupRegistrationId, approverId);
 
         GroupRequest groupRequest = new GroupRequest(
                 groupRegistrationResponse.groupName(),

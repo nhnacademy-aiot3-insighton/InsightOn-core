@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/internal/v1")
-public class InController {
-    private final GroupUseCase coreUseCase;
+public class InternalController {
+    private final GroupUseCase groupUseCase;
     private final GroupMemberService groupMemberService;
     private final LocationService locationService;
 
@@ -29,7 +29,7 @@ public class InController {
     public ResponseEntity<Void> joinGroupByToken(
             @Valid @RequestBody GroupMemberJoinRequest request) {
         // inviteToken으로 그룹이 존재하는지 확인하고 가입 시키는 로직 호출
-        coreUseCase.joinGroupByToken(request);
+        groupUseCase.joinGroupByToken(request);
 
         return ResponseEntity.ok().build();
     }

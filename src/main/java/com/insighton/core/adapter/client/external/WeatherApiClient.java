@@ -22,7 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 @Service
-public class WeatherIntegrationService {
+public class WeatherApiClient {
 
     private final RestClient kmaRestClient;
     private final RestClient airQualityRestClient;
@@ -40,7 +40,7 @@ public class WeatherIntegrationService {
     @Value("${weather.api.air-key}")
     private String airApiKey;
 
-    public WeatherIntegrationService(
+    public WeatherApiClient(
             @Qualifier("kmaRestClient") RestClient kmaRestClient,
             @Qualifier("airQualityRestClient") RestClient airQualityRestClient,
             SidoNameParser sidoNameParser) {
