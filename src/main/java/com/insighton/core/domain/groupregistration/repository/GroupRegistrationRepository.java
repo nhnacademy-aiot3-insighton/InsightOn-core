@@ -17,6 +17,5 @@ public interface GroupRegistrationRepository extends JpaRepository<GroupRegistra
     Page<GroupRegistration> findAllByRequesterId(Long requesterId, Pageable pageable);
 
     // validate
-    @Lock(value = LockModeType.OPTIMISTIC_FORCE_INCREMENT)
     boolean existsByRequesterIdAndStatus(Long requesterId, GroupRegistrationStatus status);
 }
