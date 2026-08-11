@@ -20,8 +20,8 @@ public interface SensorService {
     // 이름 수정 (권한 체크 필요 - userId 추가)
     void updateSensorName(Long userId, Long sensorId, String newSensorName);
 
-    // 업데이트
-    void updateSensor(Long userId, Long sensorId, Long newLocationId, String newSensorName);
+    // 업데이트 - newLocationName은 사용자가 화면에 보이는 장소 이름으로 넘김 (locationId를 몰라도 됨)
+    void updateSensor(Long userId, Long sensorId, String newLocationName, String newSensorName);
 
     // MQTT/패킷 수신 시 마지막 통신 시각 갱신
     void handlePacketReceived(String sensorEui);
