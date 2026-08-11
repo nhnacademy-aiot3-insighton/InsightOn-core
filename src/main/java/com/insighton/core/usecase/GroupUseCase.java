@@ -9,6 +9,7 @@ import com.insighton.core.domain.groupmember.entity.GroupMember;
 import com.insighton.core.domain.groupmember.service.GroupMemberService;
 import com.insighton.core.domain.groupregistration.service.GroupRegistrationService;
 import com.insighton.core.domain.groups.dto.request.GroupRequest;
+import com.insighton.core.domain.groups.dto.request.GroupUpdateRequest;
 import com.insighton.core.domain.groups.dto.response.GroupResponse;
 import com.insighton.core.domain.groups.entity.Group;
 import com.insighton.core.domain.groups.event.GroupDeletedEvent;
@@ -78,7 +79,7 @@ public class GroupUseCase {
      * @param groupId 수정하려는 group의 ID
      */
     @Transactional
-    public void updateGroup(GroupRequest request, Long userId, Long groupId) {
+    public void updateGroup(GroupUpdateRequest request, Long userId, Long groupId) {
         if (groupMemberService.isGroupAdmin(groupId, userId)) {
             groupService.updateGroup(request, groupId);
             return;

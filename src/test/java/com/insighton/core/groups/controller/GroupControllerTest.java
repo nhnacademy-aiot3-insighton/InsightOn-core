@@ -3,10 +3,11 @@ package com.insighton.core.groups.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.insighton.core.controller.api.GroupController;
 import com.insighton.core.domain.groups.dto.request.GroupRequest;
+import com.insighton.core.domain.groups.dto.request.GroupUpdateRequest;
 import com.insighton.core.domain.groups.dto.response.GroupAdminResponse;
 import com.insighton.core.domain.groups.dto.response.GroupResponse;
-import com.insighton.core.usecase.GroupUseCase;
 import com.insighton.core.domain.groups.service.GroupService;
+import com.insighton.core.usecase.GroupUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -133,7 +134,7 @@ class GroupControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk());
 
-            verify(groupsUseCase).updateGroup(any(GroupRequest.class), eq(1L), eq(1L));
+            verify(groupsUseCase).updateGroup(any(GroupUpdateRequest.class), eq(1L), eq(1L));
         }
 
         @Test
