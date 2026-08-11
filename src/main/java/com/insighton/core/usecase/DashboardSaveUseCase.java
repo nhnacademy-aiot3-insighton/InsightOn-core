@@ -9,6 +9,8 @@ import com.insighton.core.domain.groups.exception.NoPermissionException;
 import com.insighton.core.domain.location.service.LocationService;
 import com.insighton.core.domain.widgets.dto.chart.ChartDataResponse;
 import com.insighton.core.domain.widgets.dto.request.WidgetSaveRequest;
+import com.insighton.core.domain.widgets.exception.AlreadyDashboardSaveException;
+import com.insighton.core.domain.widgets.exception.WidgetNotFoundException;
 import com.insighton.core.domain.widgets.service.WidgetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,7 +60,11 @@ public class DashboardSaveUseCase {
             } else {
                 // Update : widget ID가 들어왔다면 기존 Widget 찾아서 수정
                 targetWidgetId = request.widgetId();
-                widgetService.updateWidget(dashboardId, request.widgetId(), request);
+                try {
+                    widgetService.updateWidget(dashboardId, request.widgetId(), request);
+                } catch (WidgetNotFoundException e) {
+                    throw new AlreadyDashboardSaveException(dashboardId);
+                }
             }
             widgetIds.add(targetWidgetId);
         }

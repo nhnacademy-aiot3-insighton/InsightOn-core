@@ -17,6 +17,7 @@ import com.insighton.core.domain.widgets.repository.WidgetRepository;
 import com.insighton.core.domain.widgets.service.WidgetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZoneId;
@@ -153,6 +154,7 @@ public class WidgetServiceImpl implements WidgetService {
     }
 
     @Override
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void evictCacheForWidgetIds(List<Long> widgetIds) {
         if (widgetIds != null && !widgetIds.isEmpty()) {
             widgetIds.forEach(configCache::remove);
@@ -267,11 +269,11 @@ public class WidgetServiceImpl implements WidgetService {
 
         if (Objects.nonNull(config.type())) {
             switch (config.type()) {
-                case GAUGE, SINGLE_STAT:
+                case SINGLE_STAT:
                     // 가장 최근 데이터 1개만 조회
                     flux.append("   |> last()\n");
                     break;
-                case GRAPH:
+                case BAR, GRAPH:
                 default:
                     // 시계열 그래프는 설정한 주기(aggregateWindow)마다 평균(mean) 값으로 묶어서 가져옴 & 입력 값 검증
                     if (Objects.nonNull(config.aggregateWindow())) {
