@@ -2,17 +2,17 @@ package com.insighton.core.domain.region.service;
 
 import com.insighton.core.domain.region.dto.GroupRegionDto;
 import com.insighton.core.domain.region.dto.RegionGridDto;
-import com.insighton.core.domain.region.dto.RegionRequestDto;
-import com.insighton.core.domain.region.dto.RegionResponseDto;
 import com.insighton.core.domain.region.exception.RegionNotFoundException;
 import com.insighton.core.domain.region.registry.RegionRegistry;
 import com.insighton.core.domain.region.repository.GroupRegionRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
@@ -33,26 +33,20 @@ public class RegionService {
         return cities;
     }
 
-    public RegionResponseDto selectGroupLocation(RegionRequestDto requestDto) {
-        Optional<RegionGridDto> optionalLocationGridDto = regionRegistry.findGridCoordinate(
-                requestDto.step1(), requestDto.step2());
-        if (optionalLocationGridDto.isEmpty()) {
-            throw new RegionNotFoundException("존재하지 않는 행정구역 좌표 정보입니다.");
-        }
+    public RegionGridDto validateRegion(String state, String city) {
+        return regionRegistry.findGridCoordinate(state, city)
+                .orElseThrow(() -> new RegionNotFoundException("존재하지 않는 행정구역입니다: " + state + " " + city));
+    }
 
-        RegionGridDto gridDto = optionalLocationGridDto.get();
+    public GroupRegionDto cacheGroupRegion(Long groupId, String groupRegion) {
+        String[] parts = groupRegion.split(",", 2);
+        RegionGridDto gridDto = validateRegion(parts[0], parts[1]);
+        GroupRegionDto groupRegionDto = new GroupRegionDto(groupId, gridDto, OffsetDateTime.now(ZoneId.systemDefault()));
+        groupRegionRepository.save(groupRegionDto);
+        return groupRegionDto;
+    }
 
-        GroupRegionDto groupLocationDto = new GroupRegionDto(
-                requestDto.groupId(),
-                gridDto,
-                OffsetDateTime.now()
-        );
-
-        groupRegionRepository.save(groupLocationDto);
-
-        return new RegionResponseDto(
-                groupLocationDto.groupId(),
-                groupLocationDto.regionGridDto()
-        );
+    public Optional<GroupRegionDto> findByGroupRegion(Long groupId) {
+        return groupRegionRepository.findByGroupId(groupId);
     }
 }
