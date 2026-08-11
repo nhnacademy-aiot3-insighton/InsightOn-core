@@ -3,6 +3,7 @@
 @userId = 1
 @groupId = 1
 @locationId = 1
+@locationName = 안방
 @actuatorId = 1
 @sensorId = 1
 
@@ -33,7 +34,7 @@ X-USER-ID: {{userId}}
 Content-Type: application/json
 
 {
-  "locationId": 2,
+  "locationName": "{{locationName}}",
   "sensorName": "수정된 센서 이름"
 }
 
