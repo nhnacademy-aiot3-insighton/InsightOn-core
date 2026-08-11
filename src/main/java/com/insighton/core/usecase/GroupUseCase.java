@@ -13,6 +13,7 @@ import com.insighton.core.domain.groups.dto.request.GroupUpdateRequest;
 import com.insighton.core.domain.groups.dto.response.GroupResponse;
 import com.insighton.core.domain.groups.entity.Group;
 import com.insighton.core.domain.groups.event.GroupDeletedEvent;
+import com.insighton.core.domain.groups.event.GroupRegionUpdateEvent;
 import com.insighton.core.domain.groups.exception.NoPermissionException;
 import com.insighton.core.domain.groups.exception.UnAuthorizedAccessException;
 import com.insighton.core.domain.groups.service.GroupService;
@@ -85,6 +86,10 @@ public class GroupUseCase {
     public void updateGroup(GroupUpdateRequest request, Long userId, Long groupId) {
         if (groupMemberService.isGroupAdmin(groupId, userId)) {
             groupService.updateGroup(request, groupId);
+
+            if (request.groupRegion() != null) {
+                eventPublisher.publishEvent(new GroupRegionUpdateEvent(groupId, request.groupRegion()));
+            }
             return;
         }
         throw new UnAuthorizedAccessException(userId);
