@@ -5,6 +5,7 @@ import com.insighton.core.domain.groupregistration.dto.GroupRegistrationResponse
 import com.insighton.core.domain.groupregistration.entity.GroupRegistrationStatus;
 import com.insighton.core.domain.groupregistration.service.GroupRegistrationService;
 import com.insighton.core.usecase.GroupRegistrationApprovalUseCase;
+import com.insighton.core.usecase.GroupRegistrationCreationUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -21,6 +22,7 @@ public class GroupRegistrationController {
 
     private final GroupRegistrationService groupRegistrationService;
     private final GroupRegistrationApprovalUseCase approvalUseCase;
+    private final GroupRegistrationCreationUseCase groupRegistrationCreationUseCase;
 
     /**
      * 그룹 생성 신청
@@ -29,7 +31,7 @@ public class GroupRegistrationController {
     public ResponseEntity<GroupRegistrationResponse> createRequest(@RequestHeader("X-User-Id") Long requesterId,
                                                                    @Valid @RequestBody CreateGroupRegistrationRequest registrationRequest
     ) {
-        GroupRegistrationResponse registrationResponse = groupRegistrationService.createRequest(requesterId, registrationRequest);
+        GroupRegistrationResponse registrationResponse = groupRegistrationCreationUseCase.createRequest(requesterId, registrationRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(registrationResponse);
     }
 

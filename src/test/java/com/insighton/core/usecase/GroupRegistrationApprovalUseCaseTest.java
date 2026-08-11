@@ -7,6 +7,8 @@ import com.insighton.core.domain.groupregistration.exception.GroupRegistrationNo
 import com.insighton.core.domain.groupregistration.exception.UnauthorizedGroupRegistrationAccessException;
 import com.insighton.core.domain.groupregistration.service.GroupRegistrationService;
 import com.insighton.core.domain.groups.dto.request.GroupRequest;
+import com.insighton.core.domain.groups.entity.Group;
+import com.insighton.core.domain.region.service.RegionService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -22,6 +24,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -33,6 +36,9 @@ class GroupRegistrationApprovalUseCaseTest {
 
     @Mock
     private GroupUseCase groupUseCase;
+
+    @Mock
+    private RegionService regionService;
 
     @InjectMocks
     private GroupRegistrationApprovalUseCase groupRegistrationApprovalUseCase;
@@ -54,8 +60,15 @@ class GroupRegistrationApprovalUseCaseTest {
         @DisplayName("승인 성공 - 신청 정보 그대로 Group 생성까지 이어짐")
         void approve_success() {
             // given
+            Long createdGroupId = 55L;
+            Group mockGroup = mock(Group.class);
+            given(mockGroup.getGroupId()).willReturn(createdGroupId);
+            given(mockGroup.getGroupRegion()).willReturn("Seoul");
+
             given(groupRegistrationService.approveGroupRegistration("ADMIN", GROUP_REGISTRATION_ID, APPROVER_ID))
                     .willReturn(approvedResponse());
+            given(groupUseCase.createGroup(eq(new GroupRequest("Test Group", "Desc", "Seoul")), eq(REQUESTER_ID)))
+                    .willReturn(mockGroup);
 
             // when
             groupRegistrationApprovalUseCase.approve("ADMIN", GROUP_REGISTRATION_ID, APPROVER_ID);
@@ -64,6 +77,7 @@ class GroupRegistrationApprovalUseCaseTest {
             verify(groupUseCase).createGroup(
                     eq(new GroupRequest("Test Group", "Desc", "Seoul")),
                     eq(REQUESTER_ID));
+            verify(regionService).cacheGroupRegion(createdGroupId, "Seoul");
         }
     }
 
