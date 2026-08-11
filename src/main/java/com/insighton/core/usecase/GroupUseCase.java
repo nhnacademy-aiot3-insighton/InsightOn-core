@@ -156,9 +156,7 @@ public class GroupUseCase {
         }
         gatewayService.deleteByGroupId(groupId);
 
-        // 권한 검증은 위에서 이미 끝났으므로 SensorService를 직접 호출 (groupId만 필요)
-        sensorService.deleteAll(groupId);
-
+        sensorService.deleteAll(userId, groupId);
 
         List<Long> locationIds = locationService.getLocationListByGroupId(groupId).stream()
                 .map(Location::getLocationId)

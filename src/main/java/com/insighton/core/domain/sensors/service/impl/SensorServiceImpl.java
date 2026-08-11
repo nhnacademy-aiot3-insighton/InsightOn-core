@@ -20,12 +20,14 @@ import com.insighton.core.adapter.mqtt.cache.SensorLookupCacheService;
 import com.insighton.core.adapter.mqtt.cache.dto.SensorCacheEntry;
 import com.insighton.core.domain.sensors.dto.SensorResponse;
 import com.insighton.core.domain.sensors.entity.Sensor;
+import com.insighton.core.domain.sensors.event.SensorCacheSyncEvent;
 import com.insighton.core.domain.sensors.exception.InvalidSensorValueException;
 import com.insighton.core.domain.sensors.exception.SensorNotFoundException;
 import com.insighton.core.domain.sensors.repository.SensorRepository;
 import com.insighton.core.domain.sensors.service.SensorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,9 +51,11 @@ public class SensorServiceImpl implements SensorService {
     private final LocationRepository locationsRepository; // 관계 엔티티 조회용
     private final GroupMemberService groupMembersService; // 그룹 멤버 권한 검증용 서비스
     private final MetricDefinitionRepository metricDefinitionRepository; // 기기속성쪽 메트릭키를 메트릭정의 메트릭키값 주입
+    private final ApplicationEventPublisher eventPublisher; // 캐시 갱신을 트랜잭션 커밋 후로 미루기 위한 이벤트 발행용
 
     /**
      * 요청자가 해당 그룹의 MANAGER 이상 권한을 가졌는지 검증하는 내부 헬퍼 메서드
+     * 유스케이스 처리해서 리팩토링해보기 순환참조 문제 해결을 위해서
      */
     private void validateManagerRole(Long userId, Long groupId) {
         GroupMember member = groupMembersService.validateGroupMembers(groupId, userId);
@@ -145,6 +149,7 @@ public class SensorServiceImpl implements SensorService {
         );
 
         // 메모리 캐시(ConcurrentHashMap)에 적재하여 다음 패킷부터는 DB 조회 없이 빠르게 처리
+        // (이 호출 뒤에 실패할 수 있는 로직이 없어 롤백 시 정합성 깨질 위험이 없으므로 이벤트로 미룰 필요 없음)
         sensorLookupCacheService.populate(cacheEntry);
 
         // 생성된 캐시 엔트리를 반환
@@ -180,6 +185,9 @@ public class SensorServiceImpl implements SensorService {
         sensor.updateLocation(newLocation);
 
         // 캐시도 같이 갱신 (sensorEui가 있는 센서만 캐시에 들어있음)
+        // populate를 여기서 바로 부르지 않고 이벤트만 발행함 - SensorCacheEventListener가
+        // 트랜잭션 커밋 후에만 실제로 캐시를 갱신하므로, 이 메서드 뒤쪽에서 예외가 나 롤백돼도
+        // 캐시가 먼저 바뀐 값을 들고 있는 정합성 문제가 생기지 않음
         if (sensor.getSensorEui() != null) {
             Long gatewayId = sensor.getGateway() != null ? sensor.getGateway().getGatewayId() : null;
 
@@ -191,8 +199,7 @@ public class SensorServiceImpl implements SensorService {
                     newLocationId
             );
 
-            // 캐시 서비스에 최신 정보 적재
-            sensorLookupCacheService.populate(updatedCacheEntry);
+            eventPublisher.publishEvent(new SensorCacheSyncEvent(updatedCacheEntry));
         }
     }
 
@@ -223,9 +230,10 @@ public class SensorServiceImpl implements SensorService {
     }
 
     @Override
-    public void updateSensor(Long userId, Long sensorId, Long newLocationId, String newSensorName) {
+    @Transactional
+    public void updateSensor(Long userId, Long sensorId, String newLocationName, String newSensorName) {
         // 아무 필드도 안 왔으면 의미없는 요청으로 간주 (정책에 따라 이 체크는 빼셔도 됩니다)
-        if (newLocationId == null && newSensorName == null) {
+        if (newLocationName == null && newSensorName == null) {
             throw new InvalidSensorValueException("변경할 값이 없습니다.");
         }
 
@@ -235,17 +243,23 @@ public class SensorServiceImpl implements SensorService {
         // 권한 체크는 한 번만 - 위치/이름 둘 다 바꿔도 검증 한 번으로 충분
         validateManagerRole(userId, sensor.getGroup().getGroupId());
 
-        if (newLocationId != null) {
-            Location location = locationsRepository.findById(newLocationId)
-                    .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(newLocationId));
+        if (newLocationName != null) {
+            // 사용자는 locationId를 모르므로 센서가 속한 그룹 내에서 이름으로 찾음
+            // (그룹 스코프로 찾기 때문에 다른 그룹 소속 location으로 잘못 옮겨질 걱정도 없음)
+            Location location = locationsRepository.findByGroupGroupIdAndLocationName(
+                            sensor.getGroup().getGroupId(), newLocationName)
+                    .orElseThrow(() -> LocationNotFoundException.notFoundLocationByName(newLocationName));
             sensor.updateLocation(location);
 
             // 캐시도 같이 갱신 (sensorEui가 있는 센서만 캐시에 들어있음)
+            // populate를 바로 부르지 않고 이벤트만 발행 - 아래 이름 검증에서 예외가 나 트랜잭션이
+            // 롤백되면 이 이벤트 자체가 소비되지 않아서(SensorCacheEventListener가 AFTER_COMMIT),
+            // "DB는 롤백됐는데 캐시엔 바뀐 위치가 남아있는" 정합성 문제가 생기지 않음
             if (sensor.getSensorEui() != null) {
                 Long gatewayId = sensor.getGateway() != null ? sensor.getGateway().getGatewayId() : null;
                 SensorCacheEntry updatedCacheEntry = new SensorCacheEntry(
-                        sensor.getSensorId(), sensor.getSensorEui(), gatewayId, newLocationId);
-                sensorLookupCacheService.populate(updatedCacheEntry);
+                        sensor.getSensorId(), sensor.getSensorEui(), gatewayId, location.getLocationId());
+                eventPublisher.publishEvent(new SensorCacheSyncEvent(updatedCacheEntry));
             }
         }
 
