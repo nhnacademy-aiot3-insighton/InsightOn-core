@@ -132,6 +132,15 @@ class RegionServiceTest {
         }
 
         @Test
+        @DisplayName("groupId 좌표 캐싱 실패 - 쉼표 없는 레거시(PR 이전) 지역 값이면 AIOOBE 대신 RegionNotFoundException")
+        void cacheGroupRegion_legacyFormatWithoutComma() {
+            // when & then
+            assertThatThrownBy(() -> regionService.cacheGroupRegion(GROUP_ID, "Seoul"))
+                    .isInstanceOf(RegionNotFoundException.class);
+            verify(groupRegionRepository, never()).save(any());
+        }
+
+        @Test
         @DisplayName("groupId 좌표 조회 실패 - 캐시에 없으면 빈 값")
         void findByGroupRegion_miss() {
             // given

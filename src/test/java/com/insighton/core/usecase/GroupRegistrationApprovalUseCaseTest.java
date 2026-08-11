@@ -8,6 +8,7 @@ import com.insighton.core.domain.groupregistration.exception.UnauthorizedGroupRe
 import com.insighton.core.domain.groupregistration.service.GroupRegistrationService;
 import com.insighton.core.domain.groups.dto.request.GroupRequest;
 import com.insighton.core.domain.groups.entity.Group;
+import com.insighton.core.domain.region.exception.RegionNotFoundException;
 import com.insighton.core.domain.region.service.RegionService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -122,6 +123,27 @@ class GroupRegistrationApprovalUseCaseTest {
             assertThatThrownBy(() -> groupRegistrationApprovalUseCase.approve("ADMIN", GROUP_REGISTRATION_ID, APPROVER_ID))
                     .isInstanceOf(AlreadyProcessedException.class);
             verify(groupUseCase, never()).createGroup(any(), any());
+        }
+
+        @Test
+        @DisplayName("승인 실패 - PR 이전(쉼표 없는 자유 텍스트) 레거시 대기 신청은 캐싱 단계에서 실패")
+        void approve_legacyPendingRegistrationWithoutCommaRegion() {
+            // given
+            Long createdGroupId = 55L;
+            Group mockGroup = mock(Group.class);
+            given(mockGroup.getGroupId()).willReturn(createdGroupId);
+            given(mockGroup.getGroupRegion()).willReturn("Seoul"); // 쉼표 없는 레거시 값
+
+            given(groupRegistrationService.approveGroupRegistration("ADMIN", GROUP_REGISTRATION_ID, APPROVER_ID))
+                    .willReturn(approvedResponse());
+            given(groupUseCase.createGroup(eq(new GroupRequest("Test Group", "Desc", "Seoul")), eq(REQUESTER_ID)))
+                    .willReturn(mockGroup);
+            willThrow(new RegionNotFoundException("올바르지 않은 지역 형식입니다: Seoul"))
+                    .given(regionService).cacheGroupRegion(createdGroupId, "Seoul");
+
+            // when & then
+            assertThatThrownBy(() -> groupRegistrationApprovalUseCase.approve("ADMIN", GROUP_REGISTRATION_ID, APPROVER_ID))
+                    .isInstanceOf(RegionNotFoundException.class);
         }
     }
 }
