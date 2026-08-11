@@ -1,9 +1,14 @@
 package com.insighton.core.sensors.service;
 
+import com.insighton.core.domain.groupmember.exception.GroupMemberNotFoundException;
 import com.insighton.core.domain.gateway.entity.Gateway;
 import com.insighton.core.domain.gateway.exception.GatewayNotFoundException;
 import com.insighton.core.domain.gateway.repository.GatewayRepository;
+import com.insighton.core.domain.groupmember.entity.GroupMember;
+import com.insighton.core.domain.groupmember.entity.GroupMember.GroupRole;
+import com.insighton.core.domain.groupmember.service.GroupMemberService;
 import com.insighton.core.domain.groups.entity.Group;
+import com.insighton.core.domain.groups.exception.NoPermissionException;
 import com.insighton.core.domain.groups.repository.GroupRepository;
 import com.insighton.core.domain.location.repository.LocationRepository;
 import com.insighton.core.adapter.mqtt.cache.SensorLookupCacheService;
@@ -34,8 +39,6 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
-// 사용자 권한(role/membership) 검증은 SensorUseCase로 이동함 - 여기는 순수 조회/저장만 검증.
-// 권한 관련 케이스(MEMBER 거부 등)는 SensorUseCaseTest 참고.
 @Disabled
 @ExtendWith(MockitoExtension.class)
 class SensorServiceTest {
@@ -43,6 +46,7 @@ class SensorServiceTest {
     @Mock private SensorRepository sensorRepository;
     @Mock private SensorAttributeRepository sensorAttributeRepository;
     @Mock private SensorLookupCacheService sensorLookupCacheService;
+    @Mock private GroupMemberService groupMemberService;
     @Mock private GatewayRepository gatewayRepository;
     @Mock private GroupRepository groupRepository;
     @Mock private LocationRepository locationRepository;
@@ -114,12 +118,50 @@ class SensorServiceTest {
     }
 
     @Test
+    @DisplayName("getSensorById - 다른 그룹 소속이면 예외")
+    void 조회_다른그룹이면_예외() {
+        Group group = mock(Group.class);
+        given(group.getGroupId()).willReturn(5L);
+        Sensor sensor = Sensor.builder().sensorId(1L).group(group).build();
+
+        given(sensorRepository.findById(1L)).willReturn(Optional.of(sensor));
+        given(groupMemberService.validateGroupMembers(5L, 999L))
+                .willThrow(GroupMemberNotFoundException.byMemberIdAndGroupId(999L, 5L));
+
+        assertThrows(GroupMemberNotFoundException.class,
+                () -> sensorService.getSensorById(999L, 1L));
+    }
+
+    @Test
+    @DisplayName("updateSensorName - MEMBER 권한이면 NoPermissionException")
+    void 이름수정_권한없음() {
+        Group group = mock(Group.class);
+        given(group.getGroupId()).willReturn(5L);
+        Sensor sensor = Sensor.builder().sensorId(1L).group(group).build();
+
+        given(sensorRepository.findById(1L)).willReturn(Optional.of(sensor));
+        GroupMember member = GroupMember.builder().userId(1L).groupRole(GroupRole.MEMBER).build();
+        given(groupMemberService.validateGroupMembers(5L, 1L)).willReturn(member);
+
+        assertThrows(NoPermissionException.class,
+                () -> sensorService.updateSensorName(1L, 1L, "새이름"));
+    }
+
+    @Test
+    @DisplayName("updateSensorName - 빈 문자열이면 InvalidSensorValueException, 리포지토리 호출 전에 걸러짐")
+    void 이름수정_빈값() {
+        assertThrows(InvalidSensorValueException.class,
+                () -> sensorService.updateSensorName(1L, 1L, "   "));
+        verify(sensorRepository, never()).findById(anyLong());
+    }
+
+    @Test
     @DisplayName("deleteSensor - 없는 센서면 SensorNotFoundException")
     void 삭제_없는센서() {
         given(sensorRepository.findById(999L)).willReturn(Optional.empty());
 
         assertThrows(SensorNotFoundException.class,
-                () -> sensorService.deleteSensor(999L));
+                () -> sensorService.deleteSensor(1L, 999L));
     }
 
     @Test
@@ -128,11 +170,14 @@ class SensorServiceTest {
         Sensor withEui = Sensor.builder().sensorId(1L).sensorEui("EUI-001").build();
         Sensor withoutEui = Sensor.builder().sensorId(2L).sensorEui(null).build();
 
+        given(groupMemberService.validateGroupMembers(5L, 1L))
+                .willReturn(GroupMember.builder().userId(1L).groupRole(GroupRole.MANAGER).build());
         given(sensorRepository.findByGroupGroupId(5L)).willReturn(List.of(withEui, withoutEui));
 
-        sensorService.deleteAll(5L);
+        sensorService.deleteAll(1L, 5L);
 
         verify(sensorLookupCacheService, times(1)).evict("EUI-001");
+//        verify(sensorAttributeRepository).deleteByGroupGroupId(5L);
         verify(sensorRepository).deleteAll(List.of(withEui, withoutEui));
     }
 
@@ -150,9 +195,11 @@ class SensorServiceTest {
         given(newLocation.getLocationId()).willReturn(20L); // 캐시 엔트리에 location.getLocationId()를 그대로 씀
 
         given(sensorRepository.findById(1L)).willReturn(Optional.of(sensor));
+        given(groupMemberService.validateGroupMembers(5L, 1L))
+                .willReturn(GroupMember.builder().userId(1L).groupRole(GroupRole.MANAGER).build());
         given(locationRepository.findByGroupGroupIdAndLocationName(5L, "4층")).willReturn(Optional.of(newLocation));
 
-        sensorService.updateSensor(1L, "4층", null);
+        sensorService.updateSensor(1L, 1L, "4층", null);
 
         assertThat(sensor.getLocation()).isEqualTo(newLocation); // getLocationsId() -> getLocation()
         verify(sensorLookupCacheService).populate(any(SensorCacheEntry.class));
@@ -168,15 +215,16 @@ class SensorServiceTest {
         Location newLocation = mock(Location.class); // 여기도 getter 스텁 불필요
 
         given(sensorRepository.findById(1L)).willReturn(Optional.of(sensor));
+        given(groupMemberService.validateGroupMembers(5L, 1L))
+                .willReturn(GroupMember.builder().userId(1L).groupRole(GroupRole.MANAGER).build());
         given(locationRepository.findByGroupGroupIdAndLocationName(5L, "4층")).willReturn(Optional.of(newLocation));
 
-        sensorService.updateSensor(1L, "4층", "새 이름");
+        sensorService.updateSensor(1L, 1L, "4층", "새 이름");
 
         assertThat(sensor.getLocation()).isEqualTo(newLocation);
         assertThat(sensor.getSensorName()).isEqualTo("새 이름");
         verify(sensorLookupCacheService, never()).populate(any()); // EUI null이라 캐시 갱신 안 함
     }
-
     @Test
     @DisplayName("updateSensor - 이름만 수정, 위치는 그대로")
     void 업데이트_이름만_수정() {
@@ -185,8 +233,10 @@ class SensorServiceTest {
         Sensor sensor = Sensor.builder().sensorId(1L).group(group).sensorName("기존 이름").build();
 
         given(sensorRepository.findById(1L)).willReturn(Optional.of(sensor));
+        given(groupMemberService.validateGroupMembers(5L, 1L))
+                .willReturn(GroupMember.builder().userId(1L).groupRole(GroupRole.MANAGER).build());
 
-        sensorService.updateSensor(1L, null, "새 이름");
+        sensorService.updateSensor(1L, 1L, null, "새 이름");
 
         assertThat(sensor.getSensorName()).isEqualTo("새 이름");
         verify(locationRepository, never()).findByGroupGroupIdAndLocationName(any(), any());
@@ -199,7 +249,7 @@ class SensorServiceTest {
     void 업데이트_둘다_null이면_거부() {
         // 구현에 이 가드가 없다면 이 테스트는 삭제하세요
         assertThrows(InvalidSensorValueException.class,
-                () -> sensorService.updateSensor(1L, null, null));
+                () -> sensorService.updateSensor(1L, 1L, null, null));
         verify(sensorRepository, never()).findById(anyLong());
     }
 
@@ -211,9 +261,11 @@ class SensorServiceTest {
         Sensor sensor = Sensor.builder().sensorId(1L).group(group).build();
 
         given(sensorRepository.findById(1L)).willReturn(Optional.of(sensor));
+        given(groupMemberService.validateGroupMembers(5L, 1L))
+                .willReturn(GroupMember.builder().userId(1L).groupRole(GroupRole.MANAGER).build());
 
         assertThrows(InvalidSensorValueException.class,
-                () -> sensorService.updateSensor(1L, null, "   "));
+                () -> sensorService.updateSensor(1L, 1L, null, "   "));
     }
 
     @Test
@@ -222,7 +274,7 @@ class SensorServiceTest {
         given(sensorRepository.findById(999L)).willReturn(Optional.empty());
 
         assertThrows(SensorNotFoundException.class,
-                () -> sensorService.updateSensor(999L, "4층", null));
+                () -> sensorService.updateSensor(1L, 999L, "4층", null));
     }
 
     @Test
@@ -233,9 +285,26 @@ class SensorServiceTest {
         Sensor sensor = Sensor.builder().sensorId(1L).group(group).build();
 
         given(sensorRepository.findById(1L)).willReturn(Optional.of(sensor));
+        given(groupMemberService.validateGroupMembers(5L, 1L))
+                .willReturn(GroupMember.builder().userId(1L).groupRole(GroupRole.MANAGER).build());
         given(locationRepository.findByGroupGroupIdAndLocationName(5L, "없는위치")).willReturn(Optional.empty());
 
         assertThrows(LocationNotFoundException.class,
-                () -> sensorService.updateSensor(1L, "없는위치", null));
+                () -> sensorService.updateSensor(1L, 1L, "없는위치", null));
+    }
+
+    @Test
+    @DisplayName("updateSensor - MEMBER 권한이면 NoPermissionException")
+    void 업데이트_권한없음() {
+        Group group = mock(Group.class);
+        given(group.getGroupId()).willReturn(5L);
+        Sensor sensor = Sensor.builder().sensorId(1L).group(group).build();
+
+        given(sensorRepository.findById(1L)).willReturn(Optional.of(sensor));
+        given(groupMemberService.validateGroupMembers(5L, 1L))
+                .willReturn(GroupMember.builder().userId(1L).groupRole(GroupRole.MEMBER).build());
+
+        assertThrows(NoPermissionException.class,
+                () -> sensorService.updateSensor(1L, 1L, "4층", "새 이름"));
     }
 }

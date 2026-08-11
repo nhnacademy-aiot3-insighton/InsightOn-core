@@ -11,6 +11,10 @@ import com.insighton.core.domain.actuators.exception.ActuatorNotFoundException;
 import com.insighton.core.domain.actuators.exception.InvalidActuatorValueException;
 import com.insighton.core.domain.actuators.repository.ActuatorRepository;
 import com.insighton.core.domain.actuators.service.impl.ActuatorServiceImpl;
+import com.insighton.core.domain.groupmember.entity.GroupMember;
+import com.insighton.core.domain.groupmember.entity.GroupMember.GroupRole;
+import com.insighton.core.domain.groupmember.service.GroupMemberService;
+import com.insighton.core.domain.groups.exception.NoPermissionException;
 import com.insighton.core.domain.location.entity.Location;
 import com.insighton.core.domain.location.exception.LocationNotFoundException;
 import com.insighton.core.domain.location.repository.LocationRepository;
@@ -31,31 +35,50 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
-// 사용자 권한(role/membership) 검증은 ActuatorUseCase로 이동함 - 여기는 순수 데이터 스코핑/영속성만 검증.
-// 권한 관련 케이스(MEMBER 거부 등)는 ActuatorUseCaseTest 참고.
 @Disabled
 @ExtendWith(MockitoExtension.class)
 class ActuatorServiceTest {
 
     @Mock private ActuatorRepository actuatorRepository;
     @Mock private LocationRepository locationRepository;
+    @Mock private GroupMemberService groupMemberService;
     @Mock private ActuatorRunLogService actuatorRunLogService; // 없으면 상태변경 시 NPE
     @Mock private ActuatorRunLogRepository actuatorRunLogRepository; // 없으면 삭제 시 NPE
 
     @InjectMocks
     private ActuatorServiceImpl actuatorsService;
 
+    private GroupMember manager() {
+        return GroupMember.builder().userId(1L).groupRole(GroupRole.MANAGER).build();
+    }
+
+    private GroupMember plainMember() {
+        return GroupMember.builder().userId(1L).groupRole(GroupRole.MEMBER).build();
+    }
+
     @Test
     @DisplayName("createActuator - locationName이 groupsId 소속이 아니면 LocationNotFoundException")
     void 생성_다른그룹location_거부() {
+        given(groupMemberService.validateGroupMembers(10L, 1L)).willReturn(manager());
         given(locationRepository.findByGroupGroupIdAndLocationName(10L, "없는장소")).willReturn(Optional.empty());
 
         ActuatorRequest request = new ActuatorRequest("없는장소", "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"));
 
         assertThrows(LocationNotFoundException.class,
-                () -> actuatorsService.createActuator(10L, request));
+                () -> actuatorsService.createActuator(1L, 10L, request));
 
         verify(actuatorRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("createActuator - MEMBER 권한이면 거부")
+    void 생성_권한없음() {
+        given(groupMemberService.validateGroupMembers(10L, 1L)).willReturn(plainMember());
+
+        ActuatorRequest request = new ActuatorRequest("거실", "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"));
+
+        assertThrows(NoPermissionException.class,
+                () -> actuatorsService.createActuator(1L, 10L, request));
     }
 
     @Test
@@ -66,21 +89,23 @@ class ActuatorServiceTest {
         Actuator entity = Actuator.builder().actuatorId(1L).location(location).build();
 
         given(actuatorRepository.findById(1L)).willReturn(Optional.of(entity));
+        given(groupMemberService.validateGroupMembers(10L, 1L)).willReturn(manager());
         given(locationRepository.findByLocationIdAndGroupGroupId(50L, 10L)).willReturn(Optional.empty());
 
         assertThrows(ActuatorNotFoundException.class,
-                () -> actuatorsService.getActuatorById(10L, 1L));
+                () -> actuatorsService.getActuatorById(1L, 10L, 1L));
     }
 
     @Test
-    @DisplayName("updateActuatorState - USER가 아닌 시스템 요청이면 소유권 체크를 건너뛴다")
-    void 상태변경_시스템요청_소유권체크생략() {
+    @DisplayName("updateActuatorState - USER가 아닌 시스템 요청이면 권한/소유권 체크를 건너뛴다")
+    void 상태변경_시스템요청_권한체크생략() {
         Location location = mock(Location.class);
         Actuator entity = Actuator.builder().actuatorId(1L).location(location).build();
         given(actuatorRepository.findById(1L)).willReturn(Optional.of(entity));
 
-        actuatorsService.updateActuatorState(null, 1L, Map.of("power", "ON"), ExecutedByType.RULE_ENGINE, null);
+        actuatorsService.updateActuatorState(null, null, 1L, Map.of("power", "ON"), ExecutedByType.RULE_ENGINE);
 
+        verify(groupMemberService, never()).validateGroupMembers(any(), any());
         verify(locationRepository, never()).findByLocationIdAndGroupGroupId(any(), any());
         verify(actuatorRunLogService).recordRunLogs(entity, Map.of("power", "ON"), ExecutedByType.RULE_ENGINE, null);
     }
@@ -88,8 +113,10 @@ class ActuatorServiceTest {
     @Test
     @DisplayName("updateActuatorState - 빈 상태값이면 InvalidActuatorValueException")
     void 상태변경_빈값_거부() {
+        given(groupMemberService.validateGroupMembers(10L, 1L)).willReturn(manager());
+
         assertThrows(InvalidActuatorValueException.class,
-                () -> actuatorsService.updateActuatorState(10L, 1L, Map.of(), ExecutedByType.USER, 1L));
+                () -> actuatorsService.updateActuatorState(1L, 10L, 1L, Map.of(), ExecutedByType.USER));
     }
 
     @Test
@@ -100,9 +127,10 @@ class ActuatorServiceTest {
         Actuator entity = Actuator.builder().actuatorId(1L).location(location).build();
 
         given(actuatorRepository.findById(1L)).willReturn(Optional.of(entity));
+        given(groupMemberService.validateGroupMembers(10L, 1L)).willReturn(manager());
         given(locationRepository.findByLocationIdAndGroupGroupId(50L, 10L)).willReturn(Optional.of(location));
 
-        actuatorsService.deleteActuatorById(10L, 1L);
+        actuatorsService.deleteActuatorById(1L, 10L, 1L);
 
         verify(actuatorRunLogRepository).deleteByActuatorActuatorId(1L);
         verify(actuatorRepository).delete(entity);
@@ -111,9 +139,10 @@ class ActuatorServiceTest {
     @Test
     @DisplayName("deleteAll - groupsId 소속 location 범위로 실행로그/액추에이터 둘 다 스코프 삭제")
     void 전체삭제_그룹스코프() {
+        given(groupMemberService.validateGroupMembers(10L, 1L)).willReturn(manager());
         given(locationRepository.findAllByGroupGroupId(10L)).willReturn(List.of());
 
-        actuatorsService.deleteAll(10L);
+        actuatorsService.deleteAll(1L, 10L);
 
         verify(actuatorRunLogRepository).deleteAllByActuatorLocationLocationIdIn(List.of());
         verify(actuatorRepository).deleteAllByLocationLocationIdIn(List.of());
