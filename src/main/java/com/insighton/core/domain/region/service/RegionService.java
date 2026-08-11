@@ -40,6 +40,9 @@ public class RegionService {
 
     public GroupRegionDto cacheGroupRegion(Long groupId, String groupRegion) {
         String[] parts = groupRegion.split(",", 2);
+        if (parts.length != 2) {
+            throw new RegionNotFoundException("올바르지 않은 지역 형식입니다: " + groupRegion);
+        }
         RegionGridDto gridDto = validateRegion(parts[0], parts[1]);
         GroupRegionDto groupRegionDto = new GroupRegionDto(groupId, gridDto, OffsetDateTime.now(ZoneId.systemDefault()));
         groupRegionRepository.save(groupRegionDto);
