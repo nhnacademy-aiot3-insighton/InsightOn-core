@@ -67,7 +67,6 @@ class GroupRegistrationServiceTest {
         @DisplayName("그룹 등록 신청 생성 성공")
         void createRequest_success() {
             // given
-            CreateGroupRegistrationRequest request = new CreateGroupRegistrationRequest("Test Group", "Desc", "Seoul");
             GroupRegistration saved = pendingRegistration();
             GroupRegistrationResponse response = dummyResponse(GroupRegistrationStatus.PENDING);
 
@@ -77,7 +76,7 @@ class GroupRegistrationServiceTest {
             given(groupRegistrationMapper.toResponse(saved)).willReturn(response);
 
             // when
-            GroupRegistrationResponse result = groupRegistrationService.createRequest(REQUESTER_ID, request);
+            GroupRegistrationResponse result = groupRegistrationService.createRequest(REQUESTER_ID, "Test Group", "Desc", "Seoul,Jongno");
 
             // then
             assertThat(result).isEqualTo(response);
@@ -211,12 +210,11 @@ class GroupRegistrationServiceTest {
         @DisplayName("신청 생성 실패 - 이미 대기중인 신청 존재")
         void createRequest_alreadyPending() {
             // given
-            CreateGroupRegistrationRequest request = new CreateGroupRegistrationRequest("Test Group", "Desc", "Seoul");
             given(groupRegistrationRepository.existsByRequesterIdAndStatus(REQUESTER_ID, GroupRegistrationStatus.PENDING))
                     .willReturn(true);
 
             // when & then
-            assertThatThrownBy(() -> groupRegistrationService.createRequest(REQUESTER_ID, request))
+            assertThatThrownBy(() -> groupRegistrationService.createRequest(REQUESTER_ID, "Test Group", "Desc", "Seoul,Jongno"))
                     .isInstanceOf(AlreadyRequestedException.class);
             verify(groupRegistrationRepository, never()).save(any());
         }
@@ -225,7 +223,6 @@ class GroupRegistrationServiceTest {
         @DisplayName("신청 생성 실패 - 동시 요청으로 인한 DB 제약 위반")
         void createRequest_raceCondition() {
             // given
-            CreateGroupRegistrationRequest request = new CreateGroupRegistrationRequest("Test Group", "Desc", "Seoul");
             given(groupRegistrationRepository.existsByRequesterIdAndStatus(REQUESTER_ID, GroupRegistrationStatus.PENDING))
                     .willReturn(false);
             given(groupRegistrationRepository.save(any(GroupRegistration.class))).willReturn(pendingRegistration());
@@ -233,7 +230,7 @@ class GroupRegistrationServiceTest {
                     .when(groupRegistrationRepository).flush();
 
             // when & then
-            assertThatThrownBy(() -> groupRegistrationService.createRequest(REQUESTER_ID, request))
+            assertThatThrownBy(() -> groupRegistrationService.createRequest(REQUESTER_ID, "Test Group", "Desc", "Seoul,Jongno"))
                     .isInstanceOf(AlreadyRequestedException.class);
         }
 
