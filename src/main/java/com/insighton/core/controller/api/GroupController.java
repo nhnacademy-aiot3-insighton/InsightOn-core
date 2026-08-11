@@ -1,6 +1,7 @@
 package com.insighton.core.controller.api;
 
 import com.insighton.core.domain.groups.dto.request.GroupRequest;
+import com.insighton.core.domain.groups.dto.request.GroupUpdateRequest;
 import com.insighton.core.domain.groups.dto.response.GroupAdminResponse;
 import com.insighton.core.domain.groups.dto.response.GroupResponse;
 import com.insighton.core.domain.groups.service.GroupService;
@@ -120,7 +121,7 @@ public class GroupController {
     public ResponseEntity<Void> updateGroup(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
-            @Valid @RequestBody GroupRequest request) {
+            @Valid @RequestBody GroupUpdateRequest request) {
         coreUseCase.updateGroup(request, userId, groupId);
 
         return ResponseEntity.ok().build();

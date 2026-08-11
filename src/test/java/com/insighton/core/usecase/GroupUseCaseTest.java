@@ -8,6 +8,7 @@ import com.insighton.core.domain.groupmember.exception.AlreadyJoinedException;
 import com.insighton.core.domain.groupmember.exception.GroupMemberNotFoundException;
 import com.insighton.core.domain.groupmember.service.GroupMemberService;
 import com.insighton.core.domain.groups.dto.request.GroupRequest;
+import com.insighton.core.domain.groups.dto.request.GroupUpdateRequest;
 import com.insighton.core.domain.groups.dto.response.GroupResponse;
 import com.insighton.core.domain.groups.entity.Group;
 import com.insighton.core.domain.groups.event.GroupDeletedEvent;
@@ -148,7 +149,7 @@ class GroupUseCaseTest {
         @DisplayName("그룹 수정 성공 - 어드민 권한 확인")
         void updateGroup_success() {
             // given
-            GroupRequest request = new GroupRequest("name", "desc", "loc");
+            GroupUpdateRequest request = new GroupUpdateRequest("name", "desc", "loc");
             given(groupMemberService.isGroupAdmin(1L, 1L)).willReturn(true);
 
             // when
@@ -162,7 +163,7 @@ class GroupUseCaseTest {
         @DisplayName("그룹 수정 실패 - 어드민 권한 없음")
         void updateGroup_notAdmin() {
             // given
-            GroupRequest request = new GroupRequest("name", "desc", "loc");
+            GroupUpdateRequest request = new GroupUpdateRequest("name", "desc", "loc");
             given(groupMemberService.isGroupAdmin(1L, 1L)).willReturn(false);
 
             // when & then
