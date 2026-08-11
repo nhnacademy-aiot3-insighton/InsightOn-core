@@ -3,6 +3,7 @@
 @userId = 1
 @groupId = 1
 @locationId = 1
+@locationName = 4층
 @actuatorId = 6
 @sensorId = 1
 
@@ -18,7 +19,7 @@ X-USER-ID: {{userId}}
 Content-Type: application/json
 
 {
-  "locationId": {{locationId}},
+  "locationName": "{{locationName}}",
   "sensorName": "4층 에어컨",
   "actuatorType": "AIRCON",
   "currentState": {

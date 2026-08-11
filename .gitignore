@@ -37,3 +37,6 @@ build/
 ### 로컬 전용 설정 (실제 값/시크릿 포함 가능) ###
 application-dev.properties
 local-jars/
+
+### Claude Code (로컬 전용 권한/설정 - 사람마다 다름) ###
+.claude/settings.local.json
