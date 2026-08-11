@@ -1,6 +1,6 @@
 package com.insighton.core.domain.groups.entity;
 
-import com.insighton.core.domain.groups.dto.request.GroupRequest;
+import com.insighton.core.domain.groups.dto.request.GroupUpdateRequest;
 import com.insighton.core.domain.location.exception.EmptyValueException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -70,7 +70,7 @@ public class Group {
         this.inviteToken = newInviteToken;
     }
 
-    public void update(GroupRequest request) {
+    public void update(GroupUpdateRequest request) {
         this.name = request.name();
         this.description = request.description();
         this.groupRegion = request.groupRegion();

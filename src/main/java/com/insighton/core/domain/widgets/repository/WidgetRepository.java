@@ -2,8 +2,6 @@ package com.insighton.core.domain.widgets.repository;
 
 import com.insighton.core.domain.widgets.entity.Widget;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,7 +14,7 @@ public interface WidgetRepository extends JpaRepository<Widget, Long> {
      * @param dashboardId 조회하려는 dashboard ID
      * @return list 반환
      */
-    List<Widget> findByDashboardDashboardId(Long dashboardId);
+    List<Widget> findAllByDashboardDashboardId(Long dashboardId);
 
     /**
      * dashboard에 속한 widget 개별 조회
@@ -42,11 +40,5 @@ public interface WidgetRepository extends JpaRepository<Widget, Long> {
      */
     void deleteAllByDashboardDashboardId(Long dashboardId);
 
-    /**
-     * widget 위한 거
-     */
-
-    @Query("SELECT w.widgetId FROM Widget w WHERE w.dashboard.dashboardId = :dashboardId")
-    List<Long> findWidgetIdsByDashboardDashboardId(@Param("dashboardId") Long dashboardId);
 
 }

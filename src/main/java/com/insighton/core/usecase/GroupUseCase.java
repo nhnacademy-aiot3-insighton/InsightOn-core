@@ -9,6 +9,7 @@ import com.insighton.core.domain.groupmember.entity.GroupMember;
 import com.insighton.core.domain.groupmember.service.GroupMemberService;
 import com.insighton.core.domain.groupregistration.service.GroupRegistrationService;
 import com.insighton.core.domain.groups.dto.request.GroupRequest;
+import com.insighton.core.domain.groups.dto.request.GroupUpdateRequest;
 import com.insighton.core.domain.groups.dto.response.GroupResponse;
 import com.insighton.core.domain.groups.entity.Group;
 import com.insighton.core.domain.groups.event.GroupDeletedEvent;
@@ -17,6 +18,7 @@ import com.insighton.core.domain.groups.exception.UnAuthorizedAccessException;
 import com.insighton.core.domain.groups.service.GroupService;
 import com.insighton.core.domain.location.entity.Location;
 import com.insighton.core.domain.location.service.LocationService;
+import com.insighton.core.domain.region.service.RegionService;
 import com.insighton.core.domain.sensors.service.SensorService;
 import com.insighton.core.domain.widgets.service.WidgetService;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +39,7 @@ public class GroupUseCase {
     private final WidgetService widgetService;
     private final SensorService sensorService;
     private final GroupRegistrationService groupRegistrationService;
+    private final RegionService regionService;
 
     // ====================== Group Controller ======================
 
@@ -79,7 +82,7 @@ public class GroupUseCase {
      * @param groupId 수정하려는 group의 ID
      */
     @Transactional
-    public void updateGroup(GroupRequest request, Long userId, Long groupId) {
+    public void updateGroup(GroupUpdateRequest request, Long userId, Long groupId) {
         if (groupMemberService.isGroupAdmin(groupId, userId)) {
             groupService.updateGroup(request, groupId);
             return;
