@@ -12,7 +12,12 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class MetricDefinition {
-    // 기본값 시딩은 MetricDefinitionSeeder(ApplicationRunner)가 앱 시작 시 자동으로 처리함
+    // TODO: 메트릭정의 삽입
+    //    INSERT INTO metric_definitions (metric_key, metric_name, unit) VALUES
+    //            ('co2', '이산화탄소', 'ppm'),
+    //            ('temperature', '온도', '°C'),
+    //            ('humidity', '습도', '%');
+    //    ON CONFLICT (metric_key) DO NOTHING;
 
     @Id
     @Column(name = "metric_key" ,length = 50)

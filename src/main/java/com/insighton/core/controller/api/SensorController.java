@@ -48,7 +48,8 @@ public class SensorController {
             @PathVariable Long id,
             @RequestBody @Valid SensorUpdateRequest request
             ){
-        sensorService.updateSensor(userId, id, request.locationId(), request.sensorName());
+        // locationId 대신 locationName을 그대로 전달 - 서비스 계층에서 그룹 내 이름으로 위치를 찾음
+        sensorService.updateSensor(userId, id, request.locationName(), request.sensorName());
         return ResponseEntity.noContent().build();
     }
 
