@@ -3,7 +3,7 @@
 @userId = 1
 @groupId = 1
 @locationId = 1
-@locationName = 4층
+@locationName = 회의실
 @actuatorId = 6
 @sensorId = 1
 
