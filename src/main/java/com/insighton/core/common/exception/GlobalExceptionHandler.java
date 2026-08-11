@@ -1,25 +1,27 @@
 package com.insighton.core.common.exception;
 
-import com.insighton.core.domain.dashboards.exception.DashboardNotFoundException;
 import com.insighton.core.domain.actuators.exception.*;
+import com.insighton.core.domain.dashboards.exception.DashboardNotFoundException;
 import com.insighton.core.domain.gateway.exception.*;
 import com.insighton.core.domain.groupmember.exception.*;
 import com.insighton.core.domain.groupregistration.exception.AlreadyProcessedException;
 import com.insighton.core.domain.groupregistration.exception.AlreadyRequestedException;
 import com.insighton.core.domain.groupregistration.exception.GroupRegistrationNotFoundException;
 import com.insighton.core.domain.groupregistration.exception.UnauthorizedGroupRegistrationAccessException;
-import com.insighton.core.domain.sensorattributes.exception.MetricKeyAlreadyExistsException;
-import com.insighton.core.domain.sensorattributes.exception.MetricKeyNotFoundException;
 import com.insighton.core.domain.groups.exception.GroupNotFoundException;
 import com.insighton.core.domain.groups.exception.InviteTokenNotFoundException;
 import com.insighton.core.domain.groups.exception.NoPermissionException;
 import com.insighton.core.domain.groups.exception.UnAuthorizedAccessException;
 import com.insighton.core.domain.location.exception.EmptyValueException;
 import com.insighton.core.domain.location.exception.LocationNotFoundException;
+import com.insighton.core.domain.sensorattributes.exception.MetricKeyAlreadyExistsException;
+import com.insighton.core.domain.sensorattributes.exception.MetricKeyNotFoundException;
+import com.insighton.core.domain.sensors.exception.InvalidSensorValueException;
+import com.insighton.core.domain.sensors.exception.SensorNotFoundException;
+import com.insighton.core.domain.widgets.exception.AlreadyDashboardSaveException;
+import com.insighton.core.domain.widgets.exception.InvalidDateTimeFormatException;
 import com.insighton.core.domain.widgets.exception.WidgetConfigNotFoundException;
 import com.insighton.core.domain.widgets.exception.WidgetNotFoundException;
-import com.insighton.core.domain.sensors.exception.SensorNotFoundException;
-import com.insighton.core.domain.sensors.exception.InvalidSensorValueException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -58,7 +60,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler({AlreadyJoinedException.class, MetricKeyAlreadyExistsException.class, GatewayAlreadyExistsException.class,
-            AlreadyRequestedException.class, AlreadyProcessedException.class})
+            AlreadyRequestedException.class, AlreadyProcessedException.class, AlreadyDashboardSaveException.class})
     public ResponseEntity<ErrorResponse> handleConflict(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ErrorResponse(HttpStatus.CONFLICT.value(), e.getMessage()));
@@ -68,7 +70,7 @@ public class GlobalExceptionHandler {
             NotJoinedAnyGroupException.class, ManagerRoleRequiredForTransferException.class,
             InvalidActuatorValueException.class, InvalidSensorValueException.class,
             CouldNotAbleToUpdateByUserToSystem.class, EmptyValueException.class,
-            InvalidGatewayConnectionConfigException.class, InvalidGatewayValueException.class
+            InvalidGatewayConnectionConfigException.class, InvalidGatewayValueException.class, InvalidDateTimeFormatException.class
     })
     public ResponseEntity<ErrorResponse> handleBadRequest(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
