@@ -18,6 +18,7 @@ import com.insighton.core.domain.groups.exception.UnAuthorizedAccessException;
 import com.insighton.core.domain.groups.service.GroupService;
 import com.insighton.core.domain.location.entity.Location;
 import com.insighton.core.domain.location.service.LocationService;
+import com.insighton.core.domain.region.service.RegionService;
 import com.insighton.core.domain.sensors.service.SensorService;
 import com.insighton.core.domain.widgets.service.WidgetService;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,7 @@ public class GroupUseCase {
     private final WidgetService widgetService;
     private final SensorService sensorService;
     private final GroupRegistrationService groupRegistrationService;
+    private final RegionService regionService;
 
     // ====================== Group Controller ======================
 
