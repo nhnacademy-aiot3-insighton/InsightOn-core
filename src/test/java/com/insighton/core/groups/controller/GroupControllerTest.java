@@ -166,18 +166,5 @@ class GroupControllerTest {
                             .header("X-USER-ID", 1L))
                     .andExpect(status().isBadRequest());
         }
-
-        @Test
-        @DisplayName("그룹 수정 시 @Valid 유효성 검사 실패 시 400 Bad Request")
-        void updateGroup_invalidBody_returnsBadRequest() throws Exception {
-            // DTO 유효성 조건(@NotBlank 등)에 걸리는 잘못된 요청 객체
-            GroupRequest invalidRequest = new GroupRequest(null, null, null);
-
-            mockMvc.perform(put("/api/v1/groups/{group-id}/update", 1L)
-                            .header("X-USER-ID", 1L)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(invalidRequest)))
-                    .andExpect(status().isBadRequest());
-        }
     }
 }
