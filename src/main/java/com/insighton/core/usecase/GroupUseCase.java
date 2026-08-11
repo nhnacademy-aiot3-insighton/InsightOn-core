@@ -66,10 +66,11 @@ public class GroupUseCase {
      * @param userId              그룹을 생성하는 user의 ID
      */
     @Transactional
-    public void createGroup(GroupRequest groupsCreateRequest, Long userId) {
+    public Group createGroup(GroupRequest groupsCreateRequest, Long userId) {
         Group group = groupService.createGroup(groupsCreateRequest);
 
         groupMemberService.createGroupMember(group, userId);
+        return group;
     }
 
 

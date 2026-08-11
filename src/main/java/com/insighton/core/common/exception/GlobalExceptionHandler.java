@@ -20,6 +20,7 @@ import com.insighton.core.domain.sensors.exception.InvalidSensorValueException;
 import com.insighton.core.domain.sensors.exception.SensorNotFoundException;
 import com.insighton.core.domain.widgets.exception.AlreadyDashboardSaveException;
 import com.insighton.core.domain.widgets.exception.InvalidDateTimeFormatException;
+import com.insighton.core.domain.region.exception.RegionNotFoundException;
 import com.insighton.core.domain.widgets.exception.WidgetConfigNotFoundException;
 import com.insighton.core.domain.widgets.exception.WidgetNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -70,7 +71,8 @@ public class GlobalExceptionHandler {
             NotJoinedAnyGroupException.class, ManagerRoleRequiredForTransferException.class,
             InvalidActuatorValueException.class, InvalidSensorValueException.class,
             CouldNotAbleToUpdateByUserToSystem.class, EmptyValueException.class,
-            InvalidGatewayConnectionConfigException.class, InvalidGatewayValueException.class, InvalidDateTimeFormatException.class
+            InvalidGatewayConnectionConfigException.class, InvalidGatewayValueException.class,
+            RegionNotFoundException.class, InvalidDateTimeFormatException.class
     })
     public ResponseEntity<ErrorResponse> handleBadRequest(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
