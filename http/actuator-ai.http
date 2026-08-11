@@ -5,6 +5,7 @@
 @locationId = 1
 @actuatorId = 6
 @sensorId = 1
+@airPurifierLocationId = 2
 
 
 ### =========================================
@@ -59,8 +60,20 @@ Content-Type: application/json
   "callerService": "AI_SYSTEM"
 }
 
+### (사전 준비, 최초 1회만) location 2에 AIR_PURIFIER 생성 - 없으면 아래 커맨드값 검증 테스트가 404로 먼저 걸림
+POST {{baseUrl}}/api/v1/groups/{{groupId}}/actuators
+X-USER-ID: {{userId}}
+Content-Type: application/json
+
+{
+  "locationName": "b",
+  "sensorName": "테스트 공기청정기",
+  "actuatorType": "AIR_PURIFIER",
+  "currentState": {"power": "OFF"}
+}
+
 ### 지원 안 되는 명령값 -> 400 기대 (AIR_PURIFIER는 온도제어 없음)
-PUT {{baseUrl}}/internal/locations/{{locationId}}/actuators/state
+PUT {{baseUrl}}/internal/locations/{{airPurifierLocationId}}/actuators/state
 Content-Type: application/json
 
 {
