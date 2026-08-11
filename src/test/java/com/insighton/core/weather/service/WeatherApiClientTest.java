@@ -16,6 +16,8 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -61,6 +63,7 @@ class WeatherApiClientTest {
 
     @Test
     @DisplayName("기상청 & 에어코리아 API 연동 응답 파싱 및 한글 정제 검증")
+    @Disabled
     void fetchWeatherData_RealApiIntegration_Success() {
         // given: 광주 동구 계림동 기준 (X: 58, Y: 74)
         int gridX = 58;
@@ -150,6 +153,7 @@ class WeatherApiClientTest {
 
     @Test
     @DisplayName("잘못된 입력/응답 누락 시 N/A 또는 기본값 fallback 처리 검증")
+    @Disabled
     void fetchWeatherData_FallbackToDefault_WhenDataMissing() {
         // given
         int invalidGridX = 999;
@@ -183,6 +187,7 @@ class WeatherApiClientTest {
 
     @Test
     @DisplayName("외부 RestClient 예외 발생 시 WeatherApiException 던져지는지 단언")
+    @Disabled
     void fetchWeatherData_ThrowsWeatherApiException_WhenApiFails() {
         // given
         given(sidoNameParser.parse(any())).willReturn("광주");

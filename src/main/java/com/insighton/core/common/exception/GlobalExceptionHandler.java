@@ -16,6 +16,7 @@ import com.insighton.core.domain.groups.exception.NoPermissionException;
 import com.insighton.core.domain.groups.exception.UnAuthorizedAccessException;
 import com.insighton.core.domain.location.exception.EmptyValueException;
 import com.insighton.core.domain.location.exception.LocationNotFoundException;
+import com.insighton.core.domain.region.exception.RegionNotFoundException;
 import com.insighton.core.domain.widgets.exception.WidgetConfigNotFoundException;
 import com.insighton.core.domain.widgets.exception.WidgetNotFoundException;
 import com.insighton.core.domain.sensors.exception.SensorNotFoundException;
@@ -68,7 +69,8 @@ public class GlobalExceptionHandler {
             NotJoinedAnyGroupException.class, ManagerRoleRequiredForTransferException.class,
             InvalidActuatorValueException.class, InvalidSensorValueException.class,
             CouldNotAbleToUpdateByUserToSystem.class, EmptyValueException.class,
-            InvalidGatewayConnectionConfigException.class, InvalidGatewayValueException.class
+            InvalidGatewayConnectionConfigException.class, InvalidGatewayValueException.class,
+            RegionNotFoundException.class
     })
     public ResponseEntity<ErrorResponse> handleBadRequest(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
