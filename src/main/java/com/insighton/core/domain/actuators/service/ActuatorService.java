@@ -30,4 +30,7 @@ public interface ActuatorService {
 
     // 전체 액추에이터 삭제 (권한 체크 필요)
     void deleteAll(Long userId, Long groupsId);
+
+    // 장소 삭제 캐스케이드용 - 해당 장소 소속 액추에이터 + 실행로그 일괄 삭제 (권한 체크는 호출부에서 이미 수행됨)
+    void deleteAllByLocationId(Long locationId);
 }

@@ -68,9 +68,9 @@ public class ActuatorServiceImpl implements ActuatorService {
         // 쓰기 작업 권한 체크
         validateManagerRole(userId, groupsId);
 
-        // 조회 및 검증
-        Location locations = locationsRepository.findByLocationIdAndGroupGroupId(request.locationId(), groupsId)
-                .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(request.locationId()));
+        // 조회 및 검증 - 사용자는 locationId를 모르므로 그룹 내 이름으로 찾음
+        Location locations = locationsRepository.findByGroupGroupIdAndLocationName(groupsId, request.locationName())
+                .orElseThrow(() -> LocationNotFoundException.notFoundLocationByName(request.locationName()));
 
 
         // 전달받은 요청 정보로 액추에이터 엔티티 생성 및 저장[cite: 6]
@@ -191,5 +191,12 @@ public class ActuatorServiceImpl implements ActuatorService {
         // 이미 만들어뒀던 위치 범위 삭제 메서드 재사용 (그룹→장소 캐스케이드 삭제 때 쓰던 것과 동일)
         actuatorRunLogRepository.deleteAllByActuatorLocationLocationIdIn(locationIds);
         actuatorRepository.deleteAllByLocationLocationIdIn(locationIds); // groupsId 소속 location만 스코프
+    }
+
+    @Override
+    @Transactional
+    public void deleteAllByLocationId(Long locationId) {
+        actuatorRunLogRepository.deleteAllByActuatorLocationLocationId(locationId); // 자식(실행로그)부터 삭제
+        actuatorRepository.deleteAllByLocationLocationId(locationId); // 그 다음 부모(액추에이터) 삭제
     }
 }
