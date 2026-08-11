@@ -1,5 +1,6 @@
 package com.insighton.core.domain.groups.event;
 
+import com.insighton.core.domain.region.service.RegionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.retry.annotation.Backoff;
@@ -15,6 +16,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @RequiredArgsConstructor
 public class GroupEventListener {
     private final GroupEventProducer groupEventProducer;
+    private final RegionService regionService;
 
     @Async
     @Retryable(retryFor = Exception.class, maxAttempts = 3, backoff = @Backoff(delay = 1000, multiplier = 2))
@@ -29,5 +31,10 @@ public class GroupEventListener {
     @Recover
     public void recover(Exception e, GroupDeletedEvent event) {
         log.error("RabbitMQ 메시지 발송 최종 실패! Group ID : {}", event.groupId(), e);
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void handleGroupRegionUpdated(GroupRegionUpdateEvent event) {
+        regionService.cacheGroupRegion(event.groupId(), event.groupRegion());
     }
 }

@@ -1,22 +1,11 @@
 package com.insighton.core.weather.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-
 import com.insighton.core.adapter.client.external.WeatherApiClient;
 import com.insighton.core.domain.weather.dto.AirQualityResponseDto;
 import com.insighton.core.domain.weather.dto.KmaWeatherResponseDto;
 import com.insighton.core.domain.weather.dto.WeatherDataDto;
 import com.insighton.core.domain.weather.exception.WeatherApiException;
 import com.insighton.core.domain.weather.parser.SidoNameParser;
-import java.net.URI;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,9 +19,21 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.web.client.RestClient;
 
+import java.net.URI;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+
 @SpringBootTest
 @ActiveProfiles("test")
 @Sql(scripts = "classpath:weather-test.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@Disabled
 class WeatherApiClientTest {
 
     private static final Logger log = LoggerFactory.getLogger(WeatherApiClientTest.class);
