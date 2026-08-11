@@ -1,6 +1,7 @@
 package com.insighton.core.domain.groups.service.impl;
 
 import com.insighton.core.domain.groups.dto.request.GroupRequest;
+import com.insighton.core.domain.groups.dto.request.GroupUpdateRequest;
 import com.insighton.core.domain.groups.dto.response.GroupAdminResponse;
 import com.insighton.core.domain.groups.dto.response.GroupResponse;
 import com.insighton.core.domain.groups.entity.Group;
@@ -42,7 +43,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     @Transactional
-    public void updateGroup(GroupRequest request, Long groupId) {
+    public void updateGroup(GroupUpdateRequest request, Long groupId) {
 
         Group group = groupFindById(groupId);
 

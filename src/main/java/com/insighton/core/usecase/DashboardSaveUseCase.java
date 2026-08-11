@@ -9,14 +9,13 @@ import com.insighton.core.domain.groups.exception.NoPermissionException;
 import com.insighton.core.domain.location.service.LocationService;
 import com.insighton.core.domain.widgets.dto.chart.ChartDataResponse;
 import com.insighton.core.domain.widgets.dto.request.WidgetSaveRequest;
+import com.insighton.core.domain.widgets.exception.AlreadyDashboardSaveException;
+import com.insighton.core.domain.widgets.exception.WidgetNotFoundException;
 import com.insighton.core.domain.widgets.service.WidgetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @UseCase
 @RequiredArgsConstructor
@@ -33,6 +32,23 @@ public class DashboardSaveUseCase {
     @Transactional
     public List<Long> saveDashboard(Long userId, Long groupId, Long locationId, List<WidgetSaveRequest> requests) {
         Dashboard dashboard = validateOnlyWidget(userId, groupId, locationId);
+        Long dashboardId = dashboard.getDashboardId();
+
+        // 기존 DB에 존재하는 대시보드의 모든 위젯 ID 조회
+        List<Long> existingWidgetIds = widgetService.getWidgetIdsByDashboardId(dashboardId);
+
+        // 프론트 요청에서 넘어온 기존 위젯 ID List 추출
+        List<Long> requestWidgetIds = requests.stream()
+                .map(WidgetSaveRequest::widgetId)
+                .filter(Objects::nonNull)
+                .toList();
+
+        for (Long existingId : existingWidgetIds) {
+            // Delete : DB에는 있지만 front 요청 목록에는 없는 위젯 삭제
+            if (!requestWidgetIds.contains(existingId)) {
+                widgetService.deleteWidget(dashboardId, existingId);
+            }
+        }
 
         List<Long> widgetIds = new ArrayList<>();
 
@@ -44,7 +60,11 @@ public class DashboardSaveUseCase {
             } else {
                 // Update : widget ID가 들어왔다면 기존 Widget 찾아서 수정
                 targetWidgetId = request.widgetId();
-                widgetService.updateWidget(dashboard.getDashboardId(), request.widgetId(), request);
+                try {
+                    widgetService.updateWidget(dashboardId, request.widgetId(), request);
+                } catch (WidgetNotFoundException e) {
+                    throw new AlreadyDashboardSaveException(dashboardId);
+                }
             }
             widgetIds.add(targetWidgetId);
         }

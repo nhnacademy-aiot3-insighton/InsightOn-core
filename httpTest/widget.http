@@ -50,16 +50,3 @@ X-USER-ID: {{userId}}
     }
   }
 ]
-
-
-
-
-
-### 2-1. 위젯 리스트 조회
-GET {{baseUrl}}/api/v1/groups/{{groupId}}/location/{{locationId}}/dashboard/widgets
-X-USER-ID: {{userId}}
-
-### 2-2. 위젯 삭제
-# 주의: 삭제 실행 후 해당 widgetId는 DB에서 제거되므로 2-1 조회 시 제외됩니다.
-DELETE {{baseUrl}}/api/v1/groups/{{groupId}}/location/{{locationId}}/dashboard/widgets/{{widgetId}}/delete
-X-USER-ID: {{userId}}

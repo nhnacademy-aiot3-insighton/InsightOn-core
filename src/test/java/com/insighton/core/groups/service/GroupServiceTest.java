@@ -1,6 +1,7 @@
 package com.insighton.core.groups.service;
 
 import com.insighton.core.domain.groups.dto.request.GroupRequest;
+import com.insighton.core.domain.groups.dto.request.GroupUpdateRequest;
 import com.insighton.core.domain.groups.dto.response.GroupAdminResponse;
 import com.insighton.core.domain.groups.dto.response.GroupResponse;
 import com.insighton.core.domain.groups.entity.Group;
@@ -76,7 +77,7 @@ public class GroupServiceTest {
         void updateGroup_success() {
             // given
             Long groupId = 1L;
-            GroupRequest request = new GroupRequest("New Name", "New Desc", "New Loc");
+            GroupUpdateRequest request = new GroupUpdateRequest("New Name", "New Desc", "New Loc");
             Group mockGroup = mock(Group.class);
             given(groupRepository.findById(groupId)).willReturn(Optional.of(mockGroup));
 
@@ -165,7 +166,7 @@ public class GroupServiceTest {
         void updateGroup_notFound() {
             // given
             Long groupId = 1L;
-            GroupRequest request = new GroupRequest("N", "D", "L");
+            GroupUpdateRequest request = new GroupUpdateRequest("N", "D", "L");
             given(groupRepository.findById(groupId)).willReturn(Optional.empty());
 
             // when & then
