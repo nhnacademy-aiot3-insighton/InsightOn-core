@@ -29,7 +29,7 @@ public class Sensor {
     // ================= [센서 전용 필드들] =================
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "gateway_id", nullable = false)
-    private Gateway gateway; // SENSOR 전용 (ACTUATOR는 null)
+    private Gateway gateway;
 
     @Column(name = "sensor_eui", length = 50, unique = true, nullable = false)
     private String sensorEui; // 하드웨어 고유 시리얼

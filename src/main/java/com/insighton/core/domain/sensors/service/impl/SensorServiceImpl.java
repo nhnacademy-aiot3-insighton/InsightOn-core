@@ -7,11 +7,8 @@ import com.insighton.core.domain.sensorattributes.repository.SensorAttributeRepo
 import com.insighton.core.domain.gateway.entity.Gateway;
 import com.insighton.core.domain.gateway.exception.GatewayNotFoundException;
 import com.insighton.core.domain.gateway.repository.GatewayRepository;
-import com.insighton.core.domain.groupmember.entity.GroupMember;
-import com.insighton.core.domain.groupmember.service.GroupMemberService;
 import com.insighton.core.domain.groups.entity.Group;
 import com.insighton.core.domain.groups.exception.GroupNotFoundException;
-import com.insighton.core.domain.groups.exception.NoPermissionException;
 import com.insighton.core.domain.groups.repository.GroupRepository;
 import com.insighton.core.domain.location.entity.Location;
 import com.insighton.core.domain.location.exception.LocationNotFoundException;
@@ -19,6 +16,7 @@ import com.insighton.core.domain.location.repository.LocationRepository;
 import com.insighton.core.adapter.mqtt.cache.SensorLookupCacheService;
 import com.insighton.core.adapter.mqtt.cache.dto.SensorCacheEntry;
 import com.insighton.core.domain.sensors.dto.SensorResponse;
+import com.insighton.core.domain.sensors.dto.SensorUpdateRequest;
 import com.insighton.core.domain.sensors.entity.Sensor;
 import com.insighton.core.domain.sensors.event.SensorCacheSyncEvent;
 import com.insighton.core.domain.sensors.exception.InvalidSensorValueException;
@@ -49,25 +47,8 @@ public class SensorServiceImpl implements SensorService {
     private final GatewayRepository gatewayRepository; // 관계 엔티티 조회용
     private final GroupRepository groupsRepository; // 관계 엔티티 조회용
     private final LocationRepository locationsRepository; // 관계 엔티티 조회용
-    private final GroupMemberService groupMembersService; // 그룹 멤버 권한 검증용 서비스
     private final MetricDefinitionRepository metricDefinitionRepository; // 기기속성쪽 메트릭키를 메트릭정의 메트릭키값 주입
     private final ApplicationEventPublisher eventPublisher; // 캐시 갱신을 트랜잭션 커밋 후로 미루기 위한 이벤트 발행용
-
-    /**
-     * 요청자가 해당 그룹의 MANAGER 이상 권한을 가졌는지 검증하는 내부 헬퍼 메서드
-     * 유스케이스 처리해서 리팩토링해보기 순환참조 문제 해결을 위해서
-     */
-    private void validateManagerRole(Long userId, Long groupId) {
-        GroupMember member = groupMembersService.validateGroupMembers(groupId, userId);
-        if (member.isMember()) {
-            throw NoPermissionException.forAdmin(member.getGroupMemberId());
-        }
-    }
-
-    // 조회용 그룹 소속만 환인, 역할은 무관 그룹내 소속인원만 확인 가능하게
-    private void validateGroupMembership(Long userId, Long groupId) {
-        groupMembersService.validateGroupMembers(groupId, userId);
-    }
 
     @Override
     @Transactional
@@ -148,59 +129,21 @@ public class SensorServiceImpl implements SensorService {
                 null // 위치는 아직 없음
         );
 
-        // 메모리 캐시(ConcurrentHashMap)에 적재하여 다음 패킷부터는 DB 조회 없이 빠르게 처리
-        // (이 호출 뒤에 실패할 수 있는 로직이 없어 롤백 시 정합성 깨질 위험이 없으므로 이벤트로 미룰 필요 없음)
-        sensorLookupCacheService.populate(cacheEntry);
+        // 캐시 갱신은 이벤트로 미뤄서 트랜잭션 커밋 후에만 반영 (SensorCacheEventListener가 AFTER_COMMIT에 처리)
+        // - 이 메서드 본문에 이후 로직이 없어도, flush/commit 자체는 메서드 리턴 이후(트랜잭션 종료 시점)에 일어나므로
+        //   여기서 바로 populate하면 flush 실패 시 DB는 롤백되는데 캐시엔 값이 남는 정합성 문제가 생길 수 있음
+        eventPublisher.publishEvent(new SensorCacheSyncEvent(cacheEntry));
 
         // 생성된 캐시 엔트리를 반환
         return cacheEntry;
     }
 
     @Override
-    public SensorResponse getSensorById(Long userId, Long sensorId) {
+    public SensorResponse getSensorById(Long sensorId) {
         Sensor sensor = sensorRepository.findById(sensorId)
                 .orElseThrow(() -> new SensorNotFoundException(sensorId));
-
-        // 조회 권한 체크
-        validateGroupMembership(userId, sensor.getGroup().getGroupId()); // Groups 객체에서 Long ID 호출
 
         return toDto(sensor);
-    }
-
-    @Override
-    @Transactional // 위치 수정 로직
-    public void updateSensorLocation(Long userId, Long sensorId, Long newLocationId) {
-        if (newLocationId == null) {
-            throw new InvalidSensorValueException("변경할 위치 ID는 필수입니다.");
-        }
-        Sensor sensor = sensorRepository.findById(sensorId)
-                .orElseThrow(() -> new SensorNotFoundException(sensorId));
-
-        // 쓰기 작업 권한 체크 (엔티티에 저장된 groupId 기준 - 다른 그룹 센서는 조작 불가)
-        validateManagerRole(userId, sensor.getGroup().getGroupId()); // Groups 객체에서 Long ID 호출
-
-        Location newLocation = locationsRepository.findById(newLocationId)
-                .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(newLocationId));
-
-        sensor.updateLocation(newLocation);
-
-        // 캐시도 같이 갱신 (sensorEui가 있는 센서만 캐시에 들어있음)
-        // populate를 여기서 바로 부르지 않고 이벤트만 발행함 - SensorCacheEventListener가
-        // 트랜잭션 커밋 후에만 실제로 캐시를 갱신하므로, 이 메서드 뒤쪽에서 예외가 나 롤백돼도
-        // 캐시가 먼저 바뀐 값을 들고 있는 정합성 문제가 생기지 않음
-        if (sensor.getSensorEui() != null) {
-            Long gatewayId = sensor.getGateway() != null ? sensor.getGateway().getGatewayId() : null;
-
-            // 변경된 newLocationId를 적용하여 새로운 캐시 엔트리 생성
-            SensorCacheEntry updatedCacheEntry = new SensorCacheEntry(
-                    sensor.getSensorId(),
-                    sensor.getSensorEui(),
-                    gatewayId,
-                    newLocationId
-            );
-
-            eventPublisher.publishEvent(new SensorCacheSyncEvent(updatedCacheEntry));
-        }
     }
 
     @Override
@@ -214,41 +157,27 @@ public class SensorServiceImpl implements SensorService {
         }
     }
 
-    @Override
-    @Transactional // 이름 수정 로직
-    public void updateSensorName(Long userId, Long sensorId, String newSensorName) {
-        if (newSensorName == null || newSensorName.trim().isEmpty()) {
-            throw new InvalidSensorValueException("변경할 장치 이름은 필수입니다.");
-        }
-        Sensor sensor = sensorRepository.findById(sensorId)
-                .orElseThrow(() -> new SensorNotFoundException(sensorId));
-
-        // 쓰기 작업 권한 체크
-        validateManagerRole(userId, sensor.getGroup().getGroupId()); // Groups 객체에서 Long ID 호출
-
-        sensor.updateName(newSensorName);
-    }
 
     @Override
     @Transactional
-    public void updateSensor(Long userId, Long sensorId, String newLocationName, String newSensorName) {
-        // 아무 필드도 안 왔으면 의미없는 요청으로 간주 (정책에 따라 이 체크는 빼셔도 됩니다)
-        if (newLocationName == null && newSensorName == null) {
+    public void updateSensor(Long sensorId, SensorUpdateRequest request) {
+        // 아무 필드도 안 왔으면 의미없는 요청으로 간주
+        if (request == null) {
             throw new InvalidSensorValueException("변경할 값이 없습니다.");
         }
 
         Sensor sensor = sensorRepository.findById(sensorId)
                 .orElseThrow(() -> new SensorNotFoundException(sensorId));
 
-        // 권한 체크는 한 번만 - 위치/이름 둘 다 바꿔도 검증 한 번으로 충분
-        validateManagerRole(userId, sensor.getGroup().getGroupId());
 
-        if (newLocationName != null) {
+        if (request.locationName() != null) {
             // 사용자는 locationId를 모르므로 센서가 속한 그룹 내에서 이름으로 찾음
             // (그룹 스코프로 찾기 때문에 다른 그룹 소속 location으로 잘못 옮겨질 걱정도 없음)
             Location location = locationsRepository.findByGroupGroupIdAndLocationName(
-                            sensor.getGroup().getGroupId(), newLocationName)
-                    .orElseThrow(() -> LocationNotFoundException.notFoundLocationByName(newLocationName));
+                    // 예) 그룹 1에서 장소(1층어디회의실)은 하나밖에없으니 거기에 맞는 장소가 나옴
+                            sensor.getGroup().getGroupId(), request.locationName())
+                    .orElseThrow(() -> LocationNotFoundException.notFoundLocationByName(request.locationName()));
+            // 그 정소를 가지고 센서는 업데이트함
             sensor.updateLocation(location);
 
             // 캐시도 같이 갱신 (sensorEui가 있는 센서만 캐시에 들어있음)
@@ -263,11 +192,11 @@ public class SensorServiceImpl implements SensorService {
             }
         }
 
-        if (newSensorName != null) {
-            if (newSensorName.isBlank()) {
+        if (request.sensorName() != null) {
+            if (request.sensorName().isBlank()) {
                 throw new InvalidSensorValueException("변경할 장치 이름은 빈 값일 수 없습니다.");
             }
-            sensor.updateName(newSensorName);
+            sensor.updateName(request.sensorName());
         }
     }
 
@@ -283,12 +212,10 @@ public class SensorServiceImpl implements SensorService {
 
     @Override
     @Transactional // 삭제 시 부모/자식 테이블 안전 삭제
-    public void deleteSensor(Long userId, Long sensorId) {
+    public void deleteSensor(Long sensorId) {
         Sensor sensor = sensorRepository.findById(sensorId)
                 .orElseThrow(() -> new SensorNotFoundException(sensorId));
 
-        // 삭제 작업 권한 체크
-        validateManagerRole(userId, sensor.getGroup().getGroupId()); // Groups 객체에서 Long ID 호출
 
         // @Query 없이 완벽하게 동작하는 자식 테이블 일괄 삭제 메서드 호출
         sensorAttributeRepository.deleteBySensorSensorId(sensorId);
@@ -302,9 +229,7 @@ public class SensorServiceImpl implements SensorService {
 
     @Override
     @Transactional
-    public void deleteAll(Long userId, Long groupId) {
-        // 전체 삭제 필수 권한 체크
-        validateManagerRole(userId, groupId);
+    public void deleteAll(Long groupId) {
 
         // 캐시 삭제 - groupId 소속 센서만 골라서 evict (clear()는 다른 그룹 캐시까지 날려버리므로 사용 금지)
         List<Sensor> sensors = sensorRepository.findByGroupGroupId(groupId);
@@ -320,10 +245,8 @@ public class SensorServiceImpl implements SensorService {
     }
 
     @Override
-    public List<SensorResponse> searchSensors(Long userId, Long groupId, Long id, String eui,
-                                              Long locationId, String sensorName) {
-        // 검색은 그룸 범위 자체를 명시적으로 받아서 그 안에서만 조회
-        validateGroupMembership(userId, groupId);
+    public List<SensorResponse> searchSensors(Long groupId, Long id, String eui,
+                                              SensorUpdateRequest request) {
 
         List<Sensor> entities;
 
@@ -331,10 +254,10 @@ public class SensorServiceImpl implements SensorService {
             entities = sensorRepository.findById(id).map(List::of).orElse(List.of());
         } else if (eui != null && !eui.trim().isEmpty()) {
             entities = sensorRepository.findBySensorEui(eui).map(List::of).orElse(List.of());
-        } else if (locationId != null) {
-            entities = sensorRepository.findByLocationLocationId(locationId);
-        } else if (sensorName != null && !sensorName.trim().isEmpty()) {
-            entities = sensorRepository.findBySensorName(sensorName);
+        } else if (request.locationName() != null) {
+            entities = sensorRepository.findByLocationLocationName(request.locationName());
+        } else if (request.sensorName() != null && !request.sensorName().trim().isEmpty()) {
+            entities = sensorRepository.findBySensorName(request.sensorName());
         } else {
             entities = sensorRepository.findByGroupGroupId(groupId);
         }
@@ -344,6 +267,13 @@ public class SensorServiceImpl implements SensorService {
                 .filter(e -> Objects.equals(e.getGroup().getGroupId(), groupId))
                 .map(this::toDto)
                 .toList();
+    }
+
+    @Override
+    public Long getSensorGroupId(Long sensorId) {
+        return sensorRepository.findById(sensorId)
+                .orElseThrow(() -> new SensorNotFoundException(sensorId))
+                .getGroup().getGroupId();
     }
 
     private SensorResponse toDto(Sensor e) {
