@@ -162,7 +162,7 @@ public class GroupUseCase {
      * @param groupId 삭제될 group ID
      */
     @Transactional
-    public void deleteGroup(Long userId, Long groupId) {
+    public void deleteGroup(Long userId, Long groupId, String inviteToken) {
         GroupMember groupMember = groupMemberService.validateGroupMembers(groupId, userId);
 
         if (!groupMember.isSuperManager()) {
@@ -180,7 +180,7 @@ public class GroupUseCase {
 
         groupMemberService.deleteGroupMemberAll(userId, groupId);
 
-        groupService.deleteGroup(groupId);
+        groupService.deleteGroup(groupId, inviteToken);
 
         eventPublisher.publishEvent(new GroupDeletedEvent(groupId, locationIds));
     }

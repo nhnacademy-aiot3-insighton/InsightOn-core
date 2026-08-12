@@ -60,7 +60,7 @@ public interface GroupService {
      *
      * @param groupId 그룹 id
      */
-    void deleteGroup(Long groupId);
+    void deleteGroup(Long groupId, String inviteToken);
 
     /**
      * 초대 토큰으로 group이 존재하는지 확인 (가입용)

@@ -144,7 +144,7 @@ class GroupControllerTest {
                             .header("X-USER-ID", 1L))
                     .andExpect(status().isNoContent());
 
-            verify(groupsUseCase).deleteGroup(1L, 1L);
+            verify(groupsUseCase).deleteGroup(1L, 1L, "token");
         }
     }
 
