@@ -20,19 +20,10 @@ public interface SensorAttributeService {
      * @param sensorId 조회할 기기 ID
      * @return 기기의 메트릭 정보 및 상태값이 포함된 DTO 리스트
      */
-    List<SensorAttributeResponse> getAllAttributeBySensorId(Long userId , Long sensorId);
-
-    /**
-     * 외부 입력 패킷이 유효한 기기 속성인지 검증합니다.
-     *
-     * @param sensorId 장치 ID
-     * @param metricKey 메트릭 키
-     * @return 유효성 여부
-     */
-    boolean isValidSensorAttribute(Long sensorId, String metricKey);
+    List<SensorAttributeResponse> getAllAttributeBySensorId(Long sensorId);
 
     List<MetricDefinitionResponse> getAllMetricDefinitions();
 
-    void deleteAttribute(Long userId, Long sensorId, String metricKey);
+    void deleteAttribute(Long sensorId, String metricKey);
 
 }

@@ -156,7 +156,7 @@ public class GroupUseCase {
         }
         gatewayService.deleteByGroupId(groupId);
 
-        sensorService.deleteAll(userId, groupId);
+        sensorService.deleteAll(groupId);
 
         List<Long> locationIds = locationService.getLocationListByGroupId(groupId).stream()
                 .map(Location::getLocationId)
