@@ -99,7 +99,7 @@ public class GroupServiceImpl implements GroupService {
         Group groupEntity = groupFindById(groupId);
 
         if (!Objects.equals(groupEntity.getInviteToken(), inviteToken)) {
-            throw new InvitationTokenMismatchException(inviteToken);
+            throw new InvitationTokenMismatchException();
         }
 
         groupRepository.delete(groupEntity);

@@ -138,7 +138,7 @@ public class GroupController {
     public ResponseEntity<Void> deleteGroup(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
-            @RequestBody String inviteToken) {
+            @RequestParam String inviteToken) {
         coreUseCase.deleteGroup(userId, groupId, inviteToken);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
