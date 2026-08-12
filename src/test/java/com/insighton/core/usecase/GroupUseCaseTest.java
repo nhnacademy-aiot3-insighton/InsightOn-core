@@ -271,16 +271,14 @@ class GroupUseCaseTest {
             GroupMember mockMember = mock(GroupMember.class);
             given(mockMember.isSuperManager()).willReturn(true);
             given(groupMemberService.validateGroupMembers(1L, 1L)).willReturn(mockMember);
-            String token = "token";
 
             // when
-            managementUseCase.deleteGroup(1L, 1L, token);
 
             // then
             verify(gatewayService, times(1)).deleteByGroupId(1L);
             verify(groupMemberService, times(1)).deleteGroupMemberAll(1L, 1L); // 멤버 전체 삭제 검증
             verify(locationService, times(1)).deleteLocationAll(1L);
-            verify(groupService, times(1)).deleteGroup(1L, token); // 그룹 엔티티 삭제 검증
+            verify(groupService, times(1)).deleteGroup(1L); // 그룹 엔티티 삭제 검증
 
             verify(eventPublisher, times(1)).publishEvent(any(GroupDeletedEvent.class));
         }

@@ -63,13 +63,11 @@ public class GroupServiceTest {
         void deleteGroup_success() {
             // given
             Long groupId = 1L;
-            String token = "token";
             Group mockGroup = mock(Group.class);
-            given(mockGroup.getInviteToken()).willReturn(token);
             given(groupRepository.findById(groupId)).willReturn(Optional.of(mockGroup));
 
             // when
-            groupService.deleteGroup(groupId, token);
+            groupService.deleteGroup(groupId);
 
             // then
             verify(groupRepository, times(1)).delete(mockGroup);
@@ -157,11 +155,10 @@ public class GroupServiceTest {
         void deleteGroup_notFound() {
             // given
             Long groupId = 1L;
-            String token = "token";
             given(groupRepository.findById(groupId)).willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> groupService.deleteGroup(groupId, token))
+            assertThatThrownBy(() -> groupService.deleteGroup(groupId))
                     .isInstanceOf(GroupNotFoundException.class);
         }
 
@@ -170,13 +167,11 @@ public class GroupServiceTest {
         void deleteGroup_tokenMismatch() {
             // given
             Long groupId = 1L;
-            String token = "wrongToken";
             Group mockGroup = mock(Group.class);
-            given(mockGroup.getInviteToken()).willReturn("correctToken");
             given(groupRepository.findById(groupId)).willReturn(Optional.of(mockGroup));
 
             // when & then
-            assertThatThrownBy(() -> groupService.deleteGroup(groupId, token))
+            assertThatThrownBy(() -> groupService.deleteGroup(groupId))
                     .isInstanceOf(InvitationTokenMismatchException.class);
         }
 

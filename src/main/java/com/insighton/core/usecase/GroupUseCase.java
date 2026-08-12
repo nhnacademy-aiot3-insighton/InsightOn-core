@@ -168,6 +168,9 @@ public class GroupUseCase {
         if (!groupMember.isSuperManager()) {
             throw NoPermissionException.forAdmin(groupMember.getGroupMemberId());
         }
+
+        groupService.validateInviteToken(groupId, inviteToken);
+
         gatewayService.deleteByGroupId(groupId);
 
         sensorService.deleteAll(userId, groupId);
@@ -180,7 +183,7 @@ public class GroupUseCase {
 
         groupMemberService.deleteGroupMemberAll(userId, groupId);
 
-        groupService.deleteGroup(groupId, inviteToken);
+        groupService.deleteGroup(groupId);
 
         eventPublisher.publishEvent(new GroupDeletedEvent(groupId, locationIds));
     }

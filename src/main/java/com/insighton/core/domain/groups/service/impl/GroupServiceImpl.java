@@ -94,13 +94,10 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     @Transactional
-    public void deleteGroup(Long groupId, String inviteToken) {
+    public void deleteGroup(Long groupId) {
         // 대상 그룹 조회 (없을 시 exception 던지기)
         Group groupEntity = groupFindById(groupId);
 
-        if (!Objects.equals(groupEntity.getInviteToken(), inviteToken)) {
-            throw new InvitationTokenMismatchException();
-        }
 
         groupRepository.delete(groupEntity);
     }
@@ -126,5 +123,14 @@ public class GroupServiceImpl implements GroupService {
     public Group groupFindById(Long groupId) {
         return groupRepository.findById(groupId)
                 .orElseThrow(() -> new GroupNotFoundException(groupId));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public void validateInviteToken(Long groupId, String inviteToken) {
+        Group groupEntity = groupFindById(groupId);
+        if (!Objects.equals(groupEntity.getInviteToken(), inviteToken)) {
+            throw new InvitationTokenMismatchException();
+        }
     }
 }
