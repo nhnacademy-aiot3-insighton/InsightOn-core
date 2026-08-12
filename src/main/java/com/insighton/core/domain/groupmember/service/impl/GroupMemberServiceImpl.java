@@ -233,6 +233,19 @@ public class GroupMemberServiceImpl implements GroupMemberService {
         return members.isManager() || members.isSuperManager();
     }
 
+    /**
+     * 센서쪽 업데이트, 삭제 권한 확인용으로 추가
+     *
+     */
+    @Override
+    public GroupMember validateGroupAdmin(Long groupId, Long userId) {
+        GroupMember member = validateGroupMembers(groupId, userId);
+        if (member.isMember()) {
+            throw NoPermissionException.forAdmin(member.getGroupMemberId());
+        }
+        return member;
+    }
+
 
     /**
      * Auth 요청

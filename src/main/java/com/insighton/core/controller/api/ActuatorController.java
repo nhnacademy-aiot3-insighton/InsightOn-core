@@ -1,12 +1,17 @@
 package com.insighton.core.controller.api;
 
 import com.insighton.core.domain.actuatorrunlogs.dto.ActuatorRunLogResponse;
-import com.insighton.core.domain.actuatorrunlogs.entity.ExecutedByType;
-import com.insighton.core.domain.actuatorrunlogs.service.ActuatorRunLogService;
 import com.insighton.core.domain.actuators.dto.ActuatorNameUpdateRequest;
 import com.insighton.core.domain.actuators.dto.ActuatorRequest;
 import com.insighton.core.domain.actuators.dto.ActuatorResponse;
-import com.insighton.core.domain.actuators.service.ActuatorService;
+import com.insighton.core.usecase.actuator.CreateActuatorUseCase;
+import com.insighton.core.usecase.actuator.DeleteActuatorUseCase;
+import com.insighton.core.usecase.actuator.DeleteAllActuatorUseCase;
+import com.insighton.core.usecase.actuator.GetActuatorRunLogsUseCase;
+import com.insighton.core.usecase.actuator.GetActuatorUseCase;
+import com.insighton.core.usecase.actuator.GetActuatorsByLocationUseCase;
+import com.insighton.core.usecase.actuator.UpdateActuatorNameUseCase;
+import com.insighton.core.usecase.actuator.UpdateActuatorStateUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -23,8 +28,14 @@ import java.util.Map;
 @RequestMapping("/api/v1/groups/{group-id}/actuators")
 public class ActuatorController {
 
-    private final ActuatorService actuatorService; // 액추에이터 서비스
-    private final ActuatorRunLogService actuatorRunLogService; // 실행 로그 조회용
+    private final CreateActuatorUseCase createActuatorUseCase;
+    private final GetActuatorUseCase getActuatorUseCase;
+    private final GetActuatorsByLocationUseCase getActuatorsByLocationUseCase;
+    private final UpdateActuatorStateUseCase updateActuatorStateUseCase;
+    private final UpdateActuatorNameUseCase updateActuatorNameUseCase;
+    private final GetActuatorRunLogsUseCase getActuatorRunLogsUseCase;
+    private final DeleteActuatorUseCase deleteActuatorUseCase;
+    private final DeleteAllActuatorUseCase deleteAllActuatorUseCase;
 
 
     // 액추에이터 생성
@@ -33,7 +44,7 @@ public class ActuatorController {
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupsId,
             @Valid @RequestBody ActuatorRequest request) {
-        Long actuatorId = actuatorService.createActuator(userId, groupsId, request);
+        Long actuatorId = createActuatorUseCase.createActuator(userId, groupsId, request);
         return ResponseEntity.ok(actuatorId);
     }
 
@@ -43,7 +54,7 @@ public class ActuatorController {
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupsId,
             @PathVariable("actuator-id") Long actuatorId) {
-        return ResponseEntity.ok(actuatorService.getActuatorById(userId, groupsId, actuatorId));
+        return ResponseEntity.ok(getActuatorUseCase.getActuatorById(userId, groupsId, actuatorId));
     }
 
     // 위치별 액추에이터 목록 조회
@@ -52,7 +63,7 @@ public class ActuatorController {
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable ("group-id") Long groupsId,
             @PathVariable ("location-id") Long locationId) {
-        return ResponseEntity.ok(actuatorService.getActuatorsByLocationId(userId, groupsId, locationId));
+        return ResponseEntity.ok(getActuatorsByLocationUseCase.getActuatorsByLocationId(userId, groupsId, locationId));
     }
 
     // 유저 전용 액추에이터 업데이트
@@ -62,8 +73,7 @@ public class ActuatorController {
             @PathVariable("group-id")Long groupsId,
             @PathVariable("actuator-id")Long actuatorId,
             @RequestBody Map<String, Object> newState) {
-        // 컨트롤러를 통한 사용자 요청이므로 isSystemRequest = false
-        actuatorService.updateActuatorState(userId, groupsId, actuatorId, newState, ExecutedByType.USER);
+        updateActuatorStateUseCase.updateActuatorState(userId, groupsId, actuatorId, newState);
         return ResponseEntity.ok().build();
     }
 
@@ -76,9 +86,7 @@ public class ActuatorController {
             @PathVariable("group-id")Long groupsId,
             @PathVariable("actuator-id")Long actuatorId,
             @PageableDefault(size = 20) Pageable pageable) {
-        actuatorService.getActuatorById(userId, groupsId, actuatorId);
-        return ResponseEntity.ok(actuatorRunLogService.getRunLogsByActuatorId(actuatorId, pageable));
-
+        return ResponseEntity.ok(getActuatorRunLogsUseCase.getActuatorRunLogs(userId, groupsId, actuatorId, pageable));
     }
 
     // 액추에이터 이름 수정
@@ -88,7 +96,7 @@ public class ActuatorController {
             @PathVariable("group-id")Long groupsId,
             @PathVariable("actuator-id")Long actuatorId,
             @Valid @RequestBody ActuatorNameUpdateRequest request) {
-        actuatorService.updateActuatorName(userId, groupsId, actuatorId, request.sensorName());
+        updateActuatorNameUseCase.updateActuatorName(userId, groupsId, actuatorId, request.sensorName());
         return ResponseEntity.noContent().build();
     }
 
@@ -98,7 +106,7 @@ public class ActuatorController {
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id")Long groupsId,
             @PathVariable("actuator-id")Long actuatorId) {
-        actuatorService.deleteActuatorById(userId, groupsId, actuatorId);
+        deleteActuatorUseCase.deleteActuatorById(userId, groupsId, actuatorId);
         return ResponseEntity.noContent().build();
     }
 
@@ -107,7 +115,7 @@ public class ActuatorController {
     public ResponseEntity<Void> deleteAll(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id")Long groupsId) {
-        actuatorService.deleteAll(userId, groupsId);
+        deleteAllActuatorUseCase.deleteAll(userId, groupsId);
         return ResponseEntity.noContent().build();
     }
 
