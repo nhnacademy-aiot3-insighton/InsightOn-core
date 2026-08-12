@@ -6,13 +6,13 @@ import com.insighton.core.domain.actuatorrunlogs.entity.ExecutedByType;
 import com.insighton.core.domain.actuators.entity.Actuator;
 import com.insighton.core.domain.actuators.policy.ActuatorCommandPreset;
 import com.insighton.core.domain.actuators.dto.ActuatorCommandRequest;
-import com.insighton.core.domain.actuatorrunlogs.service.ActuatorRunLogService;
 import com.insighton.core.domain.actuators.entity.ActuatorType;
 import com.insighton.core.domain.actuators.exception.ActuatorLocationsActuatorTypeNotFound;
 import com.insighton.core.domain.actuators.exception.InvalidActuatorValueException;
 import com.insighton.core.domain.actuators.exception.InvalidServiceCredentialException;
 import com.insighton.core.domain.actuators.repository.ActuatorRepository;
 import com.insighton.core.domain.actuators.service.ActuatorService;
+import com.insighton.core.usecase.actuator.GetActuatorRunLogsForReportUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -30,7 +30,7 @@ import java.util.Map;
 public class ActuatorInternalController {
 
 
-    private final ActuatorRunLogService actuatorRunLogService;
+    private final GetActuatorRunLogsForReportUseCase getActuatorRunLogsForReportUseCase;
     private final ActuatorService actuatorService;
     private final ActuatorRepository actuatorRepository;
 
@@ -42,7 +42,7 @@ public class ActuatorInternalController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime to) {
 
-        return ResponseEntity.ok(actuatorRunLogService.getRunLogsForReport(locationIds, from, to));
+        return ResponseEntity.ok(getActuatorRunLogsForReportUseCase.getRunLogsForReport(locationIds, from, to));
     }
 
 
@@ -72,14 +72,13 @@ public class ActuatorInternalController {
         // 요청받은 명령/값을 적용할 상태 맵으로 조립
         Map<String, Object> newState = Map.of(request.command(), request.commandValue());
 
-        // 검증을 먼저 전부 통과시킴 - 하나라도 실패하면 아래 적용 루프 자체가 안 돌아서 반쪽 적용 방지
-        for(Actuator actuator : actuators){
-            validateCommandValues(actuatorType, newState);
-        }
+        // 검증 먼저
+        validateCommandValues(actuatorType, newState);
+
         // 검증 통과 후 대상 액추에이터 전체에 동일하게 상태 적용 (보통 1개, 같은 타입이 여러 대면 전부)
         for (Actuator actuator : actuators) {
             actuatorService.updateActuatorState(
-                    null, null, actuator.getActuatorId(), newState, request.callerService());
+                    null, actuator.getActuatorId(), newState, request.callerService(), null);
         }
 
         return ResponseEntity.ok().build();
