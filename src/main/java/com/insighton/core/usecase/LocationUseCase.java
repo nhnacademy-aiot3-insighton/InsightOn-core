@@ -152,7 +152,7 @@ public class LocationUseCase {
         // sensors는 location 값만 null로 바꿔주기
         sensorService.detachLocationFromSensors(groupId, targetLocationId);
 
-        // actuators는 location_id가 NOT NULL FK라 null로 못 바꾸므로, 실행로그부터 함께 삭제
+        // actuator service에 액추에이터로그 삭제 후 액추에이터 삭제 로직이 있음
         actuatorService.deleteAllByLocationId(targetLocationId);
 
         // dashboards 삭제

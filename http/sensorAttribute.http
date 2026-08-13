@@ -29,9 +29,9 @@ POST {{baseUrl}}/internal/v1/metric-definitions
 Content-Type: application/json
 
 {
-  "metricKey": "co2",
-  "metricName": "이산화탄소",
-  "unit": "ppm"
+  "metricKey": "pm2.5",
+  "metricName": "미세먼지",
+  "unit": "㎍/㎥"
 }
 
 ### 센서 속성 목록 조회

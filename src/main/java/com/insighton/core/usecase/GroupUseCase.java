@@ -1,6 +1,7 @@
 package com.insighton.core.usecase;
 
 import com.insighton.core.common.annotation.UseCase;
+import com.insighton.core.domain.actuators.service.ActuatorService;
 import com.insighton.core.domain.dashboards.entity.Dashboard;
 import com.insighton.core.domain.dashboards.service.DashboardService;
 import com.insighton.core.domain.gateway.service.GatewayService;
@@ -35,6 +36,7 @@ public class GroupUseCase {
     private final DashboardService dashboardService;
     private final WidgetService widgetService;
     private final SensorService sensorService;
+    private final ActuatorService actuatorService;
 
     // ====================== Group Controller ======================
 
@@ -155,8 +157,8 @@ public class GroupUseCase {
             throw NoPermissionException.forAdmin(groupMember.getGroupMemberId());
         }
         gatewayService.deleteByGroupId(groupId);
-
         sensorService.deleteAll(groupId);
+        actuatorService.deleteAll(groupId);
 
         List<Long> locationIds = locationService.getLocationListByGroupId(groupId).stream()
                 .map(Location::getLocationId)
