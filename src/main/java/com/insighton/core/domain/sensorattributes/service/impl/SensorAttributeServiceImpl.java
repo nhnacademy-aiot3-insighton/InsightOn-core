@@ -52,7 +52,7 @@ public class SensorAttributeServiceImpl implements SensorAttributeService {
     public List<SensorAttributeResponse> getAllAttributeBySensorId(Long sensorId) {
 
         // 1. 해당 장치의 존재 유무 검증
-        Sensor entity = sensorRepository.findById(sensorId)
+        sensorRepository.findById(sensorId)
                 .orElseThrow(() -> new SensorNotFoundException(sensorId));
 
         // 2. DB에서 장치 속성 목록 조회 후 Enum 정보를 매핑하여 DTO로 변환
@@ -84,8 +84,9 @@ public class SensorAttributeServiceImpl implements SensorAttributeService {
     @Override
     @Transactional
     public void deleteAttribute(Long sensorId, String metricKey) {
-        SensorAttribute attribute = attributeRepository.findBySensorSensorIdAndMetricKey(sensorId, metricKey)
+        attributeRepository.findBySensorSensorIdAndMetricKey(sensorId, metricKey)
                 .orElseThrow(() -> new MetricKeyNotFoundException(metricKey));
+
 
         attributeRepository.deleteBySensorSensorIdAndMetricKey(sensorId, metricKey);
     }
