@@ -140,7 +140,7 @@ public class GroupMemberServiceImpl implements GroupMemberService {
         }
 
         // 3. targetUser가 Member권한일 때 Manager로 변경
-        targetMember.updateRole(targetMember.getGroupRole() == GroupMember.GroupRole.MANAGER ? GroupMember.GroupRole.MANAGER : GroupMember.GroupRole.MEMBER);
+        targetMember.updateRole(targetMember.getGroupRole() == GroupMember.GroupRole.MEMBER ? GroupMember.GroupRole.MANAGER : GroupMember.GroupRole.MEMBER);
     }
 
     @Override
