@@ -3,6 +3,7 @@ package com.insighton.core.controller.internal;
 import com.insighton.core.domain.actuatorrunlogs.dto.ActuatorRunLogInternalResponse;
 import com.insighton.core.domain.actuatorrunlogs.entity.CommandType;
 import com.insighton.core.domain.actuatorrunlogs.entity.ExecutedByType;
+import com.insighton.core.domain.actuatorrunlogs.service.ActuatorRunLogService;
 import com.insighton.core.domain.actuators.entity.Actuator;
 import com.insighton.core.domain.actuators.policy.ActuatorCommandPreset;
 import com.insighton.core.domain.actuators.dto.ActuatorCommandRequest;
@@ -12,7 +13,6 @@ import com.insighton.core.domain.actuators.exception.InvalidActuatorValueExcepti
 import com.insighton.core.domain.actuators.exception.InvalidServiceCredentialException;
 import com.insighton.core.domain.actuators.repository.ActuatorRepository;
 import com.insighton.core.domain.actuators.service.ActuatorService;
-import com.insighton.core.usecase.actuator.GetActuatorRunLogsForReportUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -30,19 +30,18 @@ import java.util.Map;
 public class ActuatorInternalController {
 
 
-    private final GetActuatorRunLogsForReportUseCase getActuatorRunLogsForReportUseCase;
+    private final ActuatorRunLogService actuatorRunLogService;
     private final ActuatorService actuatorService;
     private final ActuatorRepository actuatorRepository;
 
     // AI 리포트 생성 배치 전용 - location 범위/기간별 액추에이터 실행 원본 로그 조회
-    // AI 쪽에 아직 인증 헤더 자동부착 인터셉터가 없어서 required=false로 완화 (인터셉터 붙으면 true로 되돌릴 것)
     @GetMapping("/actuators/run-logs")
     public ResponseEntity<List<ActuatorRunLogInternalResponse>> getRunLogs(
             @RequestParam List<Long> locationIds,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime to) {
 
-        return ResponseEntity.ok(getActuatorRunLogsForReportUseCase.getRunLogsForReport(locationIds, from, to));
+        return ResponseEntity.ok(actuatorRunLogService.getRunLogsForReport(locationIds, from, to));
     }
 
 
@@ -51,7 +50,7 @@ public class ActuatorInternalController {
     @PutMapping("/locations/{location-id}/actuators/state")
     public ResponseEntity<Void> updateActuatorStateBySystem(
             @PathVariable("location-id") Long locationId,
-            @Valid @RequestBody ActuatorCommandRequest request) { // @Valid로 actuatorType/command/commandValue/callerService 빈값 여부 자동 검증
+            @Valid @RequestBody ActuatorCommandRequest request) {
 
         // 이 내부 API는 시스템(AI/RuleEngine)만 호출 가능 - USER가 오면 즉시 차단
         if(request.callerService() == ExecutedByType.USER){
