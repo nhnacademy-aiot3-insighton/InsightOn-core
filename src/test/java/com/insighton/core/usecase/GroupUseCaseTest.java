@@ -310,6 +310,7 @@ class GroupUseCaseTest {
             given(groupMemberService.validateGroupMembers(1L, 1L)).willReturn(mockMember);
 
             // when
+            managementUseCase.deleteGroup(1L, 1L, "testToken");
 
             // then
             verify(gatewayService, times(1)).deleteByGroupId(1L);
