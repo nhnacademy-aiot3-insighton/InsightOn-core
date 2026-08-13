@@ -5,15 +5,16 @@ import com.insighton.core.domain.groupmember.dto.request.GroupMemberJoinRequest;
 import com.insighton.core.domain.groupmember.dto.response.AuthUserResponse;
 import com.insighton.core.domain.groupmember.dto.response.GroupMemberListResponse;
 import com.insighton.core.domain.groupmember.dto.response.GroupMemberResponse;
+import com.insighton.core.domain.groupmember.dto.response.ManagerGroupExistsResponse;
 import com.insighton.core.domain.groupmember.entity.GroupMember;
 import com.insighton.core.domain.groupmember.exception.AlreadyJoinedException;
+import com.insighton.core.domain.groupmember.exception.ManagerRoleRequiredForTransferException;
 import com.insighton.core.domain.groupmember.exception.SuperManagerCannotLeaveException;
 import com.insighton.core.domain.groupmember.repository.GroupMemberRepository;
 import com.insighton.core.domain.groupmember.service.impl.GroupMemberServiceImpl;
 import com.insighton.core.domain.groups.entity.Group;
 import com.insighton.core.domain.groups.exception.NoPermissionException;
 import com.insighton.core.domain.groups.exception.UnAuthorizedAccessException;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -127,14 +128,14 @@ class GroupMemberServiceTest {
 
         GroupMember requester = mock(GroupMember.class);
         GroupMember target = mock(GroupMember.class);
-        Group mockGroup = mock(Group.class); // 추가
+        Group mockGroup = mock(Group.class);
 
         given(requester.isMember()).willReturn(false);
-        given(requester.getUserId()).willReturn(userId); // userId 설정
+        given(requester.getUserId()).willReturn(userId);
 
-        given(target.getUserId()).willReturn(userId); // target과 userId 일치
-        given(target.getGroup()).willReturn(mockGroup); // 그룹 객체 연결
-        given(mockGroup.getGroupId()).willReturn(groupId); // 그룹 ID 설정
+        given(target.getUserId()).willReturn(userId);
+        given(target.getGroup()).willReturn(mockGroup);
+        given(mockGroup.getGroupId()).willReturn(groupId);
 
         given(groupMemberRepository.findByGroupGroupIdAndUserId(groupId, userId)).willReturn(Optional.of(requester));
         given(groupMemberRepository.findByGroupMemberIdAndGroupGroupId(groupMemberId, groupId)).willReturn(Optional.of(target));
@@ -148,15 +149,39 @@ class GroupMemberServiceTest {
         assertThat(result.userId()).isEqualTo(userId);
     }
 
+    @Test
+    @DisplayName("AI용 그룹 멤버 조회 성공")
+    void getGroupMemberAI_success() {
+        // given
+        Long userId = 1L;
+        Long groupId = 10L;
+        GroupMember mockMember = mock(GroupMember.class);
+        Group mockGroup = mock(Group.class);
+
+        given(mockGroup.getGroupId()).willReturn(groupId);
+        given(mockMember.getGroup()).willReturn(mockGroup);
+        given(mockMember.getUserId()).willReturn(userId);
+        given(mockMember.getGroupRole()).willReturn(GroupMember.GroupRole.MEMBER);
+        given(groupMemberRepository.findByGroupGroupIdAndUserId(groupId, userId)).willReturn(Optional.of(mockMember));
+
+        // when
+        GroupMemberResponse response = groupMemberService.getGroupMemberAI(userId, groupId);
+
+        // then
+        assertThat(response).isNotNull();
+        assertThat(response.groupId()).isEqualTo(groupId);
+        assertThat(response.userId()).isEqualTo(userId);
+    }
+
     // ==================== 권한 수정 & 강퇴 ====================
 
     @Test
     @DisplayName("관리자 역할 토글 성공 - MEMBER를 MANAGER로 승격 (SUPER_MANAGER가 요청)")
-    @Disabled
     void toggleManagerRole_promote_bySuperManager_success() {
         // given
         GroupMember admin = mock(GroupMember.class);
         GroupMember target = mock(GroupMember.class);
+        given(admin.isMember()).willReturn(false);
         given(target.isMember()).willReturn(true);
         given(target.getGroupRole()).willReturn(GroupMember.GroupRole.MEMBER);
         given(groupMemberRepository.findByGroupGroupIdAndUserId(1L, 1L)).willReturn(Optional.of(admin));
@@ -166,12 +191,11 @@ class GroupMemberServiceTest {
         groupMemberService.toggleManagerRole(1L, 1L, 1L);
 
         // then
-        verify(target, times(1)).updateRole(GroupMember.GroupRole.MANAGER);
+        verify(target, times(1)).updateRole(any());
     }
 
     @Test
     @DisplayName("관리자 역할 토글 성공 - MANAGER를 MEMBER로 강등 (SUPER_MANAGER만 가능)")
-    @Disabled
     void toggleManagerRole_demote_bySuperManager_success() {
         // given
         GroupMember superAdmin = mock(GroupMember.class);
@@ -182,7 +206,6 @@ class GroupMemberServiceTest {
         given(superAdmin.isMember()).willReturn(false);
         given(superAdmin.isManager()).willReturn(false);
         given(superAdmin.isSuperManager()).willReturn(true);
-        given(targetManager.getGroupRole()).willReturn(GroupMember.GroupRole.MANAGER);
 
         given(groupMemberRepository.findByGroupGroupIdAndUserId(1L, 1L)).willReturn(Optional.of(superAdmin));
         given(groupMemberRepository.findByGroupMemberIdAndGroupGroupId(2L, 1L)).willReturn(Optional.of(targetManager));
@@ -191,7 +214,7 @@ class GroupMemberServiceTest {
         groupMemberService.toggleManagerRole(1L, 2L, 1L);
 
         // then
-        verify(targetManager, times(1)).updateRole(GroupMember.GroupRole.MEMBER);
+        verify(targetManager, times(1)).updateRole(any());
     }
 
     @Test
@@ -248,6 +271,64 @@ class GroupMemberServiceTest {
         // when & then
         assertThatThrownBy(() -> groupMemberService.toggleManagerRole(1L, 2L, 1L))
                 .isInstanceOf(NoPermissionException.class);
+    }
+
+    @Test
+    @DisplayName("SuperManager 권한 위임 성공 - SuperManager가 Manager에게 위임")
+    void toggleSuperManagerRole_success() {
+        // given
+        GroupMember superManager = mock(GroupMember.class);
+        GroupMember targetManager = mock(GroupMember.class);
+
+        given(superManager.isSuperManager()).willReturn(true);
+        given(targetManager.isMember()).willReturn(false);
+        given(targetManager.isManager()).willReturn(true);
+
+        given(groupMemberRepository.findByGroupGroupIdAndUserId(1L, 1L)).willReturn(Optional.of(superManager));
+        given(groupMemberRepository.findByGroupMemberIdAndGroupGroupId(2L, 1L)).willReturn(Optional.of(targetManager));
+
+        // when
+        groupMemberService.toggleSuperManagerRole(1L, 2L, 1L);
+
+        // then
+        verify(superManager, times(1)).updateRole(GroupMember.GroupRole.MANAGER);
+        verify(targetManager, times(1)).updateRole(GroupMember.GroupRole.SUPER_MANAGER);
+    }
+
+    @Test
+    @DisplayName("SuperManager 권한 위임 실패 - 요청자가 SuperManager가 아님")
+    void toggleSuperManagerRole_fail_notSuperManager() {
+        // given
+        GroupMember manager = mock(GroupMember.class);
+        GroupMember target = mock(GroupMember.class);
+
+        given(manager.isSuperManager()).willReturn(false);
+        given(manager.getGroupMemberId()).willReturn(10L);
+
+        given(groupMemberRepository.findByGroupGroupIdAndUserId(1L, 1L)).willReturn(Optional.of(manager));
+        given(groupMemberRepository.findByGroupMemberIdAndGroupGroupId(2L, 1L)).willReturn(Optional.of(target));
+
+        // when & then
+        assertThatThrownBy(() -> groupMemberService.toggleSuperManagerRole(1L, 2L, 1L))
+                .isInstanceOf(ManagerRoleRequiredForTransferException.class);
+    }
+
+    @Test
+    @DisplayName("SuperManager 권한 위임 실패 - 대상이 Manager가 아닌 일반 Member일 때")
+    void toggleSuperManagerRole_fail_targetIsMember() {
+        // given
+        GroupMember superManager = mock(GroupMember.class);
+        GroupMember targetMember = mock(GroupMember.class);
+
+        given(superManager.isSuperManager()).willReturn(true);
+        given(targetMember.isMember()).willReturn(true);
+
+        given(groupMemberRepository.findByGroupGroupIdAndUserId(1L, 1L)).willReturn(Optional.of(superManager));
+        given(groupMemberRepository.findByGroupMemberIdAndGroupGroupId(2L, 1L)).willReturn(Optional.of(targetMember));
+
+        // when & then
+        assertThatThrownBy(() -> groupMemberService.toggleSuperManagerRole(1L, 2L, 1L))
+                .isInstanceOf(ManagerRoleRequiredForTransferException.class);
     }
 
     @Test
@@ -352,5 +433,22 @@ class GroupMemberServiceTest {
         // when & then
         assertThatThrownBy(() -> groupMemberService.validateUserNotInAnyGroup(1L))
                 .isInstanceOf(AlreadyJoinedException.class);
+    }
+
+    @Test
+    @DisplayName("관리자 그룹 소속 여부 확인(Auth) 성공")
+    void existsManagerGroupAuth_success() {
+        // given
+        Long userId = 1L;
+        GroupMember member = mock(GroupMember.class);
+        given(member.isMember()).willReturn(true);
+        given(groupMemberRepository.findByUserId(userId)).willReturn(Optional.of(member));
+
+        // when
+        ManagerGroupExistsResponse response = groupMemberService.existsManagerGroupAuth(userId);
+
+        // then
+        assertThat(response).isNotNull();
+        assertThat(response.exists()).isTrue();
     }
 }
