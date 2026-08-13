@@ -17,7 +17,6 @@ import com.insighton.core.domain.widgets.repository.WidgetRepository;
 import com.insighton.core.domain.widgets.service.WidgetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZoneId;
@@ -143,7 +142,7 @@ public class WidgetServiceImpl implements WidgetService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public ChartDataResponse getWidgetChartData(Long targetWidgetId) {
 
         WidgetConfig config = getWidgetConfigFromCache(targetWidgetId);
@@ -154,7 +153,6 @@ public class WidgetServiceImpl implements WidgetService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void evictCacheForWidgetIds(List<Long> widgetIds) {
         if (widgetIds != null && !widgetIds.isEmpty()) {
             widgetIds.forEach(configCache::remove);

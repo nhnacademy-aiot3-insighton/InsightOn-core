@@ -1,5 +1,6 @@
 package com.insighton.core.usecase;
 
+import com.insighton.core.domain.dashboards.entity.Dashboard;
 import com.insighton.core.domain.dashboards.service.DashboardService;
 import com.insighton.core.domain.gateway.service.GatewayService;
 import com.insighton.core.domain.groupmember.dto.request.GroupMemberJoinRequest;
@@ -7,16 +8,19 @@ import com.insighton.core.domain.groupmember.entity.GroupMember;
 import com.insighton.core.domain.groupmember.exception.AlreadyJoinedException;
 import com.insighton.core.domain.groupmember.exception.GroupMemberNotFoundException;
 import com.insighton.core.domain.groupmember.service.GroupMemberService;
+import com.insighton.core.domain.groupregistration.exception.AlreadyRequestedException;
 import com.insighton.core.domain.groupregistration.service.GroupRegistrationService;
 import com.insighton.core.domain.groups.dto.request.GroupRequest;
 import com.insighton.core.domain.groups.dto.request.GroupUpdateRequest;
 import com.insighton.core.domain.groups.dto.response.GroupResponse;
 import com.insighton.core.domain.groups.entity.Group;
 import com.insighton.core.domain.groups.event.GroupDeletedEvent;
+import com.insighton.core.domain.groups.event.GroupRegionUpdateEvent;
 import com.insighton.core.domain.groups.exception.InviteTokenNotFoundException;
 import com.insighton.core.domain.groups.exception.NoPermissionException;
 import com.insighton.core.domain.groups.exception.UnAuthorizedAccessException;
 import com.insighton.core.domain.groups.service.GroupService;
+import com.insighton.core.domain.location.entity.Location;
 import com.insighton.core.domain.location.service.LocationService;
 import com.insighton.core.domain.sensors.service.SensorService;
 import com.insighton.core.domain.widgets.service.WidgetService;
@@ -28,6 +32,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -115,6 +121,21 @@ class GroupUseCaseTest {
                     .isInstanceOf(AlreadyJoinedException.class);
         }
 
+        @Test
+        @DisplayName("그룹 가입 실패 - 승인 대기 중인 신청서가 존재함")
+        void joinGroupByToken_alreadyRequested() {
+            // given
+            GroupMemberJoinRequest request = new GroupMemberJoinRequest("token", 1L);
+            Group mockGroup = mock(Group.class);
+            given(groupService.validateGroupByInviteToken("token")).willReturn(mockGroup);
+            willThrow(AlreadyRequestedException.of())
+                    .given(groupRegistrationService).validateNoPendingRequest(1L);
+
+            // when & then
+            assertThatThrownBy(() -> managementUseCase.joinGroupByToken(request))
+                    .isInstanceOf(AlreadyRequestedException.class);
+        }
+
         // ==================== 그룹 생성 ====================
 
         @Test
@@ -153,7 +174,7 @@ class GroupUseCaseTest {
         @DisplayName("그룹 수정 성공 - 어드민 권한 확인")
         void updateGroup_success() {
             // given
-            GroupUpdateRequest request = new GroupUpdateRequest("name", "desc", "loc");
+            GroupUpdateRequest request = new GroupUpdateRequest("name", "desc", null);
             given(groupMemberService.isGroupAdmin(1L, 1L)).willReturn(true);
 
             // when
@@ -161,6 +182,22 @@ class GroupUseCaseTest {
 
             // then
             verify(groupService, times(1)).updateGroup(request, 1L);
+            verifyNoInteractions(eventPublisher);
+        }
+
+        @Test
+        @DisplayName("그룹 수정 성공 - 지역 정보 변경 시 GroupRegionUpdateEvent 이벤트 발행")
+        void updateGroup_success_withRegionEvent() {
+            // given
+            GroupUpdateRequest request = new GroupUpdateRequest("name", "desc", "서울시 강남구");
+            given(groupMemberService.isGroupAdmin(1L, 1L)).willReturn(true);
+
+            // when
+            managementUseCase.updateGroup(request, 1L, 1L);
+
+            // then
+            verify(groupService, times(1)).updateGroup(request, 1L);
+            verify(eventPublisher, times(1)).publishEvent(any(GroupRegionUpdateEvent.class));
         }
 
         @Test
@@ -276,9 +313,10 @@ class GroupUseCaseTest {
 
             // then
             verify(gatewayService, times(1)).deleteByGroupId(1L);
-            verify(groupMemberService, times(1)).deleteGroupMemberAll(1L, 1L); // 멤버 전체 삭제 검증
+            verify(sensorService, times(1)).deleteAll(1L, 1L);
+            verify(groupMemberService, times(1)).deleteGroupMemberAll(1L, 1L);
             verify(locationService, times(1)).deleteLocationAll(1L);
-            verify(groupService, times(1)).deleteGroup(1L); // 그룹 엔티티 삭제 검증
+            verify(groupService, times(1)).deleteGroup(1L);
 
             verify(eventPublisher, times(1)).publishEvent(any(GroupDeletedEvent.class));
         }
@@ -300,16 +338,25 @@ class GroupUseCaseTest {
         }
 
         @Test
-        @DisplayName("Location 모두 삭제 성공")
+        @DisplayName("Location 모두 삭제 성공 - 연결된 대시보드 및 위젯도 삭제")
         void deleteLocationAll_success() {
             // given
             Long groupId = 1L;
+            Location mockLocation = mock(Location.class);
+            given(mockLocation.getLocationId()).willReturn(10L);
+            given(locationService.getLocationListByGroupId(groupId)).willReturn(List.of(mockLocation));
+
+            Dashboard mockDashboard = mock(Dashboard.class);
+            given(mockDashboard.getDashboardId()).willReturn(100L);
+            given(dashboardService.getDashboardEntity(10L)).willReturn(mockDashboard);
 
             // when
             managementUseCase.deleteLocationAll(groupId);
 
             // then
-            verify(locationService).deleteLocationAll(groupId);
+            verify(widgetService, times(1)).deleteAllWidget(100L);
+            verify(dashboardService, times(1)).deleteDashboard(10L);
+            verify(locationService, times(1)).deleteLocationAll(groupId);
         }
     }
 
