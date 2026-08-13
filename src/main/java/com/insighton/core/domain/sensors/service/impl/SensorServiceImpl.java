@@ -161,8 +161,16 @@ public class SensorServiceImpl implements SensorService {
     @Override
     @Transactional
     public void updateSensor(Long sensorId, SensorUpdateRequest request) {
-        // 아무 필드도 안 왔으면 의미없는 요청으로 간주
         if (request == null) {
+            throw new InvalidSensorValueException("변경할 값이 없습니다.");
+        }
+
+        boolean hasLocationName = request.locationName() != null && !request.locationName().isBlank();
+        boolean hasSensorName = request.sensorName() != null && !request.sensorName().isBlank();
+
+        // 둘 다 비어있으면(null 또는 빈 문자열) 의미없는 요청으로 간주 - 하나만 비어있으면
+        // 그 필드는 기존 값 유지로 취급하고 나머지 필드만 반영함
+        if (!hasLocationName && !hasSensorName) {
             throw new InvalidSensorValueException("변경할 값이 없습니다.");
         }
 
@@ -170,7 +178,7 @@ public class SensorServiceImpl implements SensorService {
                 .orElseThrow(() -> new SensorNotFoundException(sensorId));
 
 
-        if (request.locationName() != null) {
+        if (hasLocationName) {
             // 사용자는 locationId를 모르므로 센서가 속한 그룹 내에서 이름으로 찾음
             // (그룹 스코프로 찾기 때문에 다른 그룹 소속 location으로 잘못 옮겨질 걱정도 없음)
             Location location = locationsRepository.findByGroupGroupIdAndLocationName(
@@ -192,10 +200,7 @@ public class SensorServiceImpl implements SensorService {
             }
         }
 
-        if (request.sensorName() != null) {
-            if (request.sensorName().isBlank()) {
-                throw new InvalidSensorValueException("변경할 장치 이름은 빈 값일 수 없습니다.");
-            }
+        if (hasSensorName) {
             sensor.updateName(request.sensorName());
         }
     }
@@ -254,7 +259,7 @@ public class SensorServiceImpl implements SensorService {
             entities = sensorRepository.findById(id).map(List::of).orElse(List.of());
         } else if (eui != null && !eui.trim().isEmpty()) {
             entities = sensorRepository.findBySensorEui(eui).map(List::of).orElse(List.of());
-        } else if (request.locationName() != null) {
+        } else if (request.locationName() != null && !request.locationName().isBlank()){
             entities = sensorRepository.findByLocationLocationName(request.locationName());
         } else if (request.sensorName() != null && !request.sensorName().trim().isEmpty()) {
             entities = sensorRepository.findBySensorName(request.sensorName());
