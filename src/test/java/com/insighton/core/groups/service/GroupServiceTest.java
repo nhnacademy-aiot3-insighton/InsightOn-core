@@ -6,6 +6,7 @@ import com.insighton.core.domain.groups.dto.response.GroupAdminResponse;
 import com.insighton.core.domain.groups.dto.response.GroupResponse;
 import com.insighton.core.domain.groups.entity.Group;
 import com.insighton.core.domain.groups.exception.GroupNotFoundException;
+import com.insighton.core.domain.groups.exception.InvitationTokenMismatchException;
 import com.insighton.core.domain.groups.exception.InviteTokenNotFoundException;
 import com.insighton.core.domain.groups.exception.UnAuthorizedAccessException;
 import com.insighton.core.domain.groups.repository.GroupRepository;
@@ -159,6 +160,19 @@ public class GroupServiceTest {
             // when & then
             assertThatThrownBy(() -> groupService.deleteGroup(groupId))
                     .isInstanceOf(GroupNotFoundException.class);
+        }
+
+        @Test
+        @DisplayName("그룹 삭제 실패 - 초대 토큰 불일치")
+        void deleteGroup_tokenMismatch() {
+            // given
+            Long groupId = 1L;
+            Group mockGroup = mock(Group.class);
+            given(groupRepository.findById(groupId)).willReturn(Optional.of(mockGroup));
+
+            // when & then
+            assertThatThrownBy(() -> groupService.deleteGroup(groupId))
+                    .isInstanceOf(InvitationTokenMismatchException.class);
         }
 
         @Test

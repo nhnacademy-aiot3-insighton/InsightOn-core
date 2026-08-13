@@ -141,10 +141,11 @@ class GroupControllerTest {
         @DisplayName("그룹 삭제 성공")
         void deleteGroup_success() throws Exception {
             mockMvc.perform(delete("/api/v1/groups/{group-id}/delete", 1L)
-                            .header("X-USER-ID", 1L))
+                            .header("X-USER-ID", 1L)
+                            .param("inviteToken", "token"))
                     .andExpect(status().isNoContent());
 
-            verify(groupsUseCase).deleteGroup(1L, 1L);
+            verify(groupsUseCase).deleteGroup(1L, 1L, "token");
         }
     }
 

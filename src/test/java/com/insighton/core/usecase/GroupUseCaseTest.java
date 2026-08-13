@@ -273,7 +273,6 @@ class GroupUseCaseTest {
             given(groupMemberService.validateGroupMembers(1L, 1L)).willReturn(mockMember);
 
             // when
-            managementUseCase.deleteGroup(1L, 1L);
 
             // then
             verify(gatewayService, times(1)).deleteByGroupId(1L);
@@ -293,8 +292,10 @@ class GroupUseCaseTest {
             given(mockMember.getGroupMemberId()).willReturn(10L);
             given(groupMemberService.validateGroupMembers(1L, 1L)).willReturn(mockMember);
 
+            String token = "token";
+
             // when & then
-            assertThatThrownBy(() -> managementUseCase.deleteGroup(1L, 1L))
+            assertThatThrownBy(() -> managementUseCase.deleteGroup(1L, 1L, token))
                     .isInstanceOf(NoPermissionException.class);
         }
 
