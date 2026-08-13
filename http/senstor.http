@@ -22,7 +22,7 @@ GET {{baseUrl}}/api/v1/sensor/search?groupId={{groupId}}
 X-USER-ID: {{userId}}
 
 ### 센서 검색 - locationId 조건 추가
-GET {{baseUrl}}/api/v1/sensor/search?groupId={{groupId}}&locationId={{locationId}}
+GET {{baseUrl}}/api/v1/sensor/search?groupId={{groupId}}&locationName={{locationName}}
 X-USER-ID: {{userId}}
 
 ### 센서 검색 - id로 좁혀서 조회

@@ -21,6 +21,6 @@ INSERT INTO sensors (sensor_id, gateway_id, group_id, location_id, sensor_name, 
 VALUES (1, 1, 1, NULL, '속성테스트센서', 'EUI-ATTR-1', CURRENT_TIMESTAMP);
 
 -- 4. 센서 속성 생성 (sensor_attribute_id, sensor_id 컬럼 사용)
-INSERT INTO sensor_attributes (sensor_attribute_id, sensor_id, group_id, metric_key, current_value_str)
-VALUES (1, 1, 1, 'co2', '0'),
-       (2, 1, 1, 'humidity', '0');
+INSERT INTO sensor_attributes (sensor_attribute_id, sensor_id, metric_key)
+VALUES (1, 1, 'co2'),
+       (2, 1, 'humidity');
