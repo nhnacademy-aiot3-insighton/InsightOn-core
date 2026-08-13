@@ -8,19 +8,16 @@ import com.insighton.core.domain.groupregistration.exception.AlreadyProcessedExc
 import com.insighton.core.domain.groupregistration.exception.AlreadyRequestedException;
 import com.insighton.core.domain.groupregistration.exception.GroupRegistrationNotFoundException;
 import com.insighton.core.domain.groupregistration.exception.UnauthorizedGroupRegistrationAccessException;
-import com.insighton.core.domain.groups.exception.GroupNotFoundException;
-import com.insighton.core.domain.groups.exception.InviteTokenNotFoundException;
-import com.insighton.core.domain.groups.exception.NoPermissionException;
-import com.insighton.core.domain.groups.exception.UnAuthorizedAccessException;
+import com.insighton.core.domain.groups.exception.*;
 import com.insighton.core.domain.location.exception.EmptyValueException;
 import com.insighton.core.domain.location.exception.LocationNotFoundException;
+import com.insighton.core.domain.region.exception.RegionNotFoundException;
 import com.insighton.core.domain.sensorattributes.exception.MetricKeyAlreadyExistsException;
 import com.insighton.core.domain.sensorattributes.exception.MetricKeyNotFoundException;
 import com.insighton.core.domain.sensors.exception.InvalidSensorValueException;
 import com.insighton.core.domain.sensors.exception.SensorNotFoundException;
 import com.insighton.core.domain.widgets.exception.AlreadyDashboardSaveException;
 import com.insighton.core.domain.widgets.exception.InvalidDateTimeFormatException;
-import com.insighton.core.domain.region.exception.RegionNotFoundException;
 import com.insighton.core.domain.widgets.exception.WidgetConfigNotFoundException;
 import com.insighton.core.domain.widgets.exception.WidgetNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -72,7 +69,8 @@ public class GlobalExceptionHandler {
             InvalidActuatorValueException.class, InvalidSensorValueException.class,
             CouldNotAbleToUpdateByUserToSystem.class, EmptyValueException.class,
             InvalidGatewayConnectionConfigException.class, InvalidGatewayValueException.class,
-            RegionNotFoundException.class, InvalidDateTimeFormatException.class
+            RegionNotFoundException.class, InvalidDateTimeFormatException.class,
+            InvitationTokenMismatchException.class
     })
     public ResponseEntity<ErrorResponse> handleBadRequest(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)

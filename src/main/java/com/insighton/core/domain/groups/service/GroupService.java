@@ -76,4 +76,12 @@ public interface GroupService {
      * @return group 반환
      */
     Group groupFindById(Long groupId);
+
+    /**
+     * token이 일치하는지 검증
+     *
+     * @param groupId     삭제하고자 하는 group ID
+     * @param inviteToken 검증할 초대 토큰
+     */
+    void validateInviteToken(Long groupId, String inviteToken);
 }
