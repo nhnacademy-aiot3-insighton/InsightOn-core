@@ -16,6 +16,7 @@ import com.insighton.core.domain.groups.exception.NoPermissionException;
 import com.insighton.core.domain.groups.exception.UnAuthorizedAccessException;
 import com.insighton.core.domain.groups.service.GroupService;
 import com.insighton.core.domain.location.service.LocationService;
+import com.insighton.core.domain.actuators.service.ActuatorService;
 import com.insighton.core.domain.sensors.service.SensorService;
 import com.insighton.core.domain.widgets.service.WidgetService;
 import org.junit.jupiter.api.DisplayName;
@@ -59,6 +60,9 @@ class GroupUseCaseTest {
 
     @Mock
     private SensorService sensorService;
+
+    @Mock
+    private ActuatorService actuatorService;
 
     @InjectMocks
     private GroupUseCase managementUseCase;
