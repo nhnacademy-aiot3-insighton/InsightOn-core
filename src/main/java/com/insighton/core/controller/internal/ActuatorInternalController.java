@@ -1,7 +1,6 @@
 package com.insighton.core.controller.internal;
 
 import com.insighton.core.domain.actuatorrunlogs.dto.ActuatorRunLogInternalResponse;
-import com.insighton.core.domain.actuatorrunlogs.entity.CommandType;
 import com.insighton.core.domain.actuatorrunlogs.entity.ExecutedByType;
 import com.insighton.core.domain.actuatorrunlogs.service.ActuatorRunLogService;
 import com.insighton.core.domain.actuators.entity.Actuator;
@@ -72,7 +71,7 @@ public class ActuatorInternalController {
         Map<String, Object> newState = Map.of(request.command(), request.commandValue());
 
         // 검증 먼저
-        validateCommandValues(actuatorType, newState);
+        ActuatorCommandPreset.validateCommandValues(actuatorType, newState);
 
         // 검증 통과 후 대상 액추에이터 전체에 동일하게 상태 적용 (보통 1개, 같은 타입이 여러 대면 전부)
         for (Actuator actuator : actuators) {
@@ -91,20 +90,6 @@ public class ActuatorInternalController {
         } catch (IllegalArgumentException e) {
             throw new InvalidActuatorValueException("알 수 없는 actuatorType입니다: " + actuatorType);
         }
-    }
-
-
-    // newState의 각 키/값이 이 액추에이터 타입에서 실제로 허용되는 명령/값인지 검증
-    private void validateCommandValues(ActuatorType actuatorType, Map<String, Object> newState) {
-        newState.forEach((key, value) -> {
-            CommandType commandType = CommandType.fromStateKey(key)
-                    .orElseThrow(() -> new InvalidActuatorValueException("알 수 없는 제어 명령키: " + key));
-            String stringValue = String.valueOf(value);
-            if (!ActuatorCommandPreset.isValidValue(actuatorType, commandType, stringValue)) {
-                throw new InvalidActuatorValueException(
-                        "허용되지 않은 명령 값입니다. (commandType=" + commandType + ", value=" + stringValue + ")");
-            }
-        });
     }
 
 }
