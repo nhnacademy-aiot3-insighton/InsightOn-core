@@ -1,7 +1,7 @@
 ### 전역 변수 설정
 @baseUrl = http://localhost:8080
 @userId = 1
-@groupId = 2
+@groupId = 5
 @userRole = ADMIN
 @inviteToken = da03414095a1
 
@@ -41,7 +41,7 @@ X-USER-ID: {{userId}}
 {
   "name": "테스트 회사 C 수정",
   "description": "http test 위한 테스트 회사 수정",
-  "groupRegion": "광주광역시 남구"
+  "groupRegion": null
 }
 
 ### 7. 그룹 삭제
