@@ -7,6 +7,7 @@ import com.insighton.core.domain.groups.dto.request.GroupUpdateRequest;
 import com.insighton.core.domain.groups.dto.response.GroupAdminResponse;
 import com.insighton.core.domain.groups.dto.response.GroupResponse;
 import com.insighton.core.domain.groups.service.GroupService;
+import com.insighton.core.usecase.GroupDeleteUseCase;
 import com.insighton.core.usecase.GroupUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -45,6 +46,9 @@ class GroupControllerTest {
 
     @MockitoBean
     private GroupService groupService;
+
+    @MockitoBean
+    private GroupDeleteUseCase groupDeleteUseCase;
 
     @Nested
     @DisplayName("성공 케이스")
@@ -145,7 +149,7 @@ class GroupControllerTest {
                             .param("inviteToken", "token"))
                     .andExpect(status().isNoContent());
 
-            verify(groupsUseCase).deleteGroup(1L, 1L, "token");
+            verify(groupDeleteUseCase).deleteGroup(1L, 1L, "token");
         }
     }
 
