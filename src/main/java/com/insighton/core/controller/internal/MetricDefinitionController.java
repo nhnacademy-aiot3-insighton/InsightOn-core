@@ -2,8 +2,7 @@ package com.insighton.core.controller.internal;
 
 import com.insighton.core.domain.sensorattributes.dto.MetricDefinitionCreateRequest;
 import com.insighton.core.domain.sensorattributes.dto.MetricDefinitionResponse;
-import com.insighton.core.usecase.sensorattribute.CreateMetricUseCase;
-import com.insighton.core.usecase.sensorattribute.GetAllMetricUseCase;
+import com.insighton.core.domain.sensorattributes.service.SensorAttributeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,17 +16,16 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MetricDefinitionController {
 
-    private final GetAllMetricUseCase getAllMetricDefinition;
-    private final CreateMetricUseCase createMetricDefinition;
+    private final SensorAttributeService sensorAttributeService;
 
     @GetMapping
     public ResponseEntity<List<MetricDefinitionResponse>> getAllMetricDefinitions(){
-        return ResponseEntity.ok(getAllMetricDefinition.getAllMetric());
+        return ResponseEntity.ok(sensorAttributeService.getAllMetricDefinitions());
     }
 
     @PostMapping
     public ResponseEntity<Void> createMetricDefinition(@Valid @RequestBody MetricDefinitionCreateRequest request) {
-        createMetricDefinition.createMetric(request);
+        sensorAttributeService.createMetricDefinition(request);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 }
