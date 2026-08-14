@@ -1,5 +1,6 @@
 package com.insighton.core.adapter.mqtt.cache;
 
+import com.insighton.core.domain.sensors.event.SensorCacheEvictEvent;
 import com.insighton.core.domain.sensors.event.SensorCacheSyncEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -17,5 +18,11 @@ public class SensorCacheEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onSensorCacheSync(SensorCacheSyncEvent event) {
         sensorLookupCacheService.populate(event.cacheEntry());
+    }
+
+    // 삭재
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onSensorCacheEvict(SensorCacheEvictEvent event) {
+        sensorLookupCacheService.evict(event.sensorEui());
     }
 }

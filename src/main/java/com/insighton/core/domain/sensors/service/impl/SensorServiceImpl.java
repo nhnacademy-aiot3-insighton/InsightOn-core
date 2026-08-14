@@ -18,6 +18,7 @@ import com.insighton.core.adapter.mqtt.cache.dto.SensorCacheEntry;
 import com.insighton.core.domain.sensors.dto.SensorResponse;
 import com.insighton.core.domain.sensors.dto.SensorUpdateRequest;
 import com.insighton.core.domain.sensors.entity.Sensor;
+import com.insighton.core.domain.sensors.event.SensorCacheEvictEvent;
 import com.insighton.core.domain.sensors.event.SensorCacheSyncEvent;
 import com.insighton.core.domain.sensors.exception.InvalidSensorValueException;
 import com.insighton.core.domain.sensors.exception.SensorNotFoundException;
@@ -153,7 +154,11 @@ public class SensorServiceImpl implements SensorService {
         for (Sensor sensor : sensors) {
             sensor.updateLocation(null);
 
-            sensorLookupCacheService.evict(sensor.getSensorEui());
+            // 캐시 무효화는 바로 안 하고 이벤트만 발행 - 이 뒤로 액추에이터/대시보드/위치 삭제가 더 남아있어서
+            // 그 중 하나라도 실패해 트랜잭션이 롤백되면, 커밋 전에 이미 evict된 캐시만 남는 정합성 문제가 생길 수 있음
+            if (sensor.getSensorEui() != null) {
+                eventPublisher.publishEvent(new SensorCacheEvictEvent(sensor.getSensorEui()));
+            }
         }
     }
 
