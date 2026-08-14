@@ -21,7 +21,7 @@ X-USER-ID: {{userId}}
 GET {{baseUrl}}/api/v1/sensor/search?groupId={{groupId}}
 X-USER-ID: {{userId}}
 
-### 센서 검색 - locationId 조건 추가
+### 센서 검색 - locationName 조건 추가
 GET {{baseUrl}}/api/v1/sensor/search?groupId={{groupId}}&locationName={{locationName}}
 X-USER-ID: {{userId}}
 
