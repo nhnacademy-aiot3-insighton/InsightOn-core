@@ -1,6 +1,5 @@
 package com.insighton.core.domain.groupregistration.service;
 
-import com.insighton.core.domain.groupregistration.dto.CreateGroupRegistrationRequest;
 import com.insighton.core.domain.groupregistration.dto.GroupRegistrationResponse;
 import com.insighton.core.domain.groupregistration.entity.GroupRegistration;
 import com.insighton.core.domain.groupregistration.entity.GroupRegistrationStatus;
@@ -28,11 +27,11 @@ public class GroupRegistrationService {
     private final GroupRegistrationMapper groupRegistrationMapper;
 
     @Transactional
-    public GroupRegistrationResponse createRequest(Long requesterId, CreateGroupRegistrationRequest request) {
+    public GroupRegistrationResponse createRequest(Long requesterId, String groupName, String description, String groupRegion) {
         if (groupRegistrationRepository.existsByRequesterIdAndStatus(requesterId, GroupRegistrationStatus.PENDING)) {
             throw AlreadyRequestedException.of();
         }
-        GroupRegistration groupRegistration = GroupRegistration.create(requesterId, request.groupName(), request.description(), request.groupRegion());
+        GroupRegistration groupRegistration = GroupRegistration.create(requesterId, groupName, description, groupRegion);
         try {
             GroupRegistration saved = groupRegistrationRepository.save(groupRegistration);
             groupRegistrationRepository.flush();

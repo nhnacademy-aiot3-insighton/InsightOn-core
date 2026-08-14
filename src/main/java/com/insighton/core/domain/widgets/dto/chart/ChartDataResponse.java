@@ -1,5 +1,7 @@
 package com.insighton.core.domain.widgets.dto.chart;
 
+import lombok.Builder;
+
 import java.util.List;
 
 /**
@@ -8,6 +10,7 @@ import java.util.List;
  * @param labels   x축 [예시 : "10:00", "10:15", "10:30"]
  * @param datasets y축 데이터선들의 리스트
  */
+@Builder
 public record ChartDataResponse(
         List<String> labels,
         List<ChartDataset> datasets

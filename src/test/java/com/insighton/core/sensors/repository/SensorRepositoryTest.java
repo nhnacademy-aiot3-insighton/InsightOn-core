@@ -42,9 +42,9 @@ class SensorRepositoryTest {
     }
 
     @Test
-    @DisplayName("findByLocationsIdLocationId - 위치 ID로 조회 성공")
-    void 위치ID로_조회() {
-        List<Sensor> result = sensorRepository.findByLocationLocationId(1L);
+    @DisplayName("findByLocationLocationName - 위치 이름으로 조회 성공")
+    void 위치이름으로_조회() {
+        List<Sensor> result = sensorRepository.findByLocationLocationName("4층 개발팀");
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getSensorEui()).isEqualTo("EUI-104");

@@ -9,8 +9,8 @@ import jakarta.validation.constraints.Size;
 import java.util.Map;
 
 public record ActuatorRequest(
-        @NotNull(message = "설치 구역 ID는 필수입니다")
-        Long locationId, // 설치 구역 PK
+        @NotBlank(message = "설치 구역 이름은 필수입니다")
+        String locationName, // 설치 구역 이름 - 사용자는 locationId를 모르므로 이름으로 받음
 
         @NotBlank(message = "장비 이름 필수")
         @Size(max = 100, message = "장비 이름은 100자를 넘을 수 없습니다")

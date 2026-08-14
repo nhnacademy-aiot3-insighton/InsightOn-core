@@ -1,8 +1,8 @@
 ### 전역 변수 설정
 @baseUrl = http://localhost:8080
-@userId = 2
-@groupId = 2
-@targetMemberId = 4
+@userId = 1
+@groupId = 5
+@targetMemberId = 5
 
 ### 1-1. 그룹 멤버 리스트 조회
 GET {{baseUrl}}/api/v1/groups/{{groupId}}/members

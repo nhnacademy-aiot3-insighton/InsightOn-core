@@ -2,6 +2,7 @@ package com.insighton.core.domain.groups.service;
 
 
 import com.insighton.core.domain.groups.dto.request.GroupRequest;
+import com.insighton.core.domain.groups.dto.request.GroupUpdateRequest;
 import com.insighton.core.domain.groups.dto.response.GroupAdminResponse;
 import com.insighton.core.domain.groups.dto.response.GroupResponse;
 import com.insighton.core.domain.groups.entity.Group;
@@ -23,7 +24,7 @@ public interface GroupService {
      * @param request Group 수정 요청 정보
      * @param groupId 수정하려는 group의 ID
      */
-    void updateGroup(GroupRequest request, Long groupId);
+    void updateGroup(GroupUpdateRequest request, Long groupId);
 
 
     /**
@@ -75,4 +76,20 @@ public interface GroupService {
      * @return group 반환
      */
     Group groupFindById(Long groupId);
+
+    /**
+     * token이 일치하는지 검증
+     *
+     * @param groupId     삭제하고자 하는 group ID
+     * @param inviteToken 검증할 초대 토큰
+     */
+    void validateInviteToken(Long groupId, String inviteToken);
+
+    /**
+     * 비관적 락을 적용하여 그룹 엔티티 조회 (동시성 제어용)
+     *
+     * @param groupId 찾으려는 Group ID
+     * @return 락이 걸린 Group 반환
+     */
+    Group findWithLockByGroupId(Long groupId);
 }
