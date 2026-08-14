@@ -24,7 +24,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(MetricDefinitionController.class)
-@Disabled
 class MetricDefinitionControllerTest {
 
     @Autowired private MockMvc mockMvc;
@@ -38,7 +37,7 @@ class MetricDefinitionControllerTest {
         given(attributeService.getAllMetricDefinitions())
                 .willReturn(List.of(new MetricDefinitionResponse("co2", "이산화탄소", "ppm")));
 
-        mockMvc.perform(get("/internal/metric-definitions"))
+        mockMvc.perform(get("/internal/v1/metric-definitions"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].metricKey").value("co2"));
     }
@@ -48,7 +47,7 @@ class MetricDefinitionControllerTest {
     void 등록_성공() throws Exception {
         MetricDefinitionCreateRequest request = new MetricDefinitionCreateRequest("pm2.5", "미세먼지", "㎍/㎥");
 
-        mockMvc.perform(post("/internal/metric-definitions")
+        mockMvc.perform(post("/internal/v1/metric-definitions")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated());
@@ -62,7 +61,7 @@ class MetricDefinitionControllerTest {
 
         MetricDefinitionCreateRequest request = new MetricDefinitionCreateRequest("co2", "이산화탄소", "ppm");
 
-        mockMvc.perform(post("/internal/metric-definitions")
+        mockMvc.perform(post("/internal/v1/metric-definitions")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict());
@@ -73,7 +72,7 @@ class MetricDefinitionControllerTest {
     void 등록_필수값누락_400() throws Exception {
         String invalidJson = "{\"metricKey\":\"\",\"metricName\":\"\",\"unit\":\"ppm\"}";
 
-        mockMvc.perform(post("/internal/metric-definitions")
+        mockMvc.perform(post("/internal/v1/metric-definitions")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalidJson))
                 .andExpect(status().isBadRequest());
