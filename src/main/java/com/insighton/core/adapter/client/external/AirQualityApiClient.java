@@ -47,13 +47,14 @@ public class AirQualityApiClient {
         if (response != null && response.response() != null && response.response().body() != null) {
             List<Item> items = response.response().body().items();
             if (items != null && !items.isEmpty()) {
-                AirQualityResponseDto.Item selectedItem = items.stream()
+                Item selectedItem = items.stream()
                         .filter(item -> item.cityName() != null && item.cityName().equals(cityName))
                         .findFirst()
                         .orElseGet(() -> items.stream()
                                 .filter(item -> item.stationName() != null && item.stationName().contains(cityName))
                                 .findFirst()
-                                .orElse(items.get(0)));
+                                .orElseThrow(
+                                        () -> new WeatherApiException("해당 지역의 미세먼지 측정소 정보를 찾을 수 없습니다.: " + cityName)));
 
                 resultMap.put("pm10Value", selectedItem.pm10Value());
                 resultMap.put("pm25Value", selectedItem.pm25Value());
