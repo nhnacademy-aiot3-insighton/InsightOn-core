@@ -15,5 +15,6 @@ public record LocationListResponse(
         Long locationId,
         String locationName,
         Location.AutoControlMode autoControlMode
+        // 생성일자 추가
 ) {
 }
