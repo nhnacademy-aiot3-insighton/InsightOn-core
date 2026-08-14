@@ -1,13 +1,17 @@
 package com.insighton.core.sensors.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.insighton.core.domain.location.exception.LocationNotFoundException;
 import com.insighton.core.controller.api.SensorController;
+import com.insighton.core.domain.location.exception.LocationNotFoundException;
 import com.insighton.core.domain.sensors.dto.SensorResponse;
 import com.insighton.core.domain.sensors.dto.SensorUpdateRequest;
-import com.insighton.core.domain.sensors.exception.SensorNotFoundException;
 import com.insighton.core.domain.sensors.exception.InvalidSensorValueException;
-import com.insighton.core.domain.sensors.service.SensorService;
+import com.insighton.core.domain.sensors.exception.SensorNotFoundException;
+import com.insighton.core.usecase.sensor.DeleteAllSensorUseCase;
+import com.insighton.core.usecase.sensor.DeleteSensorUseCase;
+import com.insighton.core.usecase.sensor.GetSensorUseCase;
+import com.insighton.core.usecase.sensor.SearchSensorUseCase;
+import com.insighton.core.usecase.sensor.UpdateSensorUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +25,7 @@ import java.time.OffsetDateTime;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -34,8 +39,11 @@ class SensorControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
-    private SensorService sensorService;
+    @MockBean private GetSensorUseCase getSensorUseCase;
+    @MockBean private SearchSensorUseCase searchSensorUseCase;
+    @MockBean private UpdateSensorUseCase updateSensorUseCase;
+    @MockBean private DeleteSensorUseCase deleteSensorUseCase;
+    @MockBean private DeleteAllSensorUseCase deleteAllSensorUseCase;
 
     private SensorResponse sampleResponse() {
         return new SensorResponse(
@@ -48,7 +56,7 @@ class SensorControllerTest {
     @Test
     @DisplayName("단일 센서 조회 성공")
     void 센서_조회_성공() throws Exception {
-        given(sensorService.getSensorById(eq(1L), eq(1L))).willReturn(sampleResponse());
+        given(getSensorUseCase.getSensorById(1L, 1L)).willReturn(sampleResponse());
 
         mockMvc.perform(get("/api/v1/sensor/{id}", 1L)
                         .header("X-USER-ID", 1L))
@@ -60,7 +68,7 @@ class SensorControllerTest {
     @Test
     @DisplayName("존재하지 않는 센서 조회 시 404")
     void 센서_조회_실패_404() throws Exception {
-        given(sensorService.getSensorById(anyLong(), anyLong()))
+        given(getSensorUseCase.getSensorById(anyLong(), anyLong()))
                 .willThrow(new SensorNotFoundException(999L));
 
         mockMvc.perform(get("/api/v1/sensor/{id}", 999L)
@@ -77,7 +85,24 @@ class SensorControllerTest {
     }
 
     @Test
-    @DisplayName("위치만 수정 - 이름은 null로 그대로 전달됨")
+    @DisplayName("검색 성공 - locationName/sensorName이 SensorUpdateRequest로 묶여서 전달됨")
+    void 검색_성공() throws Exception {
+        given(searchSensorUseCase.searchSensors(eq(1L), eq(5L), isNull(), isNull(), any(SensorUpdateRequest.class)))
+                .willReturn(java.util.List.of(sampleResponse()));
+
+        mockMvc.perform(get("/api/v1/sensor/search")
+                        .header("X-USER-ID", 1L)
+                        .param("groupId", "5")
+                        .param("locationName", "4층")
+                        .param("sensorName", "CO2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1));
+
+        verify(searchSensorUseCase).searchSensors(1L, 5L, null, null, new SensorUpdateRequest("4층", "CO2"));
+    }
+
+    @Test
+    @DisplayName("위치만 수정 성공")
     void 위치만_수정_성공() throws Exception {
         SensorUpdateRequest request = new SensorUpdateRequest("4층", null);
 
@@ -87,11 +112,11 @@ class SensorControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNoContent());
 
-        verify(sensorService).updateSensor(1L, 1L, "4층", null);
+        verify(updateSensorUseCase).updateSensor(1L, 1L, request);
     }
 
     @Test
-    @DisplayName("이름만 수정 - 위치는 null로 그대로 전달됨")
+    @DisplayName("이름만 수정 성공")
     void 이름만_수정_성공() throws Exception {
         SensorUpdateRequest request = new SensorUpdateRequest(null, "새 이름");
 
@@ -101,25 +126,11 @@ class SensorControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNoContent());
 
-        verify(sensorService).updateSensor(1L, 1L, null, "새 이름");
+        verify(updateSensorUseCase).updateSensor(1L, 1L, request);
     }
 
     @Test
-    @DisplayName("위치와 이름 둘 다 수정 성공")
-    void 위치_이름_둘다_수정_성공() throws Exception {
-        SensorUpdateRequest request = new SensorUpdateRequest("4층", "새 이름");
-
-        mockMvc.perform(put("/api/v1/sensor/{id}", 1L)
-                        .header("X-USER-ID", 1L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isNoContent());
-
-        verify(sensorService).updateSensor(1L, 1L, "4층", "새 이름");
-    }
-
-    @Test
-    @DisplayName("이름이 100자를 넘으면 @Valid에 걸려 400, 서비스는 호출 안 됨")
+    @DisplayName("이름이 100자를 넘으면 @Valid에 걸려 400, UseCase는 호출 안 됨")
     void 이름_길이초과_400() throws Exception {
         String tooLong = "가".repeat(101);
         SensorUpdateRequest request = new SensorUpdateRequest(null, tooLong);
@@ -130,8 +141,7 @@ class SensorControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
 
-        verify(sensorService, org.mockito.Mockito.never())
-                .updateSensor(anyLong(), anyLong(), any(), anyString());
+        verify(updateSensorUseCase, never()).updateSensor(anyLong(), anyLong(), any());
     }
 
     @Test
@@ -140,7 +150,7 @@ class SensorControllerTest {
         SensorUpdateRequest request = new SensorUpdateRequest(null, "   ");
 
         willThrow(new InvalidSensorValueException("변경할 장치 이름은 빈 값일 수 없습니다."))
-                .given(sensorService).updateSensor(anyLong(), anyLong(), any(), anyString());
+                .given(updateSensorUseCase).updateSensor(anyLong(), anyLong(), any());
 
         mockMvc.perform(put("/api/v1/sensor/{id}", 1L)
                         .header("X-USER-ID", 1L)
@@ -155,7 +165,7 @@ class SensorControllerTest {
         SensorUpdateRequest request = new SensorUpdateRequest("없는위치", null);
 
         willThrow(LocationNotFoundException.notFoundLocationByName("없는위치"))
-                .given(sensorService).updateSensor(anyLong(), anyLong(), any(), any());
+                .given(updateSensorUseCase).updateSensor(anyLong(), anyLong(), any());
 
         mockMvc.perform(put("/api/v1/sensor/{id}", 1L)
                         .header("X-USER-ID", 1L)
@@ -164,7 +174,6 @@ class SensorControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-
     @Test
     @DisplayName("단일 센서 삭제 성공")
     void 센서_삭제_성공() throws Exception {
@@ -172,7 +181,7 @@ class SensorControllerTest {
                         .header("X-USER-ID", 1L))
                 .andExpect(status().isNoContent());
 
-        verify(sensorService).deleteSensor(1L, 1L);
+        verify(deleteSensorUseCase).deleteSensor(1L, 1L);
     }
 
     @Test
@@ -183,6 +192,6 @@ class SensorControllerTest {
                         .param("groupId", "5"))
                 .andExpect(status().isNoContent());
 
-        verify(sensorService).deleteAll(1L, 5L);
+        verify(deleteAllSensorUseCase).deleteAll(1L, 5L);
     }
 }

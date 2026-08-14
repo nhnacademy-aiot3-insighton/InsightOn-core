@@ -2,7 +2,6 @@ package com.insighton.core.sensorattributes.repository;
 
 import com.insighton.core.domain.sensorattributes.entity.SensorAttribute;
 import com.insighton.core.domain.sensorattributes.repository.SensorAttributeRepository;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +15,6 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Disabled
 @DataJpaTest
 @ActiveProfiles("test")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
