@@ -1,4 +1,4 @@
-package com.insighton.core.sensor_attributes.controller;
+package com.insighton.core.sensorattributes.controller;
 
 import com.insighton.core.controller.api.SensorAttributeController;
 import com.insighton.core.domain.sensorattributes.dto.SensorAttributeResponse;

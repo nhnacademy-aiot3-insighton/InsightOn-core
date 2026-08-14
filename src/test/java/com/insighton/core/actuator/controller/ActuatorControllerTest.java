@@ -36,7 +36,7 @@ class ActuatorControllerTest {
     @Test
     @DisplayName("액추에이터 생성 성공")
     void 생성_성공() throws Exception {
-        ActuatorRequest request = new ActuatorRequest(1L, "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"));
+        ActuatorRequest request = new ActuatorRequest("회의실", "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"));
         given(actuatorService.createActuator(eq(1L), eq(10L), any())).willReturn(100L);
 
         mockMvc.perform(post("/api/v1/groups/{group-id}/actuators", 10L)
@@ -71,6 +71,21 @@ class ActuatorControllerTest {
     }
 
     @Test
+    @DisplayName("이름 수정 성공")
+    void 이름수정_성공() throws Exception {
+        ActuatorNameUpdateRequest request = new ActuatorNameUpdateRequest("새 이름");
+
+        mockMvc.perform(put("/api/v1/groups/{group-id}/actuators/{id}/name", 10L, 1L)
+                        .header("X-USER-ID", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNoContent()); // 지난번에 200 -> 204로 바꾼 부분
+
+        verify(actuatorService).updateActuatorName(1L, 10L, 1L, "새 이름");
+    }
+
+
+    @Test
     @DisplayName("이름 수정 - 빈 값이면 @Valid에 걸려 400")
     void 이름수정_빈값_400() throws Exception {
         ActuatorNameUpdateRequest request = new ActuatorNameUpdateRequest(" ");
@@ -87,7 +102,7 @@ class ActuatorControllerTest {
     void 삭제_성공() throws Exception {
         mockMvc.perform(delete("/api/v1/groups/{group-id}/actuators/{id}", 10L, 1L)
                         .header("X-USER-ID", 1L))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         verify(actuatorService).deleteActuatorById(1L, 10L, 1L);
     }
@@ -97,7 +112,7 @@ class ActuatorControllerTest {
     void 전체삭제_성공() throws Exception {
         mockMvc.perform(delete("/api/v1/groups/{group-id}/actuators", 10L)
                         .header("X-USER-ID", 1L))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         verify(actuatorService).deleteAll(1L, 10L);
     }
