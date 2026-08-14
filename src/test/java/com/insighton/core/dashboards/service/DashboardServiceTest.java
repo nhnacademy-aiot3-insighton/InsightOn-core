@@ -80,7 +80,7 @@ class DashboardServiceTest {
             // given
             DashboardRequest request = new DashboardRequest(1L, "새 대시보드 제목");
             Dashboard mockDashboard = mock(Dashboard.class);
-            given(dashboardRepository.findByLocationLocationId(1L)).willReturn(Optional.of(mockDashboard));
+            given(dashboardRepository.findWithLockByLocationLocationId(1L)).willReturn(Optional.of(mockDashboard));
 
             // when
             dashboardService.updateDashboardTitle(request);
@@ -95,7 +95,7 @@ class DashboardServiceTest {
             // given
             Long locationId = 1L;
             Dashboard mockDashboard = mock(Dashboard.class);
-            given(dashboardRepository.findByLocationLocationId(locationId)).willReturn(Optional.of(mockDashboard));
+            given(dashboardRepository.findWithLockByLocationLocationId(locationId)).willReturn(Optional.of(mockDashboard));
 
             // when
             dashboardService.deleteDashboard(locationId);
@@ -113,7 +113,7 @@ class DashboardServiceTest {
             given(dashboardRepository.findByLocationLocationId(locationId)).willReturn(Optional.of(mockDashboard));
 
             // when
-            Dashboard result = dashboardService.getDashboardByLocationId(locationId);
+            Dashboard result = dashboardService.getDashboardEntity(locationId);
 
             // then
             assertThat(result).isEqualTo(mockDashboard);
@@ -156,7 +156,7 @@ class DashboardServiceTest {
         void updateDashboardTitle_notFound() {
             // given
             DashboardRequest request = new DashboardRequest(999L, "새 제목");
-            given(dashboardRepository.findByLocationLocationId(999L)).willReturn(Optional.empty());
+            given(dashboardRepository.findWithLockByLocationLocationId(999L)).willReturn(Optional.empty());
 
             // when & then
             assertThatThrownBy(() -> dashboardService.updateDashboardTitle(request))
@@ -168,7 +168,7 @@ class DashboardServiceTest {
         void deleteDashboard_notFound() {
             // given
             Long locationId = 999L;
-            given(dashboardRepository.findByLocationLocationId(locationId)).willReturn(Optional.empty());
+            given(dashboardRepository.findWithLockByLocationLocationId(locationId)).willReturn(Optional.empty());
 
             // when & then
             assertThatThrownBy(() -> dashboardService.deleteDashboard(locationId))

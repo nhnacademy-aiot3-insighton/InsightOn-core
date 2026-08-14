@@ -154,25 +154,40 @@ class DashboardSaveUseCaseConcurrencyTest {
         startLatch.countDown();
 
         // then
-        // 1. 요청 A (User A)는 성공하여 저장된 위젯 ID 목록 반환
-        List<Long> resultA = future1.get();
-        assertThat(resultA).isNotEmpty();
-        assertThat(resultA).contains(widgetIdA);
+        // 비관적 락으로 인해 무조건 한 스레드가 먼저 락을 획득하여 성공하고,
+        // 락 대기 후 뒤늦게 진입한 다른 스레드는 상대방이 상대 위젯을 삭제했으므로 AlreadyDashboardSaveException 예외가 발생해야함.
+        boolean isFuture1Success = false;
+        boolean isFuture2Success = false;
+        Throwable expectedException = null;
 
-        // 2. 요청 B (User B)는 요청 A에 의해 widgetIdB가 이미 삭제되었으므로 AlreadyDashboardSaveException 예외 발생 명시적 검증
-        assertThatThrownBy(() -> {
-            try {
-                future2.get();
-            } catch (ExecutionException e) {
-                throw e.getCause();
+        try {
+            List<Long> result1 = future1.get();
+            if (result1 != null && !result1.isEmpty()) {
+                isFuture1Success = true;
             }
-        }).isInstanceOf(AlreadyDashboardSaveException.class);
+        } catch (ExecutionException e) {
+            expectedException = e.getCause();
+        }
+
+        try {
+            List<Long> result2 = future2.get();
+            if (result2 != null && !result2.isEmpty()) {
+                isFuture2Success = true;
+            }
+        } catch (ExecutionException e) {
+            expectedException = e.getCause();
+        }
+
+        // 1. 두 요청 중 정확히 하나만 성공하고, 나머지 하나는 실패해야 함
+        assertThat(isFuture1Success ^ isFuture2Success).isTrue();
+
+        // 2. 실패한 요청은 반드시 AlreadyDashboardSaveException 예외여야 함
+        assertThat(expectedException).isInstanceOf(AlreadyDashboardSaveException.class);
 
         executorService.shutdown();
 
-        // 3. 두 요청이 동시에 상대방 위젯을 삭제하여 위젯이 전부(0개) 삭제되는 데이터 유실 버그 방지 검증 (Widget A 1개만 유지됨)
+        // 3. 비관적 락으로 인해 한 쪽만 반영되어 남아있는 위젯이 정확히 1개여야 함 (전부 삭제되는 유실 버그 방지)
         List<Widget> remainingWidgets = widgetRepository.findAllByDashboardDashboardId(dashboardId);
         assertThat(remainingWidgets).hasSize(1);
-        assertThat(remainingWidgets.getFirst().getWidgetId()).isEqualTo(widgetIdA);
     }
 }
