@@ -42,23 +42,38 @@ public class KmaWeatherApiClient {
         }
 
         Map<String, String> resultMap = new HashMap<>();
-        if (response != null && response.response() != null && response.response().body() != null) {
-            List<Item> items = response.response().body().items().item();
-            if (isNcst) {
-                for (Item item : items) {
-                    resultMap.putIfAbsent(item.category(), item.obsrValue());
-                }
-            } else {
-                String targetFcstDate = items.get(0).fcstDate();
-                String targetFcstTime = items.get(0).fcstTime();
 
-                for (Item item : items) {
-                    if (targetFcstDate.equals(item.fcstDate()) && targetFcstTime.equals(item.fcstTime())) {
-                        resultMap.putIfAbsent(item.category(), item.fcstValue());
-                    }
+        // 응답 구조 및 items 유효성 방어 검증 추가
+        if (response == null || response.response() == null || response.response().body() == null) {
+            throw new WeatherApiException("기상청 API 응답 구조를 파악할 수 없습니다.");
+        }
+
+        KmaWeatherResponseDto.Body body = response.response().body();
+        if (body.items() == null || body.items().item() == null) {
+            return resultMap; // 데이터가 없는 경우 빈 맵 반환 (컨트랙트 준수)
+        }
+
+        List<Item> items = body.items().item();
+        if (items.isEmpty()) {
+            return resultMap;
+        }
+
+        if (isNcst) {
+            for (Item item : items) {
+                resultMap.putIfAbsent(item.category(), item.obsrValue());
+            }
+        } else {
+            // 단기예보 / 초단기예보의 경우 첫 번째 아이템의 예보일자(fcstDate)와 예보시각(fcstTime)을 기준으로 필터링
+            String targetFcstDate = items.get(0).fcstDate();
+            String targetFcstTime = items.get(0).fcstTime();
+
+            for (Item item : items) {
+                if (targetFcstDate.equals(item.fcstDate()) && targetFcstTime.equals(item.fcstTime())) {
+                    resultMap.putIfAbsent(item.category(), item.fcstValue());
                 }
             }
         }
+
         return resultMap;
     }
 }
