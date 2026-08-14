@@ -67,7 +67,7 @@ class DashboardSaveUseCaseTest {
 
             Dashboard mockDashboard = mock(Dashboard.class);
             given(mockDashboard.getDashboardId()).willReturn(dashboardId);
-            given(dashboardService.getDashboardByLocationId(locationId)).willReturn(mockDashboard);
+            given(dashboardService.getDashboardWithLockByLocationId(locationId)).willReturn(mockDashboard);
 
             // DB에는 1번(수정대상), 2번(삭제대상) 위젯이 존재함
             given(widgetService.getWidgetIdsByDashboardId(dashboardId)).willReturn(List.of(1L, 2L));
@@ -144,7 +144,7 @@ class DashboardSaveUseCaseTest {
 
             Dashboard mockDashboard = mock(Dashboard.class);
             given(mockDashboard.getDashboardId()).willReturn(dashboardId);
-            given(dashboardService.getDashboardByLocationId(locationId)).willReturn(mockDashboard);
+            given(dashboardService.getDashboardWithLockByLocationId(locationId)).willReturn(mockDashboard);
 
             given(widgetService.getWidgetIdsByDashboardId(dashboardId)).willReturn(List.of(targetWidgetId));
 

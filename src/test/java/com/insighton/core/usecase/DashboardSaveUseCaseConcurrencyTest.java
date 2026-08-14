@@ -116,7 +116,8 @@ class DashboardSaveUseCaseConcurrencyTest {
 
     @Test
     @DisplayName("동시 대시보드 저장 요청 시 비관적 락으로 인해 요청이 직렬화되어 데이터 정합성 유지")
-    void saveDashboard_concurrency_pessimisticLock() throws InterruptedException, ExecutionException {
+    void
+    saveDashboard_concurrency_pessimisticLock() throws InterruptedException, ExecutionException {
         // given
         // 요청 1 (User A): Widget A (widgetIdA)만 유지하고 Widget B 삭제 시도
         WidgetSaveRequest requestA = WidgetSaveRequest.builder()
@@ -143,10 +144,9 @@ class DashboardSaveUseCaseConcurrencyTest {
             return dashboardSaveUseCase.saveDashboard(userId, groupId, locationId, requests1);
         });
 
-        // 요청 B 제출 (요청 A가 먼저 대시보드 비관적 락을 점유하도록 50ms 미세 지연)
+        // 요청 B 제출 (동시에 대시보드 저장 요청 진입 -> 비관적 락으로 대기)
         Future<List<Long>> future2 = executorService.submit(() -> {
             startLatch.await();
-            Thread.sleep(50);
             return dashboardSaveUseCase.saveDashboard(userId, groupId, locationId, requests2);
         });
 
