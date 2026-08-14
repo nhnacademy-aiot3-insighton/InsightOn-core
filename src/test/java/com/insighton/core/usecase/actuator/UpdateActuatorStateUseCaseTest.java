@@ -1,6 +1,8 @@
 package com.insighton.core.usecase.actuator;
 
 import com.insighton.core.domain.actuatorrunlogs.entity.ExecutedByType;
+import com.insighton.core.domain.actuators.dto.ActuatorResponse;
+import com.insighton.core.domain.actuators.entity.ActuatorType;
 import com.insighton.core.domain.actuators.exception.InvalidActuatorValueException;
 import com.insighton.core.domain.actuators.service.ActuatorService;
 import com.insighton.core.domain.groupmember.service.GroupMemberService;
@@ -12,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.OffsetDateTime;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -39,6 +42,10 @@ class UpdateActuatorStateUseCaseTest {
         Long groupId = 5L;
         Long actuatorId = 10L;
         Map<String, Object> newState = Map.of("power", "ON");
+
+        given(actuatorService.getActuatorById(groupId, actuatorId))
+                .willReturn(new ActuatorResponse(actuatorId, 1L, "테스트 에어컨", ActuatorType.AIRCON,
+                        Map.of(), OffsetDateTime.now(), OffsetDateTime.now()));
 
         updateActuatorStateUseCase.updateActuatorState(userId, groupId, actuatorId, newState);
 
@@ -70,6 +77,10 @@ class UpdateActuatorStateUseCaseTest {
         Long groupId = 5L;
         Long actuatorId = 10L;
         Map<String, Object> newState = Map.of();
+
+        given(actuatorService.getActuatorById(groupId, actuatorId))
+                .willReturn(new ActuatorResponse(actuatorId, 1L, "테스트 에어컨", ActuatorType.AIRCON,
+                        Map.of(), OffsetDateTime.now(), OffsetDateTime.now()));
 
         willThrow(new InvalidActuatorValueException("액추에이터 제어 상태 값(newState)은 비어있음"))
                 .given(actuatorService).updateActuatorState(groupId, actuatorId, newState, ExecutedByType.USER, userId);
