@@ -26,8 +26,8 @@ public class CurrentForecastWeatherScheduler {
 
         OffsetDateTime now = OffsetDateTime.now(ZoneId.systemDefault());
         String baseDate = now.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        String baseTime = String.format("%02d00", now.getHour());
-
+        String baseTime = now.format(DateTimeFormatter.ofPattern("HHmm"));
+        
         List<GroupRegionDto> allRegions = groupRegionRepository.findAll();
 
         for (GroupRegionDto regionDto : allRegions) {
