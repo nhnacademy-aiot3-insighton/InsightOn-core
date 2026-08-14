@@ -44,8 +44,7 @@ public class DashboardServiceImpl implements DashboardService {
     @Override
     @Transactional
     public void updateDashboardTitle(DashboardRequest request) {
-        Dashboard dashboard = dashboardRepository.findByLocationLocationId(request.locationId())
-                .orElseThrow(() -> new DashboardNotFoundException(request.locationId()));
+        Dashboard dashboard = getDashboardWithLockByLocationId(request.locationId());
 
         dashboard.updateTitle(request.title());
     }
@@ -53,23 +52,21 @@ public class DashboardServiceImpl implements DashboardService {
     @Override
     @Transactional
     public void deleteDashboard(Long locationId) {
-        Dashboard dashboard = dashboardRepository.findByLocationLocationId(locationId)
-                .orElseThrow(() -> new DashboardNotFoundException(locationId));
+        Dashboard dashboard = getDashboardWithLockByLocationId(locationId);
 
         dashboardRepository.delete(dashboard);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Dashboard getDashboardByLocationId(Long locationId) {
-        return dashboardRepository.findByLocationLocationId(locationId)
-                .orElseThrow(() -> new DashboardNotFoundException(locationId));
     }
 
     @Override
     @Transactional
     public Dashboard getDashboardEntity(Long locationId) {
         return dashboardRepository.findByLocationLocationId(locationId)
+                .orElseThrow(() -> new DashboardNotFoundException(locationId));
+    }
+
+    @Override
+    public Dashboard getDashboardWithLockByLocationId(Long locationId) {
+        return dashboardRepository.findWithLockByLocationLocationId(locationId)
                 .orElseThrow(() -> new DashboardNotFoundException(locationId));
     }
 }

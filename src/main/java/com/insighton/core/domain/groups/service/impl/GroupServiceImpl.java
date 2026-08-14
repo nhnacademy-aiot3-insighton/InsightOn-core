@@ -133,4 +133,11 @@ public class GroupServiceImpl implements GroupService {
             throw new InvitationTokenMismatchException();
         }
     }
+
+    @Override
+    @Transactional
+    public Group findWithLockByGroupId(Long groupId) {
+        return groupRepository.findWithLockByGroupId(groupId)
+                .orElseThrow(() -> new GroupNotFoundException(groupId));
+    }
 }

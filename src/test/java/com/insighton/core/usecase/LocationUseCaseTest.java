@@ -8,6 +8,7 @@ import com.insighton.core.domain.groupmember.exception.GroupMemberNotFoundExcept
 import com.insighton.core.domain.groupmember.service.GroupMemberService;
 import com.insighton.core.domain.groups.entity.Group;
 import com.insighton.core.domain.groups.exception.NoPermissionException;
+import com.insighton.core.domain.groups.service.GroupService;
 import com.insighton.core.domain.location.dto.request.LocationCreateRequest;
 import com.insighton.core.domain.location.dto.request.LocationUpdateRequest;
 import com.insighton.core.domain.location.dto.response.LocationListResponse;
@@ -53,6 +54,10 @@ class LocationUseCaseTest {
 
     @Mock
     private WidgetService widgetService;
+
+    @Mock
+    private GroupService groupService;
+
     @Mock
     private ApplicationEventPublisher eventPublisher;
 
@@ -77,7 +82,7 @@ class LocationUseCaseTest {
             given(groupMemberService.validateGroupMembers(groupId, userId)).willReturn(mockGroupMember);
 
             given(mockGroupMember.isMember()).willReturn(false);
-            given(mockGroupMember.getGroup()).willReturn(mockGroup);
+            given(groupService.findWithLockByGroupId(groupId)).willReturn(mockGroup);
 
             Location mockLocation = mock(Location.class);
             given(mockLocation.getLocationId()).willReturn(1L);

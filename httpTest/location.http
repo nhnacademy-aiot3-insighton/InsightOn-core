@@ -1,8 +1,8 @@
 ### 전역 변수 설정
 @baseUrl = http://localhost:8080
 @userId = 2
-@groupId = 2
-@locationId = 1
+@groupId = 5
+@locationId = 3
 
 ### 2-1-1. Location 생성 (성공 시 DB에 locationId = 1 생성됨)
 POST {{baseUrl}}/api/v1/groups/{{groupId}}/location/create
