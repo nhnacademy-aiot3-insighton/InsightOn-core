@@ -1,7 +1,6 @@
 package com.insighton.core.controller.api;
 
 import com.insighton.core.domain.weather.dto.WeatherDataDto;
-import com.insighton.core.domain.weather.service.WeatherService;
 import com.insighton.core.usecase.WeatherRecoveryUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/weather")
 public class WeatherRecoveryController {
 
-    private final WeatherService weatherService;
     private final WeatherRecoveryUseCase weatherRecoveryUseCase;
 
     @GetMapping("/group/{groupId}")
