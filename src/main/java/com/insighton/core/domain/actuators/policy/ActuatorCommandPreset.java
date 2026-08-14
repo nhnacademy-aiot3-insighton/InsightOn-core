@@ -49,6 +49,9 @@ public final class ActuatorCommandPreset {
     // newState의 각 키/값이 이 액추에이터 타입에서 실제로 허용되는 명령/값인지 일괄 검증 -
     // 유저용(UpdateActuatorStateUseCase)/내부용(ActuatorInternalController) 양쪽에서 공용으로 사용
     public static void validateCommandValues(ActuatorType actuatorType, Map<String, Object> newState) {
+        if(newState == null || newState.isEmpty()){
+            throw new InvalidActuatorValueException("액추에이터 제어 상태 값이 비어있음");
+        }
         newState.forEach((key, value) -> {
             CommandType commandType = CommandType.fromStateKey(key)
                     .orElseThrow(() -> new InvalidActuatorValueException("알 수 없는 제어 명령키: " + key));
