@@ -41,19 +41,19 @@ public interface DashboardService {
     void deleteDashboard(Long locationId);
 
     /**
-     * widget을 위한 method. api @PathVariable로 받아오는 locationID로 찾아 반환
-     *
-     * @param locationId 찾고 싶은 dashboard와 연결된 locationID
-     * @return dashboard entity 반환
-     */
-    Dashboard getDashboardByLocationId(Long locationId);
-
-    /**
      * dashboard entity를 반환
      *
      * @param locationId dashboard와 연결된 location ID
      * @return dashboard entity
      */
     Dashboard getDashboardEntity(Long locationId);
+
+    /**
+     * 비관적 락을 적용하여 dashboard entity를 반환 (동시성 제어용)
+     *
+     * @param locationId dashboard와 연결된 location ID
+     * @return 락이 걸린 dashboard entity
+     */
+    Dashboard getDashboardWithLockByLocationId(Long locationId);
 
 }

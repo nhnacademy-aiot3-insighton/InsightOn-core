@@ -2,6 +2,7 @@ package com.insighton.core.domain.actuators.policy;
 
 import com.insighton.core.domain.actuatorrunlogs.entity.CommandType;
 import com.insighton.core.domain.actuators.entity.ActuatorType;
+import com.insighton.core.domain.actuators.exception.InvalidActuatorValueException;
 
 import java.util.Map;
 import java.util.Set;
@@ -43,5 +44,22 @@ public final class ActuatorCommandPreset {
         CommandValueRule rule = RULES.getOrDefault(actuatorType, Map.of()).get(commandType);
         // rule이 null이면 무족건 false, 있으면 그 규칙(고정값/범위)으로 실제 검증
         return rule != null && rule.isValid(value);
+    }
+
+    // newState의 각 키/값이 이 액추에이터 타입에서 실제로 허용되는 명령/값인지 일괄 검증 -
+    // 유저용(UpdateActuatorStateUseCase)/내부용(ActuatorInternalController) 양쪽에서 공용으로 사용
+    public static void validateCommandValues(ActuatorType actuatorType, Map<String, Object> newState) {
+        newState.forEach((key, value) -> {
+            CommandType commandType = CommandType.fromStateKey(key)
+                    .orElseThrow(() -> new InvalidActuatorValueException("알 수 없는 제어 명령키: " + key));
+            if (value == null) {
+                throw new InvalidActuatorValueException("명령 값은 null일 수 없습니다. (commandType=" + commandType + ")");
+            }
+            String stringValue = String.valueOf(value);
+            if (!isValidValue(actuatorType, commandType, stringValue)) {
+                throw new InvalidActuatorValueException(
+                        "허용되지 않은 명령 값입니다. (commandType=" + commandType + ", value=" + stringValue + ")");
+            }
+        });
     }
 }

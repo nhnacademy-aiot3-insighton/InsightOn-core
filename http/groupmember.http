@@ -1,0 +1,34 @@
+### 전역 변수 설정
+@baseUrl = http://localhost:8080
+@userId = 1
+@groupId = 1
+@targetMemberId = 1
+
+### 1-1. 그룹 멤버 리스트 조회
+GET {{baseUrl}}/api/v1/groups/{{groupId}}/members
+X-USER-ID: {{userId}}
+
+### 1-2. 특정 멤버 상세 조회
+GET {{baseUrl}}/api/v1/groups/{{groupId}}/members/{{targetMemberId}}
+X-USER-ID: {{userId}}
+
+
+### 2-1. 그룹 멤버 매니저 권한 부여/해제 (Toggle)
+PUT {{baseUrl}}/api/v1/groups/{{groupId}}/members/{{targetMemberId}}/toggle-manager
+X-USER-ID: {{userId}}
+
+### 2-2. 최고 관리자(Super Manager) 권한 양도
+### 주의: 양도 성공 시 @userId는 최고 관리자 권한을 잃게 되므로 테스트 순서 고려 필요
+PUT {{baseUrl}}/api/v1/groups/{{groupId}}/members/{{targetMemberId}}/toggle-super-manager
+X-USER-ID: {{userId}}
+
+
+### 3-1. 그룹 멤버 추방
+### 실행 후 @targetMemberId는 그룹에서 삭제되므로 이후 해당 멤버 ID 조회 시 404 발생
+DELETE {{baseUrl}}/api/v1/groups/{{groupId}}/members/{{targetMemberId}}/kick-member
+X-USER-ID: {{userId}}
+
+### 3-2. 내 그룹 탈퇴
+### 실행 후 @userId는 그룹 멤버가 아니게 되므로 이후 해당 그룹 API 호출 시 403/404 발생
+DELETE {{baseUrl}}/api/v1/groups/{{groupId}}/members/leave-group
+X-USER-ID: {{userId}}

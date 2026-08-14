@@ -6,7 +6,9 @@ import com.insighton.core.domain.dashboards.entity.Dashboard;
 import com.insighton.core.domain.dashboards.service.DashboardService;
 import com.insighton.core.domain.groupmember.entity.GroupMember;
 import com.insighton.core.domain.groupmember.service.GroupMemberService;
+import com.insighton.core.domain.groups.entity.Group;
 import com.insighton.core.domain.groups.exception.NoPermissionException;
+import com.insighton.core.domain.groups.service.GroupService;
 import com.insighton.core.domain.location.dto.request.LocationCreateRequest;
 import com.insighton.core.domain.location.dto.request.LocationUpdateRequest;
 import com.insighton.core.domain.location.dto.response.LocationListResponse;
@@ -14,6 +16,7 @@ import com.insighton.core.domain.location.dto.response.LocationResponse;
 import com.insighton.core.domain.location.entity.Location;
 import com.insighton.core.domain.location.event.LocationDeletedEvent;
 import com.insighton.core.domain.location.service.LocationService;
+import com.insighton.core.domain.actuators.service.ActuatorService;
 import com.insighton.core.domain.sensors.service.SensorService;
 import com.insighton.core.domain.widgets.service.WidgetService;
 import lombok.RequiredArgsConstructor;
@@ -26,10 +29,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class LocationUseCase {
     private final GroupMemberService groupMemberService;
+    private final GroupService groupService;
     private final LocationService locationService;
     private final ApplicationEventPublisher eventPublisher;
     private final DashboardService dashboardService;
     private final SensorService sensorService;
+    private final ActuatorService actuatorService;
     private final WidgetService widgetService;
 
     /**
@@ -47,8 +52,10 @@ public class LocationUseCase {
         // member가 member 권한일 때는 에러를 던지고
         validationIsAdmin(groupMember);
 
+        Group group = groupService.findWithLockByGroupId(groupId);
+
         // 만들기
-        Location location = locationService.createLocation(groupMember.getGroup(), request);
+        Location location = locationService.createLocation(group, request);
 
         DashboardRequest dashboardRequest = new DashboardRequest(location.getLocationId(), request.locationName() + " - dashboard");
 
@@ -132,8 +139,7 @@ public class LocationUseCase {
 
     /**
      * location 삭제
-     * 하위에 있는 것들을 먼저 차근차근 삭제하시오 여기서.
-     * 센서 센서는 삭제 말고 locations_id를 null 값으로 바꿔주셔?
+     * 센서는 삭제하지 않고 location_id만 null로 detach, 액추에이터는 location_id가 NOT NULL FK라 실행로그와 함께 삭제
      *
      * @param userId           삭제하려는 user의 ID
      * @param groupId          삭제될 location이 속해있는 group ID
@@ -150,6 +156,9 @@ public class LocationUseCase {
 
         // sensors는 location 값만 null로 바꿔주기
         sensorService.detachLocationFromSensors(groupId, targetLocationId);
+
+        // actuator service에 액추에이터로그 삭제 후 액추에이터 삭제 로직이 있음
+        actuatorService.deleteAllByLocationId(targetLocationId);
 
         // dashboards 삭제
         dashboardDelete(targetLocationId);

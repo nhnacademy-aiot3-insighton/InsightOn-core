@@ -2,6 +2,7 @@ package com.insighton.core.usecase;
 
 import com.insighton.core.domain.dashboards.entity.Dashboard;
 import com.insighton.core.domain.dashboards.repository.DashboardRepository;
+import com.insighton.core.domain.dashboards.service.DashboardService;
 import com.insighton.core.domain.groupmember.entity.GroupMember;
 import com.insighton.core.domain.groupmember.repository.GroupMemberRepository;
 import com.insighton.core.domain.groups.entity.Group;
@@ -21,12 +22,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.util.List;
 import java.util.concurrent.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.doAnswer;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -45,6 +48,8 @@ class DashboardSaveUseCaseConcurrencyTest {
     private DashboardRepository dashboardRepository;
     @Autowired
     private WidgetRepository widgetRepository;
+    @MockitoSpyBean
+    private DashboardService dashboardService;
     @MockitoBean
     private InfluxDbRepository influxDbRepository;
     @MockitoBean
@@ -132,34 +137,37 @@ class DashboardSaveUseCaseConcurrencyTest {
                 .build();
         List<WidgetSaveRequest> requests2 = List.of(requestB);
 
-        int threadCount = 2;
-        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
-        CountDownLatch startLatch = new CountDownLatch(1);
+        ExecutorService executorService = Executors.newFixedThreadPool(2);
+        CountDownLatch lockAcquiredLatch = new CountDownLatch(1);
+
+        // 요청 A가 getDashboardWithLockByLocationId(SELECT ... FOR UPDATE)를 호출하여 DB 비관적 락을 점유한 직후 Latch 신호 전송
+        doAnswer(invocation -> {
+            Object result = invocation.callRealMethod();
+            lockAcquiredLatch.countDown();
+            return result;
+        }).when(dashboardService).getDashboardWithLockByLocationId(locationId);
 
         // when
-        // 요청 A 제출
-        Future<List<Long>> future1 = executorService.submit(() -> {
-            startLatch.await();
-            return dashboardSaveUseCase.saveDashboard(userId, groupId, locationId, requests1);
-        });
+        // 1. 요청 A (User A) 제출 -> 대시보드 비관적 락 획득 시도
+        Future<List<Long>> future1 = executorService.submit(() ->
+                dashboardSaveUseCase.saveDashboard(userId, groupId, locationId, requests1)
+        );
 
-        // 요청 B 제출 (요청 A가 먼저 대시보드 비관적 락을 점유하도록 50ms 미세 지연)
-        Future<List<Long>> future2 = executorService.submit(() -> {
-            startLatch.await();
-            Thread.sleep(50);
-            return dashboardSaveUseCase.saveDashboard(userId, groupId, locationId, requests2);
-        });
+        // 2. 요청 A가 DB 비관적 락을 획득할 때까지 명시적 대기 (요청 A의 락 선점 결정적 보장)
+        lockAcquiredLatch.await();
 
-        // 두 스레드가 동시에 실행 시작
-        startLatch.countDown();
+        // 3. 요청 A가 DB 락을 선점한 상태에서 요청 B (User B) 제출 -> 요청 B는 DB 비관적 락 대기(Lock Wait) 진입
+        Future<List<Long>> future2 = executorService.submit(() ->
+                dashboardSaveUseCase.saveDashboard(userId, groupId, locationId, requests2)
+        );
 
         // then
-        // 1. 요청 A (User A)는 성공하여 저장된 위젯 ID 목록 반환
+        // 1. 요청 A는 락을 선점하여 성공적으로 저장 완료 후 위젯 ID 목록 반환
         List<Long> resultA = future1.get();
         assertThat(resultA).isNotEmpty();
         assertThat(resultA).contains(widgetIdA);
 
-        // 2. 요청 B (User B)는 요청 A에 의해 widgetIdB가 이미 삭제되었으므로 AlreadyDashboardSaveException 예외 발생 명시적 검증
+        // 2. 요청 B는 요청 A에 의해 락 대기 후 실행되므로, 상대방(A)이 Widget B를 삭제했음을 감지하고 AlreadyDashboardSaveException 발생
         assertThatThrownBy(() -> {
             try {
                 future2.get();
@@ -170,7 +178,7 @@ class DashboardSaveUseCaseConcurrencyTest {
 
         executorService.shutdown();
 
-        // 3. 두 요청이 동시에 상대방 위젯을 삭제하여 위젯이 전부(0개) 삭제되는 데이터 유실 버그 방지 검증 (Widget A 1개만 유지됨)
+        // 3. 비관적 락으로 직렬화되어 두 요청이 서로 위젯을 지워 0개가 되는 유실 버그 방지 검증 (Widget A 1개만 남음)
         List<Widget> remainingWidgets = widgetRepository.findAllByDashboardDashboardId(dashboardId);
         assertThat(remainingWidgets).hasSize(1);
         assertThat(remainingWidgets.getFirst().getWidgetId()).isEqualTo(widgetIdA);
