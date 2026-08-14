@@ -44,10 +44,18 @@ public class KmaWeatherApiClient {
         Map<String, String> resultMap = new HashMap<>();
         if (response != null && response.response() != null && response.response().body() != null) {
             List<Item> items = response.response().body().items().item();
-            if (items != null) {
-                for (KmaWeatherResponseDto.Item item : items) {
-                    String value = isNcst ? item.obsrValue() : item.fcstValue();
-                    resultMap.putIfAbsent(item.category(), value);
+            if (isNcst) {
+                for (Item item : items) {
+                    resultMap.putIfAbsent(item.category(), item.obsrValue());
+                }
+            } else {
+                String targetFcstDate = items.get(0).fcstDate();
+                String targetFcstTime = items.get(0).fcstTime();
+
+                for (Item item : items) {
+                    if (targetFcstDate.equals(item.fcstDate()) && targetFcstTime.equals(item.fcstTime())) {
+                        resultMap.putIfAbsent(item.category(), item.fcstValue());
+                    }
                 }
             }
         }
