@@ -72,4 +72,11 @@ public class DashboardServiceImpl implements DashboardService {
         return dashboardRepository.findByLocationLocationId(locationId)
                 .orElseThrow(() -> new DashboardNotFoundException(locationId));
     }
+
+    @Override
+    @Transactional
+    public Dashboard getDashboardWithLockByLocationId(Long locationId) {
+        return dashboardRepository.findWithLockByLocationLocationId(locationId)
+                .orElseThrow(() -> new DashboardNotFoundException(locationId));
+    }
 }

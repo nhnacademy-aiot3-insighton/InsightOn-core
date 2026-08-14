@@ -99,8 +99,8 @@ public class DashboardSaveUseCase {
 
         locationService.getLocationByGroupId(locationId, groupId);
 
-        // locationID로 연결된 dashboard 가져와서
-        return dashboardService.getDashboardByLocationId(locationId);
+        // locationID로 연결된 dashboard 가져와서 (동시성 제어를 위해 비관적 락 적용)
+        return dashboardService.getDashboardWithLockByLocationId(locationId);
     }
 
 

@@ -56,4 +56,12 @@ public interface DashboardService {
      */
     Dashboard getDashboardEntity(Long locationId);
 
+    /**
+     * 비관적 락을 적용하여 dashboard entity를 반환 (동시성 제어용)
+     *
+     * @param locationId dashboard와 연결된 location ID
+     * @return 락이 걸린 dashboard entity
+     */
+    Dashboard getDashboardWithLockByLocationId(Long locationId);
+
 }
