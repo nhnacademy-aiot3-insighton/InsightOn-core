@@ -76,24 +76,10 @@ class SensorControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
-//    @Test
-//    @DisplayName("장치 이름 수정 성공")
-//    void 이름수정_성공() throws Exception {
-//        SensorNameUpdateRequest request = new SensorNameUpdateRequest("새 이름");
-//
-//        mockMvc.perform(put("/api/v1/sensor/{id}/name", 1L)
-//                        .header("X-USER-ID", 1L)
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(objectMapper.writeValueAsString(request)))
-//                .andExpect(status().isNoContent());
-//
-//        verify(sensorService).updateSensorName(1L, 1L, "새 이름");
-//    }
-
     @Test
     @DisplayName("위치만 수정 - 이름은 null로 그대로 전달됨")
     void 위치만_수정_성공() throws Exception {
-        SensorUpdateRequest request = new SensorUpdateRequest(5L, null);
+        SensorUpdateRequest request = new SensorUpdateRequest("4층", null);
 
         mockMvc.perform(put("/api/v1/sensor/{id}", 1L)
                         .header("X-USER-ID", 1L)
@@ -101,7 +87,7 @@ class SensorControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNoContent());
 
-        verify(sensorService).updateSensor(1L, 1L, 5L, null);
+        verify(sensorService).updateSensor(1L, 1L, "4층", null);
     }
 
     @Test
@@ -121,7 +107,7 @@ class SensorControllerTest {
     @Test
     @DisplayName("위치와 이름 둘 다 수정 성공")
     void 위치_이름_둘다_수정_성공() throws Exception {
-        SensorUpdateRequest request = new SensorUpdateRequest(5L, "새 이름");
+        SensorUpdateRequest request = new SensorUpdateRequest("4층", "새 이름");
 
         mockMvc.perform(put("/api/v1/sensor/{id}", 1L)
                         .header("X-USER-ID", 1L)
@@ -129,7 +115,7 @@ class SensorControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNoContent());
 
-        verify(sensorService).updateSensor(1L, 1L, 5L, "새 이름");
+        verify(sensorService).updateSensor(1L, 1L, "4층", "새 이름");
     }
 
     @Test
@@ -166,9 +152,9 @@ class SensorControllerTest {
     @Test
     @DisplayName("존재하지 않는 위치면 404")
     void 없는_위치_404() throws Exception {
-        SensorUpdateRequest request = new SensorUpdateRequest(999L, null);
+        SensorUpdateRequest request = new SensorUpdateRequest("없는위치", null);
 
-        willThrow(LocationNotFoundException.notFoundLocationByLocationId(999L))
+        willThrow(LocationNotFoundException.notFoundLocationByName("없는위치"))
                 .given(sensorService).updateSensor(anyLong(), anyLong(), any(), any());
 
         mockMvc.perform(put("/api/v1/sensor/{id}", 1L)

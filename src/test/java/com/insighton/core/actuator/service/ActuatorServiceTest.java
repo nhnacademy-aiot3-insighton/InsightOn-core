@@ -56,12 +56,12 @@ class ActuatorServiceTest {
     }
 
     @Test
-    @DisplayName("createActuator - locationId가 groupsId 소속이 아니면 LocationNotFoundException")
+    @DisplayName("createActuator - locationName이 groupsId 소속이 아니면 LocationNotFoundException")
     void 생성_다른그룹location_거부() {
         given(groupMemberService.validateGroupMembers(10L, 1L)).willReturn(manager());
-        given(locationRepository.findByLocationIdAndGroupGroupId(99L, 10L)).willReturn(Optional.empty());
+        given(locationRepository.findByGroupGroupIdAndLocationName(10L, "없는장소")).willReturn(Optional.empty());
 
-        ActuatorRequest request = new ActuatorRequest(99L, "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"));
+        ActuatorRequest request = new ActuatorRequest("없는장소", "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"));
 
         assertThrows(LocationNotFoundException.class,
                 () -> actuatorsService.createActuator(1L, 10L, request));
@@ -74,7 +74,7 @@ class ActuatorServiceTest {
     void 생성_권한없음() {
         given(groupMemberService.validateGroupMembers(10L, 1L)).willReturn(plainMember());
 
-        ActuatorRequest request = new ActuatorRequest(1L, "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"));
+        ActuatorRequest request = new ActuatorRequest("거실", "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"));
 
         assertThrows(NoPermissionException.class,
                 () -> actuatorsService.createActuator(1L, 10L, request));

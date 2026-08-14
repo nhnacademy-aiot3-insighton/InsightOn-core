@@ -10,7 +10,7 @@ public interface SensorRepository extends JpaRepository<Sensor, Long> {
 
     // 연관관계 객체를 뚫고 들어가 ID로 조회하려면 _언더스코어 네비게이션 필요
     // 위치 ID로 조회
-    List<Sensor> findByLocationLocationId(Long locationId);
+    List<Sensor> findByLocationLocationName(String locationName);
 
     // 그룹 ID로 조회
     List<Sensor> findByGroupGroupId(Long groupId);

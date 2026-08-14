@@ -16,16 +16,16 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MetricDefinitionController {
 
-    private final SensorAttributeService attributeService;
+    private final SensorAttributeService sensorAttributeService;
 
     @GetMapping
     public ResponseEntity<List<MetricDefinitionResponse>> getAllMetricDefinitions(){
-        return ResponseEntity.ok(attributeService.getAllMetricDefinitions());
+        return ResponseEntity.ok(sensorAttributeService.getAllMetricDefinitions());
     }
 
     @PostMapping
     public ResponseEntity<Void> createMetricDefinition(@Valid @RequestBody MetricDefinitionCreateRequest request) {
-        attributeService.createMetricDefinition(request);
+        sensorAttributeService.createMetricDefinition(request);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 }
