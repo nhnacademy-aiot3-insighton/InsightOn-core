@@ -8,7 +8,9 @@ import com.insighton.core.domain.groupregistration.entity.GroupRegistrationStatu
 import com.insighton.core.domain.groupregistration.exception.GroupRegistrationNotFoundException;
 import com.insighton.core.domain.groupregistration.exception.UnauthorizedGroupRegistrationAccessException;
 import com.insighton.core.domain.groupregistration.service.GroupRegistrationService;
+import com.insighton.core.domain.region.exception.RegionNotFoundException;
 import com.insighton.core.usecase.GroupRegistrationApprovalUseCase;
+import com.insighton.core.usecase.GroupRegistrationCreationUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -50,6 +52,9 @@ class GroupRegistrationControllerTest {
     @MockitoBean
     private GroupRegistrationApprovalUseCase approvalUseCase;
 
+    @MockitoBean
+    private GroupRegistrationCreationUseCase groupRegistrationCreationUseCase;
+
     private static final Long GROUP_REGISTRATION_ID = 10L;
     private static final Long REQUESTER_ID = 1L;
 
@@ -65,8 +70,8 @@ class GroupRegistrationControllerTest {
         @Test
         @DisplayName("그룹 등록 신청 생성 성공")
         void createRequest_success() throws Exception {
-            CreateGroupRegistrationRequest request = new CreateGroupRegistrationRequest("Test Group", "Desc", "Seoul");
-            given(groupRegistrationService.createRequest(eq(REQUESTER_ID), any(CreateGroupRegistrationRequest.class)))
+            CreateGroupRegistrationRequest request = new CreateGroupRegistrationRequest("Test Group", "Desc", "Seoul", "Jongno");
+            given(groupRegistrationCreationUseCase.createRequest(eq(REQUESTER_ID), any(CreateGroupRegistrationRequest.class)))
                     .willReturn(dummyResponse());
 
             mockMvc.perform(post("/api/v1/group-registrations")
@@ -75,7 +80,7 @@ class GroupRegistrationControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated());
 
-            verify(groupRegistrationService).createRequest(eq(REQUESTER_ID), any(CreateGroupRegistrationRequest.class));
+            verify(groupRegistrationCreationUseCase).createRequest(eq(REQUESTER_ID), any(CreateGroupRegistrationRequest.class));
         }
 
         @Test
@@ -160,7 +165,7 @@ class GroupRegistrationControllerTest {
         @Test
         @DisplayName("필수 헤더(X-User-Id) 누락 시 400 Bad Request")
         void createRequest_missingHeader_returnsBadRequest() throws Exception {
-            CreateGroupRegistrationRequest request = new CreateGroupRegistrationRequest("Test Group", "Desc", "Seoul");
+            CreateGroupRegistrationRequest request = new CreateGroupRegistrationRequest("Test Group", "Desc", "Seoul", "Jongno");
 
             mockMvc.perform(post("/api/v1/group-registrations")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -171,7 +176,7 @@ class GroupRegistrationControllerTest {
         @Test
         @DisplayName("필수값 누락 시 @Valid 유효성 검사 실패 - 400 Bad Request")
         void createRequest_invalidBody_returnsBadRequest() throws Exception {
-            CreateGroupRegistrationRequest invalidRequest = new CreateGroupRegistrationRequest(null, "Desc", null);
+            CreateGroupRegistrationRequest invalidRequest = new CreateGroupRegistrationRequest(null, "Desc", null, null);
 
             mockMvc.perform(post("/api/v1/group-registrations")
                             .header("X-User-Id", REQUESTER_ID)
@@ -201,6 +206,20 @@ class GroupRegistrationControllerTest {
             mockMvc.perform(get("/api/v1/group-registrations/{group-registration-id}", GROUP_REGISTRATION_ID)
                             .header("X-User-Id", REQUESTER_ID))
                     .andExpect(status().isNotFound());
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 행정구역으로 신청 생성 시도 - 400 Bad Request (GlobalExceptionHandler 매핑 확인)")
+        void createRequest_invalidRegion_returnsBadRequest() throws Exception {
+            CreateGroupRegistrationRequest request = new CreateGroupRegistrationRequest("Test Group", "Desc", "Atlantis", "Nowhere");
+            given(groupRegistrationCreationUseCase.createRequest(eq(REQUESTER_ID), any(CreateGroupRegistrationRequest.class)))
+                    .willThrow(new RegionNotFoundException("존재하지 않는 행정구역입니다: Atlantis Nowhere"));
+
+            mockMvc.perform(post("/api/v1/group-registrations")
+                            .header("X-User-Id", REQUESTER_ID)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest());
         }
     }
 }

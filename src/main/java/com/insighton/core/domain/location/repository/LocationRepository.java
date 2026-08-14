@@ -36,6 +36,16 @@ public interface LocationRepository extends JpaRepository<Location, Long> {
     boolean existsByGroupGroupIdAndLocationName(Long groupId, String locationName);
 
     /**
+     * group ID와 location 이름으로 location 상세 정보 조회 - 사용자가 locationId를 몰라도
+     * 화면에 보이는 이름으로 요청을 만들 수 있게 하기 위한 조회 (ActuatorRequest, SensorUpdateRequest 등에서 사용)
+     *
+     * @param groupId      조회하고자 하는 location의 group ID
+     * @param locationName 조회하고자 하는 location의 이름
+     * @return location entity
+     */
+    Optional<Location> findByGroupGroupIdAndLocationName(Long groupId, String locationName);
+
+    /**
      * groupID에 해당하는 모든 location 삭제
      *
      * @param groupId group ID

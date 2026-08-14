@@ -113,6 +113,13 @@ public interface GroupMemberService {
     GroupMember validateGroupMembers(Long groupId, Long userId);
 
     /**
+     * 그룹 멤버인지 검증한 뒤 MANAGER 이상 권한인지까지 확인하고, member 권한이면 NoPermissionException을 던짐.
+     * 이 "멤버십 확인 + 권한 체크" 조합을 UseCase마다 private 메서드로 각자 복사해서 쓰고 있었는데,
+     * private이라 그 로직만 독립적으로 단위 테스트하기 어렵고 코드도 중복돼서 여기 하나로 모음.
+     */
+    GroupMember validateGroupAdmin(Long groupId, Long userId);
+
+    /**
      * 어딘가의 그룹에 이미 존재한다.
      */
     void validateUserInAnyGroup(Long userId);

@@ -4,10 +4,12 @@ import com.insighton.core.domain.groupmember.dto.request.GroupMemberJoinRequest;
 import com.insighton.core.domain.groupmember.dto.response.GroupMemberResponse;
 import com.insighton.core.domain.groupmember.dto.response.ManagerGroupExistsResponse;
 import com.insighton.core.domain.groupmember.service.GroupMemberService;
+import com.insighton.core.domain.location.dto.response.LocationListResponse;
 import com.insighton.core.domain.location.dto.response.LocationResponse;
 import com.insighton.core.domain.location.service.LocationService;
 import com.insighton.core.usecase.GroupUseCase;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -39,7 +41,7 @@ public class InternalController {
      *
      * @return 멤버면 groupId/groupRole 포함 응답, 아니면 404
      */
-    @GetMapping("groups/{group-id}/members")
+    @GetMapping("/groups/{group-id}/members")
     public ResponseEntity<GroupMemberResponse> getGroupMemberByUserId(
             @PathVariable("group-id") Long groupId,
             @RequestParam("user-id") Long userId
@@ -47,6 +49,15 @@ public class InternalController {
         GroupMemberResponse response = groupMemberService.getGroupMemberAI(userId, groupId);
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/group/{group-id}/locations")
+    public ResponseEntity<List<LocationListResponse>> getLocationByGroup(
+            @PathVariable("group-id") Long groupId
+    ) {
+        List<LocationListResponse> locations = locationService.getLocationList(groupId);
+
+        return ResponseEntity.ok(locations);
     }
 
     /**

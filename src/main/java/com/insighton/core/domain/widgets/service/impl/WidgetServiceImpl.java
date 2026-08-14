@@ -85,7 +85,7 @@ public class WidgetServiceImpl implements WidgetService {
     @Transactional(readOnly = true)
     public List<WidgetsListResponse> getWidgetList(Long dashboardId) {
 
-        List<Widget> widgets = widgetRepository.findByDashboardDashboardId(dashboardId);
+        List<Widget> widgets = widgetRepository.findAllByDashboardDashboardId(dashboardId);
 
         if (widgets.isEmpty()) {
             throw WidgetNotFoundException.notFoundWidgetByDashboardId(dashboardId);
@@ -123,7 +123,10 @@ public class WidgetServiceImpl implements WidgetService {
     @Override
     @Transactional
     public void deleteAllWidget(Long dashboardId) {
-        List<Long> widgetIds = widgetRepository.findWidgetIdsByDashboardDashboardId(dashboardId);
+        List<Long> widgetIds = widgetRepository.findAllByDashboardDashboardId(dashboardId)
+                .stream()
+                .map(Widget::getWidgetId)
+                .toList();
 
         evictCacheForWidgetIds(widgetIds);
 
@@ -131,7 +134,15 @@ public class WidgetServiceImpl implements WidgetService {
     }
 
     @Override
-    @Transactional
+    public List<Long> getWidgetIdsByDashboardId(Long dashboardId) {
+        return widgetRepository.findAllByDashboardDashboardId(dashboardId)
+                .stream()
+                .map(Widget::getWidgetId)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public ChartDataResponse getWidgetChartData(Long targetWidgetId) {
 
         WidgetConfig config = getWidgetConfigFromCache(targetWidgetId);
@@ -256,11 +267,11 @@ public class WidgetServiceImpl implements WidgetService {
 
         if (Objects.nonNull(config.type())) {
             switch (config.type()) {
-                case GAUGE, SINGLE_STAT:
+                case SINGLE_STAT:
                     // 가장 최근 데이터 1개만 조회
                     flux.append("   |> last()\n");
                     break;
-                case GRAPH:
+                case BAR, GRAPH:
                 default:
                     // 시계열 그래프는 설정한 주기(aggregateWindow)마다 평균(mean) 값으로 묶어서 가져옴 & 입력 값 검증
                     if (Objects.nonNull(config.aggregateWindow())) {

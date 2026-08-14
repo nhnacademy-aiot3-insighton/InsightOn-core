@@ -1,5 +1,7 @@
 package com.insighton.core.usecase;
 
+import com.insighton.core.domain.actuators.service.ActuatorService;
+import com.insighton.core.domain.dashboards.dto.request.DashboardRequest;
 import com.insighton.core.domain.dashboards.entity.Dashboard;
 import com.insighton.core.domain.dashboards.service.DashboardService;
 import com.insighton.core.domain.groupmember.entity.GroupMember;
@@ -7,11 +9,13 @@ import com.insighton.core.domain.groupmember.exception.GroupMemberNotFoundExcept
 import com.insighton.core.domain.groupmember.service.GroupMemberService;
 import com.insighton.core.domain.groups.entity.Group;
 import com.insighton.core.domain.groups.exception.NoPermissionException;
+import com.insighton.core.domain.groups.service.GroupService;
 import com.insighton.core.domain.location.dto.request.LocationCreateRequest;
 import com.insighton.core.domain.location.dto.request.LocationUpdateRequest;
 import com.insighton.core.domain.location.dto.response.LocationListResponse;
 import com.insighton.core.domain.location.dto.response.LocationResponse;
 import com.insighton.core.domain.location.entity.Location;
+import com.insighton.core.domain.location.event.LocationDeletedEvent;
 import com.insighton.core.domain.location.service.LocationService;
 import com.insighton.core.domain.sensors.service.SensorService;
 import com.insighton.core.domain.widgets.service.WidgetService;
@@ -51,6 +55,13 @@ class LocationUseCaseTest {
 
     @Mock
     private WidgetService widgetService;
+
+    @Mock
+    private GroupService groupService;
+
+    @Mock
+    private ActuatorService actuatorService;
+
     @Mock
     private ApplicationEventPublisher eventPublisher;
 
@@ -75,7 +86,7 @@ class LocationUseCaseTest {
             given(groupMemberService.validateGroupMembers(groupId, userId)).willReturn(mockGroupMember);
 
             given(mockGroupMember.isMember()).willReturn(false);
-            given(mockGroupMember.getGroup()).willReturn(mockGroup);
+            given(groupService.findWithLockByGroupId(groupId)).willReturn(mockGroup);
 
             Location mockLocation = mock(Location.class);
             given(mockLocation.getLocationId()).willReturn(1L);
@@ -320,6 +331,7 @@ class LocationUseCaseTest {
 
             Location mockLocation = mock(Location.class);
             given(mockLocation.getLocationId()).willReturn(targetLocationId);
+            given(mockLocation.getLocationName()).willReturn("새이름");
             given(locationService.getLocationByGroupId(targetLocationId, groupId)).willReturn(mockLocation);
 
             // when
@@ -328,6 +340,7 @@ class LocationUseCaseTest {
             // then
             verify(groupMemberService).validateGroupMembers(groupId, userId);
             verify(locationService).updateName(targetLocationId, groupId, request);
+            verify(dashboardService).updateDashboardTitle(any(DashboardRequest.class));
         }
 
         @Test
@@ -395,7 +408,11 @@ class LocationUseCaseTest {
 
             // then
             verify(groupMemberService).validateGroupMembers(groupId, userId);
+            verify(sensorService).detachLocationFromSensors(groupId, targetLocationId);
+            verify(widgetService).deleteAllWidget(any());
+            verify(dashboardService).deleteDashboard(targetLocationId);
             verify(locationService).deleteLocation(targetLocationId, groupId);
+            verify(eventPublisher).publishEvent(any(LocationDeletedEvent.class));
         }
 
         @Test
@@ -440,3 +457,4 @@ class LocationUseCaseTest {
 
     }
 }
+

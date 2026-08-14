@@ -69,6 +69,6 @@ public class Widget {
     }
 
     public enum Type {
-        GAUGE, GRAPH, SINGLE_STAT
+        BAR, GRAPH, SINGLE_STAT
     }
 }

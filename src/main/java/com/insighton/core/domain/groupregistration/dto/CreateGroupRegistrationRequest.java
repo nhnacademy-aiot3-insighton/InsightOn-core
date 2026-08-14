@@ -4,4 +4,5 @@ import jakarta.validation.constraints.NotBlank;
 
 public record CreateGroupRegistrationRequest(@NotBlank String groupName,
                                              String description,
-                                             @NotBlank String groupRegion) {}
+                                             @NotBlank String state,
+                                             @NotBlank String city) {}

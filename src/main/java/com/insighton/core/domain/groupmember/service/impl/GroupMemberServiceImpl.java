@@ -140,7 +140,7 @@ public class GroupMemberServiceImpl implements GroupMemberService {
         }
 
         // 3. targetUser가 Member권한일 때 Manager로 변경
-        targetMember.updateRole(targetMember.getGroupRole() == GroupMember.GroupRole.MANAGER ? GroupMember.GroupRole.MANAGER : GroupMember.GroupRole.MEMBER);
+        targetMember.updateRole(targetMember.getGroupRole() == GroupMember.GroupRole.MEMBER ? GroupMember.GroupRole.MANAGER : GroupMember.GroupRole.MEMBER);
     }
 
     @Override
@@ -234,6 +234,19 @@ public class GroupMemberServiceImpl implements GroupMemberService {
         GroupMember members = validateGroupMembers(groupId, userId);
 
         return members.isManager() || members.isSuperManager();
+    }
+
+    /**
+     * 센서쪽 업데이트, 삭제 권한 확인용으로 추가
+     *
+     */
+    @Override
+    public GroupMember validateGroupAdmin(Long groupId, Long userId) {
+        GroupMember member = validateGroupMembers(groupId, userId);
+        if (member.isMember()) {
+            throw NoPermissionException.forAdmin(member.getGroupMemberId());
+        }
+        return member;
     }
 
 

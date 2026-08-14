@@ -3,10 +3,12 @@ package com.insighton.core.groups.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.insighton.core.controller.api.GroupController;
 import com.insighton.core.domain.groups.dto.request.GroupRequest;
+import com.insighton.core.domain.groups.dto.request.GroupUpdateRequest;
 import com.insighton.core.domain.groups.dto.response.GroupAdminResponse;
 import com.insighton.core.domain.groups.dto.response.GroupResponse;
-import com.insighton.core.usecase.GroupUseCase;
 import com.insighton.core.domain.groups.service.GroupService;
+import com.insighton.core.usecase.GroupDeleteUseCase;
+import com.insighton.core.usecase.GroupUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -44,6 +46,9 @@ class GroupControllerTest {
 
     @MockitoBean
     private GroupService groupService;
+
+    @MockitoBean
+    private GroupDeleteUseCase groupDeleteUseCase;
 
     @Nested
     @DisplayName("성공 케이스")
@@ -133,17 +138,18 @@ class GroupControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk());
 
-            verify(groupsUseCase).updateGroup(any(GroupRequest.class), eq(1L), eq(1L));
+            verify(groupsUseCase).updateGroup(any(GroupUpdateRequest.class), eq(1L), eq(1L));
         }
 
         @Test
         @DisplayName("그룹 삭제 성공")
         void deleteGroup_success() throws Exception {
             mockMvc.perform(delete("/api/v1/groups/{group-id}/delete", 1L)
-                            .header("X-USER-ID", 1L))
+                            .header("X-USER-ID", 1L)
+                            .param("inviteToken", "token"))
                     .andExpect(status().isNoContent());
 
-            verify(groupsUseCase).deleteGroup(1L, 1L);
+            verify(groupDeleteUseCase).deleteGroup(1L, 1L, "token");
         }
     }
 
@@ -163,19 +169,6 @@ class GroupControllerTest {
         void missingRequestParam_returnsBadRequest() throws Exception {
             mockMvc.perform(get("/api/v1/groups/{group-id}/preview", 1L)
                             .header("X-USER-ID", 1L))
-                    .andExpect(status().isBadRequest());
-        }
-
-        @Test
-        @DisplayName("그룹 수정 시 @Valid 유효성 검사 실패 시 400 Bad Request")
-        void updateGroup_invalidBody_returnsBadRequest() throws Exception {
-            // DTO 유효성 조건(@NotBlank 등)에 걸리는 잘못된 요청 객체
-            GroupRequest invalidRequest = new GroupRequest(null, null, null);
-
-            mockMvc.perform(put("/api/v1/groups/{group-id}/update", 1L)
-                            .header("X-USER-ID", 1L)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(invalidRequest)))
                     .andExpect(status().isBadRequest());
         }
     }

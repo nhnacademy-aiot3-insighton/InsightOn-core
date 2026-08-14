@@ -1,0 +1,75 @@
+### === 변수 ===
+@baseUrl = http://localhost:8080
+@userId = 1
+@groupId = 1
+@locationId = 1
+@locationName = 회의실
+@actuatorId = 1
+@sensorId = 1
+@secondLocationName = b
+
+
+### =========================================
+### 1. 센서(디바이스) API
+### =========================================
+
+### 센서 단건 조회
+GET {{baseUrl}}/api/v1/sensor/{{sensorId}}
+X-USER-ID: {{userId}}
+
+### 센서 검색 - groupId 필수
+GET {{baseUrl}}/api/v1/sensor/search?groupId={{groupId}}
+X-USER-ID: {{userId}}
+
+### 센서 검색 - locationName 조건 추가
+GET {{baseUrl}}/api/v1/sensor/search?groupId={{groupId}}&locationName={{locationName}}
+X-USER-ID: {{userId}}
+
+### 센서 검색 - id로 좁혀서 조회
+GET {{baseUrl}}/api/v1/sensor/search?groupId={{groupId}}&id=1
+X-USER-ID: {{userId}}
+
+### 센서 위치/이름 수정 (204 기대)
+PUT {{baseUrl}}/api/v1/sensor/{{sensorId}}
+X-USER-ID: {{userId}}
+Content-Type: application/json
+
+{
+  "locationName": "{{locationName}}",
+  "sensorName": "수정된 센서 이름"
+}
+
+### === 애프터커밋 캐시 동기화 검증용 (DB 롤백 확인) ===
+### 1) 정상적으로 다른 장소로 변경 (204 기대) - 아래 롤백 테스트의 "변경 전" 기준점을 만듦
+PUT {{baseUrl}}/api/v1/sensor/{{sensorId}}
+X-USER-ID: {{userId}}
+Content-Type: application/json
+
+{
+  "locationName": "{{secondLocationName}}"
+}
+
+### 2) 장소는 바뀌지만 이름이 공백이라 뒤에서 예외 발생 -> 트랜잭션 전체 롤백 (400 기대)
+### updateSensor 내부에서 장소 변경이 먼저 적용된 뒤 이름 검증에서 예외가 터지는 순서라,
+### DB에도 반영이 안 되고 캐시 갱신 이벤트도 커밋 안 됐으니 소비되지 않아야 정상
+PUT {{baseUrl}}/api/v1/sensor/{{sensorId}}
+X-USER-ID: {{userId}}
+Content-Type: application/json
+
+{
+  "locationName": "{{locationName}}",
+  "sensorName": " "
+}
+
+### 3) DB 롤백 확인용 재조회 - locationId가 2번의 "{{locationName}}"이 아니라
+### 1번에서 설정한 "{{secondLocationName}}" 그대로여야 정상 (IntelliJ DB 콘솔에서 sensors.location_id로 대조)
+GET {{baseUrl}}/api/v1/sensor/{{sensorId}}
+X-USER-ID: {{userId}}
+
+### 센서 단건 삭제 (204 기대)
+DELETE {{baseUrl}}/api/v1/sensor/{{sensorId}}
+X-USER-ID: {{userId}}
+
+### 센서 그룹 전체 삭제 (204 기대)
+DELETE {{baseUrl}}/api/v1/sensor?groupId={{groupId}}
+X-USER-ID: {{userId}}

@@ -1,10 +1,12 @@
 package com.insighton.core.domain.groups.service.impl;
 
 import com.insighton.core.domain.groups.dto.request.GroupRequest;
+import com.insighton.core.domain.groups.dto.request.GroupUpdateRequest;
 import com.insighton.core.domain.groups.dto.response.GroupAdminResponse;
 import com.insighton.core.domain.groups.dto.response.GroupResponse;
 import com.insighton.core.domain.groups.entity.Group;
 import com.insighton.core.domain.groups.exception.GroupNotFoundException;
+import com.insighton.core.domain.groups.exception.InvitationTokenMismatchException;
 import com.insighton.core.domain.groups.exception.InviteTokenNotFoundException;
 import com.insighton.core.domain.groups.exception.UnAuthorizedAccessException;
 import com.insighton.core.domain.groups.repository.GroupRepository;
@@ -15,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -42,7 +45,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     @Transactional
-    public void updateGroup(GroupRequest request, Long groupId) {
+    public void updateGroup(GroupUpdateRequest request, Long groupId) {
 
         Group group = groupFindById(groupId);
 
@@ -95,6 +98,7 @@ public class GroupServiceImpl implements GroupService {
         // 대상 그룹 조회 (없을 시 exception 던지기)
         Group groupEntity = groupFindById(groupId);
 
+
         groupRepository.delete(groupEntity);
     }
 
@@ -118,6 +122,22 @@ public class GroupServiceImpl implements GroupService {
     @Override
     public Group groupFindById(Long groupId) {
         return groupRepository.findById(groupId)
+                .orElseThrow(() -> new GroupNotFoundException(groupId));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public void validateInviteToken(Long groupId, String inviteToken) {
+        Group groupEntity = groupFindById(groupId);
+        if (!Objects.equals(groupEntity.getInviteToken(), inviteToken)) {
+            throw new InvitationTokenMismatchException();
+        }
+    }
+
+    @Override
+    @Transactional
+    public Group findWithLockByGroupId(Long groupId) {
+        return groupRepository.findWithLockByGroupId(groupId)
                 .orElseThrow(() -> new GroupNotFoundException(groupId));
     }
 }

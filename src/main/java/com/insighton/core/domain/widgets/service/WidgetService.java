@@ -63,4 +63,13 @@ public interface WidgetService {
      * @param dashboardId 삭제 될 dashboard ID
      */
     void deleteAllWidget(Long dashboardId);
+
+
+    /**
+     * DB에 존재하는 widget ID List 가져오기
+     *
+     * @param dashboardId widget들이 존재하는 dashboard ID
+     * @return widget ID List 반환
+     */
+    List<Long> getWidgetIdsByDashboardId(Long dashboardId);
 }
