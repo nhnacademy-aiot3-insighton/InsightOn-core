@@ -6,7 +6,9 @@ import com.insighton.core.domain.dashboards.entity.Dashboard;
 import com.insighton.core.domain.dashboards.service.DashboardService;
 import com.insighton.core.domain.groupmember.entity.GroupMember;
 import com.insighton.core.domain.groupmember.service.GroupMemberService;
+import com.insighton.core.domain.groups.entity.Group;
 import com.insighton.core.domain.groups.exception.NoPermissionException;
+import com.insighton.core.domain.groups.service.GroupService;
 import com.insighton.core.domain.location.dto.request.LocationCreateRequest;
 import com.insighton.core.domain.location.dto.request.LocationUpdateRequest;
 import com.insighton.core.domain.location.dto.response.LocationListResponse;
@@ -26,6 +28,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class LocationUseCase {
     private final GroupMemberService groupMemberService;
+    private final GroupService groupService;
     private final LocationService locationService;
     private final ApplicationEventPublisher eventPublisher;
     private final DashboardService dashboardService;
@@ -47,8 +50,10 @@ public class LocationUseCase {
         // member가 member 권한일 때는 에러를 던지고
         validationIsAdmin(groupMember);
 
+        Group group = groupService.findWithLockByGroupId(groupId);
+
         // 만들기
-        Location location = locationService.createLocation(groupMember.getGroup(), request);
+        Location location = locationService.createLocation(group, request);
 
         DashboardRequest dashboardRequest = new DashboardRequest(location.getLocationId(), request.locationName() + " - dashboard");
 

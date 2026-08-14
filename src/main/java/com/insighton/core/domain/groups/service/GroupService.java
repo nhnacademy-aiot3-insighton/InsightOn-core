@@ -84,4 +84,12 @@ public interface GroupService {
      * @param inviteToken 검증할 초대 토큰
      */
     void validateInviteToken(Long groupId, String inviteToken);
+
+    /**
+     * 비관적 락을 적용하여 그룹 엔티티 조회 (동시성 제어용)
+     *
+     * @param groupId 찾으려는 Group ID
+     * @return 락이 걸린 Group 반환
+     */
+    Group findWithLockByGroupId(Long groupId);
 }

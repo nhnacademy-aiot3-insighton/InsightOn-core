@@ -54,6 +54,8 @@ public class GroupDeleteUseCase {
             throw NoPermissionException.forAdmin(groupMember.getGroupMemberId());
         }
 
+        groupService.findWithLockByGroupId(groupId);
+
         groupService.validateInviteToken(groupId, inviteToken);
 
         gatewayService.deleteByGroupId(groupId);

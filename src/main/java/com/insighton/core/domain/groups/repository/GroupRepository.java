@@ -23,4 +23,9 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
      * @return 조회된 그룹 엔티티를 포함하는 Optional 객체 (존재하지 않는 경우 빈 Optional 반환)
      */
     Optional<Group> findByInviteToken(String inviteToken);
+
+    /**
+     * 그룹 삭제 및 위치 생성 간 동시성 제어를 위한 비관적 락 조회
+     */
+    Optional<Group> findWithLockByGroupId(Long groupId);
 }
