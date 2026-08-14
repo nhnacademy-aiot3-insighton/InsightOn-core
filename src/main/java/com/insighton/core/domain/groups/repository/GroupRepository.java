@@ -1,7 +1,9 @@
 package com.insighton.core.domain.groups.repository;
 
 import com.insighton.core.domain.groups.entity.Group;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 
 import java.util.Optional;
 
@@ -27,5 +29,6 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
     /**
      * 그룹 삭제 및 위치 생성 간 동시성 제어를 위한 비관적 락 조회
      */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Group> findWithLockByGroupId(Long groupId);
 }
