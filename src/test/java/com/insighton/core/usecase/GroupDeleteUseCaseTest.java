@@ -87,7 +87,7 @@ class GroupDeleteUseCaseTest {
         // then
         verify(groupService, times(1)).validateInviteToken(1L, "testToken");
         verify(gatewayService, times(1)).deleteByGroupId(1L);
-        verify(sensorService, times(1)).deleteAll(1L, 1L);
+        verify(sensorService, times(1)).deleteAll(1L);
         verify(groupMemberService, times(1)).deleteGroupMemberAll(1L, 1L);
         verify(widgetService, times(1)).deleteAllWidget(100L);
         verify(dashboardService, times(1)).deleteDashboard(10L);

@@ -1,5 +1,6 @@
 package com.insighton.core.usecase;
 
+import com.insighton.core.domain.actuators.service.ActuatorService;
 import com.insighton.core.domain.dashboards.dto.request.DashboardRequest;
 import com.insighton.core.domain.dashboards.entity.Dashboard;
 import com.insighton.core.domain.dashboards.service.DashboardService;
@@ -57,6 +58,9 @@ class LocationUseCaseTest {
 
     @Mock
     private GroupService groupService;
+
+    @Mock
+    private ActuatorService actuatorService;
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
