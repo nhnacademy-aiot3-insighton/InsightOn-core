@@ -1,6 +1,9 @@
 package com.insighton.core.domain.weather.service;
 
-import com.insighton.core.adapter.client.external.WeatherApiClient;
+import com.insighton.core.domain.weather.dto.AirQualityDto;
+import com.insighton.core.domain.weather.dto.CurrentWeatherDto;
+import com.insighton.core.domain.weather.dto.ForecastWeatherDto;
+import com.insighton.core.domain.weather.dto.UltraForecastWeatherDto;
 import com.insighton.core.domain.weather.dto.WeatherDataDto;
 import com.insighton.core.domain.weather.exception.WeatherApiException;
 import com.insighton.core.domain.weather.util.CacheTimeUtils;
@@ -27,7 +30,7 @@ public class WeatherCacheService {
 
     private final RedisTemplate<String, WeatherDataDto> weatherRedisTemplate;
     private final StringRedisTemplate stringRedisTemplate;
-    private final WeatherApiClient weatherApiClient;
+    private final WeatherService weatherService;
 
     public WeatherDataDto getWeatherDate(int gridX, int gridY, String sidoName, String cityName, String baseDate,
                                          String baseTime) {
@@ -48,7 +51,6 @@ public class WeatherCacheService {
         boolean acquired = acquireLock(lockKey, lockToken);
 
         if (!acquired) {
-            // 락 획득 실패 시 대기 루프 (재선점 시 직접 캐시 채움 수행을 위해 파라미터 전달)
             return waitForCache(cacheKey, lockKey, lockToken, gridX, gridY, sidoName, cityName, baseDate, baseTime);
         }
 
@@ -57,6 +59,140 @@ public class WeatherCacheService {
             return loadAndCacheData(cacheKey, gridX, gridY, sidoName, cityName, baseDate, baseTime);
         } finally {
             // 4. 본인 토큰 검증 후 락 해제
+            releaseLock(lockKey, lockToken);
+        }
+    }
+
+    /**
+     * 초단기실황 및 초단기예보만 부분 갱신 (스케줄러용) - 날씨 데이터만 필요하므로 sidoName, cityName 불필요
+     */
+    public void refreshCurrentWeather(int gridX, int gridY, String baseDate, String baseTime) {
+        String cacheKey = String.format("weather:grid:%d:%d", gridX, gridY);
+        String lockKey = cacheKey + ":lock";
+        String lockToken = UUID.randomUUID().toString();
+
+        boolean acquired = acquireLock(lockKey, lockToken);
+        if (!acquired) {
+            log.warn("[초단기 갱신 락 획득 실패] 이미 다른 프로세스/스레드가 작업 중입니다. key: {}", cacheKey);
+            return;
+        }
+
+        try {
+            WeatherDataDto cachedData = weatherRedisTemplate.opsForValue().get(cacheKey);
+
+            if (cachedData == null) {
+                log.info("[초단기 갱신] 기존 캐시가 없어 전체 데이터를 새로 적재할 수 없습니다. (지역명 부재). key: {}", cacheKey);
+                return;
+            }
+
+            CurrentWeatherDto newCurrent = weatherService.currentWeather(gridX, gridY, baseDate, baseTime);
+            UltraForecastWeatherDto newUltraForecast = weatherService.ultraForecastWeather(gridX, gridY, baseDate,
+                    baseTime);
+
+            WeatherDataDto updatedData = new WeatherDataDto(
+                    newCurrent,
+                    cachedData.forecast(),
+                    newUltraForecast,
+                    cachedData.airQuality()
+            );
+
+            Duration ttl = weatherRedisTemplate.getExpire(cacheKey, java.util.concurrent.TimeUnit.SECONDS) > 0
+                    ? Duration.ofSeconds(
+                    weatherRedisTemplate.getExpire(cacheKey, java.util.concurrent.TimeUnit.SECONDS))
+                    : CacheTimeUtils.getDurationUtilNextHour();
+
+            weatherRedisTemplate.opsForValue().set(cacheKey, updatedData, ttl);
+            log.info("[초단기 부분 갱신 완료] key: {}", cacheKey);
+        } finally {
+            releaseLock(lockKey, lockToken);
+        }
+    }
+
+    /**
+     * 단기예보만 부분 갱신 (스케줄러용) - 날씨 데이터만 필요하므로 sidoName, cityName 불필요
+     */
+    public void refreshVillageForecast(int gridX, int gridY, String baseDate, String baseTime) {
+        String cacheKey = String.format("weather:grid:%d:%d", gridX, gridY);
+        String lockKey = cacheKey + ":lock";
+        String lockToken = UUID.randomUUID().toString();
+
+        boolean acquired = acquireLock(lockKey, lockToken);
+        if (!acquired) {
+            log.warn("[단기예보 갱신 락 획득 실패] 이미 다른 프로세스/스레드가 작업 중입니다. key: {}", cacheKey);
+            return;
+        }
+
+        try {
+            WeatherDataDto cachedData = weatherRedisTemplate.opsForValue().get(cacheKey);
+
+            if (cachedData == null) {
+                log.info("[단기예보 갱신] 기존 캐시가 없어 전체 데이터를 새로 적재할 수 없습니다. (지역명 부재). key: {}", cacheKey);
+                return;
+            }
+
+            ForecastWeatherDto newForecast = weatherService.forecastWeather(gridX, gridY, baseDate, baseTime);
+
+            WeatherDataDto updatedData = new WeatherDataDto(
+                    cachedData.current(),
+                    newForecast,
+                    cachedData.ultraForecastWeather(),
+                    cachedData.airQuality()
+            );
+
+            Duration ttl = weatherRedisTemplate.getExpire(cacheKey, java.util.concurrent.TimeUnit.SECONDS) > 0
+                    ? Duration.ofSeconds(
+                    weatherRedisTemplate.getExpire(cacheKey, java.util.concurrent.TimeUnit.SECONDS))
+                    : CacheTimeUtils.getDurationUtilNextHour();
+
+            weatherRedisTemplate.opsForValue().set(cacheKey, updatedData, ttl);
+            log.info("[단기예보 부분 갱신 완료] key: {}", cacheKey);
+        } finally {
+            releaseLock(lockKey, lockToken);
+        }
+    }
+
+    /**
+     * 미세먼지만 부분 갱신 (스케줄러용) - 미세먼지 API는 sidoName, cityName이 필수이므로 유지
+     */
+    public void refreshAirQuality(int gridX, int gridY, String sidoName, String cityName, String baseDate,
+                                  String baseTime) {
+        String cacheKey = String.format("weather:grid:%d:%d", gridX, gridY);
+        String lockKey = cacheKey + ":lock";
+        String lockToken = UUID.randomUUID().toString();
+
+        boolean acquired = acquireLock(lockKey, lockToken);
+        if (!acquired) {
+            log.warn("[미세먼지 갱신 락 획득 실패] 이미 다른 프로세스/스레드가 작업 중입니다. key: {}", cacheKey);
+            return;
+        }
+
+        try {
+            WeatherDataDto cachedData = weatherRedisTemplate.opsForValue().get(cacheKey);
+
+            if (cachedData == null) {
+                log.info("[미세먼지 갱신] 기존 캐시가 없어 전체 데이터를 새로 적재합니다. key: {}", cacheKey);
+                loadAndCacheData(cacheKey, gridX, gridY, sidoName, cityName, baseDate, baseTime);
+                return;
+            }
+
+            AirQualityDto newAirQuality = weatherService.airQuality(gridX, gridY, sidoName, cityName, baseDate,
+                    baseTime);
+
+            WeatherDataDto updatedData = new WeatherDataDto(
+                    cachedData.current(),
+                    cachedData.forecast(),
+                    cachedData.ultraForecastWeather(),
+                    newAirQuality
+            );
+
+            Duration ttl = weatherRedisTemplate.getExpire(cacheKey, java.util.concurrent.TimeUnit.SECONDS) > 0
+                    ? Duration.ofSeconds(
+                    weatherRedisTemplate.getExpire(cacheKey, java.util.concurrent.TimeUnit.SECONDS))
+                    : CacheTimeUtils.getDurationUtilNextHour();
+
+            weatherRedisTemplate.opsForValue().set(cacheKey, updatedData, ttl);
+            log.info("[미세먼지 부분 갱신 완료] key: {}", cacheKey);
+        } finally {
             releaseLock(lockKey, lockToken);
         }
     }
@@ -74,7 +210,7 @@ public class WeatherCacheService {
         }
 
         log.info("[Cache Miss Validated] key: {} - 외부 API 호출 실행", cacheKey);
-        WeatherDataDto freshData = weatherApiClient.fetchWeatherData(gridX, gridY, sidoName, cityName,
+        WeatherDataDto freshData = weatherService.fetchWeatherData(gridX, gridY, sidoName, cityName,
                 baseDate, baseTime);
 
         if (freshData != null) {

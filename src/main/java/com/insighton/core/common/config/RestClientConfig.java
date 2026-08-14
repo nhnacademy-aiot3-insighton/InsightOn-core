@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestClient;
 
 @Configuration
-public class WeatherClientConfig {
+public class RestClientConfig {
 
     @Value("${weather.api.kma-base-url}")
     private String kmaBaseUrl;
