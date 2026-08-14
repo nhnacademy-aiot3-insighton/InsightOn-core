@@ -1,9 +1,7 @@
 package com.insighton.core.domain.sensors.service.impl;
 
-import com.insighton.core.domain.sensorattributes.entity.MetricDefinition;
-import com.insighton.core.domain.sensorattributes.entity.SensorAttribute;
-import com.insighton.core.domain.sensorattributes.repository.MetricDefinitionRepository;
-import com.insighton.core.domain.sensorattributes.repository.SensorAttributeRepository;
+import com.insighton.core.adapter.mqtt.cache.SensorLookupCacheService;
+import com.insighton.core.adapter.mqtt.cache.dto.SensorCacheEntry;
 import com.insighton.core.domain.gateway.entity.Gateway;
 import com.insighton.core.domain.gateway.exception.GatewayNotFoundException;
 import com.insighton.core.domain.gateway.repository.GatewayRepository;
@@ -13,8 +11,10 @@ import com.insighton.core.domain.groups.repository.GroupRepository;
 import com.insighton.core.domain.location.entity.Location;
 import com.insighton.core.domain.location.exception.LocationNotFoundException;
 import com.insighton.core.domain.location.repository.LocationRepository;
-import com.insighton.core.adapter.mqtt.cache.SensorLookupCacheService;
-import com.insighton.core.adapter.mqtt.cache.dto.SensorCacheEntry;
+import com.insighton.core.domain.sensorattributes.entity.MetricDefinition;
+import com.insighton.core.domain.sensorattributes.entity.SensorAttribute;
+import com.insighton.core.domain.sensorattributes.repository.MetricDefinitionRepository;
+import com.insighton.core.domain.sensorattributes.repository.SensorAttributeRepository;
 import com.insighton.core.domain.sensors.dto.SensorResponse;
 import com.insighton.core.domain.sensors.dto.SensorUpdateRequest;
 import com.insighton.core.domain.sensors.entity.Sensor;
@@ -187,7 +187,7 @@ public class SensorServiceImpl implements SensorService {
             // 사용자는 locationId를 모르므로 센서가 속한 그룹 내에서 이름으로 찾음
             // (그룹 스코프로 찾기 때문에 다른 그룹 소속 location으로 잘못 옮겨질 걱정도 없음)
             Location location = locationsRepository.findByGroupGroupIdAndLocationName(
-                    // 예) 그룹 1에서 장소(1층어디회의실)은 하나밖에없으니 거기에 맞는 장소가 나옴
+                            // 예) 그룹 1에서 장소(1층어디회의실)은 하나밖에없으니 거기에 맞는 장소가 나옴
                             sensor.getGroup().getGroupId(), request.locationName())
                     .orElseThrow(() -> LocationNotFoundException.notFoundLocationByName(request.locationName()));
             // 그 정소를 가지고 센서는 업데이트함
@@ -208,16 +208,6 @@ public class SensorServiceImpl implements SensorService {
         if (hasSensorName) {
             sensor.updateName(request.sensorName());
         }
-    }
-
-    @Override
-    @Transactional // 센서 통신 시각 최신화 로직
-    public void handlePacketReceived(String sensorEui) {
-        if (sensorEui == null || sensorEui.trim().isEmpty()) {
-            return;
-        }
-        sensorRepository.findBySensorEui(sensorEui)
-                .ifPresent(Sensor::updateLastSeen);
     }
 
     @Override
@@ -264,7 +254,7 @@ public class SensorServiceImpl implements SensorService {
             entities = sensorRepository.findById(id).map(List::of).orElse(List.of());
         } else if (eui != null && !eui.trim().isEmpty()) {
             entities = sensorRepository.findBySensorEui(eui).map(List::of).orElse(List.of());
-        } else if (request.locationName() != null && !request.locationName().isBlank()){
+        } else if (request.locationName() != null && !request.locationName().isBlank()) {
             entities = sensorRepository.findByLocationLocationName(request.locationName());
         } else if (request.sensorName() != null && !request.sensorName().trim().isEmpty()) {
             entities = sensorRepository.findBySensorName(request.sensorName());
