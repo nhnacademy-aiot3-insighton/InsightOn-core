@@ -15,7 +15,7 @@ public class WeatherRecoveryUseCase {
     private final RegionService regionService;
     private final WeatherCacheService weatherCacheService;
 
-    public WeatherDataDto recoveryWeather(Long groupId, String baseTime, String baseDate) {
+    public WeatherDataDto recoveryWeather(Long groupId, String baseDate, String baseTime) {
 
         GroupRegionDto groupRegionDto = regionService.findByGroupRegion(groupId)
                 .orElseThrow(() -> new WeatherApiException("그룹 지역 정보를 찾을 수 없습니다. (데이터 유실 상태)"));
