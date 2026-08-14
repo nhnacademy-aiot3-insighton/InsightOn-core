@@ -1,8 +1,8 @@
 ### 전역 변수 설정
 @baseUrl = http://localhost:8080
 @userId = 2
-@groupId = 2
-@locationId = 1
+@groupId = 5
+@locationId = 3
 
 
 ### 2-1. 대시보드 정보 조회
@@ -18,7 +18,7 @@ X-USER-ID: {{userId}}
 
 [
   {
-    "widgetId": null,
+    "widgetId": 16,
     "title": "실시간 온도 모니터링",
     "widgetType": "LINE_CHART",
     "sensorId": 101,

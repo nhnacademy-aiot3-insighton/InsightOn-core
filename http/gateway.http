@@ -1,0 +1,33 @@
+### === 변수 ===
+@baseUrl = http://localhost:8080
+@userId = 1
+@groupId = 1
+@gatewayId = 1
+
+
+### =========================================
+### 게이트웨이 (생성/삭제만)
+### =========================================
+
+### 게이트웨이 생성 - 응답의 id를 {{gatewayId}}로 자동 캡처
+POST {{baseUrl}}/api/v1/gateways
+X-User-Id: {{userId}}
+Content-Type: application/json
+
+{
+  "groupsId": {{groupId}},
+  "name": "테스트 게이트웨이",
+  "protocolType": "MQTT",
+  "connectionConfig": {
+    "brokerUrls": ["tcp://localhost:1883"]
+  }
+}
+
+> {%
+    client.global.set("gatewayId", response.body.id);
+%}
+
+### 게이트웨이 삭제
+### 소속 센서/센서속성까지 먼저 정리한 뒤 삭제됨 (GatewayServiceImpl.delete -> purgeSensorOf)
+DELETE {{baseUrl}}/api/v1/gateways/{{gatewayId}}
+X-User-Id: {{userId}}

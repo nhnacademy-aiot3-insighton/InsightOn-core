@@ -1,8 +1,8 @@
-// SensorAttributeController.java (센서별 속성 전용으로 정리)
 package com.insighton.core.controller.api;
 
 import com.insighton.core.domain.sensorattributes.dto.SensorAttributeResponse;
-import com.insighton.core.domain.sensorattributes.service.SensorAttributeService;
+import com.insighton.core.usecase.sensorattribute.DeleteAttributeUseCase;
+import com.insighton.core.usecase.sensorattribute.GetAllAttributeUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,13 +14,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SensorAttributeController {
 
-    private final SensorAttributeService attributeService;
+    private final GetAllAttributeUseCase getAllAttributeUseCase;
+    private final DeleteAttributeUseCase deleteAttributeUseCase;
 
     @GetMapping
     public ResponseEntity<List<SensorAttributeResponse>> getSensorAttribute(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("sensor-id") Long sensorId){
-        return ResponseEntity.ok(attributeService.getAllAttributeBySensorId(userId, sensorId));
+        return ResponseEntity.ok(getAllAttributeUseCase.getAllAttributeBySensorId(userId, sensorId));
     }
 
     @DeleteMapping("/{metric-key}")
@@ -28,7 +29,7 @@ public class SensorAttributeController {
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("sensor-id") Long sensorId,
             @PathVariable("metric-key") String metricKey){
-        attributeService.deleteAttribute(userId, sensorId, metricKey);
+        deleteAttributeUseCase.deleteAttribute(userId, sensorId, metricKey);
         return ResponseEntity.noContent().build();
     }
 }

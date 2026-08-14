@@ -5,6 +5,7 @@ import com.insighton.core.domain.groups.dto.request.GroupUpdateRequest;
 import com.insighton.core.domain.groups.dto.response.GroupAdminResponse;
 import com.insighton.core.domain.groups.dto.response.GroupResponse;
 import com.insighton.core.domain.groups.service.GroupService;
+import com.insighton.core.usecase.GroupDeleteUseCase;
 import com.insighton.core.usecase.GroupUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/groups")
 public class GroupController {
     private final GroupUseCase coreUseCase;
+    private final GroupDeleteUseCase groupDeleteUseCase;
     private final GroupService groupService;
 
     /**
@@ -139,7 +141,7 @@ public class GroupController {
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
             @RequestParam String inviteToken) {
-        coreUseCase.deleteGroup(userId, groupId, inviteToken);
+        groupDeleteUseCase.deleteGroup(userId, groupId, inviteToken);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }

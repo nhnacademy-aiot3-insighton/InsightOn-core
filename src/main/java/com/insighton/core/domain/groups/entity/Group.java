@@ -71,8 +71,14 @@ public class Group {
     }
 
     public void update(GroupUpdateRequest request) {
-        this.name = request.name();
-        this.description = request.description();
-        this.groupRegion = request.groupRegion();
+        if (request.name() != null) {
+            this.name = request.name();
+        }
+        if (request.description() != null) {
+            this.description = request.description();
+        }
+        if (request.groupRegion() != null) {
+            this.groupRegion = request.groupRegion();
+        }
     }
 }

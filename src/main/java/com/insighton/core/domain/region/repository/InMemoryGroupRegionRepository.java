@@ -1,6 +1,7 @@
 package com.insighton.core.domain.region.repository;
 
 import com.insighton.core.domain.region.dto.GroupRegionDto;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,6 +22,11 @@ public class InMemoryGroupRegionRepository implements GroupRegionRepository {
     @Override
     public Optional<GroupRegionDto> findByGroupId(Long groupId) {
         return Optional.ofNullable(groupRegionDtoMap.get(groupId));
+    }
+
+    @Override
+    public List<GroupRegionDto> findAll() {
+        return List.copyOf(groupRegionDtoMap.values());
     }
 
     @Override

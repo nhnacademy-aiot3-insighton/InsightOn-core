@@ -40,8 +40,8 @@ public class GlobalExceptionHandler {
             SensorNotFoundException.class, ActuatorNotFoundException.class,
             MetricKeyNotFoundException.class, DashboardNotFoundException.class,
             WidgetNotFoundException.class, WidgetConfigNotFoundException.class,
-            ActuatorLocationsActuatorTypeNotFound.class,
-            GroupRegistrationNotFoundException.class
+            ActuatorLocationsActuatorTypeNotFound.class, GroupRegistrationNotFoundException.class,
+            LocationNotFoundException.class
     })
     public ResponseEntity<ErrorResponse> handleNotFound(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
