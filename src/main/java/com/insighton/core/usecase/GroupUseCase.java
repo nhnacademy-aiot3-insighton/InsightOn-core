@@ -68,6 +68,7 @@ public class GroupUseCase {
     @Transactional
     public void updateGroup(GroupUpdateRequest request, Long userId, Long groupId) {
         if (groupMemberService.isGroupAdmin(groupId, userId)) {
+            groupService.updateGroup(request, groupId);
 
             if (request.groupRegion() != null) {
                 eventPublisher.publishEvent(new GroupRegionUpdateEvent(groupId, request.groupRegion()));
