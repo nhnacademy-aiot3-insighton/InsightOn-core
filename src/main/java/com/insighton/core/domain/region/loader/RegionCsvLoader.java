@@ -23,7 +23,7 @@ public class RegionCsvLoader implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        ClassPathResource resource = new ClassPathResource("/locations.csv");
+        ClassPathResource resource = new ClassPathResource("/data/locations.csv");
 
         try (BufferedReader bufferedReader = new BufferedReader(
                 new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8))) {
