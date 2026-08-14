@@ -171,7 +171,7 @@ public class WeatherCacheService {
 
             if (cachedData == null) {
                 log.info("[미세먼지 갱신] 기존 캐시가 없어 전체 데이터를 새로 적재합니다. key: {}", cacheKey);
-                getWeatherDate(gridX, gridY, sidoName, cityName, baseDate, baseTime);
+                loadAndCacheData(cacheKey, gridX, gridY, sidoName, cityName, baseDate, baseTime);
                 return;
             }
 
