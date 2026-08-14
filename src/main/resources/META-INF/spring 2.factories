@@ -1,0 +1,2 @@
+org.springframework.boot.env.EnvironmentPostProcessor=\
+com.insighton.core.common.config.InstanceIndexEnvironmentPostProcessor
