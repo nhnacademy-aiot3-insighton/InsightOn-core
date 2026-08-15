@@ -29,6 +29,9 @@ public interface SensorService {
     List<SensorResponse> searchSensors(Long groupId, Long id, String eui,
                                        SensorUpdateRequest request);
 
+    // 장소 미배정(location이 null인) 센서 목록 조회 - 자동 등록됐지만 아직 설치 위치를 안 정한 센서 파악용
+    List<SensorResponse> getUnassignedSensors(Long groupId);
+
     Long getSensorGroupId(Long sensorId);
 
     /**
