@@ -33,7 +33,7 @@ public class ActuatorStatusHeartbeatScheduler {
             String groupId = String.valueOf(actuator.getLocation().getGroup().getGroupId());
             String locationId = String.valueOf(actuator.getLocation().getLocationId());
             String actuatorId = String.valueOf(actuator.getActuatorId());
-            String actuatorType = actuator.getActuatorType().name();
+            String actuatorType = actuator.getActuatorType();
 
             Object powerValue = actuator.getCurrentState() == null ? null
                     : actuator.getCurrentState().get(CommandType.POWER_STATUS.getStateKey());

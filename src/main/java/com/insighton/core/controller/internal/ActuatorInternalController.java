@@ -6,9 +6,7 @@ import com.insighton.core.domain.actuatorrunlogs.service.ActuatorRunLogService;
 import com.insighton.core.domain.actuators.entity.Actuator;
 import com.insighton.core.domain.actuators.policy.ActuatorCommandPreset;
 import com.insighton.core.domain.actuators.dto.ActuatorCommandRequest;
-import com.insighton.core.domain.actuators.entity.ActuatorType;
 import com.insighton.core.domain.actuators.exception.ActuatorLocationsActuatorTypeNotFound;
-import com.insighton.core.domain.actuators.exception.InvalidActuatorValueException;
 import com.insighton.core.domain.actuators.exception.InvalidServiceCredentialException;
 import com.insighton.core.domain.actuators.repository.ActuatorRepository;
 import com.insighton.core.domain.actuators.service.ActuatorService;
@@ -56,8 +54,8 @@ public class ActuatorInternalController {
             throw new InvalidServiceCredentialException("이 내부 API는 USER가 호출할 수 없습니다");
         }
 
-        // 문자열 actuatorType을 enum으로 변환, 존재하지 않는 값이면 400으로 처리
-        ActuatorType actuatorType = parseActuatorType(request.actuatorType());
+        // 액추에이터 종류
+        String actuatorType = request.actuatorType();
 
         // 요청받은 location+actuatorType 조합에 해당하는 액추에이터 전부 조회 (AI는 개별 actuatorId를 모르므로)
         List<Actuator> actuators = actuatorRepository.findByLocationLocationIdAndActuatorType(locationId, actuatorType);
@@ -80,16 +78,6 @@ public class ActuatorInternalController {
         }
 
         return ResponseEntity.ok().build();
-    }
-
-    // ActuatorType.valueOf()가 정의 안 된 값(오타 등)을 받으면 IllegalArgumentException을 던지는데,
-    // 이건 GlobalExceptionHandler에 등록 안 되어있어서 그대로 두면 500으로 나감 -> 400으로 변환
-    private ActuatorType parseActuatorType(String actuatorType) {
-        try {
-            return ActuatorType.valueOf(actuatorType); // 유효하지 않는 문자열이면 여기서 예외 발생
-        } catch (IllegalArgumentException e) {
-            throw new InvalidActuatorValueException("알 수 없는 actuatorType입니다: " + actuatorType);
-        }
     }
 
 }

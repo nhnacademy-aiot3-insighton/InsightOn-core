@@ -1,6 +1,9 @@
 package com.insighton.core.common.exception;
 
 import com.insighton.core.domain.actuators.exception.*;
+import com.insighton.core.domain.actuatortypedefinition.exception.ActuatorTypeAlreadyExistsException;
+import com.insighton.core.domain.actuatortypedefinition.exception.ActuatorTypeInUseException;
+import com.insighton.core.domain.actuatortypedefinition.exception.ActuatorTypeNotFoundException;
 import com.insighton.core.domain.dashboards.exception.DashboardNotFoundException;
 import com.insighton.core.domain.gateway.exception.*;
 import com.insighton.core.domain.groupmember.exception.*;
@@ -41,7 +44,7 @@ public class GlobalExceptionHandler {
             MetricKeyNotFoundException.class, DashboardNotFoundException.class,
             WidgetNotFoundException.class, WidgetConfigNotFoundException.class,
             ActuatorLocationsActuatorTypeNotFound.class, GroupRegistrationNotFoundException.class,
-            LocationNotFoundException.class
+            LocationNotFoundException.class, ActuatorTypeNotFoundException.class // 등록 안 되어 있어 500으로 나가던 것을 404로 수정
     })
     public ResponseEntity<ErrorResponse> handleNotFound(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -58,7 +61,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler({AlreadyJoinedException.class, MetricKeyAlreadyExistsException.class, GatewayAlreadyExistsException.class,
-            AlreadyRequestedException.class, AlreadyProcessedException.class, AlreadyDashboardSaveException.class})
+            AlreadyRequestedException.class, AlreadyProcessedException.class, AlreadyDashboardSaveException.class,
+            ActuatorTypeAlreadyExistsException.class, ActuatorTypeInUseException.class}) // 이 둘도 등록 안 되어 있어 500으로 나가던 것을 409로 수정
     public ResponseEntity<ErrorResponse> handleConflict(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ErrorResponse(HttpStatus.CONFLICT.value(), e.getMessage()));

@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 
 // 액추에이터 종류 마스터 데이터 - 그룹에 속하지 않는 전역 카탈로그 (MetricDefinition과 동일한 성격)
 @Entity
-@Table(name ="actuator_type_definitions")
+@Table(name ="actuator_type")
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor

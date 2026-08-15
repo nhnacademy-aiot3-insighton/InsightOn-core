@@ -14,7 +14,7 @@ public interface ActuatorTypeService {
     void createActuatorType(ActuatorTypeCreateRequest request);
 
 
-    // 액우에이터 종류 삭제
+    // 액추에이터 종류 삭제
     void deleteActuatorType(String typeCode);
 
 }

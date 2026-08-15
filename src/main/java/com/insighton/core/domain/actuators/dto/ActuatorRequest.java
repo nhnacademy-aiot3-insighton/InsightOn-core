@@ -1,7 +1,6 @@
 package com.insighton.core.domain.actuators.dto;
 
 
-import com.insighton.core.domain.actuators.entity.ActuatorType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -16,8 +15,9 @@ public record ActuatorRequest(
         @Size(max = 100, message = "장비 이름은 100자를 넘을 수 없습니다")
         String sensorName, // 장비 명칭
 
-        @NotNull(message = "액추에이터 타입 필수")
-        ActuatorType actuatorType, // 액추에이터 종류
+        @NotBlank(message = "액추에이터 타입 필수")
+        @Size(max = 30, message = "액추에이터 타입은 30자를 넘을 수 없습니다")
+        String actuatorType, // 액추에이터 종류
 
         @NotNull(message = "초기 상태값 필수")
         Map<String, Object> currentState // JSONB에 저장될 초기 상태 객체

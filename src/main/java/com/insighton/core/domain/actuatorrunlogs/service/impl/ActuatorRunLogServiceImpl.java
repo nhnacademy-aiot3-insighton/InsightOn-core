@@ -44,7 +44,7 @@ public class ActuatorRunLogServiceImpl implements ActuatorRunLogService {
         String groupId = String.valueOf(actuator.getLocation().getGroup().getGroupId());
         String locationId = String.valueOf(actuator.getLocation().getLocationId());
         String actuatorId = String.valueOf(actuator.getActuatorId());
-        String actuatorType = actuator.getActuatorType().name();
+        String actuatorType = actuator.getActuatorType();
 
         // 상태 맵을 순회하며 매핑되는 CommandType을 찾아 실행 로그를 저장
         newState.forEach((key, value) -> CommandType.fromStateKey(key).ifPresentOrElse(

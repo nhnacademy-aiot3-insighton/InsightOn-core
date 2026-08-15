@@ -1,6 +1,5 @@
 package com.insighton.core.domain.actuators.repository;
 
-import com.insighton.core.domain.actuators.entity.ActuatorType;
 import com.insighton.core.domain.actuators.entity.Actuator;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -12,14 +11,14 @@ public interface ActuatorRepository extends JpaRepository<Actuator, Long> {
     // 특정 위치(locationId)에 속한 모든 액추에이터 조회
     List<Actuator> findByLocationLocationId(Long locationId);
 
-    // 액추에이터 종류(ActuatorType)별 목록 조회
-    List<Actuator> findByActuatorType(ActuatorType actuatorType);
+    // 액추에이터 종류(typeCode)별 목록 조회
+    List<Actuator> findByActuatorType(String actuatorType);
 
     // 위치 기반 액추에이터 타입 조회
-    List<Actuator> findByLocationLocationIdAndActuatorType(Long locationId, ActuatorType actuatorType);
+    List<Actuator> findByLocationLocationIdAndActuatorType(Long locationId, String actuatorType);
 
     // 특정 액추에이터 종류를 사용 중인 액추에이터 수 조회 - 종류 삭제 전 사용 여부 확인용
-    long countByActuatorType(ActuatorType actuatorType);
+    long countByActuatorType(String actuatorType);
 
     // 장소 삭제용
     void deleteAllByLocationLocationId(Long locationId);

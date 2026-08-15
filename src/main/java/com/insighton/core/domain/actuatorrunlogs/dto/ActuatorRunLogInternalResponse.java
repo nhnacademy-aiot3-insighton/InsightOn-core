@@ -19,7 +19,7 @@ public record ActuatorRunLogInternalResponse(
         return new ActuatorRunLogInternalResponse(
                 entity.getActuator().getLocation().getLocationId(),
                 entity.getActuator().getActuatorId(),
-                entity.getActuator().getActuatorType().name(),
+                entity.getActuator().getActuatorType(),
                 entity.getCommandType().name(),
                 entity.getCommandValue(),
                 entity.getExecutedByType().name(),

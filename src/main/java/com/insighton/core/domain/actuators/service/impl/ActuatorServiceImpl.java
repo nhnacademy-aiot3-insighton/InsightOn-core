@@ -10,6 +10,8 @@ import com.insighton.core.domain.actuators.exception.ActuatorNotFoundException;
 import com.insighton.core.domain.actuators.exception.InvalidActuatorValueException;
 import com.insighton.core.domain.actuators.repository.ActuatorRepository;
 import com.insighton.core.domain.actuators.service.ActuatorService;
+import com.insighton.core.domain.actuatortypedefinition.exception.ActuatorTypeNotFoundException;
+import com.insighton.core.domain.actuatortypedefinition.repository.ActuatorTypeRepository;
 import com.insighton.core.domain.location.dto.response.LocationListResponse;
 import com.insighton.core.domain.location.entity.Location;
 import com.insighton.core.domain.location.exception.LocationNotFoundException;
@@ -31,6 +33,7 @@ public class ActuatorServiceImpl implements ActuatorService {
     private final ActuatorRepository actuatorRepository; // 액추에이터 조회/저장
     private final ActuatorRunLogService actuatorRunLogService; // 제어 이력 기록용
     private final ActuatorRunLogRepository actuatorRunLogRepository;
+    private final ActuatorTypeRepository actuatorTypeRepository; // 생성 시 actuatorType 존재 검증
 
     // 대상 액추에이터가 실제로 groupsId 소속인지 확인 (locationId -> location.groupId 교차검증)
     // 다른 그룹 리소스 존재 여부를 노출하지 않기 위해 404로 통일
@@ -50,6 +53,11 @@ public class ActuatorServiceImpl implements ActuatorService {
         // 조회 및 검증 - 사용자는 locationId를 모르므로 그룹 내 이름으로 찾음
         Location locations = locationsRepository.findByGroupGroupIdAndLocationName(groupsId, request.locationName())
                 .orElseThrow(() -> LocationNotFoundException.notFoundLocationByName(request.locationName()));
+
+        // 등록된 액추에이터 종류인지 확인
+        if (!actuatorTypeRepository.existsById(request.actuatorType())) {
+            throw new ActuatorTypeNotFoundException(request.actuatorType());
+        }
 
         Actuator entity = Actuator.builder()
                 .location(locations)

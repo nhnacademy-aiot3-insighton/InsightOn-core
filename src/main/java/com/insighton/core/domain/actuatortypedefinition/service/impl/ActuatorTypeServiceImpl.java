@@ -55,8 +55,8 @@ public class ActuatorTypeServiceImpl implements ActuatorTypeService {
             throw new ActuatorTypeNotFoundException(typeCode);
         }
 
-        // 이 종류를 쓰고 있는 액추에이터가 있으면 삭제 금지 - 그룹 삭제 때 액추에이터 빼먹었던 것과 같은 실수 방지
-        long usageCount = actuatorRepository.countByActuatorType();
+        // 이 종류를 쓰고 있는 액추에이터가 있으면 삭제 금지
+        long usageCount = actuatorRepository.countByActuatorType(typeCode);
         if (usageCount > 0) {
             throw new ActuatorTypeInUseException(typeCode, usageCount);
         }
