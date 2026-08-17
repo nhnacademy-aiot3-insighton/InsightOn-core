@@ -19,6 +19,12 @@ public class RabbitConfig {
     public static final String GROUP_DELETED_ROUTING_KEY = "group.deleted";
     public static final String LOCATION_DELETED_ROUTING_KEY = "location.deleted";
 
+    // 액추에이터, 센서 삭제 이벤트
+    public static final String ACTUATOR_DELETED_QUEUE = "ai-service.actuator-deleted.queue";
+    public static final String SENSOR_DELETED_QUEUE = "ai-service.sensor-deleted.queue";
+    public static final String ACTUATOR_DELETED_ROUTING_KEY = "actuator.deleted";
+    public static final String SENSOR_DELETED_ROUTING_KEY = "sensor.deleted";
+
     public static final String TELEMETRY_EXCHANGE = "insighton.core.telemetry.exchange";
     public static final String TELEMETRY_ROUTING_KEY_PREFIX = "insighton.telemetry.";
 
@@ -43,6 +49,16 @@ public class RabbitConfig {
     }
 
     @Bean
+    public Queue actuatorDeletedQueue() {
+        return new Queue(ACTUATOR_DELETED_QUEUE, true);
+    }
+
+    @Bean
+    public Queue sensorDeletedQueue() {
+        return new Queue(SENSOR_DELETED_QUEUE, true);
+    }
+
+    @Bean
     public Binding groupDeletedBinding(Queue groupDeletedQueue, @Qualifier("coreEventsExchange") TopicExchange coreEventExchange) {
         return BindingBuilder.bind(groupDeletedQueue)
                 .to(coreEventExchange)
@@ -54,6 +70,20 @@ public class RabbitConfig {
         return BindingBuilder.bind(locationDeletedQueue)
                 .to(coreEventExchange)
                 .with(LOCATION_DELETED_ROUTING_KEY);
+    }
+
+    @Bean
+    public Binding actuatorDeletedBinding(Queue actuatorDeletedQueue, @Qualifier("coreEventsExchange") TopicExchange coreEventExchange) {
+        return BindingBuilder.bind(actuatorDeletedQueue)
+                .to(coreEventExchange)
+                .with(ACTUATOR_DELETED_ROUTING_KEY);
+    }
+
+    @Bean
+    public Binding sensorDeletedBinding(Queue sensorDeletedQueue, @Qualifier("coreEventsExchange") TopicExchange coreEventExchange) {
+        return BindingBuilder.bind(sensorDeletedQueue)
+                .to(coreEventExchange)
+                .with(SENSOR_DELETED_ROUTING_KEY);
     }
 
     @Bean
