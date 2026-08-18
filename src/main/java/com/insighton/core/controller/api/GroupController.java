@@ -1,5 +1,6 @@
 package com.insighton.core.controller.api;
 
+import com.insighton.core.domain.groupmember.dto.request.GroupMemberJoinRequest;
 import com.insighton.core.domain.groups.dto.request.GroupRequest;
 import com.insighton.core.domain.groups.dto.request.GroupUpdateRequest;
 import com.insighton.core.domain.groups.dto.response.GroupAdminResponse;
@@ -73,6 +74,25 @@ public class GroupController {
         GroupResponse response = coreUseCase.getGroupPreview(inviteToken, userId, groupId);
 
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 초대 토큰으로 그룹 가입 (이미 계정이 있는 로그인 유저용 — 회원가입 시 토큰을 안 넣은 경우 등)
+     *
+     * @param userId      login한 user의 ID
+     * @param inviteToken 초대 토큰
+     * @return 성공 시 상태 200 반환
+     */
+    @PostMapping("/join")
+    public ResponseEntity<Void> joinGroup(
+            @RequestHeader("X-USER-ID") Long userId,
+            @RequestParam String inviteToken) {
+        coreUseCase.joinGroupByToken(GroupMemberJoinRequest.builder()
+                .inviteToken(inviteToken)
+                .userId(userId)
+                .build());
+
+        return ResponseEntity.ok().build();
     }
 
     /**
