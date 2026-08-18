@@ -52,7 +52,7 @@ class SensorControllerTest {
         return new SensorResponse(
                 1L, 10L, 20L,
                 "EUI-0001", "4층 CO2 센서",
-                OffsetDateTime.now(), OffsetDateTime.now()
+                OffsetDateTime.now()
         );
     }
 
