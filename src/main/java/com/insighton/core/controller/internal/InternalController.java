@@ -81,7 +81,7 @@ public class InternalController {
      * @param userId 조회할 user ID
      * @return 권한이 있으면 true, 없으면 false
      */
-    @GetMapping("/users/{user-id}/manager-groups/exists")
+    @GetMapping("/users/{user-id}/manager-group")
     public ResponseEntity<ManagerGroupResponse> existsManagerGroup(
             @PathVariable("user-id") Long userId) {
 
