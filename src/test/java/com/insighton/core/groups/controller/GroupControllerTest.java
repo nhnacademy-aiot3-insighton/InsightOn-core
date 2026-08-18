@@ -7,8 +7,7 @@ import com.insighton.core.domain.groups.dto.request.GroupUpdateRequest;
 import com.insighton.core.domain.groups.dto.response.GroupAdminResponse;
 import com.insighton.core.domain.groups.dto.response.GroupResponse;
 import com.insighton.core.domain.groups.service.GroupService;
-import com.insighton.core.usecase.group.GroupDeleteUseCase;
-import com.insighton.core.usecase.group.GroupUseCase;
+import com.insighton.core.usecase.group.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -42,13 +41,22 @@ class GroupControllerTest {
     private ObjectMapper objectMapper;
 
     @MockitoBean
-    private GroupUseCase groupsUseCase;
+    private GroupCreateUseCase groupsUseCase;
 
     @MockitoBean
     private GroupService groupService;
 
     @MockitoBean
     private GroupDeleteUseCase groupDeleteUseCase;
+
+    @MockitoBean
+    private GroupTokenUseCase groupTokenUseCase;
+
+    @MockitoBean
+    private GroupGetUseCase groupGetUseCase;
+
+    @MockitoBean
+    private GroupUpdateUseCase groupUpdateUseCase;
 
     @Nested
     @DisplayName("성공 케이스")
@@ -73,14 +81,14 @@ class GroupControllerTest {
         void getMyGroup_success() throws Exception {
             // given
             GroupResponse mockResponse = new GroupResponse(1L, "testName", "testDescription", "testLocation", "testToken", OffsetDateTime.now());
-            given(groupsUseCase.getMyGroup(1L, 1L)).willReturn(mockResponse);
+            given(groupGetUseCase.getMyGroup(1L, 1L)).willReturn(mockResponse);
 
             // when & then
             mockMvc.perform(get("/api/v1/groups/{group-id}/my-group", 1L)
                             .header("X-USER-ID", 1L))
                     .andExpect(status().isOk());
 
-            verify(groupsUseCase).getMyGroup(1L, 1L);
+            verify(groupGetUseCase).getMyGroup(1L, 1L);
         }
 
         @Test
@@ -88,7 +96,7 @@ class GroupControllerTest {
         void getGroupPreview_success() throws Exception {
             // given
             GroupResponse mockResponse = new GroupResponse(1L, "testName", "testDescription", "testLocation", "testToken", OffsetDateTime.now());
-            given(groupsUseCase.getGroupPreview("testToken", 1L, 1L)).willReturn(mockResponse);
+            given(groupGetUseCase.getGroupPreview("testToken", 1L, 1L)).willReturn(mockResponse);
 
             // when & then
             mockMvc.perform(get("/api/v1/groups/{group-id}/preview", 1L)
@@ -96,7 +104,7 @@ class GroupControllerTest {
                             .param("inviteToken", "testToken"))
                     .andExpect(status().isOk());
 
-            verify(groupsUseCase).getGroupPreview("testToken", 1L, 1L);
+            verify(groupGetUseCase).getGroupPreview("testToken", 1L, 1L);
         }
 
         @Test
@@ -124,7 +132,7 @@ class GroupControllerTest {
                             .header("X-USER-ID", 1L))
                     .andExpect(status().isOk());
 
-            verify(groupsUseCase).newInviteToken(1L, 1L);
+            verify(groupTokenUseCase).newInviteToken(1L, 1L);
         }
 
         @Test
@@ -138,7 +146,7 @@ class GroupControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk());
 
-            verify(groupsUseCase).updateGroup(any(GroupUpdateRequest.class), eq(1L), eq(1L));
+            verify(groupUpdateUseCase).updateGroup(any(GroupUpdateRequest.class), eq(1L), eq(1L));
         }
 
         @Test
