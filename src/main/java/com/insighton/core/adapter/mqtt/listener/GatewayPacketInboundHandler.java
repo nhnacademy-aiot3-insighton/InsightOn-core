@@ -11,6 +11,8 @@ import com.insighton.core.adapter.mqtt.listener.dto.CleanTelemetryPacket;
 import com.insighton.core.adapter.mqtt.listener.dto.TelemetryEventMessage;
 import com.insighton.core.domain.sensors.service.SensorService;
 import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -22,10 +24,12 @@ import org.springframework.messaging.MessagingException;
 import org.springframework.stereotype.Component;
 
 /**
- * 모든 게이트웨이의 MQTT 인바운드 flow가 공유하는 패킷 진입점.
- * {@code DynamicMqttGatewayManager}가 게이트웨이마다 만든 어댑터/flow가 전부 이 핸들러 하나로
- * 모이며, 하트비트 기록 → 페이로드 파싱 → 센서 조회 / 자동 등록 → InfluxDB/RabbitMQ 디스패치까지
- * 패킷 하나에 대한 처리 전체를 담당.
+ * 정제된 텔레메트리 이벤트를 Rule Engine 전파용 RabbitMQ x-consistent-hash Exchange에 비동기로 발행함.
+ * 같은 locationId가 같은 큐로 가도록 라우팅 키는 비워두고, locationId를 헤더로 실어서
+ * 그 값 기준으로 해시 라우팅되게 함(exchange 선언 시 hash-header 인자로 지정).
+ * {@code @Async}로 비동기 처리하며, 발행 실패는 예외를 던지지 않고 로그만 남기고 드롭함
+ * (Fail-Silent) — RabbitMQ 장애가 MQTT 리스너 스레드를 막지 않게 하기 위함.
+ *
  */
 @Component("gatewayPacketHandler")
 @RequiredArgsConstructor
