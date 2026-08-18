@@ -2,7 +2,7 @@ package com.insighton.core.controller.internal;
 
 import com.insighton.core.domain.weather.dto.WeatherDataDto;
 import com.insighton.core.domain.weather.dto.WeatherInternalResponse;
-import com.insighton.core.usecase.WeatherRecoveryUseCase;
+import com.insighton.core.usecase.weather.WeatherRecoveryUseCase;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;

@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 
 @UseCase
 @RequiredArgsConstructor
-public class WeatherRecoveryUseCase {
+public class  WeatherRecoveryUseCase {
 
     private final RegionService regionService;
     private final WeatherCacheService weatherCacheService;
