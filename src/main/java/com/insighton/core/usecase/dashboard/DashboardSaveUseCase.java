@@ -66,6 +66,8 @@ public class DashboardSaveUseCase {
             }
             widgetIds.add(targetWidgetId);
         }
+        // 최종 수정 일시 update
+        dashboard.updateWidgetLayout();
 
         return widgetIds;
     }
