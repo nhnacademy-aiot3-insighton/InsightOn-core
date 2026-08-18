@@ -7,7 +7,7 @@ import com.insighton.core.domain.location.dto.request.LocationUpdateRequest;
 import com.insighton.core.domain.location.dto.response.LocationListResponse;
 import com.insighton.core.domain.location.dto.response.LocationResponse;
 import com.insighton.core.domain.location.entity.Location;
-import com.insighton.core.usecase.location.LocationUseCase;
+import com.insighton.core.usecase.location.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -38,7 +38,19 @@ class LocationControllerTest {
     private ObjectMapper objectMapper;
 
     @MockitoBean
-    private LocationUseCase useCase;
+    private LocationDeleteUseCase useCase;
+
+    @MockitoBean
+    private LocationCreateUseCase locationCreateUseCase;
+
+    @MockitoBean
+    private LocationNameUpdateUseCase locationNameUpdateUseCase;
+
+    @MockitoBean
+    private LocationGetUseCase locationGetUseCase;
+
+    @MockitoBean
+    private LocationModeUpdateUseCase locationModeUpdateUseCase;
 
     @Nested
     @DisplayName("성공 케이스")
@@ -57,7 +69,7 @@ class LocationControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated());
 
-            verify(useCase).createLocation(eq(1L), eq(1L), any(LocationCreateRequest.class));
+            verify(locationCreateUseCase).createLocation(eq(1L), eq(1L), any(LocationCreateRequest.class));
         }
 
         @Test
@@ -65,7 +77,7 @@ class LocationControllerTest {
         void getLocationList_success() throws Exception {
             // given
             LocationListResponse mockResponse = new LocationListResponse(1L, "test", Location.AutoControlMode.SUGGESTION);
-            given(useCase.getLocationList(1L, 1L)).willReturn(List.of(mockResponse));
+            given(locationGetUseCase.getLocationList(1L, 1L)).willReturn(List.of(mockResponse));
 
             // when & then
             mockMvc.perform(get("/api/v1/groups/{group-id}/location/list", 1L)
@@ -75,7 +87,7 @@ class LocationControllerTest {
                     .andExpect(jsonPath("$[0].locationId").value(1L))
                     .andExpect(jsonPath("$[0].locationName").value("test"));
 
-            verify(useCase).getLocationList(1L, 1L);
+            verify(locationGetUseCase).getLocationList(1L, 1L);
         }
 
         @Test
@@ -83,7 +95,7 @@ class LocationControllerTest {
         void getLocation_success() throws Exception {
             // given
             LocationResponse mockResponse = new LocationResponse(100L, 1L, "test", OffsetDateTime.now(), null);
-            given(useCase.getLocation(1L, 1L, 100L)).willReturn(mockResponse);
+            given(locationGetUseCase.getLocation(1L, 1L, 100L)).willReturn(mockResponse);
 
             // when & then
             mockMvc.perform(get("/api/v1/groups/{group-id}/location/{location-id}", 1L, 100L)
@@ -92,7 +104,7 @@ class LocationControllerTest {
                     .andExpect(jsonPath("$.locationId").value(100L))
                     .andExpect(jsonPath("$.locationName").value("test"));
 
-            verify(useCase).getLocation(1L, 1L, 100L);
+            verify(locationGetUseCase).getLocation(1L, 1L, 100L);
         }
 
         @Test
@@ -103,7 +115,7 @@ class LocationControllerTest {
                             .header("X-USER-ID", 1L))
                     .andExpect(status().isOk());
 
-            verify(useCase).toggleAutoControlMode(1L, 1L, 100L);
+            verify(locationModeUpdateUseCase).toggleAutoControlMode(1L, 1L, 100L);
         }
 
         @Test
@@ -119,7 +131,7 @@ class LocationControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk());
 
-            verify(useCase).updateName(eq(1L), eq(1L), eq(100L), any(LocationUpdateRequest.class));
+            verify(locationNameUpdateUseCase).updateName(eq(1L), eq(1L), eq(100L), any(LocationUpdateRequest.class));
         }
 
         @Test
