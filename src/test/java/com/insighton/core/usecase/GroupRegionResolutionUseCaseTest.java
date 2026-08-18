@@ -5,6 +5,7 @@ import com.insighton.core.domain.groups.service.GroupService;
 import com.insighton.core.domain.region.dto.GroupRegionDto;
 import com.insighton.core.domain.region.dto.RegionGridDto;
 import com.insighton.core.domain.region.service.RegionService;
+import com.insighton.core.usecase.groupregistration.GroupRegionResolutionUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -18,24 +19,19 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class GroupRegionResolutionUseCaseTest {
 
-    @Mock
-    private RegionService regionService;
-
-    @Mock
-    private GroupService groupService;
-
-    @InjectMocks
-    private GroupRegionResolutionUseCase groupRegionResolutionUseCase;
-
     private static final Long GROUP_ID = 1L;
     private static final RegionGridDto GRID_DTO = new RegionGridDto("Seoul", "Jongno", 60, 127);
+    @Mock
+    private RegionService regionService;
+    @Mock
+    private GroupService groupService;
+    @InjectMocks
+    private GroupRegionResolutionUseCase groupRegionResolutionUseCase;
 
     @Nested
     @DisplayName("성공 케이스")

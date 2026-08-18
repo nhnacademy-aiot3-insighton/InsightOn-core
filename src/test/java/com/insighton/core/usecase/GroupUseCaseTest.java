@@ -1,6 +1,5 @@
 package com.insighton.core.usecase;
 
-import com.insighton.core.domain.dashboards.entity.Dashboard;
 import com.insighton.core.domain.dashboards.service.DashboardService;
 import com.insighton.core.domain.gateway.service.GatewayService;
 import com.insighton.core.domain.groupmember.dto.request.GroupMemberJoinRequest;
@@ -14,17 +13,15 @@ import com.insighton.core.domain.groups.dto.request.GroupRequest;
 import com.insighton.core.domain.groups.dto.request.GroupUpdateRequest;
 import com.insighton.core.domain.groups.dto.response.GroupResponse;
 import com.insighton.core.domain.groups.entity.Group;
-import com.insighton.core.domain.groups.event.GroupDeletedEvent;
 import com.insighton.core.domain.groups.event.GroupRegionUpdateEvent;
 import com.insighton.core.domain.groups.exception.InviteTokenNotFoundException;
 import com.insighton.core.domain.groups.exception.NoPermissionException;
 import com.insighton.core.domain.groups.exception.UnAuthorizedAccessException;
 import com.insighton.core.domain.groups.service.GroupService;
-import com.insighton.core.domain.location.entity.Location;
 import com.insighton.core.domain.location.service.LocationService;
 import com.insighton.core.domain.sensors.service.SensorService;
 import com.insighton.core.domain.widgets.service.WidgetService;
-import org.junit.jupiter.api.Disabled;
+import com.insighton.core.usecase.group.GroupUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -33,8 +30,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
-
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -301,70 +296,7 @@ class GroupUseCaseTest {
             assertThatThrownBy(() -> managementUseCase.newInviteToken(1L, 1L))
                     .isInstanceOf(NoPermissionException.class);
         }
-
-        @Test
-        @DisplayName("그룹 삭제 성공 - 슈퍼 매니저만 가능하며 연관 멤버 및 그룹 데이터 모두 삭제")
-        @Disabled
-        void deleteGroup_success() {
-            // given
-            GroupMember mockMember = mock(GroupMember.class);
-            given(mockMember.isSuperManager()).willReturn(true);
-            given(groupMemberService.validateGroupMembers(1L, 1L)).willReturn(mockMember);
-
-            // when
-
-            // then
-            verify(gatewayService, times(1)).deleteByGroupId(1L);
-            verify(sensorService, times(1)).deleteAll(1L);
-            verify(groupMemberService, times(1)).deleteGroupMemberAll(1L, 1L);
-            verify(locationService, times(1)).deleteLocationAll(1L);
-            verify(groupService, times(1)).deleteGroup(1L);
-
-            verify(eventPublisher, times(1)).publishEvent(any(GroupDeletedEvent.class));
-        }
-
-        @Test
-        @DisplayName("그룹 삭제 실패 - 슈퍼 매니저가 아닐 때")
-        @Disabled
-        void deleteGroup_notSuperManager() {
-            // given
-            GroupMember mockMember = mock(GroupMember.class);
-            given(mockMember.isSuperManager()).willReturn(false);
-            given(mockMember.getGroupMemberId()).willReturn(10L);
-            given(groupMemberService.validateGroupMembers(1L, 1L)).willReturn(mockMember);
-
-            String token = "token";
-
-            // when & then
-//            assertThatThrownBy(() -> managementUseCase.deleteGroup(1L, 1L, token))
-//                    .isInstanceOf(NoPermissionException.class);
-        }
-
-        @Test
-        @DisplayName("Location 모두 삭제 성공 - 연결된 대시보드 및 위젯도 삭제")
-        @Disabled
-        void deleteLocationAll_success() {
-            // given
-            Long groupId = 1L;
-            Location mockLocation = mock(Location.class);
-            given(mockLocation.getLocationId()).willReturn(10L);
-            given(locationService.getLocationListByGroupId(groupId)).willReturn(List.of(mockLocation));
-
-            Dashboard mockDashboard = mock(Dashboard.class);
-            given(mockDashboard.getDashboardId()).willReturn(100L);
-            given(dashboardService.getDashboardEntity(10L)).willReturn(mockDashboard);
-
-            // when
-//            managementUseCase.deleteLocationAll(groupId);
-
-            // then
-            verify(widgetService, times(1)).deleteAllWidget(100L);
-            verify(dashboardService, times(1)).deleteDashboard(10L);
-            verify(locationService, times(1)).deleteLocationAll(groupId);
-        }
     }
-
-
 }
 
 

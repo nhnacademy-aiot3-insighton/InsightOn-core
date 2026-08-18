@@ -19,6 +19,7 @@ import com.insighton.core.domain.location.event.LocationDeletedEvent;
 import com.insighton.core.domain.location.service.LocationService;
 import com.insighton.core.domain.sensors.service.SensorService;
 import com.insighton.core.domain.widgets.service.WidgetService;
+import com.insighton.core.usecase.location.LocationUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -34,7 +35,6 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
@@ -394,11 +394,13 @@ class LocationUseCaseTest {
             Long userId = 100L;
             Long groupId = 1L;
             Long targetLocationId = 10L;
+            Long dashboardId = 100L;
 
-            Dashboard mockDashboard = Dashboard.builder().build();
-
-            given(dashboardService.getDashboardEntity(anyLong()))
+            Dashboard mockDashboard = mock(Dashboard.class);
+            given(mockDashboard.getDashboardId()).willReturn(dashboardId);
+            given(dashboardService.getDashboardEntity(targetLocationId))
                     .willReturn(mockDashboard);
+
             GroupMember mockGroupMember = mock(GroupMember.class);
             given(groupMemberService.validateGroupMembers(groupId, userId)).willReturn(mockGroupMember);
             given(mockGroupMember.isMember()).willReturn(false);
@@ -409,7 +411,8 @@ class LocationUseCaseTest {
             // then
             verify(groupMemberService).validateGroupMembers(groupId, userId);
             verify(sensorService).detachLocationFromSensors(groupId, targetLocationId);
-            verify(widgetService).deleteAllWidget(any());
+            verify(actuatorService).deleteAllByLocationId(targetLocationId);
+            verify(widgetService).deleteAllWidget(dashboardId);
             verify(dashboardService).deleteDashboard(targetLocationId);
             verify(locationService).deleteLocation(targetLocationId, groupId);
             verify(eventPublisher).publishEvent(any(LocationDeletedEvent.class));

@@ -11,8 +11,10 @@ import com.insighton.core.domain.groups.exception.NoPermissionException;
 import com.insighton.core.domain.groups.service.GroupService;
 import com.insighton.core.domain.location.entity.Location;
 import com.insighton.core.domain.location.service.LocationService;
+import com.insighton.core.domain.region.service.RegionService;
 import com.insighton.core.domain.sensors.service.SensorService;
 import com.insighton.core.domain.widgets.service.WidgetService;
+import com.insighton.core.usecase.group.GroupDeleteUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,7 +22,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
-import com.insighton.core.domain.region.service.RegionService;
 
 import java.util.List;
 
@@ -111,6 +112,35 @@ class GroupDeleteUseCaseTest {
         // when & then
         assertThatThrownBy(() -> deleteGroup.deleteGroup(1L, 1L, token))
                 .isInstanceOf(NoPermissionException.class);
+    }
+
+    @Test
+    @DisplayName("Location 모두 삭제 성공 - 연결된 대시보드 및 위젯도 삭제")
+    void deleteLocationAll_success() {
+        // given
+        Long groupId = 1L;
+        Long userId = 1L;
+        String token = "testToken";
+
+        GroupMember mockMember = mock(GroupMember.class);
+        given(mockMember.isSuperManager()).willReturn(true);
+        given(groupMemberService.validateGroupMembers(groupId, userId)).willReturn(mockMember);
+
+        Location mockLocation = mock(Location.class);
+        given(mockLocation.getLocationId()).willReturn(10L);
+        given(locationService.getLocationListByGroupId(groupId)).willReturn(List.of(mockLocation));
+
+        Dashboard mockDashboard = mock(Dashboard.class);
+        given(mockDashboard.getDashboardId()).willReturn(100L);
+        given(dashboardService.getDashboardEntity(10L)).willReturn(mockDashboard);
+
+        // when
+        deleteGroup.deleteGroup(userId, groupId, token);
+
+        // then
+        verify(widgetService, times(1)).deleteAllWidget(100L);
+        verify(dashboardService, times(1)).deleteDashboard(10L);
+        verify(locationService, times(1)).deleteLocationAll(groupId);
     }
 
 }

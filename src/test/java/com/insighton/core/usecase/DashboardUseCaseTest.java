@@ -9,6 +9,7 @@ import com.insighton.core.domain.location.exception.LocationNotFoundException;
 import com.insighton.core.domain.location.service.LocationService;
 import com.insighton.core.domain.widgets.dto.response.WidgetsListResponse;
 import com.insighton.core.domain.widgets.service.WidgetService;
+import com.insighton.core.usecase.dashboard.DashboardUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
