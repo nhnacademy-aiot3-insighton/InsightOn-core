@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 
 import java.lang.annotation.*;
 
-@Service
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
