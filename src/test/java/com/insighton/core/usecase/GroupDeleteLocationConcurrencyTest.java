@@ -12,7 +12,8 @@ import com.insighton.core.domain.location.repository.LocationRepository;
 import com.insighton.core.domain.region.loader.RegionCsvLoader;
 import com.insighton.core.domain.widgets.repository.InfluxDbRepository;
 import com.insighton.core.usecase.group.GroupDeleteUseCase;
-import com.insighton.core.usecase.location.LocationUseCase;
+import com.insighton.core.usecase.location.LocationCreateUseCase;
+import com.insighton.core.usecase.location.LocationDeleteUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,7 +39,7 @@ class GroupDeleteLocationConcurrencyTest {
     @Autowired
     private GroupDeleteUseCase groupDeleteUseCase;
     @Autowired
-    private LocationUseCase locationUseCase;
+    private LocationDeleteUseCase locationDeleteUseCase;
     @Autowired
     private GroupRepository groupRepository;
     @Autowired
@@ -48,6 +49,9 @@ class GroupDeleteLocationConcurrencyTest {
 
     @MockitoSpyBean
     private GroupService groupService;
+
+    @Autowired
+    private LocationCreateUseCase locationCreateUseCase;
 
     @MockitoBean
     private InfluxDbRepository influxDbRepository;
@@ -108,7 +112,7 @@ class GroupDeleteLocationConcurrencyTest {
         // 3. 그룹 락이 선점된 상태에서 위치 생성 요청 제출 -> 그룹 비관적 락 대기(Lock Wait) 진입
         LocationCreateRequest createRequest = new LocationCreateRequest("New-Location", Location.AutoControlMode.SUGGESTION);
         Future<Void> createFuture = executorService.submit(() -> {
-            locationUseCase.createLocation(userId, groupId, createRequest);
+            locationCreateUseCase.createLocation(userId, groupId, createRequest);
             return null;
         });
 

@@ -12,7 +12,6 @@ import com.insighton.core.domain.groups.dto.request.GroupUpdateRequest;
 import com.insighton.core.domain.groups.dto.response.GroupResponse;
 import com.insighton.core.domain.groups.entity.Group;
 import com.insighton.core.domain.groups.event.GroupRegionUpdateEvent;
-import com.insighton.core.domain.groups.exception.NoPermissionException;
 import com.insighton.core.domain.groups.exception.UnAuthorizedAccessException;
 import com.insighton.core.domain.groups.service.GroupService;
 import com.insighton.core.domain.location.service.LocationService;
@@ -138,19 +137,8 @@ public class GroupUseCase {
      */
     @Transactional
     public void newInviteToken(Long userId, Long groupId) {
-        GroupMember groupMember = groupMemberService.validateGroupMembers(groupId, userId);
-
-        validationIsAdmin(groupMember);
+        groupMemberService.validateGroupAdmin(groupId, userId);
 
         groupService.newInviteToken(groupId);
-    }
-
-    /**
-     * member가 관리자인지 확인
-     */
-    private void validationIsAdmin(GroupMember groupMember) {
-        if (groupMember.isMember()) {
-            throw NoPermissionException.forAdmin(groupMember.getGroupMemberId());
-        }
     }
 }

@@ -273,8 +273,7 @@ class GroupUseCaseTest {
         void newInviteToken_success() {
             // given
             GroupMember mockMember = mock(GroupMember.class);
-            given(mockMember.isMember()).willReturn(false);
-            given(groupMemberService.validateGroupMembers(1L, 1L)).willReturn(mockMember);
+            given(groupMemberService.validateGroupAdmin(1L, 1L)).willReturn(mockMember);
 
             // when
             managementUseCase.newInviteToken(1L, 1L);
@@ -287,10 +286,7 @@ class GroupUseCaseTest {
         @DisplayName("토큰 재발급 실패 - 일반 멤버 권한으로 시도 시")
         void newInviteToken_notAdmin() {
             // given
-            GroupMember mockMember = mock(GroupMember.class);
-            given(mockMember.isMember()).willReturn(true);
-            given(mockMember.getGroupMemberId()).willReturn(10L);
-            given(groupMemberService.validateGroupMembers(1L, 1L)).willReturn(mockMember);
+            given(groupMemberService.validateGroupAdmin(1L, 1L)).willThrow(NoPermissionException.forAdmin(10L));
 
             // when & then
             assertThatThrownBy(() -> managementUseCase.newInviteToken(1L, 1L))
