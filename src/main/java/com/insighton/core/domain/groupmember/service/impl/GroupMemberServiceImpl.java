@@ -237,10 +237,10 @@ public class GroupMemberServiceImpl implements GroupMemberService {
     }
 
     /**
-     * 센서쪽 업데이트, 삭제 권한 확인용으로 추가
-     *
+     * group member를 가져와서 권한이 있는지 확인하는 method
      */
     @Override
+    @Transactional
     public GroupMember validateGroupAdmin(Long groupId, Long userId) {
         GroupMember member = validateGroupMembers(groupId, userId);
         if (member.isMember()) {
