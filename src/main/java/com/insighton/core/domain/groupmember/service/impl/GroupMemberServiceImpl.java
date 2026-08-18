@@ -5,7 +5,7 @@ import com.insighton.core.domain.groupmember.dto.request.GroupMemberJoinRequest;
 import com.insighton.core.domain.groupmember.dto.response.AuthUserResponse;
 import com.insighton.core.domain.groupmember.dto.response.GroupMemberListResponse;
 import com.insighton.core.domain.groupmember.dto.response.GroupMemberResponse;
-import com.insighton.core.domain.groupmember.dto.response.ManagerGroupExistsResponse;
+import com.insighton.core.domain.groupmember.dto.response.ManagerGroupResponse;
 import com.insighton.core.domain.groupmember.entity.GroupMember;
 import com.insighton.core.domain.groupmember.exception.*;
 import com.insighton.core.domain.groupmember.repository.GroupMemberRepository;
@@ -255,13 +255,18 @@ public class GroupMemberServiceImpl implements GroupMemberService {
      */
     @Override
     @Transactional
-    public ManagerGroupExistsResponse existsManagerGroupAuth(Long userId) {
+    public ManagerGroupResponse existsManagerGroupAuth(Long userId) {
         GroupMember member = groupMemberRepository.findByUserId(userId)
                 .orElseThrow(() -> GroupMemberNotFoundException.byUserId(userId));
 
         boolean isAdmin = member.isMember() || member.isSuperManager();
 
-        return ManagerGroupExistsResponse.builder().exists(isAdmin).build();
+        String groupName = member.getGroup().getName();
+
+        return ManagerGroupResponse.builder()
+                .exists(isAdmin)
+                .groupName(groupName)
+                .build();
     }
 
     /**
