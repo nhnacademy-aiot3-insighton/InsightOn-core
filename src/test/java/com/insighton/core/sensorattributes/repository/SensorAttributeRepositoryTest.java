@@ -49,4 +49,29 @@ class SensorAttributeRepositoryTest {
         assertThat(attributeRepository.findBySensorSensorId(1L)).isEmpty();
     }
 
+    @Test
+    @DisplayName("existsBySensorSensorIdAndMetricKey - 있으면 true, 없으면 false")
+    void 존재여부_확인() {
+        assertThat(attributeRepository.existsBySensorSensorIdAndMetricKey(1L, "co2")).isTrue();
+        assertThat(attributeRepository.existsBySensorSensorIdAndMetricKey(1L, "unknown")).isFalse();
+    }
+
+    @Test
+    @DisplayName("deleteAllBySensorSensorIdIn - 여러 센서 ID 기준 일괄 삭제 성공")
+    void 여러기기ID로_일괄삭제() {
+        attributeRepository.deleteAllBySensorSensorIdIn(List.of(1L));
+
+        assertThat(attributeRepository.findBySensorSensorId(1L)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("deleteBySensorSensorIdAndMetricKey - 특정 속성 하나만 삭제")
+    void 단일속성_삭제() {
+        attributeRepository.deleteBySensorSensorIdAndMetricKey(1L, "co2");
+
+        List<SensorAttribute> remaining = attributeRepository.findBySensorSensorId(1L);
+        assertThat(remaining).hasSize(1);
+        assertThat(remaining.get(0).getMetricKey()).isEqualTo("humidity");
+    }
+
 }
