@@ -1,4 +1,4 @@
-package com.insighton.core.usecase;
+package com.insighton.core.usecase.dashboard;
 
 import com.insighton.core.domain.dashboards.entity.Dashboard;
 import com.insighton.core.domain.dashboards.service.DashboardService;
@@ -11,7 +11,6 @@ import com.insighton.core.domain.widgets.dto.request.WidgetSaveRequest;
 import com.insighton.core.domain.widgets.exception.AlreadyDashboardSaveException;
 import com.insighton.core.domain.widgets.exception.WidgetNotFoundException;
 import com.insighton.core.domain.widgets.service.WidgetService;
-import com.insighton.core.usecase.dashboard.DashboardSaveUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -105,6 +104,8 @@ class DashboardSaveUseCaseTest {
             verify(widgetService, times(1)).updateWidget(dashboardId, 1L, updateRequest);
             // 신규 위젯 생성 검증
             verify(widgetService, times(1)).createWidget(mockDashboard, createRequest);
+
+            verify(mockDashboard, times(1)).updateWidgetLayout();
         }
 
         @Test

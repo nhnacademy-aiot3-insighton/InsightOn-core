@@ -1,4 +1,4 @@
-package com.insighton.core.usecase;
+package com.insighton.core.usecase.dashboard;
 
 import com.insighton.core.domain.dashboards.entity.Dashboard;
 import com.insighton.core.domain.dashboards.repository.DashboardRepository;
@@ -15,7 +15,6 @@ import com.insighton.core.domain.widgets.entity.Widget;
 import com.insighton.core.domain.widgets.exception.AlreadyDashboardSaveException;
 import com.insighton.core.domain.widgets.repository.InfluxDbRepository;
 import com.insighton.core.domain.widgets.repository.WidgetRepository;
-import com.insighton.core.usecase.dashboard.DashboardSaveUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

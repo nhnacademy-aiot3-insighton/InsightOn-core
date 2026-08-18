@@ -3,7 +3,10 @@ package com.insighton.core.common.exception;
 import com.insighton.core.domain.actuators.exception.*;
 import com.insighton.core.domain.dashboards.exception.DashboardNotFoundException;
 import com.insighton.core.domain.gateway.exception.*;
-import com.insighton.core.domain.groupmember.exception.*;
+import com.insighton.core.domain.groupmember.exception.AlreadyJoinedException;
+import com.insighton.core.domain.groupmember.exception.GroupMemberNotFoundException;
+import com.insighton.core.domain.groupmember.exception.ManagerRoleRequiredForTransferException;
+import com.insighton.core.domain.groupmember.exception.SuperManagerCannotLeaveException;
 import com.insighton.core.domain.groupregistration.exception.AlreadyProcessedException;
 import com.insighton.core.domain.groupregistration.exception.AlreadyRequestedException;
 import com.insighton.core.domain.groupregistration.exception.GroupRegistrationNotFoundException;
@@ -36,7 +39,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({GatewayNotFoundException.class, GroupNotFoundException.class,
             InviteTokenNotFoundException.class, GroupMemberNotFoundException.class,
-            UserIdNotFoundException.class, LocationNotFoundException.class,
+            LocationNotFoundException.class,
             SensorNotFoundException.class, ActuatorNotFoundException.class,
             MetricKeyNotFoundException.class, DashboardNotFoundException.class,
             WidgetNotFoundException.class, WidgetConfigNotFoundException.class,
@@ -65,7 +68,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler({IllegalArgumentException.class, SuperManagerCannotLeaveException.class,
-            NotJoinedAnyGroupException.class, ManagerRoleRequiredForTransferException.class,
+            ManagerRoleRequiredForTransferException.class,
             InvalidActuatorValueException.class, InvalidSensorValueException.class,
             CouldNotAbleToUpdateByUserToSystem.class, EmptyValueException.class,
             InvalidGatewayConnectionConfigException.class, InvalidGatewayValueException.class,

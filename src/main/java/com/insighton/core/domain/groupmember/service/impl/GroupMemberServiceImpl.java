@@ -7,7 +7,10 @@ import com.insighton.core.domain.groupmember.dto.response.GroupMemberListRespons
 import com.insighton.core.domain.groupmember.dto.response.GroupMemberResponse;
 import com.insighton.core.domain.groupmember.dto.response.ManagerGroupResponse;
 import com.insighton.core.domain.groupmember.entity.GroupMember;
-import com.insighton.core.domain.groupmember.exception.*;
+import com.insighton.core.domain.groupmember.exception.AlreadyJoinedException;
+import com.insighton.core.domain.groupmember.exception.GroupMemberNotFoundException;
+import com.insighton.core.domain.groupmember.exception.ManagerRoleRequiredForTransferException;
+import com.insighton.core.domain.groupmember.exception.SuperManagerCannotLeaveException;
 import com.insighton.core.domain.groupmember.repository.GroupMemberRepository;
 import com.insighton.core.domain.groupmember.service.GroupMemberService;
 import com.insighton.core.domain.groups.entity.Group;
@@ -121,17 +124,13 @@ public class GroupMemberServiceImpl implements GroupMemberService {
 
         // 2. adminID가 manager나 owner권한을 가진 자인지 확인
         // target의 권한이 member일 경우 member는 권한이 없음
-        if (targetMember.isMember()) {
-            if (adminMember.isMember()) {
-                throw NoPermissionException.forAdmin(adminId);
-            }
+        if (targetMember.isMember() && adminMember.isMember()) {
+            throw NoPermissionException.forAdmin(adminId);
         }
 
         // manager의 권한은 owner말고는 변경하지 못함
-        if (targetMember.isManager()) {
-            if (adminMember.isMember() || adminMember.isManager() || !adminMember.isSuperManager()) {
-                throw NoPermissionException.forAdmin(adminId);
-            }
+        if (targetMember.isManager() && !adminMember.isSuperManager()) {
+            throw NoPermissionException.forAdmin(adminId);
         }
 
         // super manager는 권한 변경 X
@@ -157,10 +156,8 @@ public class GroupMemberServiceImpl implements GroupMemberService {
         }
 
         // super Manager이지만 대상이 일반 Member일 경우에는 양도 ㄴㄴ
-        if (superManager.isSuperManager()) {
-            if (targetMember.isMember() || !targetMember.isManager()) {
-                throw new ManagerRoleRequiredForTransferException();
-            }
+        if (targetMember.isMember() || !targetMember.isManager()) {
+            throw new ManagerRoleRequiredForTransferException();
         }
         superManager.updateRole(GroupMember.GroupRole.MANAGER);
         targetMember.updateRole(GroupMember.GroupRole.SUPER_MANAGER);
@@ -185,10 +182,8 @@ public class GroupMemberServiceImpl implements GroupMemberService {
         }
 
         // 삭제하려는 자가 manager권한인데 target이 같은 권한이거나 superManager면 삭제할 수 없음
-        if (admin.isManager()) {
-            if (target.isManager() || target.isSuperManager()) {
-                throw NoPermissionException.forAdmin(admin.getGroupMemberId());
-            }
+        if (admin.isManager() && (target.isManager() || target.isSuperManager())) {
+            throw NoPermissionException.forAdmin(admin.getGroupMemberId());
         }
 
 
@@ -259,14 +254,11 @@ public class GroupMemberServiceImpl implements GroupMemberService {
         GroupMember member = groupMemberRepository.findByUserId(userId)
                 .orElseThrow(() -> GroupMemberNotFoundException.byUserId(userId));
 
-        boolean isAdmin = member.isMember() || member.isSuperManager();
+        boolean isAdmin = member.isManager() || member.isSuperManager();
 
         String groupName = member.getGroup().getName();
 
-        return ManagerGroupResponse.builder()
-                .exists(isAdmin)
-                .groupName(groupName)
-                .build();
+        return new ManagerGroupResponse(isAdmin, groupName);
     }
 
     /**
@@ -276,17 +268,6 @@ public class GroupMemberServiceImpl implements GroupMemberService {
     public GroupMember validateGroupMembers(Long groupId, Long userId) {
         return groupMemberRepository.findByGroupGroupIdAndUserId(groupId, userId)
                 .orElseThrow(() -> GroupMemberNotFoundException.byUserIdAndGroupId(userId, groupId));
-    }
-
-    /**
-     * group에 존재하는 올바른 유저면 통과
-     */
-    @Override
-    public void validateUserInAnyGroup(Long userId) {
-        if (groupMemberRepository.existsByUserId(userId)) {
-            return;
-        }
-        throw new NotJoinedAnyGroupException(userId);
     }
 
     /**

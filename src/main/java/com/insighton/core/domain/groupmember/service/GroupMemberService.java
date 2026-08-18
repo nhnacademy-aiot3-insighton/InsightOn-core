@@ -120,11 +120,6 @@ public interface GroupMemberService {
     GroupMember validateGroupAdmin(Long groupId, Long userId);
 
     /**
-     * 어딘가의 그룹에 이미 존재한다.
-     */
-    void validateUserInAnyGroup(Long userId);
-
-    /**
      * 아무데도 가입이 안 되어있따.
      */
     void validateUserNotInAnyGroup(Long userId);
