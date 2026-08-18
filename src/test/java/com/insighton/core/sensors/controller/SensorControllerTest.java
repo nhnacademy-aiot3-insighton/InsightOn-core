@@ -7,17 +7,13 @@ import com.insighton.core.domain.sensors.dto.SensorResponse;
 import com.insighton.core.domain.sensors.dto.SensorUpdateRequest;
 import com.insighton.core.domain.sensors.exception.InvalidSensorValueException;
 import com.insighton.core.domain.sensors.exception.SensorNotFoundException;
-import com.insighton.core.usecase.sensor.DeleteAllSensorUseCase;
-import com.insighton.core.usecase.sensor.DeleteSensorUseCase;
-import com.insighton.core.usecase.sensor.GetSensorUseCase;
-import com.insighton.core.usecase.sensor.SearchSensorUseCase;
-import com.insighton.core.usecase.sensor.UpdateSensorUseCase;
+import com.insighton.core.usecase.sensor.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.OffsetDateTime;
@@ -28,7 +24,8 @@ import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(SensorController.class)
 class SensorControllerTest {
@@ -39,11 +36,16 @@ class SensorControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean private GetSensorUseCase getSensorUseCase;
-    @MockBean private SearchSensorUseCase searchSensorUseCase;
-    @MockBean private UpdateSensorUseCase updateSensorUseCase;
-    @MockBean private DeleteSensorUseCase deleteSensorUseCase;
-    @MockBean private DeleteAllSensorUseCase deleteAllSensorUseCase;
+    @MockitoBean
+    private GetSensorUseCase getSensorUseCase;
+    @MockitoBean
+    private SearchSensorUseCase searchSensorUseCase;
+    @MockitoBean
+    private UpdateSensorUseCase updateSensorUseCase;
+    @MockitoBean
+    private DeleteSensorUseCase deleteSensorUseCase;
+    @MockitoBean
+    private DeleteAllSensorUseCase deleteAllSensorUseCase;
 
     private SensorResponse sampleResponse() {
         return new SensorResponse(

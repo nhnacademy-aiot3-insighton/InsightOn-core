@@ -207,8 +207,6 @@ class GroupMemberServiceTest {
 
         given(targetManager.isMember()).willReturn(false);
         given(targetManager.isManager()).willReturn(true);
-        given(superAdmin.isMember()).willReturn(false);
-        given(superAdmin.isManager()).willReturn(false);
         given(superAdmin.isSuperManager()).willReturn(true);
 
         given(groupMemberRepository.findByGroupGroupIdAndUserId(1L, 1L)).willReturn(Optional.of(superAdmin));
@@ -247,8 +245,7 @@ class GroupMemberServiceTest {
 
         given(targetManager.isMember()).willReturn(false);
         given(targetManager.isManager()).willReturn(true);
-        given(adminManager.isMember()).willReturn(false);
-        given(adminManager.isManager()).willReturn(true);
+        given(adminManager.isSuperManager()).willReturn(false);
 
         given(groupMemberRepository.findByGroupGroupIdAndUserId(1L, 1L)).willReturn(Optional.of(adminManager));
         given(groupMemberRepository.findByGroupMemberIdAndGroupGroupId(2L, 1L)).willReturn(Optional.of(targetManager));
@@ -448,7 +445,7 @@ class GroupMemberServiceTest {
         Group group = mock(Group.class);
         given(group.getName()).willReturn("테스트 그룹");
         given(member.getGroup()).willReturn(group);
-        given(member.isMember()).willReturn(true);
+        given(member.isManager()).willReturn(true);
         given(groupMemberRepository.findByUserId(userId)).willReturn(Optional.of(member));
 
         // when
