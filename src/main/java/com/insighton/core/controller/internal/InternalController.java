@@ -7,7 +7,7 @@ import com.insighton.core.domain.groupmember.service.GroupMemberService;
 import com.insighton.core.domain.location.dto.response.LocationListResponse;
 import com.insighton.core.domain.location.dto.response.LocationResponse;
 import com.insighton.core.domain.location.service.LocationService;
-import com.insighton.core.usecase.group.GroupUseCase;
+import com.insighton.core.usecase.group.GroupCreateUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +19,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/internal/v1")
 public class InternalController {
-    private final GroupUseCase groupUseCase;
+    private final GroupCreateUseCase groupCreateUseCase;
     private final GroupMemberService groupMemberService;
     private final LocationService locationService;
 
@@ -32,7 +32,7 @@ public class InternalController {
     public ResponseEntity<Void> joinGroupByToken(
             @Valid @RequestBody GroupMemberJoinRequest request) {
         // inviteToken으로 그룹이 존재하는지 확인하고 가입 시키는 로직 호출
-        groupUseCase.joinGroupByToken(request);
+        groupCreateUseCase.joinGroupByToken(request);
 
         return ResponseEntity.ok().build();
     }

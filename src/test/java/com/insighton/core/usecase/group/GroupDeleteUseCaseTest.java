@@ -1,4 +1,4 @@
-package com.insighton.core.usecase;
+package com.insighton.core.usecase.group;
 
 import com.insighton.core.domain.dashboards.entity.Dashboard;
 import com.insighton.core.domain.dashboards.service.DashboardService;
@@ -14,7 +14,6 @@ import com.insighton.core.domain.location.service.LocationService;
 import com.insighton.core.domain.region.service.RegionService;
 import com.insighton.core.domain.sensors.service.SensorService;
 import com.insighton.core.domain.widgets.service.WidgetService;
-import com.insighton.core.usecase.group.GroupDeleteUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

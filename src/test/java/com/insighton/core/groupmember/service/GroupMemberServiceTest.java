@@ -15,6 +15,7 @@ import com.insighton.core.domain.groupmember.service.impl.GroupMemberServiceImpl
 import com.insighton.core.domain.groups.entity.Group;
 import com.insighton.core.domain.groups.exception.NoPermissionException;
 import com.insighton.core.domain.groups.exception.UnAuthorizedAccessException;
+import com.insighton.core.domain.groups.repository.GroupRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,6 +40,9 @@ class GroupMemberServiceTest {
 
     @Mock
     private AuthClient authClient;
+
+    @Mock
+    private GroupRepository groupRepository;
 
     @InjectMocks
     private GroupMemberServiceImpl groupMemberService;
@@ -441,6 +445,9 @@ class GroupMemberServiceTest {
         // given
         Long userId = 1L;
         GroupMember member = mock(GroupMember.class);
+        Group group = mock(Group.class);
+        given(group.getName()).willReturn("테스트 그룹");
+        given(member.getGroup()).willReturn(group);
         given(member.isMember()).willReturn(true);
         given(groupMemberRepository.findByUserId(userId)).willReturn(Optional.of(member));
 
@@ -450,5 +457,6 @@ class GroupMemberServiceTest {
         // then
         assertThat(response).isNotNull();
         assertThat(response.exists()).isTrue();
+        assertThat(response.groupName()).isEqualTo("테스트 그룹");
     }
 }
