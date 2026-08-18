@@ -1,4 +1,4 @@
-package com.insighton.core.usecase;
+package com.insighton.core.usecase.group;
 
 import com.insighton.core.common.annotation.UseCase;
 import com.insighton.core.domain.dashboards.service.DashboardService;

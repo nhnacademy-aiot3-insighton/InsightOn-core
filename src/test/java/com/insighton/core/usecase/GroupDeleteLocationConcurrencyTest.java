@@ -11,6 +11,8 @@ import com.insighton.core.domain.location.entity.Location;
 import com.insighton.core.domain.location.repository.LocationRepository;
 import com.insighton.core.domain.region.loader.RegionCsvLoader;
 import com.insighton.core.domain.widgets.repository.InfluxDbRepository;
+import com.insighton.core.usecase.group.GroupDeleteUseCase;
+import com.insighton.core.usecase.location.LocationUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -114,7 +116,8 @@ class GroupDeleteLocationConcurrencyTest {
         // 1. 그룹 삭제 요청은 성공 완료
         try {
             deleteFuture.get();
-        } catch (ExecutionException ignored) {}
+        } catch (ExecutionException ignored) {
+        }
 
         // 2. 위치 생성 요청은 락 대기 후 늦게 진입하지만 그룹이 삭제되었으므로 GroupNotFoundException 발생
         boolean locationCreateFailedAsExpected = false;

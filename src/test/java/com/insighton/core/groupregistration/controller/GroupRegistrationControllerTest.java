@@ -9,8 +9,8 @@ import com.insighton.core.domain.groupregistration.exception.GroupRegistrationNo
 import com.insighton.core.domain.groupregistration.exception.UnauthorizedGroupRegistrationAccessException;
 import com.insighton.core.domain.groupregistration.service.GroupRegistrationService;
 import com.insighton.core.domain.region.exception.RegionNotFoundException;
-import com.insighton.core.usecase.GroupRegistrationApprovalUseCase;
-import com.insighton.core.usecase.GroupRegistrationCreationUseCase;
+import com.insighton.core.usecase.groupregistration.GroupRegistrationApprovalUseCase;
+import com.insighton.core.usecase.groupregistration.GroupRegistrationCreationUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

@@ -7,12 +7,13 @@ import com.insighton.core.domain.groupmember.service.GroupMemberService;
 import com.insighton.core.domain.location.dto.response.LocationListResponse;
 import com.insighton.core.domain.location.dto.response.LocationResponse;
 import com.insighton.core.domain.location.service.LocationService;
-import com.insighton.core.usecase.GroupUseCase;
+import com.insighton.core.usecase.group.GroupUseCase;
 import jakarta.validation.Valid;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor

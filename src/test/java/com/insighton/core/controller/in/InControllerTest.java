@@ -5,7 +5,7 @@ import com.insighton.core.controller.internal.InternalController;
 import com.insighton.core.domain.groupmember.dto.request.GroupMemberJoinRequest;
 import com.insighton.core.domain.groupmember.service.GroupMemberService;
 import com.insighton.core.domain.location.service.LocationService;
-import com.insighton.core.usecase.GroupUseCase;
+import com.insighton.core.usecase.group.GroupUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

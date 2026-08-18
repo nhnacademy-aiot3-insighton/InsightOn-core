@@ -1,4 +1,4 @@
-package com.insighton.core.usecase;
+package com.insighton.core.usecase.dashboard;
 
 import com.insighton.core.common.annotation.UseCase;
 import com.insighton.core.domain.dashboards.dto.response.DashboardResponse;
@@ -16,7 +16,7 @@ import java.util.List;
 @UseCase
 @RequiredArgsConstructor
 public class DashboardUseCase {
-    
+
     private final GroupMemberService groupMemberService;
     private final LocationService locationService;
     private final DashboardService dashboardService;

@@ -1,6 +1,7 @@
-package com.insighton.core.usecase;
+package com.insighton.core.usecase.location;
 
 import com.insighton.core.common.annotation.UseCase;
+import com.insighton.core.domain.actuators.service.ActuatorService;
 import com.insighton.core.domain.dashboards.dto.request.DashboardRequest;
 import com.insighton.core.domain.dashboards.entity.Dashboard;
 import com.insighton.core.domain.dashboards.service.DashboardService;
@@ -16,7 +17,6 @@ import com.insighton.core.domain.location.dto.response.LocationResponse;
 import com.insighton.core.domain.location.entity.Location;
 import com.insighton.core.domain.location.event.LocationDeletedEvent;
 import com.insighton.core.domain.location.service.LocationService;
-import com.insighton.core.domain.actuators.service.ActuatorService;
 import com.insighton.core.domain.sensors.service.SensorService;
 import com.insighton.core.domain.widgets.service.WidgetService;
 import lombok.RequiredArgsConstructor;

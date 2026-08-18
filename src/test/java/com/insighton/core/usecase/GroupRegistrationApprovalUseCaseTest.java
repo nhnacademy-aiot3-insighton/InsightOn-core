@@ -10,6 +10,8 @@ import com.insighton.core.domain.groups.dto.request.GroupRequest;
 import com.insighton.core.domain.groups.entity.Group;
 import com.insighton.core.domain.region.exception.RegionNotFoundException;
 import com.insighton.core.domain.region.service.RegionService;
+import com.insighton.core.usecase.group.GroupUseCase;
+import com.insighton.core.usecase.groupregistration.GroupRegistrationApprovalUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -25,28 +27,22 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class GroupRegistrationApprovalUseCaseTest {
 
-    @Mock
-    private GroupRegistrationService groupRegistrationService;
-
-    @Mock
-    private GroupUseCase groupUseCase;
-
-    @Mock
-    private RegionService regionService;
-
-    @InjectMocks
-    private GroupRegistrationApprovalUseCase groupRegistrationApprovalUseCase;
-
     private static final Long GROUP_REGISTRATION_ID = 10L;
     private static final Long APPROVER_ID = 99L;
     private static final Long REQUESTER_ID = 1L;
+    @Mock
+    private GroupRegistrationService groupRegistrationService;
+    @Mock
+    private GroupUseCase groupUseCase;
+    @Mock
+    private RegionService regionService;
+    @InjectMocks
+    private GroupRegistrationApprovalUseCase groupRegistrationApprovalUseCase;
 
     private GroupRegistrationResponse approvedResponse() {
         return new GroupRegistrationResponse(GROUP_REGISTRATION_ID, REQUESTER_ID, "Test Group", "Desc", "Seoul",
