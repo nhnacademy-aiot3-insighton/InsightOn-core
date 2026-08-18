@@ -4,6 +4,7 @@ import com.insighton.core.domain.gateway.entity.Gateway;
 import com.insighton.core.domain.gateway.exception.GatewayNotFoundException;
 import com.insighton.core.domain.gateway.repository.GatewayRepository;
 import com.insighton.core.domain.groups.entity.Group;
+import com.insighton.core.domain.groups.exception.GroupNotFoundException;
 import com.insighton.core.domain.groups.repository.GroupRepository;
 import com.insighton.core.domain.location.entity.Location;
 import com.insighton.core.domain.location.exception.LocationNotFoundException;
@@ -15,6 +16,7 @@ import com.insighton.core.domain.sensorattributes.repository.SensorAttributeRepo
 import com.insighton.core.domain.sensors.dto.SensorResponse;
 import com.insighton.core.domain.sensors.dto.SensorUpdateRequest;
 import com.insighton.core.domain.sensors.entity.Sensor;
+import com.insighton.core.domain.sensors.event.SensorCacheEvictEvent;
 import com.insighton.core.domain.sensors.event.SensorCacheSyncEvent;
 import com.insighton.core.domain.sensors.exception.InvalidSensorValueException;
 import com.insighton.core.domain.sensors.exception.SensorNotFoundException;
@@ -23,6 +25,7 @@ import com.insighton.core.domain.sensors.service.impl.SensorServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -366,5 +369,128 @@ class SensorServiceTest {
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).sensorId()).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("autoProvision - 그룹이 없으면 GroupNotFoundException")
+    void autoProvision_그룹없음() {
+        given(sensorRepository.findBySensorEui(anyString())).willReturn(Optional.empty());
+        given(gatewayRepository.findById(10L)).willReturn(Optional.of(mock(Gateway.class)));
+        given(groupRepository.findById(999L)).willReturn(Optional.empty());
+
+        assertThrows(GroupNotFoundException.class,
+                () -> sensorService.autoProvision(10L, 999L, "EUI-001", "센서", Set.of()));
+    }
+
+    @Test
+    @DisplayName("autoProvision - metricKeys가 null이면 속성 저장을 건너뜀")
+    void autoProvision_metricKeys_null이면_속성저장생략() {
+        given(sensorRepository.findBySensorEui("EUI-002")).willReturn(Optional.empty());
+        given(gatewayRepository.findById(10L)).willReturn(Optional.of(mock(Gateway.class)));
+        given(groupRepository.findById(5L)).willReturn(Optional.of(mock(Group.class)));
+        given(sensorRepository.save(any(Sensor.class)))
+                .willReturn(Sensor.builder().sensorId(200L).sensorEui("EUI-002").build());
+
+        sensorService.autoProvision(10L, 5L, "EUI-002", "센서", null);
+
+        verify(sensorAttributeRepository, never()).saveAll(any());
+        verify(metricDefinitionRepository, never()).findByMetricKeyIgnoreCase(any());
+    }
+
+    @Test
+    @DisplayName("autoProvision - 이름이 공백이면 정규화하지 않고 그대로 저장")
+    void autoProvision_이름공백이면_정규화안함() {
+        given(sensorRepository.findBySensorEui("EUI-003")).willReturn(Optional.empty());
+        given(gatewayRepository.findById(10L)).willReturn(Optional.of(mock(Gateway.class)));
+        given(groupRepository.findById(5L)).willReturn(Optional.of(mock(Group.class)));
+        given(sensorRepository.save(any(Sensor.class))).willAnswer(inv -> inv.getArgument(0));
+
+        sensorService.autoProvision(10L, 5L, "EUI-003", "  ", Set.of());
+
+        ArgumentCaptor<Sensor> captor = ArgumentCaptor.forClass(Sensor.class);
+        verify(sensorRepository).save(captor.capture());
+        assertThat(captor.getValue().getSensorName()).isEqualTo("  ");
+    }
+
+    @Test
+    @DisplayName("detachLocationFromSensors - EUI 있는 센서는 위치 해제 + 캐시무효화 이벤트 발행")
+    void 위치일괄해제_EUI있음_이벤트발행() {
+        Sensor sensor = Sensor.builder().sensorId(1L).sensorEui("EUI-001").location(mock(Location.class)).build();
+        given(sensorRepository.findByGroupGroupIdAndLocationLocationId(5L, 20L)).willReturn(List.of(sensor));
+
+        sensorService.detachLocationFromSensors(5L, 20L);
+
+        assertThat(sensor.getLocation()).isNull();
+        verify(eventPublisher).publishEvent(any(SensorCacheEvictEvent.class));
+    }
+
+    @Test
+    @DisplayName("detachLocationFromSensors - EUI 없는 센서는 이벤트 발행 생략")
+    void 위치일괄해제_EUI없음_이벤트생략() {
+        Sensor sensor = Sensor.builder().sensorId(2L).sensorEui(null).location(mock(Location.class)).build();
+        given(sensorRepository.findByGroupGroupIdAndLocationLocationId(5L, 20L)).willReturn(List.of(sensor));
+
+        sensorService.detachLocationFromSensors(5L, 20L);
+
+        assertThat(sensor.getLocation()).isNull();
+        verify(eventPublisher, never()).publishEvent(any());
+    }
+
+    @Test
+    @DisplayName("deleteSensor - 정상 삭제, EUI 있으면 캐시도 evict")
+    void 삭제_성공_EUI있음() {
+        Sensor sensor = Sensor.builder().sensorId(1L).sensorEui("EUI-001").build();
+        given(sensorRepository.findById(1L)).willReturn(Optional.of(sensor));
+
+        sensorService.deleteSensor(1L);
+
+        verify(sensorAttributeRepository).deleteBySensorSensorId(1L);
+        verify(sensorRepository).delete(sensor);
+        verify(sensorLookupCacheService).evict("EUI-001");
+    }
+
+    @Test
+    @DisplayName("deleteSensor - EUI 없으면 캐시 evict 생략")
+    void 삭제_성공_EUI없음() {
+        Sensor sensor = Sensor.builder().sensorId(2L).sensorEui(null).build();
+        given(sensorRepository.findById(2L)).willReturn(Optional.of(sensor));
+
+        sensorService.deleteSensor(2L);
+
+        verify(sensorAttributeRepository).deleteBySensorSensorId(2L);
+        verify(sensorRepository).delete(sensor);
+        verify(sensorLookupCacheService, never()).evict(any());
+    }
+
+    @Test
+    @DisplayName("getUnassignedSensors - 위치 미배정 센서 목록을 DTO로 변환해서 반환")
+    void 장소미배정_조회_성공() {
+        Group group = mock(Group.class);
+        Sensor sensor = Sensor.builder().sensorId(1L).group(group).sensorEui("EUI-001").build();
+        given(sensorRepository.findByGroupGroupIdAndLocationIsNull(5L)).willReturn(List.of(sensor));
+
+        List<SensorResponse> result = sensorService.getUnassignedSensors(5L);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).sensorId()).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("getSensorGroupId - 소속 그룹 ID 반환")
+    void 그룹ID조회_성공() {
+        Group group = mock(Group.class);
+        given(group.getGroupId()).willReturn(5L);
+        Sensor sensor = Sensor.builder().sensorId(1L).group(group).build();
+        given(sensorRepository.findById(1L)).willReturn(Optional.of(sensor));
+
+        assertThat(sensorService.getSensorGroupId(1L)).isEqualTo(5L);
+    }
+
+    @Test
+    @DisplayName("getSensorGroupId - 없는 센서면 SensorNotFoundException")
+    void 그룹ID조회_없는센서() {
+        given(sensorRepository.findById(999L)).willReturn(Optional.empty());
+
+        assertThrows(SensorNotFoundException.class, () -> sensorService.getSensorGroupId(999L));
     }
 }
