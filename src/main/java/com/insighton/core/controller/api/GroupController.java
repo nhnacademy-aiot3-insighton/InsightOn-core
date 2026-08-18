@@ -6,8 +6,7 @@ import com.insighton.core.domain.groups.dto.request.GroupUpdateRequest;
 import com.insighton.core.domain.groups.dto.response.GroupAdminResponse;
 import com.insighton.core.domain.groups.dto.response.GroupResponse;
 import com.insighton.core.domain.groups.service.GroupService;
-import com.insighton.core.usecase.GroupDeleteUseCase;
-import com.insighton.core.usecase.GroupUseCase;
+import com.insighton.core.usecase.group.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -21,8 +20,11 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/groups")
 public class GroupController {
-    private final GroupUseCase coreUseCase;
+    private final GroupCreateUseCase coreUseCase;
+    private final GroupGetUseCase getGroupUseCase;
+    private final GroupTokenUseCase groupTokenUseCase;
     private final GroupDeleteUseCase groupDeleteUseCase;
+    private final GroupUpdateUseCase groupUpdateUseCase;
     private final GroupService groupService;
 
     /**
@@ -53,7 +55,7 @@ public class GroupController {
     public ResponseEntity<GroupResponse> getMyGroup(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId) {
-        GroupResponse response = coreUseCase.getMyGroup(userId, groupId);
+        GroupResponse response = getGroupUseCase.getMyGroup(userId, groupId);
 
         return ResponseEntity.ok(response);
     }
@@ -71,7 +73,7 @@ public class GroupController {
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
             @RequestParam String inviteToken) {
-        GroupResponse response = coreUseCase.getGroupPreview(inviteToken, userId, groupId);
+        GroupResponse response = getGroupUseCase.getGroupPreview(inviteToken, userId, groupId);
 
         return ResponseEntity.ok(response);
     }
@@ -125,7 +127,7 @@ public class GroupController {
     public ResponseEntity<Void> newInviteToken(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId) {
-        coreUseCase.newInviteToken(userId, groupId);
+        groupTokenUseCase.newInviteToken(userId, groupId);
 
         return ResponseEntity.ok().build();
     }
@@ -144,7 +146,7 @@ public class GroupController {
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
             @RequestBody GroupUpdateRequest request) {
-        coreUseCase.updateGroup(request, userId, groupId);
+        groupUpdateUseCase.updateGroup(request, userId, groupId);
 
         return ResponseEntity.ok().build();
     }

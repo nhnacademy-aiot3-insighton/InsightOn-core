@@ -5,7 +5,7 @@ import com.insighton.core.domain.groupmember.dto.response.GroupMemberListRespons
 import com.insighton.core.domain.groupmember.dto.response.GroupMemberResponse;
 import com.insighton.core.domain.groupmember.entity.GroupMember;
 import com.insighton.core.domain.groupmember.service.GroupMemberService;
-import com.insighton.core.usecase.GroupUseCase;
+import com.insighton.core.usecase.group.GroupCreateUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -31,7 +31,7 @@ class GroupMemberControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private GroupUseCase useCase;
+    private GroupCreateUseCase useCase;
 
     @MockitoBean
     private GroupMemberService groupMemberService;
