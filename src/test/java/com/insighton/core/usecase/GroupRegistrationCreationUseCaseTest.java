@@ -7,6 +7,7 @@ import com.insighton.core.domain.groupregistration.service.GroupRegistrationServ
 import com.insighton.core.domain.region.dto.RegionGridDto;
 import com.insighton.core.domain.region.exception.RegionNotFoundException;
 import com.insighton.core.domain.region.service.RegionService;
+import com.insighton.core.usecase.groupregistration.GroupRegistrationCreationUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -28,16 +29,13 @@ import static org.mockito.Mockito.verify;
 @ExtendWith(MockitoExtension.class)
 class GroupRegistrationCreationUseCaseTest {
 
+    private static final Long REQUESTER_ID = 1L;
     @Mock
     private GroupRegistrationService groupRegistrationService;
-
     @Mock
     private RegionService regionService;
-
     @InjectMocks
     private GroupRegistrationCreationUseCase groupRegistrationCreationUseCase;
-
-    private static final Long REQUESTER_ID = 1L;
 
     private GroupRegistrationResponse dummyResponse() {
         return new GroupRegistrationResponse(10L, REQUESTER_ID, "Test Group", "Desc", "Seoul,Jongno",

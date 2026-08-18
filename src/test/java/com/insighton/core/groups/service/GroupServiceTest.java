@@ -6,10 +6,13 @@ import com.insighton.core.domain.groups.dto.response.GroupAdminResponse;
 import com.insighton.core.domain.groups.dto.response.GroupResponse;
 import com.insighton.core.domain.groups.entity.Group;
 import com.insighton.core.domain.groups.exception.GroupNotFoundException;
+import com.insighton.core.domain.groups.exception.InvitationTokenMismatchException;
 import com.insighton.core.domain.groups.exception.InviteTokenNotFoundException;
 import com.insighton.core.domain.groups.exception.UnAuthorizedAccessException;
 import com.insighton.core.domain.groups.repository.GroupRepository;
 import com.insighton.core.domain.groups.service.impl.GroupServiceImpl;
+import com.insighton.core.domain.location.exception.EmptyValueException;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -73,19 +76,91 @@ public class GroupServiceTest {
         }
 
         @Test
-        @DisplayName("그룹 정보 수정 성공")
-        void updateGroup_success() {
+        @DisplayName("그룹 정보 수정 성공 - 모든 필드 변경 (name, description, groupRegion)")
+        void updateGroup_success_allFields() {
             // given
             Long groupId = 1L;
+            Group realGroup = Group.builder()
+                    .name("Old Name")
+                    .description("Old Desc")
+                    .groupRegion("Old Loc")
+                    .build();
+            given(groupRepository.findById(groupId)).willReturn(Optional.of(realGroup));
             GroupUpdateRequest request = new GroupUpdateRequest("New Name", "New Desc", "New Loc");
-            Group mockGroup = mock(Group.class);
-            given(groupRepository.findById(groupId)).willReturn(Optional.of(mockGroup));
 
             // when
             groupService.updateGroup(request, groupId);
 
             // then
-            verify(mockGroup, times(1)).update(request);
+            assertThat(realGroup.getName()).isEqualTo("New Name");
+            assertThat(realGroup.getDescription()).isEqualTo("New Desc");
+            assertThat(realGroup.getGroupRegion()).isEqualTo("New Loc");
+        }
+
+        @Test
+        @DisplayName("그룹 정보 수정 성공 - name만 변경 (description, groupRegion은 null)")
+        void updateGroup_success_nameOnly() {
+            // given
+            Long groupId = 1L;
+            Group realGroup = Group.builder()
+                    .name("Old Name")
+                    .description("Old Desc")
+                    .groupRegion("Old Loc")
+                    .build();
+            given(groupRepository.findById(groupId)).willReturn(Optional.of(realGroup));
+            GroupUpdateRequest request = new GroupUpdateRequest("New Name", null, null);
+
+            // when
+            groupService.updateGroup(request, groupId);
+
+            // then
+            assertThat(realGroup.getName()).isEqualTo("New Name");
+            assertThat(realGroup.getDescription()).isEqualTo("Old Desc");
+            assertThat(realGroup.getGroupRegion()).isEqualTo("Old Loc");
+        }
+
+        @Test
+        @DisplayName("그룹 정보 수정 성공 - description만 변경 (name, groupRegion은 null)")
+        void updateGroup_success_descriptionOnly() {
+            // given
+            Long groupId = 1L;
+            Group realGroup = Group.builder()
+                    .name("Old Name")
+                    .description("Old Desc")
+                    .groupRegion("Old Loc")
+                    .build();
+            given(groupRepository.findById(groupId)).willReturn(Optional.of(realGroup));
+            GroupUpdateRequest request = new GroupUpdateRequest(null, "New Desc", null);
+
+            // when
+            groupService.updateGroup(request, groupId);
+
+            // then
+            assertThat(realGroup.getName()).isEqualTo("Old Name");
+            assertThat(realGroup.getDescription()).isEqualTo("New Desc");
+            assertThat(realGroup.getGroupRegion()).isEqualTo("Old Loc");
+        }
+
+        @Test
+        @DisplayName("그룹 정보 수정 성공 - groupRegion만 변경 (name, description은 null)")
+        void updateGroup_success_groupRegionOnly() {
+            // given
+            Long groupId = 1L;
+            Group realGroup = Group.builder()
+                    .name("Old Name")
+                    .description("Old Desc")
+                    .groupRegion("Old Loc")
+                    .build();
+            given(groupRepository.findById(groupId)).willReturn(Optional.of(realGroup));
+            GroupUpdateRequest request = new GroupUpdateRequest(null, null, "New Loc");
+
+            // when
+            groupService.updateGroup(request, groupId);
+
+            // then
+            assertThat(realGroup.getName()).isEqualTo("Old Name");
+            assertThat(realGroup.getDescription()).isEqualTo("Old Desc");
+            assertThat(realGroup.getGroupRegion()).isEqualTo("New Loc");
         }
 
         @Test
@@ -134,14 +209,50 @@ public class GroupServiceTest {
         void newInviteToken_success() {
             // given
             Long groupId = 1L;
-            Group mockGroup = mock(Group.class);
-            given(groupRepository.findById(groupId)).willReturn(Optional.of(mockGroup));
+
+            // 실제 객체 생성
+            Group realGroup = Group.builder()
+                    .name("테스트 그룹")
+                    .inviteToken("oldToken1234")
+                    .build();
+
+            given(groupRepository.findById(1L)).willReturn(Optional.of(realGroup));
 
             // when
             groupService.newInviteToken(groupId);
 
             // then
-            verify(mockGroup, times(1)).rotateInviteToken(any(String.class));
+            // 💡 verify(realGroup) 지우고 assertThat만 남기면 됩니다!
+            assertThat(realGroup.getInviteToken()).isNotEqualTo("oldToken1234");
+            assertThat(realGroup.getInviteToken()).hasSize(12);
+        }
+
+        @Test
+        @DisplayName("초대 토큰 검증 성공 - 토큰 일치")
+        void validateInviteToken_success() {
+            // given
+            Long groupId = 1L;
+            String token = "validToken12";
+            Group group = Group.builder().name("Group").inviteToken(token).build();
+            given(groupRepository.findById(groupId)).willReturn(Optional.of(group));
+
+            // when & then
+            assertDoesNotThrow(() -> groupService.validateInviteToken(groupId, token));
+        }
+
+        @Test
+        @DisplayName("초대 토큰으로 그룹 조회 성공")
+        void validateGroupByInviteToken_success() {
+            // given
+            String token = "validToken12";
+            Group group = Group.builder().name("Group").inviteToken(token).build();
+            given(groupRepository.findByInviteToken(token)).willReturn(Optional.of(group));
+
+            // when
+            Group result = groupService.validateGroupByInviteToken(token);
+
+            // then
+            assertThat(result.getName()).isEqualTo("Group");
         }
     }
 
@@ -206,6 +317,48 @@ public class GroupServiceTest {
             // when & then
             assertThatThrownBy(() -> groupService.newInviteToken(groupId))
                     .isInstanceOf(GroupNotFoundException.class);
+        }
+
+        @Test
+        @DisplayName("토큰 재발급 실패 - 새 토큰이 null이거나 공백이면 EmptyValueException 발생")
+        void rotateInviteToken_fail_emptyOrNull() {
+            // given
+            Group realGroup = Group.builder()
+                    .name("테스트 그룹")
+                    .inviteToken("oldToken1234")
+                    .build();
+
+            // when & then: null 전달 시 예외 발생 검증
+            assertThatThrownBy(() -> realGroup.rotateInviteToken(null))
+                    .isInstanceOf(EmptyValueException.class);
+
+            // when & then: 공백문자 전달 시 예외 발생 검증
+            assertThatThrownBy(() -> realGroup.rotateInviteToken("   "))
+                    .isInstanceOf(EmptyValueException.class);
+        }
+
+        @Test
+        @DisplayName("초대 토큰 검증 실패 - 토큰 불일치 시 InvitationTokenMismatchException 발생")
+        void validateInviteToken_mismatch() {
+            // given
+            Long groupId = 1L;
+            Group group = Group.builder().name("Group").inviteToken("correctToken").build();
+            given(groupRepository.findById(groupId)).willReturn(Optional.of(group));
+
+            // when & then
+            assertThatThrownBy(() -> groupService.validateInviteToken(groupId, "wrongToken"))
+                    .isInstanceOf(InvitationTokenMismatchException.class);
+        }
+
+        @Test
+        @DisplayName("초대 토큰으로 그룹 조회 실패 - 존재하지 않는 토큰")
+        void validateGroupByInviteToken_notFound() {
+            // given
+            given(groupRepository.findByInviteToken("invalidToken")).willReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> groupService.validateGroupByInviteToken("invalidToken"))
+                    .isInstanceOf(InviteTokenNotFoundException.class);
         }
     }
 }

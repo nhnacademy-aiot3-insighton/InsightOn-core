@@ -12,6 +12,7 @@ import com.insighton.core.domain.location.exception.LocationAlreadyException;
 import com.insighton.core.domain.location.exception.LocationNotFoundException;
 import com.insighton.core.domain.location.repository.LocationRepository;
 import com.insighton.core.domain.location.service.impl.LocationServiceImpl;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -28,6 +29,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willDoNothing;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -195,6 +197,60 @@ class LocationServiceTest {
             // then
             verify(locationRepository, times(1)).deleteAllByGroupGroupId(groupId);
         }
+
+        @Test
+        @DisplayName("getLocationAI 상세 조회 성공")
+        void getLocationAI_success() {
+            // given
+            Long locationId = 1L;
+            Group group = Group.builder().name("Test Group").build();
+            Location location = new Location(group, "name", Location.AutoControlMode.SUGGESTION);
+            given(locationRepository.findById(locationId)).willReturn(Optional.of(location));
+
+            // when
+            LocationResponse response = locationsService.getLocationAI(locationId);
+
+            // then
+            assertThat(response).isNotNull();
+            assertThat(response.locationName()).isEqualTo("name");
+            assertThat(response.autoControlMode()).isEqualTo(Location.AutoControlMode.SUGGESTION);
+        }
+
+        @Test
+        @DisplayName("location 이름 수정 성공 - 기존 이름과 동일할 때 변경 없이 조기 리턴")
+        void updateName_sameName_noUpdate() {
+            // given
+            Long groupId = 1L;
+            Long locationId = 1L;
+            Group group = Group.builder().name("Test Group").build();
+            Location location = new Location(group, "sameName", Location.AutoControlMode.SUGGESTION);
+            given(locationRepository.findByLocationIdAndGroupGroupId(locationId, groupId)).willReturn(Optional.of(location));
+
+            LocationUpdateRequest request = new LocationUpdateRequest("sameName");
+
+            // when
+            locationsService.updateName(locationId, groupId, request);
+
+            // then
+            assertThat(location.getLocationName()).isEqualTo("sameName");
+            verify(locationRepository, never()).existsByGroupGroupIdAndLocationName(any(), any());
+        }
+
+        @Test
+        @DisplayName("getLocationListByGroupId 성공 - 그룹 ID로 Location 엔티티 목록 반환")
+        void getLocationListByGroupId_success() {
+            // given
+            Long groupId = 1L;
+            Group group = Group.builder().name("Group").build();
+            Location loc = new Location(group, "Loc", Location.AutoControlMode.SUGGESTION);
+            given(locationRepository.findByGroupGroupId(groupId)).willReturn(List.of(loc));
+
+            // when
+            List<Location> result = locationsService.getLocationListByGroupId(groupId);
+
+            // then
+            assertThat(result).hasSize(1);
+        }
     }
 
     @Nested
@@ -215,6 +271,20 @@ class LocationServiceTest {
 
             // when & then
             assertThatThrownBy(() -> locationsService.createLocation(group, locationsRequest))
+                    .isInstanceOf(LocationAlreadyException.class);
+        }
+
+        @Test
+        @DisplayName("location 생성 실패 - DB 저장 시 DataIntegrityViolationException 발생 시 LocationAlreadyException 재던짐")
+        void createLocation_fail_dataIntegrity() {
+            // given
+            Group group = Group.builder().name("Test Group").build();
+            LocationCreateRequest request = new LocationCreateRequest("Test Location", Location.AutoControlMode.SUGGESTION);
+            given(locationRepository.existsByGroupGroupIdAndLocationName(group.getGroupId(), request.locationName())).willReturn(false);
+            given(locationRepository.saveAndFlush(any(Location.class))).willThrow(DataIntegrityViolationException.class);
+
+            // when & then
+            assertThatThrownBy(() -> locationsService.createLocation(group, request))
                     .isInstanceOf(LocationAlreadyException.class);
         }
 
@@ -248,6 +318,18 @@ class LocationServiceTest {
         }
 
         @Test
+        @DisplayName("getLocationAI 상세 정보 조회 실패 - Location이 존재하지 않을 때 LocationNotFoundException 발생")
+        void getLocationAI_fail() {
+            // given
+            Long locationId = 999L;
+            given(locationRepository.findById(locationId)).willReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> locationsService.getLocationAI(locationId))
+                    .isInstanceOf(LocationNotFoundException.class);
+        }
+
+        @Test
         @DisplayName("AI 모드 변경 실패 - group에 Location이 존재하지 않을 때")
         void toggleAutoControlMode_fail() {
             // given
@@ -277,6 +359,24 @@ class LocationServiceTest {
             // when & then
             assertThatThrownBy(() -> locationsService.updateName(locationId, groupId, request))
                     .isInstanceOf(EmptyValueException.class);
+        }
+
+        @Test
+        @DisplayName("location 이름 수정 실패 - 이미 그룹 내 동일한 이름의 Location이 존재할 때 LocationAlreadyException 발생")
+        void updateName_fail_alreadyExists() {
+            // given
+            Long groupId = 1L;
+            Long locationId = 1L;
+            Group group = Group.builder().name("Test Group").build();
+            Location location = new Location(group, "oldName", Location.AutoControlMode.SUGGESTION);
+            given(locationRepository.findByLocationIdAndGroupGroupId(locationId, groupId)).willReturn(Optional.of(location));
+            given(locationRepository.existsByGroupGroupIdAndLocationName(groupId, "existingName")).willReturn(true);
+
+            LocationUpdateRequest request = new LocationUpdateRequest("existingName");
+
+            // when & then
+            assertThatThrownBy(() -> locationsService.updateName(locationId, groupId, request))
+                    .isInstanceOf(LocationAlreadyException.class);
         }
 
         @Test

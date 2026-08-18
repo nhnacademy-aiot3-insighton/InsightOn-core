@@ -4,7 +4,7 @@ package com.insighton.core.domain.groupmember.service;
 import com.insighton.core.domain.groupmember.dto.request.GroupMemberJoinRequest;
 import com.insighton.core.domain.groupmember.dto.response.GroupMemberListResponse;
 import com.insighton.core.domain.groupmember.dto.response.GroupMemberResponse;
-import com.insighton.core.domain.groupmember.dto.response.ManagerGroupExistsResponse;
+import com.insighton.core.domain.groupmember.dto.response.ManagerGroupResponse;
 import com.insighton.core.domain.groupmember.entity.GroupMember;
 import com.insighton.core.domain.groups.entity.Group;
 
@@ -120,11 +120,6 @@ public interface GroupMemberService {
     GroupMember validateGroupAdmin(Long groupId, Long userId);
 
     /**
-     * 어딘가의 그룹에 이미 존재한다.
-     */
-    void validateUserInAnyGroup(Long userId);
-
-    /**
      * 아무데도 가입이 안 되어있따.
      */
     void validateUserNotInAnyGroup(Long userId);
@@ -136,6 +131,6 @@ public interface GroupMemberService {
      * @param userId 권한을 가진 member로 존재하는지 알고 싶은 user
      * @return 있으면 true, 없으면 false
      */
-    ManagerGroupExistsResponse existsManagerGroupAuth(Long userId);
+    ManagerGroupResponse existsManagerGroupAuth(Long userId);
 
 }

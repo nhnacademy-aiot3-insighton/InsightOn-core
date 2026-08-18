@@ -1,11 +1,9 @@
-package com.insighton.core.usecase;
+package com.insighton.core.usecase.dashboard;
 
 import com.insighton.core.common.annotation.UseCase;
 import com.insighton.core.domain.dashboards.entity.Dashboard;
 import com.insighton.core.domain.dashboards.service.DashboardService;
-import com.insighton.core.domain.groupmember.entity.GroupMember;
 import com.insighton.core.domain.groupmember.service.GroupMemberService;
-import com.insighton.core.domain.groups.exception.NoPermissionException;
 import com.insighton.core.domain.location.service.LocationService;
 import com.insighton.core.domain.widgets.dto.chart.ChartDataResponse;
 import com.insighton.core.domain.widgets.dto.request.WidgetSaveRequest;
@@ -68,6 +66,8 @@ public class DashboardSaveUseCase {
             }
             widgetIds.add(targetWidgetId);
         }
+        // 최종 수정 일시 update
+        dashboard.updateWidgetLayout();
 
         return widgetIds;
     }
@@ -91,25 +91,12 @@ public class DashboardSaveUseCase {
      * widget service 로직에서 반복되는 작업(권한 체크나 dashboard 가져오는 작업) 따로 분리
      */
     private Dashboard validateOnlyWidget(Long userId, Long groupId, Long locationId) {
-        // user가 group에 속해있는지 확인하고
-        GroupMember member = groupMemberService.validateGroupMembers(groupId, userId);
-
-        // 속해있는 user가 관리자인지 확인하고
-        validationIsAdmin(member);
+        // user가 group에 속해있는지 및 관리자인지 확인
+        groupMemberService.validateGroupAdmin(groupId, userId);
 
         locationService.getLocationByGroupId(locationId, groupId);
 
         // locationID로 연결된 dashboard 가져와서 (동시성 제어를 위해 비관적 락 적용)
         return dashboardService.getDashboardWithLockByLocationId(locationId);
-    }
-
-
-    /**
-     * member가 관리자인지 확인
-     */
-    private void validationIsAdmin(GroupMember groupMember) {
-        if (groupMember.isMember()) {
-            throw NoPermissionException.forAdmin(groupMember.getGroupMemberId());
-        }
     }
 }
