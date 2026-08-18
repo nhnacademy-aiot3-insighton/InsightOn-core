@@ -4,7 +4,7 @@ import com.insighton.core.domain.location.dto.request.LocationCreateRequest;
 import com.insighton.core.domain.location.dto.request.LocationUpdateRequest;
 import com.insighton.core.domain.location.dto.response.LocationListResponse;
 import com.insighton.core.domain.location.dto.response.LocationResponse;
-import com.insighton.core.usecase.location.LocationUseCase;
+import com.insighton.core.usecase.location.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,7 +17,11 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/groups/{group-id}/location")
 public class LocationController {
-    private final LocationUseCase useCase;
+    private final LocationCreateUseCase locationCreateUseCase;
+    private final LocationGetUseCase locationGetUseCase;
+    private final LocationModeUpdateUseCase locationModeUpdateUseCase;
+    private final LocationNameUpdateUseCase locationNameUpdateUseCase;
+    private final LocationDeleteUseCase useCase;
 
     /**
      * location 생성
@@ -33,7 +37,7 @@ public class LocationController {
             @PathVariable("group-id") Long groupId,
             @Valid @RequestBody LocationCreateRequest request
     ) {
-        useCase.createLocation(userId, groupId, request);
+        locationCreateUseCase.createLocation(userId, groupId, request);
 
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
@@ -50,7 +54,7 @@ public class LocationController {
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId
     ) {
-        List<LocationListResponse> locationListResponses = useCase.getLocationList(userId, groupId);
+        List<LocationListResponse> locationListResponses = locationGetUseCase.getLocationList(userId, groupId);
 
         return ResponseEntity.ok(locationListResponses);
     }
@@ -69,7 +73,7 @@ public class LocationController {
             @PathVariable("group-id") Long groupId,
             @PathVariable("location-id") Long locationId
     ) {
-        LocationResponse response = useCase.getLocation(userId, groupId, locationId);
+        LocationResponse response = locationGetUseCase.getLocation(userId, groupId, locationId);
 
         return ResponseEntity.ok(response);
     }
@@ -88,7 +92,7 @@ public class LocationController {
             @PathVariable("group-id") Long groupId,
             @PathVariable("location-id") Long locationId
     ) {
-        useCase.toggleAutoControlMode(userId, groupId, locationId);
+        locationModeUpdateUseCase.toggleAutoControlMode(userId, groupId, locationId);
 
         return ResponseEntity.ok().build();
     }
@@ -109,7 +113,7 @@ public class LocationController {
             @PathVariable("location-id") Long locationId,
             @Valid @RequestBody LocationUpdateRequest request) {
 
-        useCase.updateName(userId, groupId, locationId, request);
+        locationNameUpdateUseCase.updateName(userId, groupId, locationId, request);
 
         return ResponseEntity.ok().build();
     }
