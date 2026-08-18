@@ -17,7 +17,7 @@ public class WeatherInternalController {
 
     private final WeatherRecoveryUseCase weatherRecoveryUseCase;
 
-    @GetMapping("/groups/{group-id}/weather")
+    @GetMapping("/internal/v1/groups/{group-id}/weather")
     public ResponseEntity<WeatherInternalResponse> getWeather(@PathVariable("group-id") Long groupId) {
 
         OffsetDateTime now = OffsetDateTime.now();
