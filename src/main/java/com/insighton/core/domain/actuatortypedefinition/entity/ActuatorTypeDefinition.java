@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 public class ActuatorTypeDefinition {
 
     @Id
-    @Column(name = "type_code", length = 30)
+    @Column(name = "type_code", length = 50)
     private String typeCode; // AIRCON
 
     @Column(name = "type_name", length = 50, nullable = false)

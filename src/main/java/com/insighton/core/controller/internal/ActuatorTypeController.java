@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/internal/v1/actuator-types")
+@RequestMapping("/internal/v1/actuator-type")
 @RequiredArgsConstructor
 public class ActuatorTypeController {
 

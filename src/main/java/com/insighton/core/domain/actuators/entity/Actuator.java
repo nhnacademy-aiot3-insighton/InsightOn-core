@@ -32,7 +32,7 @@ public class Actuator {
     @Column(name = "sensor_name", length = 100, nullable = false)
     private String sensorName; // 센서 이름
 
-    @Column(name = "actuator_type", length = 30, nullable = false)
+    @Column(name = "actuator_type", length = 50, nullable = false)
     private String actuatorType; // 액추에이터 종류
 
     @JdbcTypeCode(SqlTypes.JSON) // Gateway.connectionConfig와 동일한 방식으로 통일
