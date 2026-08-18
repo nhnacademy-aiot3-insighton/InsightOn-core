@@ -1,4 +1,4 @@
-package com.insighton.core.usecase;
+package com.insighton.core.usecase.weather;
 
 import com.insighton.core.common.annotation.UseCase;
 import com.insighton.core.domain.region.dto.GroupRegionDto;

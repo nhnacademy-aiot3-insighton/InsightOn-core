@@ -1,4 +1,4 @@
-package com.insighton.core.usecase;
+package com.insighton.core.usecase.dashboard;
 
 import com.insighton.core.domain.dashboards.dto.response.DashboardResponse;
 import com.insighton.core.domain.dashboards.entity.Dashboard;
