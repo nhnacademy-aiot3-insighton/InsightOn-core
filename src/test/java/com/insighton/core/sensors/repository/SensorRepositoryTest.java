@@ -49,4 +49,13 @@ class SensorRepositoryTest {
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getSensorEui()).isEqualTo("EUI-104");
     }
+
+    @Test
+    @DisplayName("findByGroupGroupIdAndLocationIsNull - 장소 미배정 센서만 조회")
+    void 장소미배정_센서만_조회() {
+        List<Sensor> result = sensorRepository.findByGroupGroupIdAndLocationIsNull(1L);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getSensorEui()).isEqualTo("EUI-100");
+    }
 }
