@@ -10,17 +10,19 @@ import com.insighton.core.domain.sensors.exception.SensorNotFoundException;
 import com.insighton.core.usecase.sensor.DeleteAllSensorUseCase;
 import com.insighton.core.usecase.sensor.DeleteSensorUseCase;
 import com.insighton.core.usecase.sensor.GetSensorUseCase;
+import com.insighton.core.usecase.sensor.GetUnassignedSensorsUseCase;
 import com.insighton.core.usecase.sensor.SearchSensorUseCase;
 import com.insighton.core.usecase.sensor.UpdateSensorUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
@@ -39,11 +41,12 @@ class SensorControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean private GetSensorUseCase getSensorUseCase;
-    @MockBean private SearchSensorUseCase searchSensorUseCase;
-    @MockBean private UpdateSensorUseCase updateSensorUseCase;
-    @MockBean private DeleteSensorUseCase deleteSensorUseCase;
-    @MockBean private DeleteAllSensorUseCase deleteAllSensorUseCase;
+    @MockitoBean private GetSensorUseCase getSensorUseCase;
+    @MockitoBean private SearchSensorUseCase searchSensorUseCase;
+    @MockitoBean private GetUnassignedSensorsUseCase getUnassignedSensorsUseCase;
+    @MockitoBean private UpdateSensorUseCase updateSensorUseCase;
+    @MockitoBean private DeleteSensorUseCase deleteSensorUseCase;
+    @MockitoBean private DeleteAllSensorUseCase deleteAllSensorUseCase;
 
     private SensorResponse sampleResponse() {
         return new SensorResponse(
@@ -99,6 +102,19 @@ class SensorControllerTest {
                 .andExpect(jsonPath("$.length()").value(1));
 
         verify(searchSensorUseCase).searchSensors(1L, 5L, null, null, new SensorUpdateRequest("4층", "CO2"));
+    }
+
+    @Test
+    @DisplayName("장소 미배정 센서 목록 조회 성공")
+    void 장소미배정_조회_성공() throws Exception {
+        given(getUnassignedSensorsUseCase.getUnassignedSensors(1L, 5L)).willReturn(List.of(sampleResponse()));
+
+        mockMvc.perform(get("/api/v1/sensor/unassigned")
+                        .header("X-USER-ID", 1L)
+                        .param("groupId", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].sensorId").value(1L));
     }
 
     @Test
