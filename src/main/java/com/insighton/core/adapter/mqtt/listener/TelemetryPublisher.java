@@ -32,13 +32,18 @@ public class TelemetryPublisher {
      */
     @Async("telemetryDispatchExecutor")
     public void publish(TelemetryEventMessage event) {
-        String routingKey = RabbitConfig.TELEMETRY_ROUTING_KEY_PREFIX + event.groupId();
 
         try {
             rabbitTemplate.convertAndSend(
                     RabbitConfig.TELEMETRY_EXCHANGE,
-                    routingKey,
-                    event
+                    "",
+                    event,
+                    message -> {
+                        message.getMessageProperties()
+                                .setHeader(RabbitConfig.TELEMETRY_HASH_HEADER, String.valueOf(event.locationId()));
+
+                        return message;
+                    }
             );
         } catch (AmqpException e) {
             log.warn("RabbitMQ 발행 실패, 메시지 드롭 (groupId = {} , locationId = {})", event.groupId(), event.locationId(), e);

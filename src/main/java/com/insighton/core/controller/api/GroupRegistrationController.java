@@ -4,8 +4,8 @@ import com.insighton.core.domain.groupregistration.dto.CreateGroupRegistrationRe
 import com.insighton.core.domain.groupregistration.dto.GroupRegistrationResponse;
 import com.insighton.core.domain.groupregistration.entity.GroupRegistrationStatus;
 import com.insighton.core.domain.groupregistration.service.GroupRegistrationService;
-import com.insighton.core.usecase.GroupRegistrationApprovalUseCase;
-import com.insighton.core.usecase.GroupRegistrationCreationUseCase;
+import com.insighton.core.usecase.groupregistration.GroupRegistrationApprovalUseCase;
+import com.insighton.core.usecase.groupregistration.GroupRegistrationCreationUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

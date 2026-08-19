@@ -1,4 +1,4 @@
-package com.insighton.core.usecase;
+package com.insighton.core.usecase.dashboard;
 
 import com.insighton.core.domain.dashboards.entity.Dashboard;
 import com.insighton.core.domain.dashboards.service.DashboardService;
@@ -62,8 +62,7 @@ class DashboardSaveUseCaseTest {
             Long dashboardId = 50L;
 
             GroupMember mockMember = mock(GroupMember.class);
-            given(mockMember.isMember()).willReturn(false); // 관리자 권한
-            given(groupMemberService.validateGroupMembers(groupId, userId)).willReturn(mockMember);
+            given(groupMemberService.validateGroupAdmin(groupId, userId)).willReturn(mockMember);
 
             Dashboard mockDashboard = mock(Dashboard.class);
             given(mockDashboard.getDashboardId()).willReturn(dashboardId);
@@ -105,6 +104,8 @@ class DashboardSaveUseCaseTest {
             verify(widgetService, times(1)).updateWidget(dashboardId, 1L, updateRequest);
             // 신규 위젯 생성 검증
             verify(widgetService, times(1)).createWidget(mockDashboard, createRequest);
+
+            verify(mockDashboard, times(1)).updateWidgetLayout();
         }
 
         @Test
@@ -115,16 +116,13 @@ class DashboardSaveUseCaseTest {
             Long groupId = 1L;
             Long locationId = 10L;
 
-            GroupMember mockMember = mock(GroupMember.class);
-            given(mockMember.isMember()).willReturn(true); // 일반 멤버 권한
-            given(mockMember.getGroupMemberId()).willReturn(200L);
-            given(groupMemberService.validateGroupMembers(groupId, userId)).willReturn(mockMember);
+            given(groupMemberService.validateGroupAdmin(groupId, userId)).willThrow(NoPermissionException.forAdmin(200L));
 
             // when & then
             assertThatThrownBy(() -> dashboardSaveUseCase.saveDashboard(userId, groupId, locationId, List.of()))
                     .isInstanceOf(NoPermissionException.class);
 
-            verify(groupMemberService, times(1)).validateGroupMembers(groupId, userId);
+            verify(groupMemberService, times(1)).validateGroupAdmin(groupId, userId);
             verifyNoInteractions(locationService, dashboardService, widgetService);
         }
 
@@ -139,8 +137,7 @@ class DashboardSaveUseCaseTest {
             Long targetWidgetId = 999L;
 
             GroupMember mockMember = mock(GroupMember.class);
-            given(mockMember.isMember()).willReturn(false);
-            given(groupMemberService.validateGroupMembers(groupId, userId)).willReturn(mockMember);
+            given(groupMemberService.validateGroupAdmin(groupId, userId)).willReturn(mockMember);
 
             Dashboard mockDashboard = mock(Dashboard.class);
             given(mockDashboard.getDashboardId()).willReturn(dashboardId);
