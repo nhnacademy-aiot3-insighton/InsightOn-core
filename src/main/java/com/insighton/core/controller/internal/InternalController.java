@@ -2,23 +2,24 @@ package com.insighton.core.controller.internal;
 
 import com.insighton.core.domain.groupmember.dto.request.GroupMemberJoinRequest;
 import com.insighton.core.domain.groupmember.dto.response.GroupMemberResponse;
-import com.insighton.core.domain.groupmember.dto.response.ManagerGroupExistsResponse;
+import com.insighton.core.domain.groupmember.dto.response.ManagerGroupResponse;
 import com.insighton.core.domain.groupmember.service.GroupMemberService;
 import com.insighton.core.domain.location.dto.response.LocationListResponse;
 import com.insighton.core.domain.location.dto.response.LocationResponse;
 import com.insighton.core.domain.location.service.LocationService;
-import com.insighton.core.usecase.GroupUseCase;
+import com.insighton.core.usecase.group.GroupCreateUseCase;
 import jakarta.validation.Valid;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/internal/v1")
 public class InternalController {
-    private final GroupUseCase groupUseCase;
+    private final GroupCreateUseCase groupCreateUseCase;
     private final GroupMemberService groupMemberService;
     private final LocationService locationService;
 
@@ -31,7 +32,7 @@ public class InternalController {
     public ResponseEntity<Void> joinGroupByToken(
             @Valid @RequestBody GroupMemberJoinRequest request) {
         // inviteToken으로 그룹이 존재하는지 확인하고 가입 시키는 로직 호출
-        groupUseCase.joinGroupByToken(request);
+        groupCreateUseCase.joinGroupByToken(request);
 
         return ResponseEntity.ok().build();
     }
@@ -80,11 +81,11 @@ public class InternalController {
      * @param userId 조회할 user ID
      * @return 권한이 있으면 true, 없으면 false
      */
-    @GetMapping("/users/{user-id}/manager-groups/exists")
-    public ResponseEntity<ManagerGroupExistsResponse> existsManagerGroup(
+    @GetMapping("/users/{user-id}/manager-group")
+    public ResponseEntity<ManagerGroupResponse> existsManagerGroup(
             @PathVariable("user-id") Long userId) {
 
-        ManagerGroupExistsResponse response = groupMemberService.existsManagerGroupAuth(userId);
+        ManagerGroupResponse response = groupMemberService.existsManagerGroupAuth(userId);
 
         return ResponseEntity.ok(response);
     }

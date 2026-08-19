@@ -11,6 +11,10 @@ import com.insighton.core.domain.location.entity.Location;
 import com.insighton.core.domain.location.repository.LocationRepository;
 import com.insighton.core.domain.region.loader.RegionCsvLoader;
 import com.insighton.core.domain.widgets.repository.InfluxDbRepository;
+import com.insighton.core.usecase.group.GroupDeleteUseCase;
+import com.insighton.core.usecase.location.LocationCreateUseCase;
+import com.insighton.core.usecase.location.LocationDeleteUseCase;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,6 +32,7 @@ import static org.mockito.Mockito.doAnswer;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@Slf4j
 class GroupDeleteLocationConcurrencyTest {
 
     private final Long userId = 100L;
@@ -36,7 +41,7 @@ class GroupDeleteLocationConcurrencyTest {
     @Autowired
     private GroupDeleteUseCase groupDeleteUseCase;
     @Autowired
-    private LocationUseCase locationUseCase;
+    private LocationDeleteUseCase locationDeleteUseCase;
     @Autowired
     private GroupRepository groupRepository;
     @Autowired
@@ -46,6 +51,9 @@ class GroupDeleteLocationConcurrencyTest {
 
     @MockitoSpyBean
     private GroupService groupService;
+
+    @Autowired
+    private LocationCreateUseCase locationCreateUseCase;
 
     @MockitoBean
     private InfluxDbRepository influxDbRepository;
@@ -106,7 +114,7 @@ class GroupDeleteLocationConcurrencyTest {
         // 3. 그룹 락이 선점된 상태에서 위치 생성 요청 제출 -> 그룹 비관적 락 대기(Lock Wait) 진입
         LocationCreateRequest createRequest = new LocationCreateRequest("New-Location", Location.AutoControlMode.SUGGESTION);
         Future<Void> createFuture = executorService.submit(() -> {
-            locationUseCase.createLocation(userId, groupId, createRequest);
+            locationCreateUseCase.createLocation(userId, groupId, createRequest);
             return null;
         });
 
@@ -114,7 +122,9 @@ class GroupDeleteLocationConcurrencyTest {
         // 1. 그룹 삭제 요청은 성공 완료
         try {
             deleteFuture.get();
-        } catch (ExecutionException ignored) {}
+        } catch (ExecutionException ignored) {
+            log.error("에러터짐");
+        }
 
         // 2. 위치 생성 요청은 락 대기 후 늦게 진입하지만 그룹이 삭제되었으므로 GroupNotFoundException 발생
         boolean locationCreateFailedAsExpected = false;
