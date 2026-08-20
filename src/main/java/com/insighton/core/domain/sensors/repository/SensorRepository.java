@@ -2,11 +2,12 @@ package com.insighton.core.domain.sensors.repository;
 
 import com.insighton.core.domain.sensors.entity.Sensor;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface SensorRepository extends JpaRepository<Sensor, Long> {
+public interface SensorRepository extends JpaRepository<Sensor, Long>, QuerydslPredicateExecutor<Sensor> {
 
     // 연관관계 객체를 뚫고 들어가 ID로 조회하려면 _언더스코어 네비게이션 필요
     // 위치 ID로 조회
