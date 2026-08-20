@@ -57,6 +57,9 @@ public class RabbitConfig {
     @Bean
     public Queue gatewayStatusQueue() {
         return new Queue(GATEWAY_STATUS_QUEUE, true);
+    }
+
+    @Bean
     public Queue actuatorDeletedQueue() {
         return new Queue(ACTUATOR_DELETED_QUEUE, true);
     }
@@ -86,6 +89,9 @@ public class RabbitConfig {
         return BindingBuilder.bind(gatewayStatusQueue)
                 .to(coreEventExchange)
                 .with(GATEWAY_STATUS_ROUTING_KEY);
+    }
+
+    @Bean
     public Binding actuatorDeletedBinding(Queue actuatorDeletedQueue, @Qualifier("coreEventsExchange") TopicExchange coreEventExchange) {
         return BindingBuilder.bind(actuatorDeletedQueue)
                 .to(coreEventExchange)
