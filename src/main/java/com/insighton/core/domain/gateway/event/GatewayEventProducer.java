@@ -1,9 +1,6 @@
 package com.insighton.core.domain.gateway.event;
 
 import com.insighton.core.common.config.RabbitConfig;
-import com.insighton.core.domain.gateway.entity.Gateway;
-import com.insighton.core.domain.gateway.entity.GatewayStatus;
-import java.time.OffsetDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.AmqpException;
@@ -17,15 +14,9 @@ public class GatewayEventProducer {
 
     private final RabbitTemplate rabbitTemplate;
 
-    public void sendGatewayStatusChangedEvent(Gateway gateway) {
+    public void sendGatewayStatusChangedEvent(GatewayStatusChangedEvent event) {
         try {
-            GatewayStatusChangedEvent event = new GatewayStatusChangedEvent(
-                    gateway.getGatewayId(),
-                    gateway.getGroupId(),
-                    gateway.getName(),
-                    gateway.getStatus(),
-                    OffsetDateTime.now()
-            );
+            log.info("게이트웨이 상태 변경 메세지 발행 시작 - gatewayId:{}, status: {}", event.gatewayId(), event.status());
 
             rabbitTemplate.convertAndSend(
                     RabbitConfig.CORE_EVENTS_EXCHANGE,
@@ -33,9 +24,10 @@ public class GatewayEventProducer {
                     event
             );
 
-            log.info("GatewayEventProducer 상태 변경 이벤트 전송 - gatewayId:{}, status: {}", gateway.getGatewayId(), gateway.getStatus());
+            log.info("[GatewayEventProducer] 상태 변경 이벤트 전송 성공 - gatewayId:{}, status: {}", event.gatewayId(), event.status());
         } catch (AmqpException e) {
-            log.error("GatewayEventProducer 상태 변경 이벤트 전송 실패 - gatewayId:{}, error: {}", gateway.getGatewayId(), e.getMessage(), e);
+            log.error("[GatewayEventProducer] 상태 변경 이벤트 전송 실패 - gatewayId:{}, error: {}", event.gatewayId(), e.getMessage(), e);
+            throw e;
         }
     }
 }
