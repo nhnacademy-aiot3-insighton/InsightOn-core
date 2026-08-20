@@ -11,7 +11,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -28,8 +28,8 @@ class SensorAttributeControllerTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
-    @MockBean private GetAllAttributeUseCase getAllAttributeUseCase;
-    @MockBean private DeleteAttributeUseCase deleteAttributeUseCase;
+    @MockitoBean private GetAllAttributeUseCase getAllAttributeUseCase;
+    @MockitoBean private DeleteAttributeUseCase deleteAttributeUseCase;
 
     @Test
     @DisplayName("속성 목록 조회 성공")

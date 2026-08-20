@@ -22,7 +22,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
@@ -44,14 +44,14 @@ class ActuatorControllerTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
 
-    @MockBean private CreateActuatorUseCase createActuatorUseCase;
-    @MockBean private GetActuatorUseCase getActuatorUseCase;
-    @MockBean private GetActuatorsByLocationUseCase getActuatorsByLocationUseCase;
-    @MockBean private UpdateActuatorStateUseCase updateActuatorStateUseCase;
-    @MockBean private UpdateActuatorNameUseCase updateActuatorNameUseCase;
-    @MockBean private GetActuatorRunLogsUseCase getActuatorRunLogsUseCase;
-    @MockBean private DeleteActuatorUseCase deleteActuatorUseCase;
-    @MockBean private DeleteAllActuatorUseCase deleteAllActuatorUseCase;
+    @MockitoBean private CreateActuatorUseCase createActuatorUseCase;
+    @MockitoBean private GetActuatorUseCase getActuatorUseCase;
+    @MockitoBean private GetActuatorsByLocationUseCase getActuatorsByLocationUseCase;
+    @MockitoBean private UpdateActuatorStateUseCase updateActuatorStateUseCase;
+    @MockitoBean private UpdateActuatorNameUseCase updateActuatorNameUseCase;
+    @MockitoBean private GetActuatorRunLogsUseCase getActuatorRunLogsUseCase;
+    @MockitoBean private DeleteActuatorUseCase deleteActuatorUseCase;
+    @MockitoBean private DeleteAllActuatorUseCase deleteAllActuatorUseCase;
 
     @Test
     @DisplayName("액추에이터 생성 성공")
