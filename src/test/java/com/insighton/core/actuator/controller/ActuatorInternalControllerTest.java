@@ -72,7 +72,7 @@ class ActuatorInternalControllerTest {
     void 시스템상태변경_USER호출_403() throws Exception {
         ActuatorCommandRequest request = new ActuatorCommandRequest("AIRCON", "power", "ON", ExecutedByType.USER);
 
-        mockMvc.perform(put("/internal/locations/{location-id}/actuators/state", 20L)
+        mockMvc.perform(put("/internal/v1/locations/{location-id}/actuators/state", 20L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden());
@@ -83,7 +83,7 @@ class ActuatorInternalControllerTest {
     void 시스템상태변경_알수없는타입_400() throws Exception {
         ActuatorCommandRequest request = new ActuatorCommandRequest("UNKNOWN_TYPE", "power", "ON", ExecutedByType.RULE_ENGINE);
 
-        mockMvc.perform(put("/internal/locations/{location-id}/actuators/state", 20L)
+        mockMvc.perform(put("/internal/v1/locations/{location-id}/actuators/state", 20L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -97,7 +97,7 @@ class ActuatorInternalControllerTest {
 
         ActuatorCommandRequest request = new ActuatorCommandRequest("AIRCON", "power", "ON", ExecutedByType.RULE_ENGINE);
 
-        mockMvc.perform(put("/internal/locations/{location-id}/actuators/state", 20L)
+        mockMvc.perform(put("/internal/v1/locations/{location-id}/actuators/state", 20L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());
@@ -112,7 +112,7 @@ class ActuatorInternalControllerTest {
 
         ActuatorCommandRequest request = new ActuatorCommandRequest("AIRCON", "power", "EXPLODE", ExecutedByType.RULE_ENGINE);
 
-        mockMvc.perform(put("/internal/locations/{location-id}/actuators/state", 20L)
+        mockMvc.perform(put("/internal/v1/locations/{location-id}/actuators/state", 20L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -130,7 +130,7 @@ class ActuatorInternalControllerTest {
 
         ActuatorCommandRequest request = new ActuatorCommandRequest("AIRCON", "power", "ON", ExecutedByType.RULE_ENGINE);
 
-        mockMvc.perform(put("/internal/locations/{location-id}/actuators/state", 20L)
+        mockMvc.perform(put("/internal/v1/locations/{location-id}/actuators/state", 20L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
