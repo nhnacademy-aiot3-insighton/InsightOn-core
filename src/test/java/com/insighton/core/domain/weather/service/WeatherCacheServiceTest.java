@@ -13,10 +13,10 @@ import com.insighton.core.domain.weather.dto.CurrentWeatherDto;
 import com.insighton.core.domain.weather.dto.UltraForecastWeatherDto;
 import com.insighton.core.domain.weather.dto.WeatherDataDto;
 import java.time.Duration;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -26,6 +26,8 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 @ExtendWith(MockitoExtension.class)
 class WeatherCacheServiceTest {
+
+    private WeatherCacheService weatherCacheService;
 
     @Mock
     private RedisTemplate<String, WeatherDataDto> weatherRedisTemplate;
@@ -42,8 +44,10 @@ class WeatherCacheServiceTest {
     @Mock
     private ValueOperations<String, String> stringValueOperations;
 
-    @InjectMocks
-    private WeatherCacheService weatherCacheService;
+    @BeforeEach
+    void setUp() {
+        weatherCacheService = new WeatherCacheService(weatherRedisTemplate, stringRedisTemplate, weatherService);
+    }
 
     @Test
     @DisplayName("캐시 히트 성공 - Redis에 데이터가 존재할 경우 외부 API를 호출하지 않음")
