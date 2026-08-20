@@ -25,7 +25,8 @@ import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(SensorController.class)
 class SensorControllerTest {
@@ -36,12 +37,16 @@ class SensorControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockitoBean private GetSensorUseCase getSensorUseCase;
-    @MockitoBean private SearchSensorUseCase searchSensorUseCase;
-    @MockitoBean private GetUnassignedSensorsUseCase getUnassignedSensorsUseCase;
-    @MockitoBean private UpdateSensorUseCase updateSensorUseCase;
-    @MockitoBean private DeleteSensorUseCase deleteSensorUseCase;
-    @MockitoBean private DeleteAllSensorUseCase deleteAllSensorUseCase;
+    @MockitoBean
+    private GetSensorUseCase getSensorUseCase;
+    @MockitoBean
+    private SearchSensorUseCase searchSensorUseCase;
+    @MockitoBean
+    private UpdateSensorUseCase updateSensorUseCase;
+    @MockitoBean
+    private DeleteSensorUseCase deleteSensorUseCase;
+    @MockitoBean
+    private DeleteAllSensorUseCase deleteAllSensorUseCase;
 
     private SensorResponse sampleResponse() {
         return new SensorResponse(

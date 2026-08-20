@@ -7,6 +7,7 @@ import com.insighton.core.domain.dashboards.exception.DashboardNotFoundException
 import com.insighton.core.domain.dashboards.repository.DashboardRepository;
 import com.insighton.core.domain.dashboards.service.impl.DashboardServiceImpl;
 import com.insighton.core.domain.location.entity.Location;
+import com.insighton.core.domain.location.exception.EmptyValueException;
 import com.insighton.core.domain.widgets.dto.response.WidgetsListResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -79,14 +80,14 @@ class DashboardServiceTest {
         void updateDashboardTitle_success() {
             // given
             DashboardRequest request = new DashboardRequest(1L, "새 대시보드 제목");
-            Dashboard mockDashboard = mock(Dashboard.class);
-            given(dashboardRepository.findWithLockByLocationLocationId(1L)).willReturn(Optional.of(mockDashboard));
+            Dashboard realDashboard = Dashboard.builder().title("기존 제목").build();
+            given(dashboardRepository.findWithLockByLocationLocationId(1L)).willReturn(Optional.of(realDashboard));
 
             // when
             dashboardService.updateDashboardTitle(request);
 
             // then
-            verify(mockDashboard, times(1)).updateTitle("새 대시보드 제목");
+            assertThat(realDashboard.getTitle()).isEqualTo("새 대시보드 제목");
         }
 
         @Test
@@ -163,6 +164,25 @@ class DashboardServiceTest {
                     .isInstanceOf(DashboardNotFoundException.class);
         }
 
+        @Test
+        @DisplayName("대시보드 제목 수정 실패 - 제목이 null이거나 공백인 경우 EmptyValueException 발생")
+        void updateDashboardTitle_fail_emptyTitle() {
+            // given (Mock 대신 실제 Dashboard 객체를 반환하게 지정)
+            Dashboard realDashboard = Dashboard.builder().title("기존 제목").build();
+            given(dashboardRepository.findWithLockByLocationLocationId(1L))
+                    .willReturn(Optional.of(realDashboard));
+
+            DashboardRequest blankRequest = new DashboardRequest(1L, " "); // 공백 전달
+            DashboardRequest nullRequest = new DashboardRequest(1L, null); // null 전달
+
+            // when & then
+            assertThatThrownBy(() -> dashboardService.updateDashboardTitle(blankRequest))
+                    .isInstanceOf(EmptyValueException.class);
+
+            assertThatThrownBy(() -> dashboardService.updateDashboardTitle(nullRequest))
+                    .isInstanceOf(EmptyValueException.class);
+        }
+        
         @Test
         @DisplayName("대시보드 삭제 실패 - 대시보드가 존재하지 않을 때 DashboardNotFoundException 발생")
         void deleteDashboard_notFound() {

@@ -1,7 +1,9 @@
 package com.insighton.core.common.config;
 
+import java.util.Map;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.CustomExchange;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -26,11 +28,12 @@ public class RabbitConfig {
     public static final String SENSOR_DELETED_ROUTING_KEY = "sensor.deleted";
 
     public static final String TELEMETRY_EXCHANGE = "insighton.core.telemetry.exchange";
-    public static final String TELEMETRY_ROUTING_KEY_PREFIX = "insighton.telemetry.";
+    public static final String TELEMETRY_HASH_HEADER = "locationId";
 
     @Bean
-    public TopicExchange telemetryExchange() {
-        return new TopicExchange(TELEMETRY_EXCHANGE, true, false);
+    public CustomExchange telemetryExchange() {
+
+        return new CustomExchange(TELEMETRY_EXCHANGE, "x-consistent-hash", true, false, Map.of("hash-header", TELEMETRY_HASH_HEADER));
     }
 
     @Bean
