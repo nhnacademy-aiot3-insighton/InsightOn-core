@@ -22,6 +22,7 @@ import com.insighton.core.domain.sensors.exception.InvalidSensorValueException;
 import com.insighton.core.domain.sensors.exception.SensorNotFoundException;
 import com.insighton.core.domain.sensors.repository.SensorRepository;
 import com.insighton.core.domain.sensors.service.impl.SensorServiceImpl;
+import com.querydsl.core.types.Predicate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -297,75 +298,78 @@ class SensorServiceTest {
     }
 
     @Test
-    @DisplayName("searchSensors - id가 있으면 id로만 조회 (다른 조건 무시)")
-    void 검색_id우선() {
-        Group group = mock(Group.class);
-        given(group.getGroupId()).willReturn(5L);
-        Sensor sensor = Sensor.builder().sensorId(1L).group(group).build();
-        given(sensorRepository.findById(1L)).willReturn(Optional.of(sensor));
+    @DisplayName("searchSensors - groupId 조건은 항상 predicate에 포함")
+    void 검색_그룹조건_항상포함() {
+        given(sensorRepository.findAll(any(Predicate.class))).willReturn(List.of());
 
-        List<SensorResponse> result = sensorService.searchSensors(5L, 1L, "무시될EUI", new SensorUpdateRequest("무시될장소", "무시될이름"));
+        sensorService.searchSensors(5L, null, new SensorUpdateRequest(null, null));
 
-        assertThat(result).hasSize(1);
-        verify(sensorRepository, never()).findBySensorEui(any());
-        verify(sensorRepository, never()).findByLocationLocationName(any());
-        verify(sensorRepository, never()).findBySensorName(any());
+        ArgumentCaptor<Predicate> captor = ArgumentCaptor.forClass(Predicate.class);
+        verify(sensorRepository).findAll(captor.capture());
+        assertThat(captor.getValue().toString()).contains("groupId = 5");
     }
 
     @Test
-    @DisplayName("searchSensors - locationName이 빈 문자열이면 무시하고 sensorName으로 검색")
-    void 검색_빈장소이름은_무시하고_이름으로_검색() {
-        Group group = mock(Group.class);
-        given(group.getGroupId()).willReturn(5L);
-        Sensor sensor = Sensor.builder().sensorId(1L).group(group).sensorName("마루센서").build();
-        given(sensorRepository.findBySensorName("마루센서")).willReturn(List.of(sensor));
+    @DisplayName("searchSensors - eui가 있으면 predicate에 eui 조건 포함")
+    void 검색_eui조건_포함() {
+        given(sensorRepository.findAll(any(Predicate.class))).willReturn(List.of());
 
-        List<SensorResponse> result = sensorService.searchSensors(5L, null, null, new SensorUpdateRequest("", "마루센서"));
+        sensorService.searchSensors(5L, "EUI-1", new SensorUpdateRequest(null, null));
 
-        assertThat(result).hasSize(1);
-        verify(sensorRepository, never()).findByLocationLocationName(any());
+        ArgumentCaptor<Predicate> captor = ArgumentCaptor.forClass(Predicate.class);
+        verify(sensorRepository).findAll(captor.capture());
+        assertThat(captor.getValue().toString()).contains("sensorEui = EUI-1");
     }
 
     @Test
-    @DisplayName("searchSensors - locationName이 있으면 위치로 검색")
-    void 검색_장소이름으로_검색() {
-        Group group = mock(Group.class);
-        given(group.getGroupId()).willReturn(5L);
-        Sensor sensor = Sensor.builder().sensorId(1L).group(group).build();
-        given(sensorRepository.findByLocationLocationName("4층")).willReturn(List.of(sensor));
+    @DisplayName("searchSensors - locationName이 빈 문자열이면 predicate에서 제외, sensorName은 포함")
+    void 검색_빈장소이름은_제외_이름조건은_포함() {
+        given(sensorRepository.findAll(any(Predicate.class))).willReturn(List.of());
 
-        List<SensorResponse> result = sensorService.searchSensors(5L, null, null, new SensorUpdateRequest("4층", null));
+        sensorService.searchSensors(5L, null, new SensorUpdateRequest("", "마루센서"));
 
-        assertThat(result).hasSize(1);
-        verify(sensorRepository, never()).findBySensorName(any());
+        ArgumentCaptor<Predicate> captor = ArgumentCaptor.forClass(Predicate.class);
+        verify(sensorRepository).findAll(captor.capture());
+        assertThat(captor.getValue().toString())
+                .doesNotContain("locationName")
+                .contains("sensorName = 마루센서");
     }
 
     @Test
-    @DisplayName("searchSensors - 조건이 다 비어있으면 groupId로 전체 조회")
-    void 검색_조건없으면_그룹전체조회() {
-        Group group = mock(Group.class);
-        given(group.getGroupId()).willReturn(5L);
-        Sensor sensor = Sensor.builder().sensorId(1L).group(group).build();
-        given(sensorRepository.findByGroupGroupId(5L)).willReturn(List.of(sensor));
+    @DisplayName("searchSensors - locationName이 있으면 predicate에 위치 조건 포함")
+    void 검색_장소이름조건_포함() {
+        given(sensorRepository.findAll(any(Predicate.class))).willReturn(List.of());
 
-        List<SensorResponse> result = sensorService.searchSensors(5L, null, null, new SensorUpdateRequest(null, null));
+        sensorService.searchSensors(5L, null, new SensorUpdateRequest("4층", null));
 
-        assertThat(result).hasSize(1);
+        ArgumentCaptor<Predicate> captor = ArgumentCaptor.forClass(Predicate.class);
+        verify(sensorRepository).findAll(captor.capture());
+        assertThat(captor.getValue().toString()).contains("locationName = 4층");
     }
 
     @Test
-    @DisplayName("searchSensors - 결과에 다른 그룹 센서가 섞여있으면 최종 필터링으로 제외")
-    void 검색_다른그룹결과는_필터링됨() {
+    @DisplayName("searchSensors - eui/locationName/sensorName 전부 없으면 groupId 조건만 남음")
+    void 검색_조건없으면_그룹조건만() {
+        given(sensorRepository.findAll(any(Predicate.class))).willReturn(List.of());
+
+        sensorService.searchSensors(5L, null, new SensorUpdateRequest(null, null));
+
+        ArgumentCaptor<Predicate> captor = ArgumentCaptor.forClass(Predicate.class);
+        verify(sensorRepository).findAll(captor.capture());
+        assertThat(captor.getValue().toString())
+                .doesNotContain("sensorEui")
+                .doesNotContain("locationName")
+                .doesNotContain("sensorName");
+    }
+
+    @Test
+    @DisplayName("searchSensors - 조회 결과를 DTO로 매핑해서 반환")
+    void 검색_결과_DTO매핑() {
         Group group = mock(Group.class);
-        given(group.getGroupId()).willReturn(5L);
-        Group otherGroup = mock(Group.class);
-        given(otherGroup.getGroupId()).willReturn(999L);
+        Sensor sensor = Sensor.builder().sensorId(1L).group(group).sensorEui("EUI-1").build();
+        given(sensorRepository.findAll(any(Predicate.class))).willReturn(List.of(sensor));
 
-        Sensor sensor = Sensor.builder().sensorId(1L).group(group).sensorName("센서A").build();
-        Sensor otherGroupSensor = Sensor.builder().sensorId(2L).group(otherGroup).sensorName("센서A").build();
-        given(sensorRepository.findBySensorName("센서A")).willReturn(List.of(sensor, otherGroupSensor));
-
-        List<SensorResponse> result = sensorService.searchSensors(5L, null, null, new SensorUpdateRequest(null, "센서A"));
+        List<SensorResponse> result = sensorService.searchSensors(5L, "EUI-1", new SensorUpdateRequest(null, null));
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).sensorId()).isEqualTo(1L);
