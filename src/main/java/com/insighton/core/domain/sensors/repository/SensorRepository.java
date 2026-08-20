@@ -33,4 +33,7 @@ public interface SensorRepository extends JpaRepository<Sensor, Long> {
     // location 삭제를 위한 찾기
     List<Sensor> findByGroupGroupIdAndLocationLocationId(Long groupId, Long locationId);
 
+    // 장소 미배정(location이 null인) 센서만 조회 - 자동 등록됐지만 아직 설치 위치를 안 정한 센서 파악용
+    List<Sensor> findByGroupGroupIdAndLocationIsNull(Long groupId);
+
 }
