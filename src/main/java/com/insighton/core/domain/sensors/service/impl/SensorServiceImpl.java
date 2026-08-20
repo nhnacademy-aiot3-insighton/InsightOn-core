@@ -270,6 +270,13 @@ public class SensorServiceImpl implements SensorService {
     }
 
     @Override
+    public List<SensorResponse> getUnassignedSensors(Long groupId) {
+        return sensorRepository.findByGroupGroupIdAndLocationIsNull(groupId).stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    @Override
     public Long getSensorGroupId(Long sensorId) {
         return sensorRepository.findById(sensorId)
                 .orElseThrow(() -> new SensorNotFoundException(sensorId))
