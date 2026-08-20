@@ -17,6 +17,7 @@ import com.insighton.core.domain.sensorattributes.repository.MetricDefinitionRep
 import com.insighton.core.domain.sensorattributes.repository.SensorAttributeRepository;
 import com.insighton.core.domain.sensors.dto.SensorResponse;
 import com.insighton.core.domain.sensors.dto.SensorUpdateRequest;
+import com.insighton.core.domain.sensors.entity.QSensor;
 import com.insighton.core.domain.sensors.entity.Sensor;
 import com.insighton.core.domain.sensors.event.SensorCacheEvictEvent;
 import com.insighton.core.domain.sensors.event.SensorCacheSyncEvent;
@@ -24,6 +25,7 @@ import com.insighton.core.domain.sensors.exception.InvalidSensorValueException;
 import com.insighton.core.domain.sensors.exception.SensorNotFoundException;
 import com.insighton.core.domain.sensors.repository.SensorRepository;
 import com.insighton.core.domain.sensors.service.SensorService;
+import com.querydsl.core.BooleanBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -35,6 +37,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.StreamSupport;
 
 @Slf4j
 @Service
@@ -244,26 +247,24 @@ public class SensorServiceImpl implements SensorService {
     }
 
     @Override
-    public List<SensorResponse> searchSensors(Long groupId, Long id, String eui,
-                                              SensorUpdateRequest request) {
+    public List<SensorResponse> searchSensors(Long groupId, String eui, SensorUpdateRequest request) {
 
-        List<Sensor> entities;
+        QSensor sensor = QSensor.sensor;
+        BooleanBuilder builder = new BooleanBuilder();
+        builder.and(sensor.group.groupId.eq(groupId)); // 항상 그룹 스코프로 제한
 
-        if (id != null) {
-            entities = sensorRepository.findById(id).map(List::of).orElse(List.of());
-        } else if (eui != null && !eui.trim().isEmpty()) {
-            entities = sensorRepository.findBySensorEui(eui).map(List::of).orElse(List.of());
-        } else if (request.locationName() != null && !request.locationName().isBlank()) {
-            entities = sensorRepository.findByLocationLocationName(request.locationName());
-        } else if (request.sensorName() != null && !request.sensorName().trim().isEmpty()) {
-            entities = sensorRepository.findBySensorName(request.sensorName());
-        } else {
-            entities = sensorRepository.findByGroupGroupId(groupId);
+        // eui/locationName/sensorName 중 값이 있는 조건만 AND로 조합 (없는 조건은 건너뜀)
+        if (eui != null && !eui.trim().isEmpty()) {
+            builder.and(sensor.sensorEui.eq(eui));
+        }
+        if (request.locationName() != null && !request.locationName().isBlank()) {
+            builder.and(sensor.location.locationName.eq(request.locationName()));
+        }
+        if (request.sensorName() != null && !request.sensorName().trim().isEmpty()) {
+            builder.and(sensor.sensorName.eq(request.sensorName()));
         }
 
-        // 위 분기들은 groupId로 안걸렀으니 다른 그룹 결과가 섞이지 않게 마지막에 한번더 필터링
-        return entities.stream()
-                .filter(e -> Objects.equals(e.getGroup().getGroupId(), groupId))
+        return StreamSupport.stream(sensorRepository.findAll(builder).spliterator(), false)
                 .map(this::toDto)
                 .toList();
     }
