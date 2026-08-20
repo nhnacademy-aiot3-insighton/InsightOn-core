@@ -20,6 +20,9 @@ public class RabbitConfig {
     public static final String LOCATION_DELETED_QUEUE = "ai-service.location-deleted.queue";
     public static final String GROUP_DELETED_ROUTING_KEY = "group.deleted";
     public static final String LOCATION_DELETED_ROUTING_KEY = "location.deleted";
+    public static final String GATEWAY_STATUS_QUEUE = "ai-service.gateway-status.queue";
+    public static final String GATEWAY_STATUS_ROUTING_KEY = "gateway.status";
+
 
     public static final String TELEMETRY_EXCHANGE = "insighton.core.telemetry.exchange";
     public static final String TELEMETRY_HASH_HEADER = "locationId";
@@ -46,6 +49,11 @@ public class RabbitConfig {
     }
 
     @Bean
+    public Queue gatewayStatusQueue() {
+        return new Queue(GATEWAY_STATUS_QUEUE, true);
+    }
+
+    @Bean
     public Binding groupDeletedBinding(Queue groupDeletedQueue, @Qualifier("coreEventsExchange") TopicExchange coreEventExchange) {
         return BindingBuilder.bind(groupDeletedQueue)
                 .to(coreEventExchange)
@@ -57,6 +65,14 @@ public class RabbitConfig {
         return BindingBuilder.bind(locationDeletedQueue)
                 .to(coreEventExchange)
                 .with(LOCATION_DELETED_ROUTING_KEY);
+    }
+
+    @Bean
+    public Binding gatewayStatusBinding(Queue gatewayStatusQueue,
+                                        @Qualifier("coreEventsExchange") TopicExchange coreEventExchange) {
+        return BindingBuilder.bind(gatewayStatusQueue)
+                .to(coreEventExchange)
+                .with(GATEWAY_STATUS_ROUTING_KEY);
     }
 
     @Bean
