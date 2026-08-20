@@ -50,7 +50,7 @@ class ActuatorInternalControllerTest {
         given(actuatorRunLogService.getRunLogsForReport(eq(List.of(20L)), any(), any()))
                 .willReturn(List.of(log));
 
-        mockMvc.perform(get("/internal/actuators/run-logs")
+        mockMvc.perform(get("/internal/v1/actuators/run-logs")
                         .param("locationIds", "20")
                         .param("from", "2026-01-01T00:00:00Z")
                         .param("to", "2026-01-02T00:00:00Z"))
@@ -62,7 +62,7 @@ class ActuatorInternalControllerTest {
     @Test
     @DisplayName("필수 쿼리 파라미터가 없으면 400")
     void 실행로그조회_파라미터누락_400() throws Exception {
-        mockMvc.perform(get("/internal/actuators/run-logs")
+        mockMvc.perform(get("/internal/v1/actuators/run-logs")
                         .param("locationIds", "20"))
                 .andExpect(status().isBadRequest());
     }

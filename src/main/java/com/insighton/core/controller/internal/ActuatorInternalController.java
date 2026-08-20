@@ -25,7 +25,7 @@ import java.util.Map;
 // 룰엔진/AI 등 신뢰된 내부 서비스 전용 API 모음 - 사용자용 ActuatorController와 완전히 분리
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/internal")
+@RequestMapping("/internal/v1")
 public class ActuatorInternalController {
 
 

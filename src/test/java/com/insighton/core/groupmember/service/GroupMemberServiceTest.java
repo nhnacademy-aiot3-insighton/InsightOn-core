@@ -5,7 +5,7 @@ import com.insighton.core.domain.groupmember.dto.request.GroupMemberJoinRequest;
 import com.insighton.core.domain.groupmember.dto.response.AuthUserResponse;
 import com.insighton.core.domain.groupmember.dto.response.GroupMemberListResponse;
 import com.insighton.core.domain.groupmember.dto.response.GroupMemberResponse;
-import com.insighton.core.domain.groupmember.dto.response.ManagerGroupExistsResponse;
+import com.insighton.core.domain.groupmember.dto.response.ManagerGroupResponse;
 import com.insighton.core.domain.groupmember.entity.GroupMember;
 import com.insighton.core.domain.groupmember.exception.AlreadyJoinedException;
 import com.insighton.core.domain.groupmember.exception.ManagerRoleRequiredForTransferException;
@@ -15,6 +15,7 @@ import com.insighton.core.domain.groupmember.service.impl.GroupMemberServiceImpl
 import com.insighton.core.domain.groups.entity.Group;
 import com.insighton.core.domain.groups.exception.NoPermissionException;
 import com.insighton.core.domain.groups.exception.UnAuthorizedAccessException;
+import com.insighton.core.domain.groups.repository.GroupRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,6 +40,9 @@ class GroupMemberServiceTest {
 
     @Mock
     private AuthClient authClient;
+
+    @Mock
+    private GroupRepository groupRepository;
 
     @InjectMocks
     private GroupMemberServiceImpl groupMemberService;
@@ -203,8 +207,6 @@ class GroupMemberServiceTest {
 
         given(targetManager.isMember()).willReturn(false);
         given(targetManager.isManager()).willReturn(true);
-        given(superAdmin.isMember()).willReturn(false);
-        given(superAdmin.isManager()).willReturn(false);
         given(superAdmin.isSuperManager()).willReturn(true);
 
         given(groupMemberRepository.findByGroupGroupIdAndUserId(1L, 1L)).willReturn(Optional.of(superAdmin));
@@ -243,8 +245,7 @@ class GroupMemberServiceTest {
 
         given(targetManager.isMember()).willReturn(false);
         given(targetManager.isManager()).willReturn(true);
-        given(adminManager.isMember()).willReturn(false);
-        given(adminManager.isManager()).willReturn(true);
+        given(adminManager.isSuperManager()).willReturn(false);
 
         given(groupMemberRepository.findByGroupGroupIdAndUserId(1L, 1L)).willReturn(Optional.of(adminManager));
         given(groupMemberRepository.findByGroupMemberIdAndGroupGroupId(2L, 1L)).willReturn(Optional.of(targetManager));
@@ -441,14 +442,18 @@ class GroupMemberServiceTest {
         // given
         Long userId = 1L;
         GroupMember member = mock(GroupMember.class);
-        given(member.isMember()).willReturn(true);
+        Group group = mock(Group.class);
+        given(group.getName()).willReturn("테스트 그룹");
+        given(member.getGroup()).willReturn(group);
+        given(member.isManager()).willReturn(true);
         given(groupMemberRepository.findByUserId(userId)).willReturn(Optional.of(member));
 
         // when
-        ManagerGroupExistsResponse response = groupMemberService.existsManagerGroupAuth(userId);
+        ManagerGroupResponse response = groupMemberService.existsManagerGroupAuth(userId);
 
         // then
         assertThat(response).isNotNull();
         assertThat(response.exists()).isTrue();
+        assertThat(response.groupName()).isEqualTo("테스트 그룹");
     }
 }

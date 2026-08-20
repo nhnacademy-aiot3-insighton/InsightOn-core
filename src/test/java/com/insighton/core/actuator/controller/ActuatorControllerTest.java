@@ -10,22 +10,15 @@ import com.insighton.core.domain.actuators.dto.ActuatorRequest;
 import com.insighton.core.domain.actuators.dto.ActuatorResponse;
 import com.insighton.core.domain.actuators.entity.ActuatorType;
 import com.insighton.core.domain.actuators.exception.ActuatorNotFoundException;
-import com.insighton.core.usecase.actuator.CreateActuatorUseCase;
-import com.insighton.core.usecase.actuator.DeleteActuatorUseCase;
-import com.insighton.core.usecase.actuator.DeleteAllActuatorUseCase;
-import com.insighton.core.usecase.actuator.GetActuatorRunLogsUseCase;
-import com.insighton.core.usecase.actuator.GetActuatorUseCase;
-import com.insighton.core.usecase.actuator.GetActuatorsByLocationUseCase;
-import com.insighton.core.usecase.actuator.UpdateActuatorNameUseCase;
-import com.insighton.core.usecase.actuator.UpdateActuatorStateUseCase;
+import com.insighton.core.usecase.actuator.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.OffsetDateTime;
@@ -41,17 +34,27 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(ActuatorController.class)
 class ActuatorControllerTest {
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private ObjectMapper objectMapper;
 
-    @MockitoBean private CreateActuatorUseCase createActuatorUseCase;
-    @MockitoBean private GetActuatorUseCase getActuatorUseCase;
-    @MockitoBean private GetActuatorsByLocationUseCase getActuatorsByLocationUseCase;
-    @MockitoBean private UpdateActuatorStateUseCase updateActuatorStateUseCase;
-    @MockitoBean private UpdateActuatorNameUseCase updateActuatorNameUseCase;
-    @MockitoBean private GetActuatorRunLogsUseCase getActuatorRunLogsUseCase;
-    @MockitoBean private DeleteActuatorUseCase deleteActuatorUseCase;
-    @MockitoBean private DeleteAllActuatorUseCase deleteAllActuatorUseCase;
+    @MockitoBean
+    private CreateActuatorUseCase createActuatorUseCase;
+    @MockitoBean
+    private GetActuatorUseCase getActuatorUseCase;
+    @MockitoBean
+    private GetActuatorsByLocationUseCase getActuatorsByLocationUseCase;
+    @MockitoBean
+    private UpdateActuatorStateUseCase updateActuatorStateUseCase;
+    @MockitoBean
+    private UpdateActuatorNameUseCase updateActuatorNameUseCase;
+    @MockitoBean
+    private GetActuatorRunLogsUseCase getActuatorRunLogsUseCase;
+    @MockitoBean
+    private DeleteActuatorUseCase deleteActuatorUseCase;
+    @MockitoBean
+    private DeleteAllActuatorUseCase deleteAllActuatorUseCase;
 
     @Test
     @DisplayName("액추에이터 생성 성공")

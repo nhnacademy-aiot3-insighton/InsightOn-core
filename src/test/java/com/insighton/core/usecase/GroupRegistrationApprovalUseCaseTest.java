@@ -10,6 +10,8 @@ import com.insighton.core.domain.groups.dto.request.GroupRequest;
 import com.insighton.core.domain.groups.entity.Group;
 import com.insighton.core.domain.region.exception.RegionNotFoundException;
 import com.insighton.core.domain.region.service.RegionService;
+import com.insighton.core.usecase.group.GroupCreateUseCase;
+import com.insighton.core.usecase.groupregistration.GroupRegistrationApprovalUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -25,28 +27,22 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class GroupRegistrationApprovalUseCaseTest {
 
-    @Mock
-    private GroupRegistrationService groupRegistrationService;
-
-    @Mock
-    private GroupUseCase groupUseCase;
-
-    @Mock
-    private RegionService regionService;
-
-    @InjectMocks
-    private GroupRegistrationApprovalUseCase groupRegistrationApprovalUseCase;
-
     private static final Long GROUP_REGISTRATION_ID = 10L;
     private static final Long APPROVER_ID = 99L;
     private static final Long REQUESTER_ID = 1L;
+    @Mock
+    private GroupRegistrationService groupRegistrationService;
+    @Mock
+    private GroupCreateUseCase groupCreateUseCase;
+    @Mock
+    private RegionService regionService;
+    @InjectMocks
+    private GroupRegistrationApprovalUseCase groupRegistrationApprovalUseCase;
 
     private GroupRegistrationResponse approvedResponse() {
         return new GroupRegistrationResponse(GROUP_REGISTRATION_ID, REQUESTER_ID, "Test Group", "Desc", "Seoul",
@@ -68,14 +64,14 @@ class GroupRegistrationApprovalUseCaseTest {
 
             given(groupRegistrationService.approveGroupRegistration("ADMIN", GROUP_REGISTRATION_ID, APPROVER_ID))
                     .willReturn(approvedResponse());
-            given(groupUseCase.createGroup(eq(new GroupRequest("Test Group", "Desc", "Seoul")), eq(REQUESTER_ID)))
+            given(groupCreateUseCase.createGroup(eq(new GroupRequest("Test Group", "Desc", "Seoul")), eq(REQUESTER_ID)))
                     .willReturn(mockGroup);
 
             // when
             groupRegistrationApprovalUseCase.approve("ADMIN", GROUP_REGISTRATION_ID, APPROVER_ID);
 
             // then
-            verify(groupUseCase).createGroup(
+            verify(groupCreateUseCase).createGroup(
                     eq(new GroupRequest("Test Group", "Desc", "Seoul")),
                     eq(REQUESTER_ID));
             verify(regionService).cacheGroupRegion(createdGroupId, "Seoul");
@@ -96,7 +92,7 @@ class GroupRegistrationApprovalUseCaseTest {
             // when & then
             assertThatThrownBy(() -> groupRegistrationApprovalUseCase.approve("USER", GROUP_REGISTRATION_ID, APPROVER_ID))
                     .isInstanceOf(UnauthorizedGroupRegistrationAccessException.class);
-            verify(groupUseCase, never()).createGroup(any(), any());
+            verify(groupCreateUseCase, never()).createGroup(any(), any());
         }
 
         @Test
@@ -109,7 +105,7 @@ class GroupRegistrationApprovalUseCaseTest {
             // when & then
             assertThatThrownBy(() -> groupRegistrationApprovalUseCase.approve("ADMIN", GROUP_REGISTRATION_ID, APPROVER_ID))
                     .isInstanceOf(GroupRegistrationNotFoundException.class);
-            verify(groupUseCase, never()).createGroup(any(), any());
+            verify(groupCreateUseCase, never()).createGroup(any(), any());
         }
 
         @Test
@@ -122,7 +118,7 @@ class GroupRegistrationApprovalUseCaseTest {
             // when & then
             assertThatThrownBy(() -> groupRegistrationApprovalUseCase.approve("ADMIN", GROUP_REGISTRATION_ID, APPROVER_ID))
                     .isInstanceOf(AlreadyProcessedException.class);
-            verify(groupUseCase, never()).createGroup(any(), any());
+            verify(groupCreateUseCase, never()).createGroup(any(), any());
         }
 
         @Test
@@ -136,7 +132,7 @@ class GroupRegistrationApprovalUseCaseTest {
 
             given(groupRegistrationService.approveGroupRegistration("ADMIN", GROUP_REGISTRATION_ID, APPROVER_ID))
                     .willReturn(approvedResponse());
-            given(groupUseCase.createGroup(eq(new GroupRequest("Test Group", "Desc", "Seoul")), eq(REQUESTER_ID)))
+            given(groupCreateUseCase.createGroup(eq(new GroupRequest("Test Group", "Desc", "Seoul")), eq(REQUESTER_ID)))
                     .willReturn(mockGroup);
             willThrow(new RegionNotFoundException("올바르지 않은 지역 형식입니다: Seoul"))
                     .given(regionService).cacheGroupRegion(createdGroupId, "Seoul");
