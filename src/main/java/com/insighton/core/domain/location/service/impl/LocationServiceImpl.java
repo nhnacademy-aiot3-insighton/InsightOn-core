@@ -12,7 +12,6 @@ import com.insighton.core.domain.location.repository.LocationRepository;
 import com.insighton.core.domain.location.service.LocationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,13 +38,9 @@ public class LocationServiceImpl implements LocationService {
                 .autoControlMode(request.autoControlMode())
                 .build();
 
-        try {
-            Location savedLocation = locationRepository.saveAndFlush(newLocation);
-            log.info("위치(Location) 생성 완료 - locationName: {}, groupId: {}", request.locationName(), group.getGroupId());
-            return savedLocation;
-        } catch (DataIntegrityViolationException e) {
-            throw new LocationAlreadyException(request.locationName());
-        }
+        Location savedLocation = locationRepository.saveAndFlush(newLocation);
+        log.info("위치(Location) 생성 완료 - locationName: {}, groupId: {}", request.locationName(), group.getGroupId());
+        return savedLocation;
     }
 
 
