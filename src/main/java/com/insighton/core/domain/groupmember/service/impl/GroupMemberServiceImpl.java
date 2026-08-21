@@ -8,6 +8,7 @@ import com.insighton.core.domain.groupmember.dto.response.GroupMemberResponse;
 import com.insighton.core.domain.groupmember.dto.response.ManagerGroupResponse;
 import com.insighton.core.domain.groupmember.entity.GroupMember;
 import com.insighton.core.domain.groupmember.exception.AlreadyJoinedException;
+import com.insighton.core.domain.groupmember.exception.CannotKickSelfException;
 import com.insighton.core.domain.groupmember.exception.GroupMemberNotFoundException;
 import com.insighton.core.domain.groupmember.exception.ManagerRoleRequiredForTransferException;
 import com.insighton.core.domain.groupmember.exception.SuperManagerCannotLeaveException;
@@ -17,12 +18,14 @@ import com.insighton.core.domain.groups.entity.Group;
 import com.insighton.core.domain.groups.exception.NoPermissionException;
 import com.insighton.core.domain.groups.exception.UnAuthorizedAccessException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class GroupMemberServiceImpl implements GroupMemberService {
@@ -45,6 +48,7 @@ public class GroupMemberServiceImpl implements GroupMemberService {
 
 
         groupMemberRepository.save(newMember);
+        log.info("초대 토큰 그룹 가입 완료 - userId: {}, groupId: {}", request.userId(), group.getGroupId());
     }
 
     @Override
@@ -60,6 +64,7 @@ public class GroupMemberServiceImpl implements GroupMemberService {
                 .build();
 
         groupMemberRepository.save(members);
+        log.info("그룹 생성자(SUPER_MANAGER) 등록 완료 - userId: {}, groupId: {}", userId, group.getGroupId());
     }
 
     @Override
@@ -178,7 +183,7 @@ public class GroupMemberServiceImpl implements GroupMemberService {
 
         // 삭제를 시도하는자가 target과 동일인물이면 안됨
         if (Objects.equals(admin.getUserId(), target.getUserId())) {
-            throw new SuperManagerCannotLeaveException(admin.getGroupMemberId());
+            throw new CannotKickSelfException(admin.getGroupMemberId());
         }
 
         // 삭제하려는 자가 manager권한인데 target이 같은 권한이거나 superManager면 삭제할 수 없음
@@ -188,6 +193,7 @@ public class GroupMemberServiceImpl implements GroupMemberService {
 
 
         groupMemberRepository.delete(target);
+        log.info("그룹 멤버 강퇴 완료 - adminId: {}, targetMemberId: {}, groupId: {}", adminId, targetGroupMemberId, groupId);
     }
 
     @Override
@@ -203,6 +209,7 @@ public class GroupMemberServiceImpl implements GroupMemberService {
 
         // 그들이 속한 그룹(삭제될 예정임) ID로 찾아서 모두 삭제
         groupMemberRepository.deleteAllByGroupGroupId(groupId);
+        log.info("그룹 모든 멤버 삭제 완료 - adminId: {}, groupId: {}", adminId, groupId);
     }
 
     @Override
@@ -217,6 +224,7 @@ public class GroupMemberServiceImpl implements GroupMemberService {
         }
 
         groupMemberRepository.delete(members);
+        log.info("그룹 탈퇴 완료 - userId: {}, groupId: {}", userId, groupId);
     }
 
     //     ==================== 공통 검증 및 조회용 헬퍼 메서드 ====================
