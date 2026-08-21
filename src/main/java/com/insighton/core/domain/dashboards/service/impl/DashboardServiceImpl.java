@@ -9,11 +9,13 @@ import com.insighton.core.domain.dashboards.service.DashboardService;
 import com.insighton.core.domain.location.entity.Location;
 import com.insighton.core.domain.widgets.dto.response.WidgetsListResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DashboardServiceImpl implements DashboardService {
@@ -25,7 +27,8 @@ public class DashboardServiceImpl implements DashboardService {
         Dashboard dashboard = Dashboard.builder()
                 .location(location).title(request.title()).build();
 
-        dashboardRepository.save(dashboard);
+        Dashboard savedDashboard = dashboardRepository.save(dashboard);
+        log.info("대시보드 생성 완료 - dashboardId: {}, locationId: {}, title: {}", savedDashboard.getDashboardId(), location.getLocationId(), request.title());
     }
 
     @Override
@@ -47,6 +50,7 @@ public class DashboardServiceImpl implements DashboardService {
         Dashboard dashboard = getDashboardWithLockByLocationId(request.locationId());
 
         dashboard.updateTitle(request.title());
+        log.info("대시보드 제목 수정 완료 - locationId: {}, newTitle: {}", request.locationId(), request.title());
     }
 
     @Override
@@ -55,6 +59,7 @@ public class DashboardServiceImpl implements DashboardService {
         Dashboard dashboard = getDashboardWithLockByLocationId(locationId);
 
         dashboardRepository.delete(dashboard);
+        log.info("대시보드 삭제 완료 - locationId: {}", locationId);
     }
 
     @Override

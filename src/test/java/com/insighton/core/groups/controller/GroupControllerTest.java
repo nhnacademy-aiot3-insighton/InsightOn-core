@@ -2,8 +2,8 @@ package com.insighton.core.groups.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.insighton.core.controller.api.GroupController;
+import com.insighton.core.domain.groupmember.dto.request.GroupMemberJoinRequest;
 import com.insighton.core.domain.groups.dto.request.GroupRequest;
-import com.insighton.core.domain.groups.dto.request.GroupUpdateRequest;
 import com.insighton.core.domain.groups.dto.response.GroupAdminResponse;
 import com.insighton.core.domain.groups.dto.response.GroupResponse;
 import com.insighton.core.domain.groups.service.GroupService;
@@ -146,7 +146,7 @@ class GroupControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk());
 
-            verify(groupUpdateUseCase).updateGroup(any(GroupUpdateRequest.class), eq(1L), eq(1L));
+            verify(groupUpdateUseCase).updateGroup(any(GroupRequest.class), eq(1L), eq(1L));
         }
 
         @Test
@@ -158,6 +158,17 @@ class GroupControllerTest {
                     .andExpect(status().isNoContent());
 
             verify(groupDeleteUseCase).deleteGroup(1L, 1L, "token");
+        }
+
+        @Test
+        @DisplayName("초대 토큰으로 그룹 가입 성공")
+        void joinGroup_success() throws Exception {
+            mockMvc.perform(post("/api/v1/groups/join")
+                            .header("X-USER-ID", 1L)
+                            .param("inviteToken", "testToken"))
+                    .andExpect(status().isOk());
+
+            verify(groupsUseCase).joinGroupByToken(any(GroupMemberJoinRequest.class));
         }
     }
 
