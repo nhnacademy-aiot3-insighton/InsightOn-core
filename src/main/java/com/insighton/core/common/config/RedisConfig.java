@@ -14,30 +14,6 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 public class RedisConfig {
 
     @Bean
-    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
-        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
-        redisTemplate.setConnectionFactory(connectionFactory);
-
-        //Key 직렬화 설정
-        StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
-        redisTemplate.setKeySerializer(new StringRedisSerializer());
-        redisTemplate.setHashValueSerializer(new StringRedisSerializer());
-
-        //ObjectMapper 생성 및 설정
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-
-        Jackson2JsonRedisSerializer<WeatherDataDto> serializer =
-                new Jackson2JsonRedisSerializer<>(objectMapper, WeatherDataDto.class);
-
-        //Value 직렬화 설정
-        redisTemplate.setValueSerializer(serializer);
-        redisTemplate.setHashValueSerializer(serializer);
-
-        return redisTemplate;
-    }
-
-    @Bean
     public RedisTemplate<String, WeatherDataDto> weatherRedisTemplate(RedisConnectionFactory connectionFactory) {
         RedisTemplate<String, WeatherDataDto> redisTemplate = new RedisTemplate<>();
         redisTemplate.setConnectionFactory(connectionFactory);
