@@ -1,6 +1,8 @@
 package com.insighton.core.controller.api;
 
 import com.insighton.core.domain.groupmember.dto.request.GroupMemberJoinRequest;
+import com.insighton.core.domain.groupmember.dto.response.GroupMemberResponse;
+import com.insighton.core.domain.groupmember.service.GroupMemberService;
 import com.insighton.core.domain.groups.dto.request.GroupRequest;
 import com.insighton.core.domain.groups.dto.response.GroupAdminResponse;
 import com.insighton.core.domain.groups.dto.response.GroupResponse;
@@ -25,6 +27,7 @@ public class GroupController {
     private final GroupDeleteUseCase groupDeleteUseCase;
     private final GroupUpdateUseCase groupUpdateUseCase;
     private final GroupService groupService;
+    private final GroupMemberService groupMemberService;
 
     /**
      * 그룹 생성
@@ -94,6 +97,21 @@ public class GroupController {
                 .build());
 
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 내 그룹 멤버십 조회 — 로그인 직후 세션에 groupId/권한 캐싱용.
+     * groupId를 몰라도 X-USER-ID만으로 소속 그룹과 권한을 알아낼 수 있음.
+     *
+     * @param userId login한 user의 ID
+     * @return 소속 그룹의 groupId/groupRole (소속 없으면 404)
+     */
+    @GetMapping("/my-membership")
+    public ResponseEntity<GroupMemberResponse> getMyMembership(
+            @RequestHeader("X-USER-ID") Long userId) {
+        GroupMemberResponse response = groupMemberService.getMyGroupMember(userId);
+
+        return ResponseEntity.ok(response);
     }
 
     /**

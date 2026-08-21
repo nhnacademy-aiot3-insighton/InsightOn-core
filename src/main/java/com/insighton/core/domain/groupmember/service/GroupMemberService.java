@@ -133,4 +133,13 @@ public interface GroupMemberService {
      */
     ManagerGroupResponse existsManagerGroupAuth(Long userId);
 
+    /**
+     * 로그인 직후 세션에 groupId/권한을 캐싱하기 위한 "내 그룹 멤버 정보" 조회.
+     * groupId를 몰라도 userId만으로 소속 그룹과 권한을 알아냄 (1인 1그룹 전제).
+     *
+     * @param userId 조회할 user ID
+     * @return 소속 그룹의 groupId/groupRole 등이 담긴 응답
+     */
+    GroupMemberResponse getMyGroupMember(Long userId);
+
 }
