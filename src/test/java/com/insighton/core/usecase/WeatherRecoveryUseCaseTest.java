@@ -10,6 +10,7 @@ import com.insighton.core.domain.region.dto.RegionGridDto;
 import com.insighton.core.domain.region.service.RegionService;
 import com.insighton.core.domain.weather.exception.WeatherApiException;
 import com.insighton.core.domain.weather.service.WeatherCacheService;
+import com.insighton.core.usecase.weather.WeatherRecoveryUseCase;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
