@@ -54,6 +54,8 @@ class DashboardSaveUseCaseConcurrencyTest {
     private InfluxDbRepository influxDbRepository;
     @MockitoBean
     private RegionCsvLoader regionCsvLoader;
+    @MockitoBean
+    private org.springframework.data.redis.core.RedisTemplate<String, Object> redisTemplate;
     private Long groupId;
     private Long locationId;
     private Long dashboardId;
