@@ -120,5 +120,26 @@ class DashboardControllerTest {
                             .content("[]"))
                     .andExpect(status().isBadRequest());
         }
+
+        @Test
+        @DisplayName("대시보드 저장 시 위젯 좌표가 음수이거나 크기가 1 미만이면 400 Bad Request")
+        void saveDashboard_invalidWidgetDimensions_returnsBadRequest() throws Exception {
+            String invalidWidgetJson = """
+                    [
+                        {
+                            "xPos": -1,
+                            "yPos": 0,
+                            "width": 0,
+                            "height": 4
+                        }
+                    ]
+                    """;
+
+            mockMvc.perform(post("/api/v1/groups/{group-id}/location/{location-id}/dashboard/save", 1L, 10L)
+                            .header("X-USER-ID", 1L)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(invalidWidgetJson))
+                    .andExpect(status().isBadRequest());
+        }
     }
 }

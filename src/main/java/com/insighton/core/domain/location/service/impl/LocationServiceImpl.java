@@ -11,12 +11,13 @@ import com.insighton.core.domain.location.exception.LocationNotFoundException;
 import com.insighton.core.domain.location.repository.LocationRepository;
 import com.insighton.core.domain.location.service.LocationService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class LocationServiceImpl implements LocationService {
@@ -37,11 +38,9 @@ public class LocationServiceImpl implements LocationService {
                 .autoControlMode(request.autoControlMode())
                 .build();
 
-        try {
-            return locationRepository.saveAndFlush(newLocation);
-        } catch (DataIntegrityViolationException e) {
-            throw new LocationAlreadyException(request.locationName());
-        }
+        Location savedLocation = locationRepository.saveAndFlush(newLocation);
+        log.info("위치(Location) 생성 완료 - locationName: {}, groupId: {}", request.locationName(), group.getGroupId());
+        return savedLocation;
     }
 
 
@@ -87,6 +86,7 @@ public class LocationServiceImpl implements LocationService {
     public void toggleAutoControlMode(Long locationId, Long groupId) {
         Location location = getLocationByGroupId(locationId, groupId);
         location.toggleAutoControlMode();
+        log.info("위치 자동제어 모드 변경 완료 - locationId: {}, autoControlMode: {}", locationId, location.getAutoControlMode());
     }
 
     @Override
@@ -103,6 +103,7 @@ public class LocationServiceImpl implements LocationService {
         }
 
         location.updateName(request.newLocationName());
+        log.info("위치 이름 수정 완료 - locationId: {}, newName: {}", locationId, request.newLocationName());
     }
 
     @Override
@@ -111,6 +112,7 @@ public class LocationServiceImpl implements LocationService {
         Location location = getLocationByGroupId(targetLocationId, groupId);
 
         locationRepository.delete(location);
+        log.info("위치 삭제 완료 - locationId: {}, groupId: {}", targetLocationId, groupId);
     }
 
     @Override
@@ -118,6 +120,7 @@ public class LocationServiceImpl implements LocationService {
     public void deleteLocationAll(Long groupId) {
 
         locationRepository.deleteAllByGroupGroupId(groupId);
+        log.info("그룹 모든 위치 삭제 완료 - groupId: {}", groupId);
     }
 
     @Override
