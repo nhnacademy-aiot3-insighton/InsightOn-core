@@ -21,6 +21,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.Duration;
 import java.time.ZoneId;
@@ -70,8 +72,7 @@ public class WidgetServiceImpl implements WidgetService {
 
         if (request.widgetConfig() != null) {
             widget.updateWidget(request.widgetConfig());
-
-            widgetRedisTemplate.delete(WIDGET_CONFIG_KEY_PREFIX + targetWidgetId);
+            evictCacheKeysAfterCommit(List.of(WIDGET_CONFIG_KEY_PREFIX + targetWidgetId));
         }
 
         if (request.xPos() != null && request.yPos() != null
@@ -123,7 +124,7 @@ public class WidgetServiceImpl implements WidgetService {
 
         widgetRepository.deleteByWidgetIdAndDashboardDashboardId(targetWidgetId, dashboardId);
 
-        widgetRedisTemplate.delete(WIDGET_CONFIG_KEY_PREFIX + targetWidgetId);
+        evictCacheKeysAfterCommit(List.of(WIDGET_CONFIG_KEY_PREFIX + targetWidgetId));
         log.info("위젯 삭제 완료 - widgetId: {}, dashboardId: {}", targetWidgetId, dashboardId);
     }
 
@@ -166,8 +167,36 @@ public class WidgetServiceImpl implements WidgetService {
             List<String> keys = widgetIds.stream()
                     .map(id -> WIDGET_CONFIG_KEY_PREFIX + id)
                     .toList();
-            widgetRedisTemplate.delete(keys);
-            log.info("위젯 Redis 캐시 파기 완료 - size: {}", widgetIds.size());
+            evictCacheKeysAfterCommit(keys);
+        }
+    }
+
+    private void evictCacheKeysAfterCommit(List<String> keys) {
+        if (keys == null || keys.isEmpty()) {
+            return;
+        }
+
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            try {
+                                widgetRedisTemplate.delete(keys);
+                                log.info("위젯 Redis 캐시 파기 완료 (AFTER_COMMIT) - size: {}", keys.size());
+                            } catch (Exception e) {
+                                log.error("위젯 Redis 캐시 파기 실패 (AFTER_COMMIT) - keys: {}", keys, e);
+                            }
+                        }
+                    }
+            );
+        } else {
+            try {
+                widgetRedisTemplate.delete(keys);
+                log.info("위젯 Redis 캐시 파기 완료 - size: {}", keys.size());
+            } catch (Exception e) {
+                log.error("위젯 Redis 캐시 파기 실패 - keys: {}", keys, e);
+            }
         }
     }
 
