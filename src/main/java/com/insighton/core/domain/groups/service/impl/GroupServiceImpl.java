@@ -42,7 +42,7 @@ public class GroupServiceImpl implements GroupService {
                 .build();
 
         Group savedGroup = groupRepository.save(group);
-        log.info("그룹 생성 완료 - groupId: {}, name: {}", savedGroup.getGroupId(), savedGroup.getName());
+        log.info("그룹 생성 완료 - name: {}", request.name());
         return savedGroup;
     }
 
