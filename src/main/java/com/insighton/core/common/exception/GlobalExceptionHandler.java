@@ -22,6 +22,7 @@ import com.insighton.core.domain.widgets.exception.AlreadyDashboardSaveException
 import com.insighton.core.domain.widgets.exception.InvalidDateTimeFormatException;
 import com.insighton.core.domain.widgets.exception.WidgetConfigNotFoundException;
 import com.insighton.core.domain.widgets.exception.WidgetNotFoundException;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,6 +32,7 @@ import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.stream.Collectors;
@@ -88,11 +90,14 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage()));
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException e) {
-        String message = e.getBindingResult().getFieldErrors().stream()
-                .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
-                .collect(Collectors.joining(", "));
+    @ExceptionHandler({MethodArgumentNotValidException.class, HandlerMethodValidationException.class, ConstraintViolationException.class})
+    public ResponseEntity<ErrorResponse> handleValidation(Exception e) {
+        String message = e.getMessage();
+        if (e instanceof MethodArgumentNotValidException manve) {
+            message = manve.getBindingResult().getFieldErrors().stream()
+                    .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
+                    .collect(Collectors.joining(", "));
+        }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), message));
     }

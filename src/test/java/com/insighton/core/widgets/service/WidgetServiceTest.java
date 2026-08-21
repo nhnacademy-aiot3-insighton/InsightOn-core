@@ -252,6 +252,45 @@ class WidgetServiceTest {
 
             verify(influxDbRepository, times(1)).query(anyString());
         }
+
+        @Test
+        @DisplayName("SINGLE_STAT 타입 위젯 차트 데이터 조회 성공")
+        void getWidgetChartData_singleStat_success() {
+            Long widgetId = 10L;
+            Widget mockWidget = mock(Widget.class);
+            WidgetConfig config = WidgetConfig.builder()
+                    .type(Widget.Type.SINGLE_STAT)
+                    .sensorEui("DEV_01")
+                    .range("-1h")
+                    .fields(List.of("temperature"))
+                    .build();
+
+            given(mockWidget.getWidgetConfig()).willReturn(config);
+            given(widgetRepository.findById(widgetId)).willReturn(Optional.of(mockWidget));
+            given(influxDbRepository.query(anyString())).willReturn(List.of());
+
+            ChartDataResponse response = widgetService.getWidgetChartData(widgetId);
+            assertThat(response).isNotNull();
+        }
+
+        @Test
+        @DisplayName("Redis 캐시된 데이터가 Map 형태일 때 ObjectMapper로 변환하여 조회 성공")
+        void getWidgetChartData_cacheHitMap_success() {
+            Long widgetId = 10L;
+            java.util.Map<String, Object> mapCache = java.util.Map.of("sensorEui", "DEV_01");
+            WidgetConfig convertedConfig = WidgetConfig.builder()
+                    .type(Widget.Type.GRAPH)
+                    .sensorEui("DEV_01")
+                    .range("-1h")
+                    .build();
+
+            doReturn(mapCache).when(valueOperations).get("widget:config:" + widgetId);
+            given(objectMapper.convertValue(mapCache, WidgetConfig.class)).willReturn(convertedConfig);
+            given(influxDbRepository.query(anyString())).willReturn(List.of());
+
+            ChartDataResponse response = widgetService.getWidgetChartData(widgetId);
+            assertThat(response).isNotNull();
+        }
     }
 
     @Nested
@@ -317,6 +356,24 @@ class WidgetServiceTest {
             given(widgetRepository.findById(widgetId)).willReturn(Optional.of(mockWidget));
 
             // when & then
+            assertThatThrownBy(() -> widgetService.getWidgetChartData(widgetId))
+                    .isInstanceOf(InvalidDateTimeFormatException.class);
+        }
+
+        @Test
+        @DisplayName("위젯 차트 데이터 조회 실패 - 잘못된 aggregateWindow 파라미터일 때 InvalidDateTimeFormatException 발생")
+        void getWidgetChartData_invalidAggregateWindow_throwsException() {
+            Long widgetId = 10L;
+            Widget mockWidget = mock(Widget.class);
+            WidgetConfig invalidConfig = WidgetConfig.builder()
+                    .type(Widget.Type.GRAPH)
+                    .range("-1h")
+                    .aggregateWindow("invalid-window")
+                    .build();
+
+            given(mockWidget.getWidgetConfig()).willReturn(invalidConfig);
+            given(widgetRepository.findById(widgetId)).willReturn(Optional.of(mockWidget));
+
             assertThatThrownBy(() -> widgetService.getWidgetChartData(widgetId))
                     .isInstanceOf(InvalidDateTimeFormatException.class);
         }
