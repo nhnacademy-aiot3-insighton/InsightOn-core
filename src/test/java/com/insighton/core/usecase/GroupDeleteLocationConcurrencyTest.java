@@ -63,6 +63,10 @@ class GroupDeleteLocationConcurrencyTest {
     private RegionCsvLoader regionCsvLoader;
     @MockitoBean
     private RedisTemplate<String, Object> redisTemplate;
+    @MockitoBean
+    private RedisTemplate<String, com.insighton.core.domain.widgets.entity.WidgetConfig> widgetRedisTemplate;
+    @MockitoBean
+    private org.springframework.data.redis.connection.RedisConnectionFactory redisConnectionFactory;
 
     private Long groupId;
 
