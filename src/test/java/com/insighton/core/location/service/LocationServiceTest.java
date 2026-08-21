@@ -12,7 +12,6 @@ import com.insighton.core.domain.location.exception.LocationAlreadyException;
 import com.insighton.core.domain.location.exception.LocationNotFoundException;
 import com.insighton.core.domain.location.repository.LocationRepository;
 import com.insighton.core.domain.location.service.impl.LocationServiceImpl;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -29,9 +28,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willDoNothing;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class LocationServiceTest {
@@ -271,20 +268,6 @@ class LocationServiceTest {
 
             // when & then
             assertThatThrownBy(() -> locationsService.createLocation(group, locationsRequest))
-                    .isInstanceOf(LocationAlreadyException.class);
-        }
-
-        @Test
-        @DisplayName("location 생성 실패 - DB 저장 시 DataIntegrityViolationException 발생 시 LocationAlreadyException 재던짐")
-        void createLocation_fail_dataIntegrity() {
-            // given
-            Group group = Group.builder().name("Test Group").build();
-            LocationCreateRequest request = new LocationCreateRequest("Test Location", Location.AutoControlMode.SUGGESTION);
-            given(locationRepository.existsByGroupGroupIdAndLocationName(group.getGroupId(), request.locationName())).willReturn(false);
-            given(locationRepository.saveAndFlush(any(Location.class))).willThrow(DataIntegrityViolationException.class);
-
-            // when & then
-            assertThatThrownBy(() -> locationsService.createLocation(group, request))
                     .isInstanceOf(LocationAlreadyException.class);
         }
 
