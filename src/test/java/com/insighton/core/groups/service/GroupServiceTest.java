@@ -1,7 +1,6 @@
 package com.insighton.core.groups.service;
 
 import com.insighton.core.domain.groups.dto.request.GroupRequest;
-import com.insighton.core.domain.groups.dto.request.GroupUpdateRequest;
 import com.insighton.core.domain.groups.dto.response.GroupAdminResponse;
 import com.insighton.core.domain.groups.dto.response.GroupResponse;
 import com.insighton.core.domain.groups.entity.Group;
@@ -12,7 +11,6 @@ import com.insighton.core.domain.groups.exception.UnAuthorizedAccessException;
 import com.insighton.core.domain.groups.repository.GroupRepository;
 import com.insighton.core.domain.groups.service.impl.GroupServiceImpl;
 import com.insighton.core.domain.location.exception.EmptyValueException;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -30,6 +28,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -86,7 +85,7 @@ public class GroupServiceTest {
                     .groupRegion("Old Loc")
                     .build();
             given(groupRepository.findById(groupId)).willReturn(Optional.of(realGroup));
-            GroupUpdateRequest request = new GroupUpdateRequest("New Name", "New Desc", "New Loc");
+            GroupRequest request = new GroupRequest("New Name", "New Desc", "New Loc");
 
             // when
             groupService.updateGroup(request, groupId);
@@ -108,7 +107,7 @@ public class GroupServiceTest {
                     .groupRegion("Old Loc")
                     .build();
             given(groupRepository.findById(groupId)).willReturn(Optional.of(realGroup));
-            GroupUpdateRequest request = new GroupUpdateRequest("New Name", null, null);
+            GroupRequest request = new GroupRequest("New Name", null, null);
 
             // when
             groupService.updateGroup(request, groupId);
@@ -130,7 +129,7 @@ public class GroupServiceTest {
                     .groupRegion("Old Loc")
                     .build();
             given(groupRepository.findById(groupId)).willReturn(Optional.of(realGroup));
-            GroupUpdateRequest request = new GroupUpdateRequest(null, "New Desc", null);
+            GroupRequest request = new GroupRequest(null, "New Desc", null);
 
             // when
             groupService.updateGroup(request, groupId);
@@ -152,7 +151,7 @@ public class GroupServiceTest {
                     .groupRegion("Old Loc")
                     .build();
             given(groupRepository.findById(groupId)).willReturn(Optional.of(realGroup));
-            GroupUpdateRequest request = new GroupUpdateRequest(null, null, "New Loc");
+            GroupRequest request = new GroupRequest(null, null, "New Loc");
 
             // when
             groupService.updateGroup(request, groupId);
@@ -277,7 +276,7 @@ public class GroupServiceTest {
         void updateGroup_notFound() {
             // given
             Long groupId = 1L;
-            GroupUpdateRequest request = new GroupUpdateRequest("N", "D", "L");
+            GroupRequest request = new GroupRequest("N", "D", "L");
             given(groupRepository.findById(groupId)).willReturn(Optional.empty());
 
             // when & then

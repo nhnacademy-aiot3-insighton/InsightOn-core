@@ -57,10 +57,8 @@ public class WidgetServiceImpl implements WidgetService {
                 .widgetConfig(request.widgetConfig())
                 .build();
         Widget newWidget = widgetRepository.save(widget);
-
+        log.info("위젯 생성 완료 - widgetId: {}, dashboardId: {}", newWidget.getWidgetId(), dashboard.getDashboardId());
         return newWidget.getWidgetId();
-
-
     }
 
     @Override
@@ -86,7 +84,7 @@ public class WidgetServiceImpl implements WidgetService {
                     request.height()
             );
         }
-
+        log.info("위젯 수정 완료 - widgetId: {}, dashboardId: {}", targetWidgetId, dashboardId);
     }
 
     @Override
@@ -126,6 +124,7 @@ public class WidgetServiceImpl implements WidgetService {
         widgetRepository.deleteByWidgetIdAndDashboardDashboardId(targetWidgetId, dashboardId);
 
         redisTemplate.delete(WIDGET_CONFIG_KEY_PREFIX + targetWidgetId);
+        log.info("위젯 삭제 완료 - widgetId: {}, dashboardId: {}", targetWidgetId, dashboardId);
     }
 
     @Override
@@ -139,6 +138,7 @@ public class WidgetServiceImpl implements WidgetService {
         evictCacheForWidgetIds(widgetIds);
 
         widgetRepository.deleteAllByDashboardDashboardId(dashboardId);
+        log.info("대시보드 하위 전체 위젯 삭제 완료 - dashboardId: {}, count: {}", dashboardId, widgetIds.size());
     }
 
     @Override
@@ -167,6 +167,7 @@ public class WidgetServiceImpl implements WidgetService {
                     .map(id -> WIDGET_CONFIG_KEY_PREFIX + id)
                     .toList();
             redisTemplate.delete(keys);
+            log.info("위젯 Redis 캐시 파기 완료 - size: {}", widgetIds.size());
         }
     }
 

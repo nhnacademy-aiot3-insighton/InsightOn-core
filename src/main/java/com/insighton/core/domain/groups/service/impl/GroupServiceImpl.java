@@ -1,7 +1,6 @@
 package com.insighton.core.domain.groups.service.impl;
 
 import com.insighton.core.domain.groups.dto.request.GroupRequest;
-import com.insighton.core.domain.groups.dto.request.GroupUpdateRequest;
 import com.insighton.core.domain.groups.dto.response.GroupAdminResponse;
 import com.insighton.core.domain.groups.dto.response.GroupResponse;
 import com.insighton.core.domain.groups.entity.Group;
@@ -12,6 +11,7 @@ import com.insighton.core.domain.groups.exception.UnAuthorizedAccessException;
 import com.insighton.core.domain.groups.repository.GroupRepository;
 import com.insighton.core.domain.groups.service.GroupService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Objects;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class GroupServiceImpl implements GroupService {
@@ -40,16 +41,19 @@ public class GroupServiceImpl implements GroupService {
                 .inviteToken(inviteToken)
                 .build();
 
-        return groupRepository.save(group);
+        Group savedGroup = groupRepository.save(group);
+        log.info("그룹 생성 완료 - groupId: {}, name: {}", savedGroup.getGroupId(), savedGroup.getName());
+        return savedGroup;
     }
 
     @Override
     @Transactional
-    public void updateGroup(GroupUpdateRequest request, Long groupId) {
+    public void updateGroup(GroupRequest request, Long groupId) {
 
         Group group = groupFindById(groupId);
 
         group.update(request);
+        log.info("그룹 정보 수정 완료 - groupId: {}", groupId);
     }
 
     @Override
@@ -90,6 +94,7 @@ public class GroupServiceImpl implements GroupService {
         String newToken = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
 
         groupEntity.rotateInviteToken(newToken);
+        log.info("그룹 초대 토큰 재발급 완료 - groupId: {}", groupId);
     }
 
     @Override
@@ -100,6 +105,7 @@ public class GroupServiceImpl implements GroupService {
 
 
         groupRepository.delete(groupEntity);
+        log.info("그룹 삭제 완료 - groupId: {}", groupId);
     }
 
 
