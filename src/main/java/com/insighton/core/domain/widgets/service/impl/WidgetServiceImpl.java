@@ -41,7 +41,7 @@ public class WidgetServiceImpl implements WidgetService {
 
     private final WidgetRepository widgetRepository;
     private final InfluxDbRepository influxDbRepository;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, WidgetConfig> widgetRedisTemplate;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -71,7 +71,7 @@ public class WidgetServiceImpl implements WidgetService {
         if (request.widgetConfig() != null) {
             widget.updateWidget(request.widgetConfig());
 
-            redisTemplate.delete(WIDGET_CONFIG_KEY_PREFIX + targetWidgetId);
+            widgetRedisTemplate.delete(WIDGET_CONFIG_KEY_PREFIX + targetWidgetId);
         }
 
         if (request.xPos() != null && request.yPos() != null
@@ -123,7 +123,7 @@ public class WidgetServiceImpl implements WidgetService {
 
         widgetRepository.deleteByWidgetIdAndDashboardDashboardId(targetWidgetId, dashboardId);
 
-        redisTemplate.delete(WIDGET_CONFIG_KEY_PREFIX + targetWidgetId);
+        widgetRedisTemplate.delete(WIDGET_CONFIG_KEY_PREFIX + targetWidgetId);
         log.info("위젯 삭제 완료 - widgetId: {}, dashboardId: {}", targetWidgetId, dashboardId);
     }
 
@@ -166,7 +166,7 @@ public class WidgetServiceImpl implements WidgetService {
             List<String> keys = widgetIds.stream()
                     .map(id -> WIDGET_CONFIG_KEY_PREFIX + id)
                     .toList();
-            redisTemplate.delete(keys);
+            widgetRedisTemplate.delete(keys);
             log.info("위젯 Redis 캐시 파기 완료 - size: {}", widgetIds.size());
         }
     }
@@ -176,11 +176,8 @@ public class WidgetServiceImpl implements WidgetService {
     private WidgetConfig getWidgetConfigFromCache(Long widgetId) {
         String key = WIDGET_CONFIG_KEY_PREFIX + widgetId;
 
-        Object cached = redisTemplate.opsForValue().get(key);
+        WidgetConfig cached = widgetRedisTemplate.opsForValue().get(key);
         if (cached != null) {
-            if (cached instanceof WidgetConfig config) {
-                return config;
-            }
             return objectMapper.convertValue(cached, WidgetConfig.class);
         }
 
@@ -192,7 +189,7 @@ public class WidgetServiceImpl implements WidgetService {
             throw new WidgetConfigNotFoundException(widgetId);
         }
 
-        redisTemplate.opsForValue().set(key, config, CACHE_TTL);
+        widgetRedisTemplate.opsForValue().set(key, config, CACHE_TTL);
 
         return config;
     }
