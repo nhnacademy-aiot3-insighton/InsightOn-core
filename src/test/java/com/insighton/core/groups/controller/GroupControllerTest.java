@@ -24,6 +24,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
@@ -73,7 +74,7 @@ class GroupControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated());
 
-            verify(groupsUseCase).createGroup(any(GroupRequest.class), eq(1L));
+            verify(groupsUseCase).createGroup(eq(request), eq(1L));
         }
 
         @Test
@@ -146,7 +147,7 @@ class GroupControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk());
 
-            verify(groupUpdateUseCase).updateGroup(any(GroupRequest.class), eq(1L), eq(1L));
+            verify(groupUpdateUseCase).updateGroup(eq(request), eq(1L), eq(1L));
         }
 
         @Test
@@ -168,7 +169,7 @@ class GroupControllerTest {
                             .param("inviteToken", "testToken"))
                     .andExpect(status().isOk());
 
-            verify(groupsUseCase).joinGroupByToken(any(GroupMemberJoinRequest.class));
+            verify(groupsUseCase).joinGroupByToken(argThat(req -> "testToken".equals(req.inviteToken()) && Long.valueOf(1L).equals(req.userId())));
         }
     }
 

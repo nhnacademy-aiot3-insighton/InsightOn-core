@@ -50,10 +50,10 @@ class WidgetServiceTest {
     private InfluxDbRepository influxDbRepository;
 
     @Mock
-    private RedisTemplate<String, Object> redisTemplate;
+    private RedisTemplate<String, WidgetConfig> widgetRedisTemplate;
 
     @Mock
-    private ValueOperations<String, Object> valueOperations;
+    private ValueOperations<String, WidgetConfig> valueOperations;
 
     @Mock
     private ObjectMapper objectMapper;
@@ -63,7 +63,7 @@ class WidgetServiceTest {
 
     @BeforeEach
     void setUp() {
-        doReturn(valueOperations).when(redisTemplate).opsForValue();
+        doReturn(valueOperations).when(widgetRedisTemplate).opsForValue();
     }
 
     @Nested
@@ -274,22 +274,22 @@ class WidgetServiceTest {
         }
 
         @Test
-        @DisplayName("Redis 캐시된 데이터가 Map 형태일 때 ObjectMapper로 변환하여 조회 성공")
-        void getWidgetChartData_cacheHitMap_success() {
+        @DisplayName("Redis 캐시된 데이터가 존재하는 경우 DB 조회 없이 조회 성공")
+        void getWidgetChartData_cacheHit_success() {
             Long widgetId = 10L;
-            java.util.Map<String, Object> mapCache = java.util.Map.of("sensorEui", "DEV_01");
-            WidgetConfig convertedConfig = WidgetConfig.builder()
+            WidgetConfig cachedConfig = WidgetConfig.builder()
                     .type(Widget.Type.GRAPH)
                     .sensorEui("DEV_01")
                     .range("-1h")
                     .build();
 
-            doReturn(mapCache).when(valueOperations).get("widget:config:" + widgetId);
-            given(objectMapper.convertValue(mapCache, WidgetConfig.class)).willReturn(convertedConfig);
+            doReturn(cachedConfig).when(valueOperations).get("widget:config:" + widgetId);
+            given(objectMapper.convertValue(cachedConfig, WidgetConfig.class)).willReturn(cachedConfig);
             given(influxDbRepository.query(anyString())).willReturn(List.of());
 
             ChartDataResponse response = widgetService.getWidgetChartData(widgetId);
             assertThat(response).isNotNull();
+            verify(widgetRepository, never()).findById(anyLong());
         }
     }
 

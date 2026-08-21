@@ -35,10 +35,7 @@ public class Widget {
     private int height;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(
-            name = "widget_config",
-            columnDefinition = "jsonb"
-    )
+    @Column(name = "widget_config")
     private WidgetConfig widgetConfig;
 
 

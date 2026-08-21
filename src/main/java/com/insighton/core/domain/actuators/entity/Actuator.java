@@ -37,7 +37,7 @@ public class Actuator {
     private ActuatorType actuatorType; // 액추에이터 종류
 
     @JdbcTypeCode(SqlTypes.JSON) // Gateway.connectionConfig와 동일한 방식으로 통일
-    @Column(name = "current_state", columnDefinition = "jsonb", nullable = false)
+    @Column(name = "current_state", nullable = false)
     private Map<String, Object> currentState; // 현재 제어 상태
 
     @Column(name = "state_updated_at")
