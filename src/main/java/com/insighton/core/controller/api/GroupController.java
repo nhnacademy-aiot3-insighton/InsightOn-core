@@ -144,7 +144,7 @@ public class GroupController {
     public ResponseEntity<Void> updateGroup(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
-            @RequestBody GroupRequest request) {
+            @Valid @RequestBody GroupRequest request) {
         groupUpdateUseCase.updateGroup(request, userId, groupId);
 
         return ResponseEntity.ok().build();
