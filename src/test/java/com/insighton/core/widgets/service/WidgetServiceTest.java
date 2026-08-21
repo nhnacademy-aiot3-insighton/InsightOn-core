@@ -1,5 +1,6 @@
 package com.insighton.core.widgets.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.influxdb.query.FluxRecord;
 import com.influxdb.query.FluxTable;
 import com.insighton.core.domain.dashboards.entity.Dashboard;
@@ -14,6 +15,7 @@ import com.insighton.core.domain.widgets.exception.WidgetNotFoundException;
 import com.insighton.core.domain.widgets.repository.InfluxDbRepository;
 import com.insighton.core.domain.widgets.repository.WidgetRepository;
 import com.insighton.core.domain.widgets.service.impl.WidgetServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -21,6 +23,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 
 import java.time.Instant;
 import java.util.List;
@@ -34,6 +40,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class WidgetServiceTest {
 
     @Mock
@@ -42,8 +49,22 @@ class WidgetServiceTest {
     @Mock
     private InfluxDbRepository influxDbRepository;
 
+    @Mock
+    private RedisTemplate<String, Object> redisTemplate;
+
+    @Mock
+    private ValueOperations<String, Object> valueOperations;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
     @InjectMocks
     private WidgetServiceImpl widgetService;
+
+    @BeforeEach
+    void setUp() {
+        doReturn(valueOperations).when(redisTemplate).opsForValue();
+    }
 
     @Nested
     @DisplayName("성공 케이스")

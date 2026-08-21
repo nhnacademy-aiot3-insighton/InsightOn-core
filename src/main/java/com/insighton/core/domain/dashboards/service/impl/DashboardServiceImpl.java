@@ -27,8 +27,8 @@ public class DashboardServiceImpl implements DashboardService {
         Dashboard dashboard = Dashboard.builder()
                 .location(location).title(request.title()).build();
 
-        Dashboard savedDashboard = dashboardRepository.save(dashboard);
-        log.info("대시보드 생성 완료 - dashboardId: {}, locationId: {}, title: {}", savedDashboard.getDashboardId(), location.getLocationId(), request.title());
+        dashboardRepository.save(dashboard);
+        log.info("대시보드 생성 완료 - locationId: {}, title: {}", location.getLocationId(), request.title());
     }
 
     @Override

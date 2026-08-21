@@ -57,8 +57,8 @@ public class WidgetServiceImpl implements WidgetService {
                 .widgetConfig(request.widgetConfig())
                 .build();
         Widget newWidget = widgetRepository.save(widget);
-        log.info("위젯 생성 완료 - widgetId: {}, dashboardId: {}", newWidget.getWidgetId(), dashboard.getDashboardId());
-        return newWidget.getWidgetId();
+        log.info("위젯 생성 완료 - dashboardId: {}", dashboard.getDashboardId());
+        return newWidget != null ? newWidget.getWidgetId() : null;
     }
 
     @Override

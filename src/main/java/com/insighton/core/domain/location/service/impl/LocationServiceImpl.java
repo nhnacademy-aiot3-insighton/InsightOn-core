@@ -41,7 +41,7 @@ public class LocationServiceImpl implements LocationService {
 
         try {
             Location savedLocation = locationRepository.saveAndFlush(newLocation);
-            log.info("위치(Location) 생성 완료 - locationId: {}, locationName: {}, groupId: {}", savedLocation.getLocationId(), savedLocation.getLocationName(), group.getGroupId());
+            log.info("위치(Location) 생성 완료 - locationName: {}, groupId: {}", request.locationName(), group.getGroupId());
             return savedLocation;
         } catch (DataIntegrityViolationException e) {
             throw new LocationAlreadyException(request.locationName());

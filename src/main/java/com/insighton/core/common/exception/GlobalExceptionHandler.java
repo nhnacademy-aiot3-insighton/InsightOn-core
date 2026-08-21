@@ -10,12 +10,14 @@ import com.insighton.core.domain.groupregistration.exception.GroupRegistrationNo
 import com.insighton.core.domain.groupregistration.exception.UnauthorizedGroupRegistrationAccessException;
 import com.insighton.core.domain.groups.exception.*;
 import com.insighton.core.domain.location.exception.EmptyValueException;
+import com.insighton.core.domain.location.exception.LocationAlreadyException;
 import com.insighton.core.domain.location.exception.LocationNotFoundException;
 import com.insighton.core.domain.region.exception.RegionNotFoundException;
 import com.insighton.core.domain.sensorattributes.exception.MetricKeyAlreadyExistsException;
 import com.insighton.core.domain.sensorattributes.exception.MetricKeyNotFoundException;
 import com.insighton.core.domain.sensors.exception.InvalidSensorValueException;
 import com.insighton.core.domain.sensors.exception.SensorNotFoundException;
+import com.insighton.core.domain.weather.exception.WeatherApiException;
 import com.insighton.core.domain.widgets.exception.AlreadyDashboardSaveException;
 import com.insighton.core.domain.widgets.exception.InvalidDateTimeFormatException;
 import com.insighton.core.domain.widgets.exception.WidgetConfigNotFoundException;
@@ -23,9 +25,13 @@ import com.insighton.core.domain.widgets.exception.WidgetNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.stream.Collectors;
 
@@ -59,7 +65,9 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler({AlreadyJoinedException.class, MetricKeyAlreadyExistsException.class, GatewayAlreadyExistsException.class,
-            AlreadyRequestedException.class, AlreadyProcessedException.class, AlreadyDashboardSaveException.class})
+            AlreadyRequestedException.class, AlreadyProcessedException.class, AlreadyDashboardSaveException.class,
+            LocationAlreadyException.class
+    })
     public ResponseEntity<ErrorResponse> handleConflict(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ErrorResponse(HttpStatus.CONFLICT.value(), e.getMessage()));
@@ -71,9 +79,11 @@ public class GlobalExceptionHandler {
             CouldNotAbleToUpdateByUserToSystem.class, EmptyValueException.class,
             InvalidGatewayConnectionConfigException.class, InvalidGatewayValueException.class,
             RegionNotFoundException.class, InvalidDateTimeFormatException.class,
-            InvitationTokenMismatchException.class
+            InvitationTokenMismatchException.class, WeatherApiException.class,
+            MissingServletRequestParameterException.class, MissingRequestHeaderException.class,
+            MethodArgumentTypeMismatchException.class, HttpMessageNotReadableException.class
     })
-    public ResponseEntity<ErrorResponse> handleBadRequest(RuntimeException e) {
+    public ResponseEntity<ErrorResponse> handleBadRequest(Exception e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage()));
     }
