@@ -42,6 +42,8 @@ class SensorControllerTest {
     @MockitoBean
     private SearchSensorUseCase searchSensorUseCase;
     @MockitoBean
+    private GetUnassignedSensorsUseCase getUnassignedSensorsUseCase;
+    @MockitoBean
     private UpdateSensorUseCase updateSensorUseCase;
     @MockitoBean
     private DeleteSensorUseCase deleteSensorUseCase;
@@ -209,5 +211,20 @@ class SensorControllerTest {
                 .andExpect(status().isNoContent());
 
         verify(deleteAllSensorUseCase).deleteAll(1L, 5L);
+    }
+
+    @Test
+    @DisplayName("장소 미배정 센서 목록 조회 성공")
+    void 장소_미배정_센서_목록_조회_성공() throws Exception {
+        given(getUnassignedSensorsUseCase.getUnassignedSensors(1L, 5L))
+                .willReturn(java.util.List.of(sampleResponse()));
+
+        mockMvc.perform(get("/api/v1/sensor/unassigned")
+                        .header("X-USER-ID", 1L)
+                        .param("groupId", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].sensorId").value(1L));
+
+        verify(getUnassignedSensorsUseCase).getUnassignedSensors(1L, 5L);
     }
 }

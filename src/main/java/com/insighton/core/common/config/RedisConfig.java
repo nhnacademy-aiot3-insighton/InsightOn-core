@@ -3,6 +3,7 @@ package com.insighton.core.common.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.insighton.core.domain.weather.dto.WeatherDataDto;
+import com.insighton.core.domain.widgets.entity.WidgetConfig;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -28,6 +29,31 @@ public class RedisConfig {
         Jackson2JsonRedisSerializer<WeatherDataDto> serializer =
                 new Jackson2JsonRedisSerializer<>(objectMapper, WeatherDataDto.class);
 
+        redisTemplate.setValueSerializer(serializer);
+        redisTemplate.setHashValueSerializer(serializer);
+
+        return redisTemplate;
+    }
+
+
+    @Bean
+    public RedisTemplate<String, WidgetConfig> widgetRedisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, WidgetConfig> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(connectionFactory);
+
+        //Key 직렬화 설정
+        StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
+        redisTemplate.setKeySerializer(stringRedisSerializer);
+        redisTemplate.setHashValueSerializer(stringRedisSerializer);
+
+        //ObjectMapper 생성 및 설정
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+
+        Jackson2JsonRedisSerializer<WidgetConfig> serializer =
+                new Jackson2JsonRedisSerializer<>(objectMapper, WidgetConfig.class);
+
+        //Value 직렬화 설정
         redisTemplate.setValueSerializer(serializer);
         redisTemplate.setHashValueSerializer(serializer);
 

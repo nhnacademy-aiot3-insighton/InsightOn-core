@@ -23,7 +23,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-//@Disabled("실제 컨트롤러 경로(/api/v1/groups/...)와 테스트 요청 경로(/api/groups/...)가 안 맞아 전부 404 — 배포 테스트 위해 임시 비활성화")
+
 @WebMvcTest(GroupMemberController.class)
 class GroupMemberControllerTest {
 

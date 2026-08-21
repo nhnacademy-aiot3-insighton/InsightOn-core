@@ -1,5 +1,6 @@
 package com.insighton.core.domain.widgets.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.influxdb.query.FluxRecord;
 import com.influxdb.query.FluxTable;
 import com.insighton.core.domain.dashboards.entity.Dashboard;
@@ -16,25 +17,34 @@ import com.insighton.core.domain.widgets.repository.InfluxDbRepository;
 import com.insighton.core.domain.widgets.repository.WidgetRepository;
 import com.insighton.core.domain.widgets.service.WidgetService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.time.Duration;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class WidgetServiceImpl implements WidgetService {
     private static final Pattern DURATION_PATTERN = Pattern.compile("^-?\\d+[smhdwy]$");
     private static final String BUCKET_NAME = "insighton-bucket";
     private static final String MEASUREMENT_NAME = "sensor_data";
+    private static final String WIDGET_CONFIG_KEY_PREFIX = "widget:config:";
+    private static final Duration CACHE_TTL = Duration.ofDays(1);
+
     private final WidgetRepository widgetRepository;
     private final InfluxDbRepository influxDbRepository;
-    private final Map<Long, WidgetConfig> configCache = new ConcurrentHashMap<>();
+    private final RedisTemplate<String, WidgetConfig> widgetRedisTemplate;
+    private final ObjectMapper objectMapper;
 
     @Override
     @Transactional
@@ -49,10 +59,8 @@ public class WidgetServiceImpl implements WidgetService {
                 .widgetConfig(request.widgetConfig())
                 .build();
         Widget newWidget = widgetRepository.save(widget);
-
-        return newWidget.getWidgetId();
-
-
+        log.info("위젯 생성 완료 - dashboardId: {}", dashboard.getDashboardId());
+        return newWidget != null ? newWidget.getWidgetId() : null;
     }
 
     @Override
@@ -64,8 +72,7 @@ public class WidgetServiceImpl implements WidgetService {
 
         if (request.widgetConfig() != null) {
             widget.updateWidget(request.widgetConfig());
-
-            configCache.remove(targetWidgetId);
+            evictCacheKeysAfterCommit(List.of(WIDGET_CONFIG_KEY_PREFIX + targetWidgetId));
         }
 
         if (request.xPos() != null && request.yPos() != null
@@ -78,7 +85,7 @@ public class WidgetServiceImpl implements WidgetService {
                     request.height()
             );
         }
-
+        log.info("위젯 수정 완료 - widgetId: {}, dashboardId: {}", targetWidgetId, dashboardId);
     }
 
     @Override
@@ -88,7 +95,7 @@ public class WidgetServiceImpl implements WidgetService {
         List<Widget> widgets = widgetRepository.findAllByDashboardDashboardId(dashboardId);
 
         if (widgets.isEmpty()) {
-            throw WidgetNotFoundException.notFoundWidgetByDashboardId(dashboardId);
+            return List.of();
         }
 
         List<WidgetsListResponse> responses = new ArrayList<>();
@@ -117,7 +124,8 @@ public class WidgetServiceImpl implements WidgetService {
 
         widgetRepository.deleteByWidgetIdAndDashboardDashboardId(targetWidgetId, dashboardId);
 
-        configCache.remove(targetWidgetId);
+        evictCacheKeysAfterCommit(List.of(WIDGET_CONFIG_KEY_PREFIX + targetWidgetId));
+        log.info("위젯 삭제 완료 - widgetId: {}, dashboardId: {}", targetWidgetId, dashboardId);
     }
 
     @Override
@@ -131,6 +139,7 @@ public class WidgetServiceImpl implements WidgetService {
         evictCacheForWidgetIds(widgetIds);
 
         widgetRepository.deleteAllByDashboardDashboardId(dashboardId);
+        log.info("대시보드 하위 전체 위젯 삭제 완료 - dashboardId: {}, count: {}", dashboardId, widgetIds.size());
     }
 
     @Override
@@ -155,26 +164,63 @@ public class WidgetServiceImpl implements WidgetService {
     @Override
     public void evictCacheForWidgetIds(List<Long> widgetIds) {
         if (widgetIds != null && !widgetIds.isEmpty()) {
-            widgetIds.forEach(configCache::remove);
+            List<String> keys = widgetIds.stream()
+                    .map(id -> WIDGET_CONFIG_KEY_PREFIX + id)
+                    .toList();
+            evictCacheKeysAfterCommit(keys);
+        }
+    }
+
+    private void evictCacheKeysAfterCommit(List<String> keys) {
+        if (keys == null || keys.isEmpty()) {
+            return;
+        }
+
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            try {
+                                widgetRedisTemplate.delete(keys);
+                                log.info("위젯 Redis 캐시 파기 완료 (AFTER_COMMIT) - size: {}", keys.size());
+                            } catch (Exception e) {
+                                log.error("위젯 Redis 캐시 파기 실패 (AFTER_COMMIT) - keys: {}", keys, e);
+                            }
+                        }
+                    }
+            );
+        } else {
+            try {
+                widgetRedisTemplate.delete(keys);
+                log.info("위젯 Redis 캐시 파기 완료 - size: {}", keys.size());
+            } catch (Exception e) {
+                log.error("위젯 Redis 캐시 파기 실패 - keys: {}", keys, e);
+            }
         }
     }
 
     // ===================== private method ========================
 
     private WidgetConfig getWidgetConfigFromCache(Long widgetId) {
-        return configCache.computeIfAbsent(widgetId, id -> {
-            Widget widget = widgetRepository.findById(id)
-                    .orElseThrow(() -> WidgetNotFoundException.notFoundWidgetByWidgetId(widgetId));
+        String key = WIDGET_CONFIG_KEY_PREFIX + widgetId;
 
-            WidgetConfig config = widget.getWidgetConfig();
+        WidgetConfig cached = widgetRedisTemplate.opsForValue().get(key);
+        if (cached != null) {
+            return objectMapper.convertValue(cached, WidgetConfig.class);
+        }
 
-            // id는 존재하는데 config 값이 null 일때는 exception 던지기
-            if (config == null) {
-                throw new WidgetConfigNotFoundException(widgetId);
-            }
+        Widget widget = widgetRepository.findById(widgetId)
+                .orElseThrow(() -> WidgetNotFoundException.notFoundWidgetByWidgetId(widgetId));
 
-            return config;
-        });
+        WidgetConfig config = widget.getWidgetConfig();
+        if (config == null) {
+            throw new WidgetConfigNotFoundException(widgetId);
+        }
+
+        widgetRedisTemplate.opsForValue().set(key, config, CACHE_TTL);
+
+        return config;
     }
 
     /**
@@ -206,6 +252,7 @@ public class WidgetServiceImpl implements WidgetService {
                 }
             }
         }
+        log.info("widget x축 시간 라벨과 y축 값 가져오기 완료");
 
         // map에 모인 데이터를 chartDataset 객체 리스트로 변환
         List<ChartDataset> datasets = new ArrayList<>();

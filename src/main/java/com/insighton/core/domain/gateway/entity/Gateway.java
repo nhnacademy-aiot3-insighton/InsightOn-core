@@ -42,7 +42,7 @@ public class Gateway {
     private ProtocolType protocolType;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "connection_config", columnDefinition = "jsonb", nullable = false)
+    @Column(name = "connection_config", nullable = false)
     private Map<String, Object> connectionConfig;
 
     @Enumerated(EnumType.STRING)
