@@ -238,6 +238,20 @@ class WidgetServiceTest {
     class FailureCases {
 
         @Test
+        @DisplayName("대시보드 하위에 위젯이 없을 때 빈 리스트 반환")
+        void getWidgetList_emptyWidgets_returnsEmptyList() {
+            // given
+            Long dashboardId = 1L;
+            given(widgetRepository.findAllByDashboardDashboardId(dashboardId)).willReturn(List.of());
+
+            // when
+            List<WidgetsListResponse> responses = widgetService.getWidgetList(dashboardId);
+
+            // then
+            assertThat(responses).isEmpty();
+        }
+
+        @Test
         @DisplayName("위젯 수정 실패 - 존재하지 않는 위젯인 경우 WidgetNotFoundException 발생")
         void updateWidget_notFound() {
             // given
@@ -250,18 +264,6 @@ class WidgetServiceTest {
 
             // when & then
             assertThatThrownBy(() -> widgetService.updateWidget(dashboardId, widgetId, request))
-                    .isInstanceOf(WidgetNotFoundException.class);
-        }
-
-        @Test
-        @DisplayName("위젯 목록 조회 실패 - 대시보드 하위에 위젯이 없을 때 WidgetNotFoundException 발생")
-        void getWidgetList_emptyWidgets_throwsException() {
-            // given
-            Long dashboardId = 1L;
-            given(widgetRepository.findAllByDashboardDashboardId(dashboardId)).willReturn(List.of());
-
-            // when & then
-            assertThatThrownBy(() -> widgetService.getWidgetList(dashboardId))
                     .isInstanceOf(WidgetNotFoundException.class);
         }
 
