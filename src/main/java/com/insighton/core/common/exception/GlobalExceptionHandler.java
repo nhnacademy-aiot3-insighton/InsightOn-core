@@ -3,10 +3,7 @@ package com.insighton.core.common.exception;
 import com.insighton.core.domain.actuators.exception.*;
 import com.insighton.core.domain.dashboards.exception.DashboardNotFoundException;
 import com.insighton.core.domain.gateway.exception.*;
-import com.insighton.core.domain.groupmember.exception.AlreadyJoinedException;
-import com.insighton.core.domain.groupmember.exception.GroupMemberNotFoundException;
-import com.insighton.core.domain.groupmember.exception.ManagerRoleRequiredForTransferException;
-import com.insighton.core.domain.groupmember.exception.SuperManagerCannotLeaveException;
+import com.insighton.core.domain.groupmember.exception.*;
 import com.insighton.core.domain.groupregistration.exception.AlreadyProcessedException;
 import com.insighton.core.domain.groupregistration.exception.AlreadyRequestedException;
 import com.insighton.core.domain.groupregistration.exception.GroupRegistrationNotFoundException;
@@ -23,6 +20,7 @@ import com.insighton.core.domain.widgets.exception.AlreadyDashboardSaveException
 import com.insighton.core.domain.widgets.exception.InvalidDateTimeFormatException;
 import com.insighton.core.domain.widgets.exception.WidgetConfigNotFoundException;
 import com.insighton.core.domain.widgets.exception.WidgetNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -34,6 +32,7 @@ import java.util.stream.Collectors;
 /**
  * 도메인이 늘어나면 이 클래스에 핸들러 메서드 추가.
  */
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -43,8 +42,7 @@ public class GlobalExceptionHandler {
             SensorNotFoundException.class, ActuatorNotFoundException.class,
             MetricKeyNotFoundException.class, DashboardNotFoundException.class,
             WidgetNotFoundException.class, WidgetConfigNotFoundException.class,
-            ActuatorLocationsActuatorTypeNotFound.class, GroupRegistrationNotFoundException.class,
-            LocationNotFoundException.class
+            ActuatorLocationsActuatorTypeNotFound.class, GroupRegistrationNotFoundException.class
     })
     public ResponseEntity<ErrorResponse> handleNotFound(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -67,7 +65,7 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(HttpStatus.CONFLICT.value(), e.getMessage()));
     }
 
-    @ExceptionHandler({IllegalArgumentException.class, SuperManagerCannotLeaveException.class,
+    @ExceptionHandler({IllegalArgumentException.class, SuperManagerCannotLeaveException.class, CannotKickSelfException.class,
             ManagerRoleRequiredForTransferException.class,
             InvalidActuatorValueException.class, InvalidSensorValueException.class,
             CouldNotAbleToUpdateByUserToSystem.class, EmptyValueException.class,
@@ -87,5 +85,12 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.joining(", "));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), message));
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleUnhandledException(Exception e) {
+        log.error("Unhandled Exception Occurred: ", e);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), "서버 내부 오류가 발생했습니다."));
     }
 }
