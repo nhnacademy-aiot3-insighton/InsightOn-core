@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class WidgetServiceImpl implements WidgetService {
+
     private static final Pattern DURATION_PATTERN = Pattern.compile("^-?\\d+[smhdwy]$");
     private static final String BUCKET_NAME = "insighton-bucket";
     private static final String MEASUREMENT_NAME = "sensor_data";
@@ -139,6 +140,11 @@ public class WidgetServiceImpl implements WidgetService {
                 .stream()
                 .map(Widget::getWidgetId)
                 .toList();
+    }
+
+    @Override
+    public Long getWidgetGroupId(Long widgetId) {
+        return getWidgetConfigFromCache(widgetId).groupId();
     }
 
     @Override

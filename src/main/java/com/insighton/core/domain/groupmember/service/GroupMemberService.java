@@ -58,6 +58,15 @@ public interface GroupMemberService {
     GroupMemberResponse getGroupMemberAI(Long userId, Long groupId);
 
     /**
+     * userId만으로 소속 group의 ID를 조회 (한 유저는 최대 한 그룹에만 소속됨).
+     * front가 로그인 시점에 groupId를 알아내기 위해 사용.
+     *
+     * @param userId 조회할 user의 ID
+     * @return 소속된 groupId
+     */
+    Long getMyGroupId(Long userId);
+
+    /**
      * member 권한 변경
      *
      * @param groupId             그들이 속한 group ID
