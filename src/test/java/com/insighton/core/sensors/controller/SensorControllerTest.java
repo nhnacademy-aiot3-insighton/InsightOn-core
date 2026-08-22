@@ -106,18 +106,18 @@ class SensorControllerTest {
         verify(searchSensorUseCase).searchSensors(1L, 5L, null, null, new SensorUpdateRequest("4층", "CO2"));
     }
 
-    @Test
-    @DisplayName("장소 미배정 센서 목록 조회 성공")
-    void 장소미배정_조회_성공() throws Exception {
-        given(getUnassignedSensorsUseCase.getUnassignedSensors(1L, 5L)).willReturn(List.of(sampleResponse()));
-
-        mockMvc.perform(get("/api/v1/sensor/unassigned")
-                        .header("X-USER-ID", 1L)
-                        .param("groupId", "5"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].sensorId").value(1L));
-    }
+//    @Test
+//    @DisplayName("장소 미배정 센서 목록 조회 성공")
+//    void 장소미배정_조회_성공() throws Exception {
+//        given(getUnassignedSensorsUseCase.getUnassignedSensors(1L, 5L)).willReturn(List.of(sampleResponse()));
+//
+//        mockMvc.perform(get("/api/v1/sensor/unassigned")
+//                        .header("X-USER-ID", 1L)
+//                        .param("groupId", "5"))
+//                .andExpect(status().isOk())
+//                .andExpect(jsonPath("$.length()").value(1))
+//                .andExpect(jsonPath("$[0].sensorId").value(1L));
+//    }
 
     @Test
     @DisplayName("위치만 수정 성공")

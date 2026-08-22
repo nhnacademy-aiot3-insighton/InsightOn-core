@@ -72,4 +72,6 @@ public interface WidgetService {
      * @return widget ID List 반환
      */
     List<Long> getWidgetIdsByDashboardId(Long dashboardId);
+
+    Long getWidgetGroupId(Long widgetId);
 }

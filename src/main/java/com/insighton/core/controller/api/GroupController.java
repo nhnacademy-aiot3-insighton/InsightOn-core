@@ -1,6 +1,8 @@
 package com.insighton.core.controller.api;
 
 import com.insighton.core.domain.groupmember.dto.request.GroupMemberJoinRequest;
+import com.insighton.core.domain.groupmember.dto.response.MyGroupIdResponse;
+import com.insighton.core.domain.groupmember.service.GroupMemberService;
 import com.insighton.core.domain.groups.dto.request.GroupRequest;
 import com.insighton.core.domain.groups.dto.response.GroupAdminResponse;
 import com.insighton.core.domain.groups.dto.response.GroupResponse;
@@ -25,6 +27,22 @@ public class GroupController {
     private final GroupDeleteUseCase groupDeleteUseCase;
     private final GroupUpdateUseCase groupUpdateUseCase;
     private final GroupService groupService;
+    private final GroupMemberService groupMemberService;
+
+    /**
+     * 로그인한 유저가 속한 groupId 조회 (한 유저 = 한 그룹). groupId를 모르는 상태에서
+     * 다른 API들을 호출하기 전에 front가 이걸로 먼저 groupId를 알아냄.
+     *
+     * @param userId login한 user의 ID
+     * @return 소속된 groupId
+     */
+    @GetMapping("/my")
+    public ResponseEntity<MyGroupIdResponse> getMyGroupId(
+            @RequestHeader("X-USER-ID") Long userId) {
+        Long groupId = groupMemberService.getMyGroupId(userId);
+
+        return ResponseEntity.ok(new MyGroupIdResponse(groupId));
+    }
 
     /**
      * 그룹 생성
