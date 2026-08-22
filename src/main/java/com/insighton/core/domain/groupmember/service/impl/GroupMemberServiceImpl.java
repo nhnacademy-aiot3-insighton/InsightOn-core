@@ -120,6 +120,14 @@ public class GroupMemberServiceImpl implements GroupMemberService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Long getMyGroupId(Long userId) {
+        GroupMember member = groupMemberRepository.findByUserId(userId)
+                .orElseThrow(() -> GroupMemberNotFoundException.byUserId(userId));
+        return member.getGroup().getGroupId();
+    }
+
+    @Override
     @Transactional
     public void toggleManagerRole(Long groupId, Long targetGroupMemberId, Long adminId) {
         // 1. group id가 존재하는지 확인

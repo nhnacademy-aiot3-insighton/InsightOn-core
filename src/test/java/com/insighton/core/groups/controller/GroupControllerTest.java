@@ -2,6 +2,7 @@ package com.insighton.core.groups.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.insighton.core.controller.api.GroupController;
+import com.insighton.core.domain.groupmember.service.GroupMemberService;
 import com.insighton.core.domain.groupmember.dto.request.GroupMemberJoinRequest;
 import com.insighton.core.domain.groups.dto.request.GroupRequest;
 import com.insighton.core.domain.groups.dto.response.GroupAdminResponse;
@@ -58,6 +59,9 @@ class GroupControllerTest {
 
     @MockitoBean
     private GroupUpdateUseCase groupUpdateUseCase;
+
+    @MockitoBean
+    private GroupMemberService groupMemberService;
 
     @Nested
     @DisplayName("성공 케이스")

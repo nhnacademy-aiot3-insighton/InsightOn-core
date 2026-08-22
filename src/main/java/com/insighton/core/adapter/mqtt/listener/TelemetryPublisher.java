@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Component;
 public class TelemetryPublisher {
 
     private final RabbitTemplate rabbitTemplate;
+    private final RedisTemplate<String, TelemetryEventMessage> telemetryRedisTemplate;
 
     /**
      * 정제된 텔레메트리 이벤트를 Rule Engine 전파용 RabbitMQ Topic Exchange에 비동기로 발행함.
@@ -47,6 +49,12 @@ public class TelemetryPublisher {
             );
         } catch (AmqpException e) {
             log.warn("RabbitMQ 발행 실패, 메시지 드롭 (groupId = {} , locationId = {})", event.groupId(), event.locationId(), e);
+        }
+
+        try {
+            telemetryRedisTemplate.convertAndSend("telemetry:sensor:%s".formatted(event.sensorId()), event);
+        } catch (Exception e) {
+            log.warn("Redis 실시간 발행 실패, 메시지 드롭 (sensorId = {})", event.sensorId(), e);
         }
     }
 }
