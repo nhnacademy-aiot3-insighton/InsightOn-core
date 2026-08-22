@@ -4,7 +4,6 @@ import com.insighton.core.domain.groupmember.dto.request.GroupMemberJoinRequest;
 import com.insighton.core.domain.groupmember.dto.response.MyGroupIdResponse;
 import com.insighton.core.domain.groupmember.service.GroupMemberService;
 import com.insighton.core.domain.groups.dto.request.GroupRequest;
-import com.insighton.core.domain.groups.dto.request.GroupUpdateRequest;
 import com.insighton.core.domain.groups.dto.response.GroupAdminResponse;
 import com.insighton.core.domain.groups.dto.response.GroupResponse;
 import com.insighton.core.domain.groups.service.GroupService;
@@ -163,7 +162,7 @@ public class GroupController {
     public ResponseEntity<Void> updateGroup(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
-            @RequestBody GroupUpdateRequest request) {
+            @Valid @RequestBody GroupRequest request) {
         groupUpdateUseCase.updateGroup(request, userId, groupId);
 
         return ResponseEntity.ok().build();

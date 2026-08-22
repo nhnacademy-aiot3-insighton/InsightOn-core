@@ -1,6 +1,7 @@
 package com.insighton.core.domain.widgets.dto.request;
 
 import com.insighton.core.domain.widgets.entity.WidgetConfig;
+import jakarta.validation.constraints.Min;
 import lombok.Builder;
 
 /**
@@ -16,11 +17,14 @@ import lombok.Builder;
 @Builder
 public record WidgetSaveRequest(
         Long widgetId, // << 이거 null이면 생성 요청, null이 아니라면 수정 요청
+        @Min(value = 0, message = "xPos는 0 이상이어야 합니다.")
         Integer xPos,
+        @Min(value = 0, message = "yPos는 0 이상이어야 합니다.")
         Integer yPos,
+        @Min(value = 1, message = "width는 1 이상이어야 합니다.")
         Integer width,
+        @Min(value = 1, message = "height는 1 이상이어야 합니다.")
         Integer height,
         WidgetConfig widgetConfig
-
 ) {
 }

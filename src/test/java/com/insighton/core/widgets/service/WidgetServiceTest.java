@@ -1,5 +1,6 @@
 package com.insighton.core.widgets.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.influxdb.query.FluxRecord;
 import com.influxdb.query.FluxTable;
 import com.insighton.core.domain.dashboards.entity.Dashboard;
@@ -14,6 +15,7 @@ import com.insighton.core.domain.widgets.exception.WidgetNotFoundException;
 import com.insighton.core.domain.widgets.repository.InfluxDbRepository;
 import com.insighton.core.domain.widgets.repository.WidgetRepository;
 import com.insighton.core.domain.widgets.service.impl.WidgetServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -21,6 +23,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 
 import java.time.Instant;
 import java.util.List;
@@ -34,6 +40,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class WidgetServiceTest {
 
     @Mock
@@ -42,8 +49,22 @@ class WidgetServiceTest {
     @Mock
     private InfluxDbRepository influxDbRepository;
 
+    @Mock
+    private RedisTemplate<String, WidgetConfig> widgetRedisTemplate;
+
+    @Mock
+    private ValueOperations<String, WidgetConfig> valueOperations;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
     @InjectMocks
     private WidgetServiceImpl widgetService;
+
+    @BeforeEach
+    void setUp() {
+        doReturn(valueOperations).when(widgetRedisTemplate).opsForValue();
+    }
 
     @Nested
     @DisplayName("성공 케이스")
@@ -231,11 +252,64 @@ class WidgetServiceTest {
 
             verify(influxDbRepository, times(1)).query(anyString());
         }
+
+        @Test
+        @DisplayName("SINGLE_STAT 타입 위젯 차트 데이터 조회 성공")
+        void getWidgetChartData_singleStat_success() {
+            Long widgetId = 10L;
+            Widget mockWidget = mock(Widget.class);
+            WidgetConfig config = WidgetConfig.builder()
+                    .type(Widget.Type.SINGLE_STAT)
+                    .sensorEui("DEV_01")
+                    .range("-1h")
+                    .fields(List.of("temperature"))
+                    .build();
+
+            given(mockWidget.getWidgetConfig()).willReturn(config);
+            given(widgetRepository.findById(widgetId)).willReturn(Optional.of(mockWidget));
+            given(influxDbRepository.query(anyString())).willReturn(List.of());
+
+            ChartDataResponse response = widgetService.getWidgetChartData(widgetId);
+            assertThat(response).isNotNull();
+        }
+
+        @Test
+        @DisplayName("Redis 캐시된 데이터가 존재하는 경우 DB 조회 없이 조회 성공")
+        void getWidgetChartData_cacheHit_success() {
+            Long widgetId = 10L;
+            WidgetConfig cachedConfig = WidgetConfig.builder()
+                    .type(Widget.Type.GRAPH)
+                    .sensorEui("DEV_01")
+                    .range("-1h")
+                    .build();
+
+            doReturn(cachedConfig).when(valueOperations).get("widget:config:" + widgetId);
+            given(objectMapper.convertValue(cachedConfig, WidgetConfig.class)).willReturn(cachedConfig);
+            given(influxDbRepository.query(anyString())).willReturn(List.of());
+
+            ChartDataResponse response = widgetService.getWidgetChartData(widgetId);
+            assertThat(response).isNotNull();
+            verify(widgetRepository, never()).findById(anyLong());
+        }
     }
 
     @Nested
     @DisplayName("실패 및 예외 케이스")
     class FailureCases {
+
+        @Test
+        @DisplayName("대시보드 하위에 위젯이 없을 때 빈 리스트 반환")
+        void getWidgetList_emptyWidgets_returnsEmptyList() {
+            // given
+            Long dashboardId = 1L;
+            given(widgetRepository.findAllByDashboardDashboardId(dashboardId)).willReturn(List.of());
+
+            // when
+            List<WidgetsListResponse> responses = widgetService.getWidgetList(dashboardId);
+
+            // then
+            assertThat(responses).isEmpty();
+        }
 
         @Test
         @DisplayName("위젯 수정 실패 - 존재하지 않는 위젯인 경우 WidgetNotFoundException 발생")
@@ -250,18 +324,6 @@ class WidgetServiceTest {
 
             // when & then
             assertThatThrownBy(() -> widgetService.updateWidget(dashboardId, widgetId, request))
-                    .isInstanceOf(WidgetNotFoundException.class);
-        }
-
-        @Test
-        @DisplayName("위젯 목록 조회 실패 - 대시보드 하위에 위젯이 없을 때 WidgetNotFoundException 발생")
-        void getWidgetList_emptyWidgets_throwsException() {
-            // given
-            Long dashboardId = 1L;
-            given(widgetRepository.findAllByDashboardDashboardId(dashboardId)).willReturn(List.of());
-
-            // when & then
-            assertThatThrownBy(() -> widgetService.getWidgetList(dashboardId))
                     .isInstanceOf(WidgetNotFoundException.class);
         }
 
@@ -294,6 +356,24 @@ class WidgetServiceTest {
             given(widgetRepository.findById(widgetId)).willReturn(Optional.of(mockWidget));
 
             // when & then
+            assertThatThrownBy(() -> widgetService.getWidgetChartData(widgetId))
+                    .isInstanceOf(InvalidDateTimeFormatException.class);
+        }
+
+        @Test
+        @DisplayName("위젯 차트 데이터 조회 실패 - 잘못된 aggregateWindow 파라미터일 때 InvalidDateTimeFormatException 발생")
+        void getWidgetChartData_invalidAggregateWindow_throwsException() {
+            Long widgetId = 10L;
+            Widget mockWidget = mock(Widget.class);
+            WidgetConfig invalidConfig = WidgetConfig.builder()
+                    .type(Widget.Type.GRAPH)
+                    .range("-1h")
+                    .aggregateWindow("invalid-window")
+                    .build();
+
+            given(mockWidget.getWidgetConfig()).willReturn(invalidConfig);
+            given(widgetRepository.findById(widgetId)).willReturn(Optional.of(mockWidget));
+
             assertThatThrownBy(() -> widgetService.getWidgetChartData(widgetId))
                     .isInstanceOf(InvalidDateTimeFormatException.class);
         }
