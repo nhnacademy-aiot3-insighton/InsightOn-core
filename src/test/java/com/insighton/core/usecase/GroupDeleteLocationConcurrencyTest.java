@@ -24,6 +24,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
+import org.springframework.data.redis.core.RedisTemplate;
+
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -59,6 +61,12 @@ class GroupDeleteLocationConcurrencyTest {
     private InfluxDbRepository influxDbRepository;
     @MockitoBean
     private RegionCsvLoader regionCsvLoader;
+    @MockitoBean
+    private RedisTemplate<String, Object> redisTemplate;
+    @MockitoBean
+    private RedisTemplate<String, com.insighton.core.domain.widgets.entity.WidgetConfig> widgetRedisTemplate;
+    @MockitoBean
+    private org.springframework.data.redis.connection.RedisConnectionFactory redisConnectionFactory;
 
     private Long groupId;
 
