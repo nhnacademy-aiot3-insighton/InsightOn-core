@@ -18,13 +18,13 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @Configuration
 public class RedisConfig {
 
-    @Value("${telemetry.redis.host}")
+    @Value("${telemetry.redis.host:localhost}")
     private String telemetryRedisHost;
 
-    @Value("${telemetry.redis.port}")
+    @Value("${telemetry.redis.port:6379}")
     private int telemetryRedisPort;
 
-    @Value("${telemetry.redis.password}")
+    @Value("${telemetry.redis.password:}")
     private String telemetryRedisPassword;
 
     // 락/캐시용 기본 Redis와 완전히 분리된 별도 인스턴스 — pub/sub 트래픽이
