@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.insighton.core.adapter.mqtt.listener.dto.TelemetryEventMessage;
 import com.insighton.core.domain.weather.dto.WeatherDataDto;
+import com.insighton.core.domain.widgets.entity.WidgetConfig;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
