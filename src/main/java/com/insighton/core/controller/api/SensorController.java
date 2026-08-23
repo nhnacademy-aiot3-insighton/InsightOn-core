@@ -43,11 +43,12 @@ public class SensorController {
             @RequestHeader("X-USER-ID") Long userid,
             @RequestParam Long groupId,
             @RequestParam(required = false) String eui,
+            @RequestParam(required = false) Long locationId,
             @RequestParam(required = false) String locationName,
             @RequestParam(required = false) String sensorName) {
 
         // 조건 검색 수행 후 리스트 반환
-        List<SensorResponse> result = searchSensorUseCase.searchSensors(userid, groupId, eui,
+        List<SensorResponse> result = searchSensorUseCase.searchSensors(userid, groupId, eui, locationId,
                 new SensorUpdateRequest(locationName, sensorName));
         return ResponseEntity.ok(result);
     }
