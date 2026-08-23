@@ -3,6 +3,7 @@ package com.insighton.core.sensorattributes.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.insighton.core.controller.api.SensorAttributeController;
 import com.insighton.core.domain.sensorattributes.dto.SensorAttributeResponse;
+import com.insighton.core.domain.sensorattributes.exception.MetricKeyNotFoundException;
 import com.insighton.core.domain.sensors.exception.SensorNotFoundException;
 import com.insighton.core.usecase.sensorattribute.DeleteAttributeUseCase;
 import com.insighton.core.usecase.sensorattribute.GetAllAttributeUseCase;
@@ -15,25 +16,20 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(SensorAttributeController.class)
 class SensorAttributeControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-    @Autowired
-    private ObjectMapper objectMapper;
-    @MockitoBean
-    private GetAllAttributeUseCase getAllAttributeUseCase;
-    @MockitoBean
-    private DeleteAttributeUseCase deleteAttributeUseCase;
+    @Autowired private MockMvc mockMvc;
+    @Autowired private ObjectMapper objectMapper;
+    @MockitoBean private GetAllAttributeUseCase getAllAttributeUseCase;
+    @MockitoBean private DeleteAttributeUseCase deleteAttributeUseCase;
 
     @Test
     @DisplayName("속성 목록 조회 성공")
@@ -67,5 +63,16 @@ class SensorAttributeControllerTest {
                 .andExpect(status().isNoContent());
 
         verify(deleteAttributeUseCase).deleteAttribute(1L, 1L, "co2");
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 속성 삭제 시 404")
+    void 속성_삭제_없는속성_404() throws Exception {
+        willThrow(new MetricKeyNotFoundException("unknown"))
+                .given(deleteAttributeUseCase).deleteAttribute(1L, 1L, "unknown");
+
+        mockMvc.perform(delete("/api/v1/sensor/{sensor-id}/attribute/{metric-key}", 1L, "unknown")
+                        .header("X-USER-ID", 1L))
+                .andExpect(status().isNotFound());
     }
 }

@@ -57,4 +57,48 @@ class SensorRepositoryTest {
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getSensorEui()).isEqualTo("EUI-100");
     }
+
+    @Test
+    @DisplayName("findBySensorName - 이름으로 조회 성공")
+    void 이름으로_조회() {
+        List<Sensor> result = sensorRepository.findBySensorName("센서A");
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getSensorEui()).isEqualTo("EUI-100");
+    }
+
+    @Test
+    @DisplayName("findByGatewayGatewayId - 게이트웨이 ID로 조회 성공")
+    void 게이트웨이ID로_조회() {
+        List<Sensor> result = sensorRepository.findByGatewayGatewayId(1L);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getSensorEui()).isEqualTo("EUI-100");
+    }
+
+    @Test
+    @DisplayName("findByGroupGroupIdAndLocationLocationId - 그룹+장소 조합으로 조회 성공")
+    void 그룹장소조합으로_조회() {
+        List<Sensor> result = sensorRepository.findByGroupGroupIdAndLocationLocationId(1L, 1L);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getSensorEui()).isEqualTo("EUI-104");
+    }
+
+    @Test
+    @DisplayName("deleteAllByLocationLocationId - 해당 장소 소속 센서만 삭제")
+    void 장소기준_일괄삭제() {
+        sensorRepository.deleteAllByLocationLocationId(1L);
+
+        assertThat(sensorRepository.findAll()).hasSize(1);
+        assertThat(sensorRepository.findBySensorEui("EUI-100")).isPresent();
+    }
+
+    @Test
+    @DisplayName("deleteAllByGroupGroupId - 해당 그룹 소속 센서 전부 삭제")
+    void 그룹기준_일괄삭제() {
+        sensorRepository.deleteAllByGroupGroupId(1L);
+
+        assertThat(sensorRepository.findAll()).isEmpty();
+    }
 }
