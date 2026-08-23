@@ -27,7 +27,7 @@ class DeleteActuatorUseCaseTest {
     private ActuatorService actuatorService;
 
     @Mock
-    private ApplicationEventPublisher applicationEventPublisher;
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private DeleteActuatorUseCase deleteActuatorUseCase;
