@@ -49,8 +49,6 @@ class SensorControllerTest {
     private DeleteSensorUseCase deleteSensorUseCase;
     @MockitoBean
     private DeleteAllSensorUseCase deleteAllSensorUseCase;
-    @MockitoBean
-    private GetUnassignedSensorsUseCase getUnassignedSensorsUseCase;
 
     private SensorResponse sampleResponse() {
         return new SensorResponse(
