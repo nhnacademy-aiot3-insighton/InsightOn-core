@@ -2,6 +2,7 @@ package com.insighton.core.adapter.mqtt.connection;
 
 import com.insighton.core.domain.gateway.entity.Gateway;
 import com.insighton.core.domain.gateway.entity.GatewayStatus;
+import com.insighton.core.domain.gateway.event.GatewayStatusChangedEvent;
 import com.insighton.core.domain.gateway.repository.GatewayRepository;
 import java.time.Duration;
 import java.time.Instant;
@@ -13,6 +14,7 @@ import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +27,7 @@ public class GatewayHealthMonitor {
     private final DynamicMqttGatewayManager gatewayManager;
     private final GatewayHeartbeatTracker heartbeatTracker;
     private final GatewayRepository gatewayRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Value("${gateway.health.fault-threshold-seconds:1800}")
     private long faultThresholdSeconds;
@@ -58,6 +61,10 @@ public class GatewayHealthMonitor {
                 if(gateway.getStatus() != GatewayStatus.FAULT) {
                     gateway.markFault();
                     log.warn("Gateway {} 마지막 수신 {}초 전 - FAULT 전환", gateway.getGatewayId(), idleSeconds);
+
+                    eventPublisher.publishEvent(new GatewayStatusChangedEvent(
+                            gateway.getGatewayId(), gateway.getGroupId(), gateway.getName(),
+                            gateway.getStatus(), OffsetDateTime.now()));
                 }
                 continue;
             }
@@ -70,6 +77,10 @@ public class GatewayHealthMonitor {
 
                 if(wasFault) {
                     log.info("Gateway {} 하트비트 재개 감지 — ACTIVE로 복구", gateway.getGatewayId());
+
+                    eventPublisher.publishEvent(new GatewayStatusChangedEvent(
+                            gateway.getGatewayId(), gateway.getGroupId(), gateway.getName(),
+                            gateway.getStatus(), OffsetDateTime.now()));
                 }
             }
         }

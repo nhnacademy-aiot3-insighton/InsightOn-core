@@ -27,7 +27,7 @@ class DeleteSensorUseCaseTest {
     private SensorService sensorService;
 
     @Mock
-    private ApplicationEventPublisher eventPublisher;
+    private ApplicationEventPublisher applicationEventPublisher;
 
     @InjectMocks
     private DeleteSensorUseCase deleteSensorUseCase;
