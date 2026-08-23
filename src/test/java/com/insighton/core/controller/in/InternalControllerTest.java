@@ -75,7 +75,7 @@ class InternalControllerTest {
         given(groupMemberService.getGroupMemberAI(10L, 1L)).willReturn(response);
 
         mockMvc.perform(get("/internal/v1/groups/1/members")
-                        .param("user-id", "10"))
+                        .param("userId", "10"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userId").value(10L))
