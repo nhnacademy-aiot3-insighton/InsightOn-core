@@ -73,6 +73,20 @@ class SensorAttributeServiceTest {
     }
 
     @Test
+    @DisplayName("getAllAttributeBySensorId - 속성의 metricKey가 카탈로그에 없으면 MetricKeyNotFoundException")
+    void 목록조회_메트릭정의없음() {
+        Sensor sensor = mock(Sensor.class);
+        given(sensorRepository.findById(1L)).willReturn(Optional.of(sensor));
+
+        SensorAttribute attribute = SensorAttribute.builder().sensor(sensor).metricKey("deprecated_key").build();
+        given(attributeRepository.findBySensorSensorId(1L)).willReturn(List.of(attribute));
+        given(metricDefinitionRepository.findByMetricKeyIgnoreCase("deprecated_key")).willReturn(Optional.empty());
+
+        assertThrows(MetricKeyNotFoundException.class,
+                () -> attributeService.getAllAttributeBySensorId(1L));
+    }
+
+    @Test
     @DisplayName("createMetricDefinition - 정상 생성")
     void 메트릭생성_성공() {
         given(metricDefinitionRepository.findByMetricKeyIgnoreCase("pm2.5")).willReturn(Optional.empty());

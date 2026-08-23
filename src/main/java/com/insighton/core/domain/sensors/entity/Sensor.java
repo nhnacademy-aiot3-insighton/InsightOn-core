@@ -34,9 +34,6 @@ public class Sensor {
     @Column(name = "sensor_eui", length = 50, unique = true, nullable = false)
     private String sensorEui; // 하드웨어 고유 시리얼
 
-    @Column(name = "last_seen_at")
-    private OffsetDateTime lastSeenAt; // 마지막 통신 시간
-
     // ================= [공통 필드들] =================
 
     @Column(name = "sensor_name", length = 100, nullable = false)
@@ -56,10 +53,6 @@ public class Sensor {
 
     public void updateLocation(Location newLocationId) {
         this.location = newLocationId;
-    }
-
-    public void updateLastSeen() {
-        this.lastSeenAt = OffsetDateTime.now();
     }
 
     public void updateName(String newSensorName) {

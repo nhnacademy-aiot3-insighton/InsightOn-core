@@ -49,12 +49,14 @@ class SensorControllerTest {
     private DeleteSensorUseCase deleteSensorUseCase;
     @MockitoBean
     private DeleteAllSensorUseCase deleteAllSensorUseCase;
+    @MockitoBean
+    private GetUnassignedSensorsUseCase getUnassignedSensorsUseCase;
 
     private SensorResponse sampleResponse() {
         return new SensorResponse(
                 1L, 10L, 20L,
                 "EUI-0001", "4층 CO2 센서",
-                OffsetDateTime.now(), OffsetDateTime.now()
+                OffsetDateTime.now()
         );
     }
 
@@ -92,7 +94,7 @@ class SensorControllerTest {
     @Test
     @DisplayName("검색 성공 - locationName/sensorName이 SensorUpdateRequest로 묶여서 전달됨")
     void 검색_성공() throws Exception {
-        given(searchSensorUseCase.searchSensors(eq(1L), eq(5L), isNull(), isNull(), any(SensorUpdateRequest.class)))
+        given(searchSensorUseCase.searchSensors(eq(1L), eq(5L), isNull(), any(SensorUpdateRequest.class)))
                 .willReturn(java.util.List.of(sampleResponse()));
 
         mockMvc.perform(get("/api/v1/sensor/search")
@@ -103,7 +105,7 @@ class SensorControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1));
 
-        verify(searchSensorUseCase).searchSensors(1L, 5L, null, null, new SensorUpdateRequest("4층", "CO2"));
+        verify(searchSensorUseCase).searchSensors(1L, 5L, null, new SensorUpdateRequest("4층", "CO2"));
     }
 
 //    @Test

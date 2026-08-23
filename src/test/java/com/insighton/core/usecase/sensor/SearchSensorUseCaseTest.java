@@ -41,11 +41,11 @@ class SearchSensorUseCaseTest {
         Long groupId = 5L;
         SensorUpdateRequest request = new SensorUpdateRequest(null, null);
         List<SensorResponse> expected = List.of(
-                new SensorResponse(1L, 2L, 3L, "EUI-1", "센서A", OffsetDateTime.now(), OffsetDateTime.now()));
+                new SensorResponse(1L, 2L, 3L, "EUI-1", "센서A", OffsetDateTime.now()));
 
-        given(sensorService.searchSensors(groupId, null, null, request)).willReturn(expected);
+        given(sensorService.searchSensors(groupId, null, request)).willReturn(expected);
 
-        List<SensorResponse> result = searchSensorUseCase.searchSensors(userId, groupId, null, null, request);
+        List<SensorResponse> result = searchSensorUseCase.searchSensors(userId, groupId, null, request);
 
         assertThat(result).isEqualTo(expected);
         verify(groupMemberService).validateGroupMembers(groupId, userId);
@@ -61,7 +61,7 @@ class SearchSensorUseCaseTest {
         given(groupMemberService.validateGroupMembers(groupId, userId))
                 .willThrow(GroupMemberNotFoundException.byUserIdAndGroupId(userId, groupId));
 
-        assertThatThrownBy(() -> searchSensorUseCase.searchSensors(userId, groupId, null, null, request))
+        assertThatThrownBy(() -> searchSensorUseCase.searchSensors(userId, groupId, null, request))
                 .isInstanceOf(GroupMemberNotFoundException.class);
 
         verifyNoInteractions(sensorService);
