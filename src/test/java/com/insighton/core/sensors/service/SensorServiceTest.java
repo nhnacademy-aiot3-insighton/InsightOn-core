@@ -302,7 +302,7 @@ class SensorServiceTest {
     void 검색_그룹조건_항상포함() {
         given(sensorRepository.findAll(any(Predicate.class))).willReturn(List.of());
 
-        sensorService.searchSensors(5L, null, new SensorUpdateRequest(null, null));
+        sensorService.searchSensors(5L, null, null, new SensorUpdateRequest(null, null));
 
         ArgumentCaptor<Predicate> captor = ArgumentCaptor.forClass(Predicate.class);
         verify(sensorRepository).findAll(captor.capture());
@@ -314,7 +314,7 @@ class SensorServiceTest {
     void 검색_eui조건_포함() {
         given(sensorRepository.findAll(any(Predicate.class))).willReturn(List.of());
 
-        sensorService.searchSensors(5L, "EUI-1", new SensorUpdateRequest(null, null));
+        sensorService.searchSensors(5L, "EUI-1", null, new SensorUpdateRequest(null, null));
 
         ArgumentCaptor<Predicate> captor = ArgumentCaptor.forClass(Predicate.class);
         verify(sensorRepository).findAll(captor.capture());
@@ -326,7 +326,7 @@ class SensorServiceTest {
     void 검색_빈장소이름은_제외_이름조건은_포함() {
         given(sensorRepository.findAll(any(Predicate.class))).willReturn(List.of());
 
-        sensorService.searchSensors(5L, null, new SensorUpdateRequest("", "마루센서"));
+        sensorService.searchSensors(5L, null, null, new SensorUpdateRequest("", "마루센서"));
 
         ArgumentCaptor<Predicate> captor = ArgumentCaptor.forClass(Predicate.class);
         verify(sensorRepository).findAll(captor.capture());
@@ -340,7 +340,7 @@ class SensorServiceTest {
     void 검색_장소이름조건_포함() {
         given(sensorRepository.findAll(any(Predicate.class))).willReturn(List.of());
 
-        sensorService.searchSensors(5L, null, new SensorUpdateRequest("4층", null));
+        sensorService.searchSensors(5L, null, null, new SensorUpdateRequest("4층", null));
 
         ArgumentCaptor<Predicate> captor = ArgumentCaptor.forClass(Predicate.class);
         verify(sensorRepository).findAll(captor.capture());
@@ -352,7 +352,7 @@ class SensorServiceTest {
     void 검색_조건없으면_그룹조건만() {
         given(sensorRepository.findAll(any(Predicate.class))).willReturn(List.of());
 
-        sensorService.searchSensors(5L, null, new SensorUpdateRequest(null, null));
+        sensorService.searchSensors(5L, null, null, new SensorUpdateRequest(null, null));
 
         ArgumentCaptor<Predicate> captor = ArgumentCaptor.forClass(Predicate.class);
         verify(sensorRepository).findAll(captor.capture());
@@ -363,13 +363,25 @@ class SensorServiceTest {
     }
 
     @Test
+    @DisplayName("searchSensors - locationId가 있으면 predicate에 위치 ID 조건 포함")
+    void 검색_위치ID조건_포함() {
+        given(sensorRepository.findAll(any(Predicate.class))).willReturn(List.of());
+
+        sensorService.searchSensors(5L, null, 10L, new SensorUpdateRequest(null, null));
+
+        ArgumentCaptor<Predicate> captor = ArgumentCaptor.forClass(Predicate.class);
+        verify(sensorRepository).findAll(captor.capture());
+        assertThat(captor.getValue().toString()).contains("locationId = 10");
+    }
+
+    @Test
     @DisplayName("searchSensors - 조회 결과를 DTO로 매핑해서 반환")
     void 검색_결과_DTO매핑() {
         Group group = mock(Group.class);
         Sensor sensor = Sensor.builder().sensorId(1L).group(group).sensorEui("EUI-1").build();
         given(sensorRepository.findAll(any(Predicate.class))).willReturn(List.of(sensor));
 
-        List<SensorResponse> result = sensorService.searchSensors(5L, "EUI-1", new SensorUpdateRequest(null, null));
+        List<SensorResponse> result = sensorService.searchSensors(5L, "EUI-1", null, new SensorUpdateRequest(null, null));
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).sensorId()).isEqualTo(1L);
