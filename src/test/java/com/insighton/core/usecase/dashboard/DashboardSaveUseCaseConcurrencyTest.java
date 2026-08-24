@@ -12,6 +12,7 @@ import com.insighton.core.domain.location.repository.LocationRepository;
 import com.insighton.core.domain.region.loader.RegionCsvLoader;
 import com.insighton.core.domain.widgets.dto.request.WidgetSaveRequest;
 import com.insighton.core.domain.widgets.entity.Widget;
+import com.insighton.core.domain.widgets.entity.WidgetConfig;
 import com.insighton.core.domain.widgets.exception.AlreadyDashboardSaveException;
 import com.insighton.core.domain.widgets.repository.InfluxDbRepository;
 import com.insighton.core.domain.widgets.repository.WidgetRepository;
@@ -20,6 +21,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
@@ -54,6 +57,12 @@ class DashboardSaveUseCaseConcurrencyTest {
     private InfluxDbRepository influxDbRepository;
     @MockitoBean
     private RegionCsvLoader regionCsvLoader;
+    @MockitoBean
+    private org.springframework.data.redis.core.RedisTemplate<String, Object> redisTemplate;
+    @MockitoBean
+    private org.springframework.data.redis.core.RedisTemplate<String, com.insighton.core.domain.widgets.entity.WidgetConfig> widgetRedisTemplate;
+    @MockitoBean
+    private org.springframework.data.redis.connection.RedisConnectionFactory redisConnectionFactory;
     private Long groupId;
     private Long locationId;
     private Long dashboardId;
@@ -137,46 +146,47 @@ class DashboardSaveUseCaseConcurrencyTest {
                 .build();
         List<WidgetSaveRequest> requests2 = List.of(requestB);
 
-        ExecutorService executorService = Executors.newFixedThreadPool(2);
-        CountDownLatch lockAcquiredLatch = new CountDownLatch(1);
+        try (ExecutorService executorService = Executors.newFixedThreadPool(2)) {
+            CountDownLatch lockAcquiredLatch = new CountDownLatch(1);
 
-        // 요청 A가 getDashboardWithLockByLocationId(SELECT ... FOR UPDATE)를 호출하여 DB 비관적 락을 점유한 직후 Latch 신호 전송
-        doAnswer(invocation -> {
-            Object result = invocation.callRealMethod();
-            lockAcquiredLatch.countDown();
-            return result;
-        }).when(dashboardService).getDashboardWithLockByLocationId(locationId);
+            // 요청 A가 getDashboardWithLockByLocationId(SELECT ... FOR UPDATE)를 호출하여 DB 비관적 락을 점유한 직후 Latch 신호 전송
+            doAnswer(invocation -> {
+                Object result = invocation.callRealMethod();
+                lockAcquiredLatch.countDown();
+                return result;
+            }).when(dashboardService).getDashboardWithLockByLocationId(locationId);
 
-        // when
-        // 1. 요청 A (User A) 제출 -> 대시보드 비관적 락 획득 시도
-        Future<List<Long>> future1 = executorService.submit(() ->
-                dashboardSaveUseCase.saveDashboard(userId, groupId, locationId, requests1)
-        );
+            // when
+            // 1. 요청 A (User A) 제출 -> 대시보드 비관적 락 획득 시도
+            Future<List<Long>> future1 = executorService.submit(() ->
+                    dashboardSaveUseCase.saveDashboard(userId, groupId, locationId, requests1)
+            );
 
-        // 2. 요청 A가 DB 비관적 락을 획득할 때까지 명시적 대기 (요청 A의 락 선점 결정적 보장)
-        lockAcquiredLatch.await();
+            // 2. 요청 A가 DB 비관적 락을 획득할 때까지 명시적 대기 (요청 A의 락 선점 결정적 보장)
+            lockAcquiredLatch.await();
 
-        // 3. 요청 A가 DB 락을 선점한 상태에서 요청 B (User B) 제출 -> 요청 B는 DB 비관적 락 대기(Lock Wait) 진입
-        Future<List<Long>> future2 = executorService.submit(() ->
-                dashboardSaveUseCase.saveDashboard(userId, groupId, locationId, requests2)
-        );
+            // 3. 요청 A가 DB 락을 선점한 상태에서 요청 B (User B) 제출 -> 요청 B는 DB 비관적 락 대기(Lock Wait) 진입
+            Future<List<Long>> future2 = executorService.submit(() ->
+                    dashboardSaveUseCase.saveDashboard(userId, groupId, locationId, requests2)
+            );
 
-        // then
-        // 1. 요청 A는 락을 선점하여 성공적으로 저장 완료 후 위젯 ID 목록 반환
-        List<Long> resultA = future1.get();
-        assertThat(resultA).isNotEmpty();
-        assertThat(resultA).contains(widgetIdA);
+            // then
+            // 1. 요청 A는 락을 선점하여 성공적으로 저장 완료 후 위젯 ID 목록 반환
+            List<Long> resultA = future1.get();
+            assertThat(resultA).isNotEmpty();
+            assertThat(resultA).contains(widgetIdA);
 
-        // 2. 요청 B는 요청 A에 의해 락 대기 후 실행되므로, 상대방(A)이 Widget B를 삭제했음을 감지하고 AlreadyDashboardSaveException 발생
-        assertThatThrownBy(() -> {
-            try {
-                future2.get();
-            } catch (ExecutionException e) {
-                throw e.getCause();
-            }
-        }).isInstanceOf(AlreadyDashboardSaveException.class);
+            // 2. 요청 B는 요청 A에 의해 락 대기 후 실행되므로, 상대방(A)이 Widget B를 삭제했음을 감지하고 AlreadyDashboardSaveException 발생
+            assertThatThrownBy(() -> {
+                try {
+                    future2.get();
+                } catch (ExecutionException e) {
+                    throw e.getCause();
+                }
+            }).isInstanceOf(AlreadyDashboardSaveException.class);
 
-        executorService.shutdown();
+            executorService.shutdown();
+        }
 
         // 3. 비관적 락으로 직렬화되어 두 요청이 서로 위젯을 지워 0개가 되는 유실 버그 방지 검증 (Widget A 1개만 남음)
         List<Widget> remainingWidgets = widgetRepository.findAllByDashboardDashboardId(dashboardId);

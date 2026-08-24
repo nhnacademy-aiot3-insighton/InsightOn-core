@@ -35,10 +35,7 @@ public class Widget {
     private int height;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(
-            name = "widget_config",
-            columnDefinition = "jsonb"
-    )
+    @Column(name = "widget_config")
     private WidgetConfig widgetConfig;
 
 
@@ -49,6 +46,7 @@ public class Widget {
      */
     @Builder
     public Widget(Dashboard dashboard, int xPos, int yPos, int width, int height, WidgetConfig widgetConfig) {
+        validatePositionAndSize(xPos, yPos, width, height);
         this.dashboard = dashboard;
         this.xPos = xPos;
         this.yPos = yPos;
@@ -58,10 +56,20 @@ public class Widget {
     }
 
     public void updateLocationWidget(int xPos, int yPos, int width, int height) {
+        validatePositionAndSize(xPos, yPos, width, height);
         this.xPos = xPos;
         this.yPos = yPos;
         this.width = width;
         this.height = height;
+    }
+
+    private void validatePositionAndSize(int xPos, int yPos, int width, int height) {
+        if (xPos < 0 || yPos < 0) {
+            throw new IllegalArgumentException("위젯 좌표(xPos, yPos)는 0 이상이어야 합니다.");
+        }
+        if (width < 1 || height < 1) {
+            throw new IllegalArgumentException("위젯 크기(width, height)는 1 이상이어야 합니다.");
+        }
     }
 
     public void updateWidget(WidgetConfig widgetConfig) {

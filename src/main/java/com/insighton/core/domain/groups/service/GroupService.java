@@ -2,7 +2,6 @@ package com.insighton.core.domain.groups.service;
 
 
 import com.insighton.core.domain.groups.dto.request.GroupRequest;
-import com.insighton.core.domain.groups.dto.request.GroupUpdateRequest;
 import com.insighton.core.domain.groups.dto.response.GroupAdminResponse;
 import com.insighton.core.domain.groups.dto.response.GroupResponse;
 import com.insighton.core.domain.groups.entity.Group;
@@ -24,7 +23,7 @@ public interface GroupService {
      * @param request Group 수정 요청 정보
      * @param groupId 수정하려는 group의 ID
      */
-    void updateGroup(GroupUpdateRequest request, Long groupId);
+    void updateGroup(GroupRequest request, Long groupId);
 
 
     /**

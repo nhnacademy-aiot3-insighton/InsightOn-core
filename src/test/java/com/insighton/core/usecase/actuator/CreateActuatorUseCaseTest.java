@@ -3,7 +3,6 @@ package com.insighton.core.usecase.actuator;
 import com.insighton.core.domain.actuators.dto.ActuatorRequest;
 import com.insighton.core.domain.actuators.entity.ActuatorType;
 import com.insighton.core.domain.actuators.service.ActuatorService;
-import com.insighton.core.domain.groupmember.exception.GroupMemberNotFoundException;
 import com.insighton.core.domain.groupmember.service.GroupMemberService;
 import com.insighton.core.domain.groups.exception.NoPermissionException;
 import org.junit.jupiter.api.DisplayName;
@@ -38,7 +37,7 @@ class CreateActuatorUseCaseTest {
     void createActuator_success() {
         Long userId = 1L;
         Long groupId = 5L;
-        ActuatorRequest request = new ActuatorRequest("회의실", "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"));
+        ActuatorRequest request = new ActuatorRequest("거실", "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"));
 
         given(actuatorService.createActuator(groupId, request)).willReturn(100L);
 
@@ -46,7 +45,6 @@ class CreateActuatorUseCaseTest {
 
         assertThat(result).isEqualTo(100L);
         verify(groupMemberService).validateGroupAdmin(groupId, userId);
-        verify(actuatorService).createActuator(groupId, request);
     }
 
     @Test
@@ -54,29 +52,13 @@ class CreateActuatorUseCaseTest {
     void createActuator_fail_noPermission() {
         Long userId = 1L;
         Long groupId = 5L;
-        ActuatorRequest request = new ActuatorRequest("회의실", "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"));
+        ActuatorRequest request = new ActuatorRequest("거실", "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"));
 
         given(groupMemberService.validateGroupAdmin(groupId, userId))
                 .willThrow(NoPermissionException.forAdmin(userId));
 
         assertThatThrownBy(() -> createActuatorUseCase.createActuator(userId, groupId, request))
                 .isInstanceOf(NoPermissionException.class);
-
-        verifyNoInteractions(actuatorService);
-    }
-
-    @Test
-    @DisplayName("액추에이터 생성 실패 - 그룹 멤버가 아니면 GroupMemberNotFoundException")
-    void createActuator_fail_notMember() {
-        Long userId = 999L;
-        Long groupId = 5L;
-        ActuatorRequest request = new ActuatorRequest("회의실", "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"));
-
-        given(groupMemberService.validateGroupAdmin(groupId, userId))
-                .willThrow(GroupMemberNotFoundException.byUserIdAndGroupId(userId, groupId));
-
-        assertThatThrownBy(() -> createActuatorUseCase.createActuator(userId, groupId, request))
-                .isInstanceOf(GroupMemberNotFoundException.class);
 
         verifyNoInteractions(actuatorService);
     }

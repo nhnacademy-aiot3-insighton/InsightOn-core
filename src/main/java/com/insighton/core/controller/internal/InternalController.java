@@ -45,14 +45,14 @@ public class InternalController {
     @GetMapping("/groups/{group-id}/members")
     public ResponseEntity<GroupMemberResponse> getGroupMemberByUserId(
             @PathVariable("group-id") Long groupId,
-            @RequestParam("user-id") Long userId
+            @RequestParam("userId") Long userId
     ) {
         GroupMemberResponse response = groupMemberService.getGroupMemberAI(userId, groupId);
 
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/group/{group-id}/locations")
+    @GetMapping("/groups/{group-id}/locations")
     public ResponseEntity<List<LocationListResponse>> getLocationByGroup(
             @PathVariable("group-id") Long groupId
     ) {
