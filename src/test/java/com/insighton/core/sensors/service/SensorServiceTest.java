@@ -221,7 +221,7 @@ class SensorServiceTest {
         sensorService.updateSensor(1L, new SensorUpdateRequest(null, "새 이름"));
 
         assertThat(sensor.getSensorName()).isEqualTo("새 이름");
-        verify(locationRepository, never()).findByGroupGroupIdAndLocationName(any(), any());
+        verify(locationRepository, never()).findByLocationIdAndGroupGroupId(any(), any());
         verify(eventPublisher, never()).publishEvent(any());
     }
 
@@ -348,7 +348,7 @@ class SensorServiceTest {
     }
 
     @Test
-    @DisplayName("searchSensors - eui/locationName/sensorName 전부 없으면 groupId 조건만 남음")
+    @DisplayName("searchSensors - eui/locationId/sensorName 전부 없으면 groupId 조건만 남음")
     void 검색_조건없으면_그룹조건만() {
         given(sensorRepository.findAll(any(Predicate.class))).willReturn(List.of());
 
