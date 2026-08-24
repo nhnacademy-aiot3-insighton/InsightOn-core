@@ -247,15 +247,19 @@ public class SensorServiceImpl implements SensorService {
     }
 
     @Override
-    public List<SensorResponse> searchSensors(Long groupId, String eui, SensorUpdateRequest request) {
+    public List<SensorResponse> searchSensors(Long groupId, String eui, Long locationId,
+                                              SensorUpdateRequest request) {
 
         QSensor sensor = QSensor.sensor;
         BooleanBuilder builder = new BooleanBuilder();
         builder.and(sensor.group.groupId.eq(groupId)); // 항상 그룹 스코프로 제한
 
-        // eui/locationName/sensorName 중 값이 있는 조건만 AND로 조합 (없는 조건은 건너뜀)
+        // eui/locationId/locationName/sensorName 중 값이 있는 조건만 AND로 조합 (없는 조건은 건너뜀)
         if (eui != null && !eui.trim().isEmpty()) {
             builder.and(sensor.sensorEui.eq(eui));
+        }
+        if (locationId != null) {
+            builder.and(sensor.location.locationId.eq(locationId));
         }
         if (request.locationName() != null && !request.locationName().isBlank()) {
             builder.and(sensor.location.locationName.eq(request.locationName()));
