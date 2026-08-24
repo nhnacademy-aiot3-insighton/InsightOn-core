@@ -25,9 +25,8 @@ public interface SensorService {
     // 전체 장치 삭제 (권한 체크 필요 - userId, 삭제 대상 groupId 추가)
     void deleteAll(Long groupId);
 
-    // 조건별 장치 검색 (단순 분기)
-    List<SensorResponse> searchSensors(Long groupId, Long id, String eui,
-                                       SensorUpdateRequest request);
+    // 조건별 장치 검색 (eui/locationId/locationName/sensorName 중 있는 조건만 AND로 조합)
+    List<SensorResponse> searchSensors(Long groupId, String eui, Long locationId, SensorUpdateRequest request);
 
     // 장소 미배정(location이 null인) 센서 목록 조회 - 자동 등록됐지만 아직 설치 위치를 안 정한 센서 파악용
     List<SensorResponse> getUnassignedSensors(Long groupId);

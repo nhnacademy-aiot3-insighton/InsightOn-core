@@ -143,4 +143,167 @@ class ActuatorServiceTest {
         verify(actuatorRunLogRepository).deleteAllByActuatorLocationLocationIdIn(List.of());
         verify(actuatorRepository).deleteAllByLocationLocationIdIn(List.of());
     }
+
+    @Test
+    @DisplayName("createActuator - 정상 생성, 생성된 ID 반환")
+    void 생성_성공() {
+        Location location = mock(Location.class);
+        given(locationRepository.findByGroupGroupIdAndLocationName(10L, "거실")).willReturn(Optional.of(location));
+        given(actuatorRepository.save(any(Actuator.class))).willReturn(Actuator.builder().actuatorId(100L).build());
+
+        ActuatorRequest request = new ActuatorRequest("거실", "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"));
+        Long result = actuatorsService.createActuator(10L, request);
+
+        assertThat(result).isEqualTo(100L);
+    }
+
+    @Test
+    @DisplayName("getActuatorById - 액추에이터 자체가 없으면 ActuatorNotFoundException")
+    void 조회_없는액추에이터() {
+        given(actuatorRepository.findById(999L)).willReturn(Optional.empty());
+
+        assertThrows(ActuatorNotFoundException.class,
+                () -> actuatorsService.getActuatorById(10L, 999L));
+    }
+
+    @Test
+    @DisplayName("getActuatorById - 정상 조회")
+    void 조회_성공() {
+        Location location = mock(Location.class);
+        given(location.getLocationId()).willReturn(50L);
+        Actuator entity = Actuator.builder().actuatorId(1L).location(location)
+                .sensorName("에어컨").actuatorType(ActuatorType.AIRCON).currentState(Map.of("power", "ON")).build();
+
+        given(actuatorRepository.findById(1L)).willReturn(Optional.of(entity));
+        given(locationRepository.findByLocationIdAndGroupGroupId(50L, 10L)).willReturn(Optional.of(location));
+
+        ActuatorResponse result = actuatorsService.getActuatorById(10L, 1L);
+
+        assertThat(result.actuatorId()).isEqualTo(1L);
+        assertThat(result.sensorName()).isEqualTo("에어컨");
+    }
+
+    @Test
+    @DisplayName("updateActuatorState - 없는 액추에이터면 ActuatorNotFoundException")
+    void 상태변경_없는액추에이터() {
+        given(actuatorRepository.findById(999L)).willReturn(Optional.empty());
+
+        assertThrows(ActuatorNotFoundException.class,
+                () -> actuatorsService.updateActuatorState(10L, 999L, Map.of("power", "ON"), ExecutedByType.USER, 1L));
+    }
+
+    @Test
+    @DisplayName("updateActuatorState - USER 요청이면 실제로 소유권 체크를 수행하고 통과 시 반영")
+    void 상태변경_유저요청_소유권체크통과() {
+        Location location = mock(Location.class);
+        given(location.getLocationId()).willReturn(50L);
+        Actuator entity = Actuator.builder().actuatorId(1L).location(location).build();
+        given(actuatorRepository.findById(1L)).willReturn(Optional.of(entity));
+        given(locationRepository.findByLocationIdAndGroupGroupId(50L, 10L)).willReturn(Optional.of(location));
+
+        actuatorsService.updateActuatorState(10L, 1L, Map.of("power", "ON"), ExecutedByType.USER, 1L);
+
+        verify(locationRepository).findByLocationIdAndGroupGroupId(50L, 10L);
+        verify(actuatorRunLogService).recordRunLogs(entity, Map.of("power", "ON"), ExecutedByType.USER, 1L);
+    }
+
+    @Test
+    @DisplayName("updateActuatorState - USER 요청인데 다른 그룹 소속이면 ActuatorNotFoundException, 로그 기록 안 함")
+    void 상태변경_유저요청_다른그룹_거부() {
+        Location location = mock(Location.class);
+        given(location.getLocationId()).willReturn(50L);
+        Actuator entity = Actuator.builder().actuatorId(1L).location(location).build();
+        given(actuatorRepository.findById(1L)).willReturn(Optional.of(entity));
+        given(locationRepository.findByLocationIdAndGroupGroupId(50L, 10L)).willReturn(Optional.empty());
+
+        assertThrows(ActuatorNotFoundException.class,
+                () -> actuatorsService.updateActuatorState(10L, 1L, Map.of("power", "ON"), ExecutedByType.USER, 1L));
+
+        verify(actuatorRunLogService, never()).recordRunLogs(any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("updateActuatorName - 정상 수정")
+    void 이름수정_성공() {
+        Location location = mock(Location.class);
+        given(location.getLocationId()).willReturn(50L);
+        Actuator entity = Actuator.builder().actuatorId(1L).location(location).sensorName("기존이름").build();
+
+        given(actuatorRepository.findById(1L)).willReturn(Optional.of(entity));
+        given(locationRepository.findByLocationIdAndGroupGroupId(50L, 10L)).willReturn(Optional.of(location));
+
+        actuatorsService.updateActuatorName(10L, 1L, "새이름");
+
+        assertThat(entity.getSensorName()).isEqualTo("새이름");
+    }
+
+    @Test
+    @DisplayName("updateActuatorName - 빈 값이면 InvalidActuatorValueException, 조회도 안 함")
+    void 이름수정_빈값_거부() {
+        assertThrows(InvalidActuatorValueException.class,
+                () -> actuatorsService.updateActuatorName(10L, 1L, "   "));
+
+        verify(actuatorRepository, never()).findById(any());
+    }
+
+    @Test
+    @DisplayName("updateActuatorName - 없는 액추에이터면 ActuatorNotFoundException")
+    void 이름수정_없는액추에이터() {
+        given(actuatorRepository.findById(999L)).willReturn(Optional.empty());
+
+        assertThrows(ActuatorNotFoundException.class,
+                () -> actuatorsService.updateActuatorName(10L, 999L, "새이름"));
+    }
+
+    @Test
+    @DisplayName("updateActuatorName - 다른 그룹 소속이면 ActuatorNotFoundException, 이름 변경 안 됨")
+    void 이름수정_다른그룹_거부() {
+        Location location = mock(Location.class);
+        given(location.getLocationId()).willReturn(50L);
+        Actuator entity = Actuator.builder().actuatorId(1L).location(location).sensorName("기존이름").build();
+
+        given(actuatorRepository.findById(1L)).willReturn(Optional.of(entity));
+        given(locationRepository.findByLocationIdAndGroupGroupId(50L, 10L)).willReturn(Optional.empty());
+
+        assertThrows(ActuatorNotFoundException.class,
+                () -> actuatorsService.updateActuatorName(10L, 1L, "새이름"));
+
+        assertThat(entity.getSensorName()).isEqualTo("기존이름");
+    }
+
+    @Test
+    @DisplayName("deleteActuatorById - 없는 액추에이터면 ActuatorNotFoundException, 삭제 안 함")
+    void 삭제_없는액추에이터() {
+        given(actuatorRepository.findById(999L)).willReturn(Optional.empty());
+
+        assertThrows(ActuatorNotFoundException.class,
+                () -> actuatorsService.deleteActuatorById(10L, 999L));
+
+        verify(actuatorRunLogRepository, never()).deleteByActuatorActuatorId(any());
+    }
+
+    @Test
+    @DisplayName("deleteActuatorById - 다른 그룹 소속이면 ActuatorNotFoundException, 삭제 안 함")
+    void 삭제_다른그룹_거부() {
+        Location location = mock(Location.class);
+        given(location.getLocationId()).willReturn(50L);
+        Actuator entity = Actuator.builder().actuatorId(1L).location(location).build();
+
+        given(actuatorRepository.findById(1L)).willReturn(Optional.of(entity));
+        given(locationRepository.findByLocationIdAndGroupGroupId(50L, 10L)).willReturn(Optional.empty());
+
+        assertThrows(ActuatorNotFoundException.class,
+                () -> actuatorsService.deleteActuatorById(10L, 1L));
+
+        verify(actuatorRepository, never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("deleteAllByLocationId - 해당 위치 소속 실행로그/액추에이터 스코프 삭제")
+    void 장소기준_전체삭제() {
+        actuatorsService.deleteAllByLocationId(50L);
+
+        verify(actuatorRunLogRepository).deleteAllByActuatorLocationLocationId(50L);
+        verify(actuatorRepository).deleteAllByLocationLocationId(50L);
+    }
 }
