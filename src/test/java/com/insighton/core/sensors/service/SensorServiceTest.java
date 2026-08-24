@@ -22,7 +22,6 @@ import com.insighton.core.domain.sensors.exception.InvalidSensorValueException;
 import com.insighton.core.domain.sensors.exception.SensorNotFoundException;
 import com.insighton.core.domain.sensors.repository.SensorRepository;
 import com.insighton.core.domain.sensors.service.impl.SensorServiceImpl;
-import com.querydsl.core.types.Predicate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -298,81 +297,28 @@ class SensorServiceTest {
     }
 
     @Test
-    @DisplayName("searchSensors - groupId 조건은 항상 predicate에 포함")
-    void 검색_그룹조건_항상포함() {
-        given(sensorRepository.findAll(any(Predicate.class))).willReturn(List.of());
-
-        sensorService.searchSensors(5L, null, new SensorUpdateRequest(null, null));
-
-        ArgumentCaptor<Predicate> captor = ArgumentCaptor.forClass(Predicate.class);
-        verify(sensorRepository).findAll(captor.capture());
-        assertThat(captor.getValue().toString()).contains("groupId = 5");
-    }
-
-    @Test
-    @DisplayName("searchSensors - eui가 있으면 predicate에 eui 조건 포함")
-    void 검색_eui조건_포함() {
-        given(sensorRepository.findAll(any(Predicate.class))).willReturn(List.of());
-
-        sensorService.searchSensors(5L, "EUI-1", new SensorUpdateRequest(null, null));
-
-        ArgumentCaptor<Predicate> captor = ArgumentCaptor.forClass(Predicate.class);
-        verify(sensorRepository).findAll(captor.capture());
-        assertThat(captor.getValue().toString()).contains("sensorEui = EUI-1");
-    }
-
-    @Test
-    @DisplayName("searchSensors - locationId가 없으면 predicate에서 제외, sensorName은 포함")
-    void 검색_빈장소이름은_제외_이름조건은_포함() {
-        given(sensorRepository.findAll(any(Predicate.class))).willReturn(List.of());
-
-        sensorService.searchSensors(5L, null, new SensorUpdateRequest(null, "마루센서"));
-
-        ArgumentCaptor<Predicate> captor = ArgumentCaptor.forClass(Predicate.class);
-        verify(sensorRepository).findAll(captor.capture());
-        assertThat(captor.getValue().toString())
-                .doesNotContain("locationId")
-                .contains("sensorName = 마루센서");
-    }
-
-    @Test
-    @DisplayName("searchSensors - locationId가 있으면 predicate에 위치 조건 포함")
-    void 검색_장소이름조건_포함() {
-        given(sensorRepository.findAll(any(Predicate.class))).willReturn(List.of());
-
-        sensorService.searchSensors(5L, null, new SensorUpdateRequest(20L, null));
-
-        ArgumentCaptor<Predicate> captor = ArgumentCaptor.forClass(Predicate.class);
-        verify(sensorRepository).findAll(captor.capture());
-        assertThat(captor.getValue().toString()).contains("locationId = 20");
-    }
-
-    @Test
-    @DisplayName("searchSensors - eui/locationId/sensorName 전부 없으면 groupId 조건만 남음")
-    void 검색_조건없으면_그룹조건만() {
-        given(sensorRepository.findAll(any(Predicate.class))).willReturn(List.of());
-
-        sensorService.searchSensors(5L, null, new SensorUpdateRequest(null, null));
-
-        ArgumentCaptor<Predicate> captor = ArgumentCaptor.forClass(Predicate.class);
-        verify(sensorRepository).findAll(captor.capture());
-        assertThat(captor.getValue().toString())
-                .doesNotContain("sensorEui")
-                .doesNotContain("locationId")
-                .doesNotContain("sensorName");
-    }
-
-    @Test
-    @DisplayName("searchSensors - 조회 결과를 DTO로 매핑해서 반환")
-    void 검색_결과_DTO매핑() {
+    @DisplayName("searchSensors - 조건을 리포지토리에 그대로 넘기고 결과를 DTO로 매핑해서 반환")
+    void 검색_성공() {
         Group group = mock(Group.class);
         Sensor sensor = Sensor.builder().sensorId(1L).group(group).sensorEui("EUI-1").build();
-        given(sensorRepository.findAll(any(Predicate.class))).willReturn(List.of(sensor));
+        given(sensorRepository.search(5L, 1L, "EUI-1", 20L, "마루센서")).willReturn(List.of(sensor));
 
-        List<SensorResponse> result = sensorService.searchSensors(5L, "EUI-1", new SensorUpdateRequest(null, null));
+        List<SensorResponse> result = sensorService.searchSensors(5L, 1L, "EUI-1", new SensorUpdateRequest(20L, "마루센서"));
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).sensorId()).isEqualTo(1L);
+        verify(sensorRepository).search(5L, 1L, "EUI-1", 20L, "마루센서");
+    }
+
+    @Test
+    @DisplayName("searchSensors - 조건이 전부 없어도 그대로(null) 리포지토리에 전달")
+    void 검색_조건없음_그대로전달() {
+        given(sensorRepository.search(5L, null, null, null, null)).willReturn(List.of());
+
+        List<SensorResponse> result = sensorService.searchSensors(5L, null, null, new SensorUpdateRequest(null, null));
+
+        assertThat(result).isEmpty();
+        verify(sensorRepository).search(5L, null, null, null, null);
     }
 
     @Test
