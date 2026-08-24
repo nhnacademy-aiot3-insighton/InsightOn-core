@@ -17,7 +17,6 @@ import com.insighton.core.domain.sensorattributes.repository.MetricDefinitionRep
 import com.insighton.core.domain.sensorattributes.repository.SensorAttributeRepository;
 import com.insighton.core.domain.sensors.dto.SensorResponse;
 import com.insighton.core.domain.sensors.dto.SensorUpdateRequest;
-import com.insighton.core.domain.sensors.entity.QSensor;
 import com.insighton.core.domain.sensors.entity.Sensor;
 import com.insighton.core.domain.sensors.event.SensorCacheEvictEvent;
 import com.insighton.core.domain.sensors.event.SensorCacheSyncEvent;
@@ -25,7 +24,6 @@ import com.insighton.core.domain.sensors.exception.InvalidSensorValueException;
 import com.insighton.core.domain.sensors.exception.SensorNotFoundException;
 import com.insighton.core.domain.sensors.repository.SensorRepository;
 import com.insighton.core.domain.sensors.service.SensorService;
-import com.querydsl.core.BooleanBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -38,7 +36,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.StreamSupport;
 
 @Slf4j
 @Service
@@ -256,24 +253,9 @@ public class SensorServiceImpl implements SensorService {
     }
 
     @Override
-    public List<SensorResponse> searchSensors(Long groupId, String eui, SensorUpdateRequest request) {
-
-        QSensor sensor = QSensor.sensor;
-        BooleanBuilder builder = new BooleanBuilder();
-        builder.and(sensor.group.groupId.eq(groupId)); // 항상 그룹 스코프로 제한
-
-        // eui/locationId/sensorName 중 값이 있는 조건만 AND로 조합 (없는 조건은 건너뜀)
-        if (eui != null && !eui.trim().isEmpty()) {
-            builder.and(sensor.sensorEui.eq(eui));
-        }
-        if (request.locationId() != null) {
-            builder.and(sensor.location.locationId.eq(request.locationId()));
-        }
-        if (request.sensorName() != null && !request.sensorName().trim().isEmpty()) {
-            builder.and(sensor.sensorName.eq(request.sensorName()));
-        }
-
-        return StreamSupport.stream(sensorRepository.findAll(builder).spliterator(), false)
+    public List<SensorResponse> searchSensors(Long groupId, Long id, String eui, SensorUpdateRequest request) {
+        // 조건 조합(QueryDSL)은 리포지토리 구현체 안에 있음 - 서비스는 조건만 그대로 넘기고 결과를 DTO로 매핑
+        return sensorRepository.search(groupId, id, eui, request.locationId(), request.sensorName()).stream()
                 .map(this::toDto)
                 .toList();
     }
