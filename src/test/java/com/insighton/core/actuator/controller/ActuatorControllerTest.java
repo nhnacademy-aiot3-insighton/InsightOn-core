@@ -59,7 +59,7 @@ class ActuatorControllerTest {
     @Test
     @DisplayName("액추에이터 생성 성공")
     void 생성_성공() throws Exception {
-        ActuatorRequest request = new ActuatorRequest("회의실", "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"));
+        ActuatorRequest request = new ActuatorRequest(20L, "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"));
         given(createActuatorUseCase.createActuator(eq(1L), eq(10L), any())).willReturn(100L);
 
         mockMvc.perform(post("/api/v1/groups/{group-id}/actuators", 10L)

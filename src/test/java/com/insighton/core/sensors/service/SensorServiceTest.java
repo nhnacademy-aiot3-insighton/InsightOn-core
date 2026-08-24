@@ -184,9 +184,9 @@ class SensorServiceTest {
         given(newLocation.getLocationId()).willReturn(20L);
 
         given(sensorRepository.findById(1L)).willReturn(Optional.of(sensor));
-        given(locationRepository.findByGroupGroupIdAndLocationName(5L, "4층")).willReturn(Optional.of(newLocation));
+        given(locationRepository.findByLocationIdAndGroupGroupId(20L, 5L)).willReturn(Optional.of(newLocation));
 
-        sensorService.updateSensor(1L, new SensorUpdateRequest("4층", null));
+        sensorService.updateSensor(1L, new SensorUpdateRequest(20L, null));
 
         assertThat(sensor.getLocation()).isEqualTo(newLocation);
         verify(eventPublisher).publishEvent(any(SensorCacheSyncEvent.class));
@@ -202,9 +202,9 @@ class SensorServiceTest {
         Location newLocation = mock(Location.class);
 
         given(sensorRepository.findById(1L)).willReturn(Optional.of(sensor));
-        given(locationRepository.findByGroupGroupIdAndLocationName(5L, "4층")).willReturn(Optional.of(newLocation));
+        given(locationRepository.findByLocationIdAndGroupGroupId(20L, 5L)).willReturn(Optional.of(newLocation));
 
-        sensorService.updateSensor(1L, new SensorUpdateRequest("4층", "새 이름"));
+        sensorService.updateSensor(1L, new SensorUpdateRequest(20L, "새 이름"));
 
         assertThat(sensor.getLocation()).isEqualTo(newLocation);
         assertThat(sensor.getSensorName()).isEqualTo("새 이름");
@@ -250,15 +250,15 @@ class SensorServiceTest {
         Location location = mock(Location.class);
 
         given(sensorRepository.findById(1L)).willReturn(Optional.of(sensor));
-        given(locationRepository.findByGroupGroupIdAndLocationName(5L, "4층")).willReturn(Optional.of(location));
+        given(locationRepository.findByLocationIdAndGroupGroupId(20L, 5L)).willReturn(Optional.of(location));
 
-        sensorService.updateSensor(1L, new SensorUpdateRequest("4층", "  "));
+        sensorService.updateSensor(1L, new SensorUpdateRequest(20L, "  "));
 
         assertThat(sensor.getSensorName()).isEqualTo("기존이름");
     }
 
     @Test
-    @DisplayName("updateSensor - 위치가 빈 문자열이면 기존 위치 그대로 유지 (이름만 반영)")
+    @DisplayName("updateSensor - 위치가 null이면 기존 위치 그대로 유지 (이름만 반영)")
     void 업데이트_빈위치는_무시() {
         Group group = mock(Group.class);
         Location existingLocation = mock(Location.class);
@@ -266,11 +266,11 @@ class SensorServiceTest {
 
         given(sensorRepository.findById(1L)).willReturn(Optional.of(sensor));
 
-        sensorService.updateSensor(1L, new SensorUpdateRequest("", "새이름"));
+        sensorService.updateSensor(1L, new SensorUpdateRequest(null, "새이름"));
 
         assertThat(sensor.getSensorName()).isEqualTo("새이름");
         assertThat(sensor.getLocation()).isSameAs(existingLocation);
-        verify(locationRepository, never()).findByGroupGroupIdAndLocationName(any(), any());
+        verify(locationRepository, never()).findByLocationIdAndGroupGroupId(any(), any());
         verify(eventPublisher, never()).publishEvent(any());
     }
 
@@ -280,7 +280,7 @@ class SensorServiceTest {
         given(sensorRepository.findById(999L)).willReturn(Optional.empty());
 
         assertThrows(SensorNotFoundException.class,
-                () -> sensorService.updateSensor(999L, new SensorUpdateRequest("4층", null)));
+                () -> sensorService.updateSensor(999L, new SensorUpdateRequest(20L, null)));
     }
 
     @Test
@@ -291,10 +291,10 @@ class SensorServiceTest {
         Sensor sensor = Sensor.builder().sensorId(1L).group(group).build();
 
         given(sensorRepository.findById(1L)).willReturn(Optional.of(sensor));
-        given(locationRepository.findByGroupGroupIdAndLocationName(5L, "없는위치")).willReturn(Optional.empty());
+        given(locationRepository.findByLocationIdAndGroupGroupId(999L, 5L)).willReturn(Optional.empty());
 
         assertThrows(LocationNotFoundException.class,
-                () -> sensorService.updateSensor(1L, new SensorUpdateRequest("없는위치", null)));
+                () -> sensorService.updateSensor(1L, new SensorUpdateRequest(999L, null)));
     }
 
     @Test
@@ -322,29 +322,29 @@ class SensorServiceTest {
     }
 
     @Test
-    @DisplayName("searchSensors - locationName이 빈 문자열이면 predicate에서 제외, sensorName은 포함")
+    @DisplayName("searchSensors - locationId가 없으면 predicate에서 제외, sensorName은 포함")
     void 검색_빈장소이름은_제외_이름조건은_포함() {
         given(sensorRepository.findAll(any(Predicate.class))).willReturn(List.of());
 
-        sensorService.searchSensors(5L, null, new SensorUpdateRequest("", "마루센서"));
+        sensorService.searchSensors(5L, null, new SensorUpdateRequest(null, "마루센서"));
 
         ArgumentCaptor<Predicate> captor = ArgumentCaptor.forClass(Predicate.class);
         verify(sensorRepository).findAll(captor.capture());
         assertThat(captor.getValue().toString())
-                .doesNotContain("locationName")
+                .doesNotContain("locationId")
                 .contains("sensorName = 마루센서");
     }
 
     @Test
-    @DisplayName("searchSensors - locationName이 있으면 predicate에 위치 조건 포함")
+    @DisplayName("searchSensors - locationId가 있으면 predicate에 위치 조건 포함")
     void 검색_장소이름조건_포함() {
         given(sensorRepository.findAll(any(Predicate.class))).willReturn(List.of());
 
-        sensorService.searchSensors(5L, null, new SensorUpdateRequest("4층", null));
+        sensorService.searchSensors(5L, null, new SensorUpdateRequest(20L, null));
 
         ArgumentCaptor<Predicate> captor = ArgumentCaptor.forClass(Predicate.class);
         verify(sensorRepository).findAll(captor.capture());
-        assertThat(captor.getValue().toString()).contains("locationName = 4층");
+        assertThat(captor.getValue().toString()).contains("locationId = 20");
     }
 
     @Test
@@ -358,7 +358,7 @@ class SensorServiceTest {
         verify(sensorRepository).findAll(captor.capture());
         assertThat(captor.getValue().toString())
                 .doesNotContain("sensorEui")
-                .doesNotContain("locationName")
+                .doesNotContain("locationId")
                 .doesNotContain("sensorName");
     }
 
