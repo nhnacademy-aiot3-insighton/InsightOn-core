@@ -17,6 +17,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
@@ -41,6 +42,8 @@ class SensorControllerTest {
     @MockitoBean
     private SearchSensorUseCase searchSensorUseCase;
     @MockitoBean
+    private GetUnassignedSensorsUseCase getUnassignedSensorsUseCase;
+    @MockitoBean
     private UpdateSensorUseCase updateSensorUseCase;
     @MockitoBean
     private DeleteSensorUseCase deleteSensorUseCase;
@@ -51,7 +54,7 @@ class SensorControllerTest {
         return new SensorResponse(
                 1L, 10L, 20L,
                 "EUI-0001", "4층 CO2 센서",
-                OffsetDateTime.now(), OffsetDateTime.now()
+                OffsetDateTime.now()
         );
     }
 
@@ -102,6 +105,19 @@ class SensorControllerTest {
 
         verify(searchSensorUseCase).searchSensors(1L, 5L, null, null, new SensorUpdateRequest("4층", "CO2"));
     }
+
+//    @Test
+//    @DisplayName("장소 미배정 센서 목록 조회 성공")
+//    void 장소미배정_조회_성공() throws Exception {
+//        given(getUnassignedSensorsUseCase.getUnassignedSensors(1L, 5L)).willReturn(List.of(sampleResponse()));
+//
+//        mockMvc.perform(get("/api/v1/sensor/unassigned")
+//                        .header("X-USER-ID", 1L)
+//                        .param("groupId", "5"))
+//                .andExpect(status().isOk())
+//                .andExpect(jsonPath("$.length()").value(1))
+//                .andExpect(jsonPath("$[0].sensorId").value(1L));
+//    }
 
     @Test
     @DisplayName("위치만 수정 성공")
@@ -195,5 +211,20 @@ class SensorControllerTest {
                 .andExpect(status().isNoContent());
 
         verify(deleteAllSensorUseCase).deleteAll(1L, 5L);
+    }
+
+    @Test
+    @DisplayName("장소 미배정 센서 목록 조회 성공")
+    void 장소_미배정_센서_목록_조회_성공() throws Exception {
+        given(getUnassignedSensorsUseCase.getUnassignedSensors(1L, 5L))
+                .willReturn(java.util.List.of(sampleResponse()));
+
+        mockMvc.perform(get("/api/v1/sensor/unassigned")
+                        .header("X-USER-ID", 1L)
+                        .param("groupId", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].sensorId").value(1L));
+
+        verify(getUnassignedSensorsUseCase).getUnassignedSensors(1L, 5L);
     }
 }

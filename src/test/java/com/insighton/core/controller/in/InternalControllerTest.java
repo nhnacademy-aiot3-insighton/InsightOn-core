@@ -75,7 +75,7 @@ class InternalControllerTest {
         given(groupMemberService.getGroupMemberAI(10L, 1L)).willReturn(response);
 
         mockMvc.perform(get("/internal/v1/groups/1/members")
-                        .param("user-id", "10"))
+                        .param("userId", "10"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userId").value(10L))
@@ -88,7 +88,7 @@ class InternalControllerTest {
         LocationListResponse response = new LocationListResponse(100L, "거실", Location.AutoControlMode.SUGGESTION);
         given(locationService.getLocationList(1L)).willReturn(List.of(response));
 
-        mockMvc.perform(get("/internal/v1/group/1/locations"))
+        mockMvc.perform(get("/internal/v1/groups/1/locations"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))

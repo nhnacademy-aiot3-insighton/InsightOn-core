@@ -17,6 +17,7 @@ import com.insighton.core.domain.sensorattributes.repository.MetricDefinitionRep
 import com.insighton.core.domain.sensorattributes.repository.SensorAttributeRepository;
 import com.insighton.core.domain.sensors.dto.SensorResponse;
 import com.insighton.core.domain.sensors.dto.SensorUpdateRequest;
+import com.insighton.core.domain.sensors.entity.QSensor;
 import com.insighton.core.domain.sensors.entity.Sensor;
 import com.insighton.core.domain.sensors.event.SensorCacheEvictEvent;
 import com.insighton.core.domain.sensors.event.SensorCacheSyncEvent;
@@ -24,6 +25,7 @@ import com.insighton.core.domain.sensors.exception.InvalidSensorValueException;
 import com.insighton.core.domain.sensors.exception.SensorNotFoundException;
 import com.insighton.core.domain.sensors.repository.SensorRepository;
 import com.insighton.core.domain.sensors.service.SensorService;
+import com.querydsl.core.BooleanBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -35,6 +37,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.StreamSupport;
 
 @Slf4j
 @Service
@@ -92,7 +95,6 @@ public class SensorServiceImpl implements SensorService {
                 .sensorEui(sensorEui) // 센서의 고유 시리얼 번호(EUI)를 입력
                 .sensorName(nolSensorName) // 패킷 정보 기반의 임시 이름(예: "Temp_Sensor_01")을 입력
                 .location(null) // 설치 장소는 아직 모르므로 일단 null로 비움
-                .lastSeenAt(OffsetDateTime.now()) // 첫 데이터가 도착했으니 통신 시각을 현재로 기록
                 .createdAt(OffsetDateTime.now()) // 생성 시각을 현재로 저장
                 .build();
 
@@ -245,26 +247,35 @@ public class SensorServiceImpl implements SensorService {
     }
 
     @Override
-    public List<SensorResponse> searchSensors(Long groupId, Long id, String eui,
+    public List<SensorResponse> searchSensors(Long groupId, String eui, Long locationId,
                                               SensorUpdateRequest request) {
 
-        List<Sensor> entities;
+        QSensor sensor = QSensor.sensor;
+        BooleanBuilder builder = new BooleanBuilder();
+        builder.and(sensor.group.groupId.eq(groupId)); // 항상 그룹 스코프로 제한
 
-        if (id != null) {
-            entities = sensorRepository.findById(id).map(List::of).orElse(List.of());
-        } else if (eui != null && !eui.trim().isEmpty()) {
-            entities = sensorRepository.findBySensorEui(eui).map(List::of).orElse(List.of());
-        } else if (request.locationName() != null && !request.locationName().isBlank()) {
-            entities = sensorRepository.findByLocationLocationName(request.locationName());
-        } else if (request.sensorName() != null && !request.sensorName().trim().isEmpty()) {
-            entities = sensorRepository.findBySensorName(request.sensorName());
-        } else {
-            entities = sensorRepository.findByGroupGroupId(groupId);
+        // eui/locationId/locationName/sensorName 중 값이 있는 조건만 AND로 조합 (없는 조건은 건너뜀)
+        if (eui != null && !eui.trim().isEmpty()) {
+            builder.and(sensor.sensorEui.eq(eui));
+        }
+        if (locationId != null) {
+            builder.and(sensor.location.locationId.eq(locationId));
+        }
+        if (request.locationName() != null && !request.locationName().isBlank()) {
+            builder.and(sensor.location.locationName.eq(request.locationName()));
+        }
+        if (request.sensorName() != null && !request.sensorName().trim().isEmpty()) {
+            builder.and(sensor.sensorName.eq(request.sensorName()));
         }
 
-        // 위 분기들은 groupId로 안걸렀으니 다른 그룹 결과가 섞이지 않게 마지막에 한번더 필터링
-        return entities.stream()
-                .filter(e -> Objects.equals(e.getGroup().getGroupId(), groupId))
+        return StreamSupport.stream(sensorRepository.findAll(builder).spliterator(), false)
+                .map(this::toDto)
+                .toList();
+    }
+
+    @Override
+    public List<SensorResponse> getUnassignedSensors(Long groupId) {
+        return sensorRepository.findByGroupGroupIdAndLocationIsNull(groupId).stream()
                 .map(this::toDto)
                 .toList();
     }
@@ -283,8 +294,7 @@ public class SensorServiceImpl implements SensorService {
                 e.getLocation() != null ? e.getLocation().getLocationId() : null,
                 e.getSensorEui(),
                 e.getSensorName(),
-                e.getCreatedAt(),
-                e.getLastSeenAt()
+                e.getCreatedAt()
         );
     }
 

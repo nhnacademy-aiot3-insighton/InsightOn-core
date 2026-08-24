@@ -8,6 +8,7 @@ import com.insighton.core.domain.groupmember.dto.response.GroupMemberResponse;
 import com.insighton.core.domain.groupmember.dto.response.ManagerGroupResponse;
 import com.insighton.core.domain.groupmember.entity.GroupMember;
 import com.insighton.core.domain.groupmember.exception.AlreadyJoinedException;
+import com.insighton.core.domain.groupmember.exception.CannotKickSelfException;
 import com.insighton.core.domain.groupmember.exception.ManagerRoleRequiredForTransferException;
 import com.insighton.core.domain.groupmember.exception.SuperManagerCannotLeaveException;
 import com.insighton.core.domain.groupmember.repository.GroupMemberRepository;
@@ -365,7 +366,7 @@ class GroupMemberServiceTest {
 
         // when & then
         assertThatThrownBy(() -> groupMemberService.kickGroupMember(1L, 1L, 1L))
-                .isInstanceOf(SuperManagerCannotLeaveException.class);
+                .isInstanceOf(CannotKickSelfException.class);
     }
 
     // ==================== 삭제 & 탈퇴 ====================

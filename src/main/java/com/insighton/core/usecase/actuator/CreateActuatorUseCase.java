@@ -2,6 +2,7 @@ package com.insighton.core.usecase.actuator;
 
 import com.insighton.core.common.annotation.UseCase;
 import com.insighton.core.domain.actuators.dto.ActuatorRequest;
+import com.insighton.core.domain.actuators.policy.ActuatorCommandPreset;
 import com.insighton.core.domain.actuators.service.ActuatorService;
 import com.insighton.core.domain.groupmember.service.GroupMemberService;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ public class CreateActuatorUseCase {
     @Transactional
     public Long createActuator(Long userId, Long groupsId, ActuatorRequest request) {
         groupMemberService.validateGroupAdmin(groupsId, userId);
+        ActuatorCommandPreset.validateCommandValues(request.actuatorType(), request.currentState());
         return actuatorService.createActuator(groupsId, request);
     }
 }

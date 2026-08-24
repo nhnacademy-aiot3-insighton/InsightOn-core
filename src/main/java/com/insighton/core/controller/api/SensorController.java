@@ -5,6 +5,7 @@ import com.insighton.core.domain.sensors.dto.SensorUpdateRequest;
 import com.insighton.core.usecase.sensor.DeleteAllSensorUseCase;
 import com.insighton.core.usecase.sensor.DeleteSensorUseCase;
 import com.insighton.core.usecase.sensor.GetSensorUseCase;
+import com.insighton.core.usecase.sensor.GetUnassignedSensorsUseCase;
 import com.insighton.core.usecase.sensor.SearchSensorUseCase;
 import com.insighton.core.usecase.sensor.UpdateSensorUseCase;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +21,7 @@ public class SensorController {
 
     private final GetSensorUseCase getSensorUseCase;
     private final SearchSensorUseCase searchSensorUseCase;
+    private final GetUnassignedSensorsUseCase getUnassignedSensorsUseCase;
     private final UpdateSensorUseCase updateSensorUseCase;
     private final DeleteSensorUseCase deleteSensorUseCase;
     private final DeleteAllSensorUseCase deleteAllSensorUseCase;
@@ -40,14 +42,24 @@ public class SensorController {
     public ResponseEntity<List<SensorResponse>> search(
             @RequestHeader("X-USER-ID") Long userid,
             @RequestParam Long groupId,
-            @RequestParam(required = false) Long id,
             @RequestParam(required = false) String eui,
+            @RequestParam(required = false) Long locationId,
             @RequestParam(required = false) String locationName,
             @RequestParam(required = false) String sensorName) {
 
         // 조건 검색 수행 후 리스트 반환
-        List<SensorResponse> result = searchSensorUseCase.searchSensors(userid, groupId, id, eui,
+        List<SensorResponse> result = searchSensorUseCase.searchSensors(userid, groupId, eui, locationId,
                 new SensorUpdateRequest(locationName, sensorName));
+        return ResponseEntity.ok(result);
+    }
+
+    // 장소 미배정 센서 목록 조회 API (GET /api/v1/sensor/unassigned) - autoProvision으로 자동 등록만 되고
+    // 아직 위치가 안 정해진 센서들을 관리자가 찾아서 배치할 수 있게 별도 API로 분리
+    @GetMapping("/unassigned")
+    public ResponseEntity<List<SensorResponse>> getUnassignedSensors(
+            @RequestHeader("X-USER-ID") Long userId,
+            @RequestParam Long groupId) {
+        List<SensorResponse> result = getUnassignedSensorsUseCase.getUnassignedSensors(userId, groupId);
         return ResponseEntity.ok(result);
     }
 
