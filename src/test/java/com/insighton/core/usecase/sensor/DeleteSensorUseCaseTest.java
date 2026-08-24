@@ -2,6 +2,7 @@ package com.insighton.core.usecase.sensor;
 
 import com.insighton.core.domain.groupmember.service.GroupMemberService;
 import com.insighton.core.domain.groups.exception.NoPermissionException;
+import com.insighton.core.domain.sensors.event.SensorDeletedEvent;
 import com.insighton.core.domain.sensors.exception.SensorNotFoundException;
 import com.insighton.core.domain.sensors.service.SensorService;
 import org.junit.jupiter.api.DisplayName;
@@ -26,13 +27,13 @@ class DeleteSensorUseCaseTest {
     private SensorService sensorService;
 
     @Mock
-    private ApplicationEventPublisher applicationEventPublisher;
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private DeleteSensorUseCase deleteSensorUseCase;
 
     @Test
-    @DisplayName("센서 삭제 성공 - 매니저 이상 권한이면 삭제 가능")
+    @DisplayName("센서 삭제 성공 - 매니저 이상 권한이면 삭제 가능, 룰엔진에 삭제 이벤트 발행")
     void deleteSensor_success() {
         Long userId = 1L;
         Long sensorId = 10L;
@@ -44,6 +45,7 @@ class DeleteSensorUseCaseTest {
 
         verify(groupMemberService).validateGroupAdmin(groupId, userId);
         verify(sensorService).deleteSensor(sensorId);
+        verify(eventPublisher).publishEvent(new SensorDeletedEvent(sensorId));
     }
 
     @Test
