@@ -56,7 +56,7 @@ public class DashboardController {
 
         List<Long> widgetIds = dashboardSaveUseCase.saveDashboard(userId, groupId, locationId, requests);
 
-        Map<Long, ChartDataResponse> result = dashboardSaveUseCase.saveDashboardInfluxDB(widgetIds);
+        Map<Long, ChartDataResponse> result = dashboardSaveUseCase.saveDashboardInfluxDB(locationId, widgetIds);
 
         return ResponseEntity.ok(result);
     }

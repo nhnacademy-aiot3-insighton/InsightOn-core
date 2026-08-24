@@ -75,12 +75,14 @@ public class DashboardSaveUseCase {
     /**
      * 수정하거나 생성된 widget들의 config 값을 받아서 db method와 분리하여 influxDB 정보 불러오기
      */
-    public Map<Long, ChartDataResponse> saveDashboardInfluxDB(List<Long> widgetIds) {
+    public Map<Long, ChartDataResponse> saveDashboardInfluxDB(Long locationId, List<Long> widgetIds) {
+        Dashboard dashboard = dashboardService.getDashboardEntity(locationId);
+        Long dashboardId = dashboard.getDashboardId();
 
         Map<Long, ChartDataResponse> updatedChartDataMap = new HashMap<>();
 
         for (Long widgetId : widgetIds) {
-            ChartDataResponse chartData = widgetService.getWidgetChartData(widgetId);
+            ChartDataResponse chartData = widgetService.getWidgetChartData(dashboardId, widgetId);
             updatedChartDataMap.put(widgetId, chartData);
         }
 

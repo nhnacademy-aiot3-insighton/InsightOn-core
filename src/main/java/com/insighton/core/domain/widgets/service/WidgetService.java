@@ -4,6 +4,7 @@ import com.insighton.core.domain.dashboards.entity.Dashboard;
 import com.insighton.core.domain.widgets.dto.chart.ChartDataResponse;
 import com.insighton.core.domain.widgets.dto.request.WidgetSaveRequest;
 import com.insighton.core.domain.widgets.dto.response.WidgetsListResponse;
+import com.insighton.core.domain.widgets.entity.Widget;
 
 import java.util.List;
 
@@ -34,6 +35,15 @@ public interface WidgetService {
     void updateWidget(Long dashboardId, Long targetWidgetId, WidgetSaveRequest request);
 
     /**
+     * widget을 dashboard와 widget 아이디로 검색해서 entity 가져오기
+     *
+     * @param dashboardId widget이 속해있는 dashboard ID
+     * @param widgetId    찾을 widget ID
+     * @return widget entity
+     */
+    Widget getWidget(Long dashboardId, Long widgetId);
+
+    /**
      * widget 삭제
      *
      * @param dashboardId    삭제될 widget이 속해있는 dashboard ID
@@ -47,7 +57,7 @@ public interface WidgetService {
      * @param widgetId 그리고 싶은 widget ID?
      * @return Chart.js에 보낼 DTO 반환
      */
-    ChartDataResponse getWidgetChartData(Long widgetId);
+    ChartDataResponse getWidgetChartData(Long dashboardId, Long widgetId);
 
     /**
      * 외부에서 호출할  캐시 일괄 삭제 메서드
@@ -73,5 +83,4 @@ public interface WidgetService {
      */
     List<Long> getWidgetIdsByDashboardId(Long dashboardId);
 
-    Long getWidgetGroupId(Long widgetId);
 }
