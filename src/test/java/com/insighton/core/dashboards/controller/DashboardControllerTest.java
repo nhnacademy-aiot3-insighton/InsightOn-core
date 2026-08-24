@@ -85,7 +85,7 @@ class DashboardControllerTest {
                     .datasets(List.of())
                     .build();
 
-            given(dashboardSaveUseCase.saveDashboardInfluxDB(widgetIds))
+            given(dashboardSaveUseCase.saveDashboardInfluxDB(eq(locationId), eq(widgetIds)))
                     .willReturn(Map.of(1L, mockChartData));
 
             // when & then
@@ -97,7 +97,7 @@ class DashboardControllerTest {
                     .andExpect(jsonPath("$['1'].labels.length()").value(2));
 
             verify(dashboardSaveUseCase).saveDashboard(eq(userId), eq(groupId), eq(locationId), any());
-            verify(dashboardSaveUseCase).saveDashboardInfluxDB(widgetIds);
+            verify(dashboardSaveUseCase).saveDashboardInfluxDB(eq(locationId), eq(widgetIds));
         }
     }
 
