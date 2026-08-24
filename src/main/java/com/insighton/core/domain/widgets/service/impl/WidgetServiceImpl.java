@@ -61,7 +61,7 @@ public class WidgetServiceImpl implements WidgetService {
                 .build();
         Widget newWidget = widgetRepository.save(widget);
         log.info("위젯 생성 완료 - dashboardId: {}", dashboard.getDashboardId());
-        return newWidget != null ? newWidget.getWidgetId() : null;
+        return newWidget.getWidgetId();
     }
 
     @Override
@@ -87,6 +87,13 @@ public class WidgetServiceImpl implements WidgetService {
             );
         }
         log.info("위젯 수정 완료 - widgetId: {}, dashboardId: {}", targetWidgetId, dashboardId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Widget getWidget(Long dashboardId, Long widgetId) {
+        return widgetRepository.findByWidgetIdAndDashboardDashboardId(widgetId, dashboardId)
+                .orElseThrow(() -> WidgetNotFoundException.notFoundWidgetByWidgetId(widgetId));
     }
 
     @Override
@@ -151,16 +158,12 @@ public class WidgetServiceImpl implements WidgetService {
                 .toList();
     }
 
-    @Override
-    public Long getWidgetGroupId(Long widgetId) {
-        return getWidgetConfigFromCache(widgetId).groupId();
-    }
 
     @Override
     @Transactional(readOnly = true)
-    public ChartDataResponse getWidgetChartData(Long targetWidgetId) {
+    public ChartDataResponse getWidgetChartData(Long dashboardId, Long targetWidgetId) {
 
-        WidgetConfig config = getWidgetConfigFromCache(targetWidgetId);
+        WidgetConfig config = getWidgetConfigFromCache(dashboardId, targetWidgetId);
 
         List<FluxTable> tables = getWidgetData(config);
 
@@ -208,7 +211,7 @@ public class WidgetServiceImpl implements WidgetService {
 
     // ===================== private method ========================
 
-    private WidgetConfig getWidgetConfigFromCache(Long widgetId) {
+    private WidgetConfig getWidgetConfigFromCache(Long dashboardId, Long widgetId) {
         String key = WIDGET_CONFIG_KEY_PREFIX + widgetId;
 
         WidgetConfig cached = widgetRedisTemplate.opsForValue().get(key);
@@ -216,7 +219,7 @@ public class WidgetServiceImpl implements WidgetService {
             return objectMapper.convertValue(cached, WidgetConfig.class);
         }
 
-        Widget widget = widgetRepository.findById(widgetId)
+        Widget widget = widgetRepository.findByWidgetIdAndDashboardDashboardId(widgetId, dashboardId)
                 .orElseThrow(() -> WidgetNotFoundException.notFoundWidgetByWidgetId(widgetId));
 
         WidgetConfig config = widget.getWidgetConfig();

@@ -218,6 +218,7 @@ class WidgetServiceTest {
         @DisplayName("위젯 차트 데이터 조회 성공 - Config 기반 InfluxDB 쿼리 실행 및 파싱")
         void getWidgetChartData_success() {
             // given
+            Long dashboardId = 1L;
             Long widgetId = 10L;
             Widget mockWidget = mock(Widget.class);
             WidgetConfig config = WidgetConfig.builder()
@@ -229,7 +230,7 @@ class WidgetServiceTest {
                     .build();
 
             given(mockWidget.getWidgetConfig()).willReturn(config);
-            given(widgetRepository.findById(widgetId)).willReturn(Optional.of(mockWidget));
+            given(widgetRepository.findByWidgetIdAndDashboardDashboardId(widgetId, dashboardId)).willReturn(Optional.of(mockWidget));
 
             FluxTable mockTable = mock(FluxTable.class);
             FluxRecord mockRecord = mock(FluxRecord.class);
@@ -242,7 +243,7 @@ class WidgetServiceTest {
             given(influxDbRepository.query(anyString())).willReturn(List.of(mockTable));
 
             // when
-            ChartDataResponse response = widgetService.getWidgetChartData(widgetId);
+            ChartDataResponse response = widgetService.getWidgetChartData(dashboardId, widgetId);
 
             // then
             assertThat(response).isNotNull();
@@ -256,6 +257,7 @@ class WidgetServiceTest {
         @Test
         @DisplayName("SINGLE_STAT 타입 위젯 차트 데이터 조회 성공")
         void getWidgetChartData_singleStat_success() {
+            Long dashboardId = 1L;
             Long widgetId = 10L;
             Widget mockWidget = mock(Widget.class);
             WidgetConfig config = WidgetConfig.builder()
@@ -266,16 +268,17 @@ class WidgetServiceTest {
                     .build();
 
             given(mockWidget.getWidgetConfig()).willReturn(config);
-            given(widgetRepository.findById(widgetId)).willReturn(Optional.of(mockWidget));
+            given(widgetRepository.findByWidgetIdAndDashboardDashboardId(widgetId, dashboardId)).willReturn(Optional.of(mockWidget));
             given(influxDbRepository.query(anyString())).willReturn(List.of());
 
-            ChartDataResponse response = widgetService.getWidgetChartData(widgetId);
+            ChartDataResponse response = widgetService.getWidgetChartData(dashboardId, widgetId);
             assertThat(response).isNotNull();
         }
 
         @Test
         @DisplayName("Redis 캐시된 데이터가 존재하는 경우 DB 조회 없이 조회 성공")
         void getWidgetChartData_cacheHit_success() {
+            Long dashboardId = 1L;
             Long widgetId = 10L;
             WidgetConfig cachedConfig = WidgetConfig.builder()
                     .type(Widget.Type.GRAPH)
@@ -287,7 +290,7 @@ class WidgetServiceTest {
             given(objectMapper.convertValue(cachedConfig, WidgetConfig.class)).willReturn(cachedConfig);
             given(influxDbRepository.query(anyString())).willReturn(List.of());
 
-            ChartDataResponse response = widgetService.getWidgetChartData(widgetId);
+            ChartDataResponse response = widgetService.getWidgetChartData(dashboardId, widgetId);
             assertThat(response).isNotNull();
             verify(widgetRepository, never()).findById(anyLong());
         }
@@ -331,13 +334,14 @@ class WidgetServiceTest {
         @DisplayName("위젯 차트 데이터 조회 실패 - 위젯 Config가 null일 때 WidgetConfigNotFoundException 발생")
         void getWidgetChartData_nullConfig_throwsException() {
             // given
+            Long dashboardId = 1L;
             Long widgetId = 10L;
             Widget mockWidget = mock(Widget.class);
             given(mockWidget.getWidgetConfig()).willReturn(null);
-            given(widgetRepository.findById(widgetId)).willReturn(Optional.of(mockWidget));
+            given(widgetRepository.findByWidgetIdAndDashboardDashboardId(widgetId, dashboardId)).willReturn(Optional.of(mockWidget));
 
             // when & then
-            assertThatThrownBy(() -> widgetService.getWidgetChartData(widgetId))
+            assertThatThrownBy(() -> widgetService.getWidgetChartData(dashboardId, widgetId))
                     .isInstanceOf(WidgetConfigNotFoundException.class);
         }
 
@@ -345,6 +349,7 @@ class WidgetServiceTest {
         @DisplayName("위젯 차트 데이터 조회 실패 - 잘못된 range 파라미터일 때 InvalidDateTimeFormatException 발생")
         void getWidgetChartData_invalidRange_throwsException() {
             // given
+            Long dashboardId = 1L;
             Long widgetId = 10L;
             Widget mockWidget = mock(Widget.class);
             WidgetConfig invalidConfig = WidgetConfig.builder()
@@ -353,16 +358,17 @@ class WidgetServiceTest {
                     .build();
 
             given(mockWidget.getWidgetConfig()).willReturn(invalidConfig);
-            given(widgetRepository.findById(widgetId)).willReturn(Optional.of(mockWidget));
+            given(widgetRepository.findByWidgetIdAndDashboardDashboardId(widgetId, dashboardId)).willReturn(Optional.of(mockWidget));
 
             // when & then
-            assertThatThrownBy(() -> widgetService.getWidgetChartData(widgetId))
+            assertThatThrownBy(() -> widgetService.getWidgetChartData(dashboardId, widgetId))
                     .isInstanceOf(InvalidDateTimeFormatException.class);
         }
 
         @Test
         @DisplayName("위젯 차트 데이터 조회 실패 - 잘못된 aggregateWindow 파라미터일 때 InvalidDateTimeFormatException 발생")
         void getWidgetChartData_invalidAggregateWindow_throwsException() {
+            Long dashboardId = 1L;
             Long widgetId = 10L;
             Widget mockWidget = mock(Widget.class);
             WidgetConfig invalidConfig = WidgetConfig.builder()
@@ -372,9 +378,9 @@ class WidgetServiceTest {
                     .build();
 
             given(mockWidget.getWidgetConfig()).willReturn(invalidConfig);
-            given(widgetRepository.findById(widgetId)).willReturn(Optional.of(mockWidget));
+            given(widgetRepository.findByWidgetIdAndDashboardDashboardId(widgetId, dashboardId)).willReturn(Optional.of(mockWidget));
 
-            assertThatThrownBy(() -> widgetService.getWidgetChartData(widgetId))
+            assertThatThrownBy(() -> widgetService.getWidgetChartData(dashboardId, widgetId))
                     .isInstanceOf(InvalidDateTimeFormatException.class);
         }
     }
