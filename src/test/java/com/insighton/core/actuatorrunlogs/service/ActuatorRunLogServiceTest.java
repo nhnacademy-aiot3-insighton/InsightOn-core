@@ -69,7 +69,7 @@ class ActuatorRunLogServiceTest {
     void 기록_전원상태_이벤트발행() {
         actuatorRunLogService.recordRunLogs(actuator(), Map.of("power", "ON"), ExecutedByType.USER, 1L);
 
-        verify(actuatorRunLogRepository).save(any(ActuatorRunLog.class));
+        verify(actuatorRunLogRepository).saveAll(any());
         verify(eventPublisher).publishEvent(any(ActuatorStatusChangedEvent.class));
     }
 
@@ -78,7 +78,7 @@ class ActuatorRunLogServiceTest {
     void 기록_비전원명령_이벤트미발행() {
         actuatorRunLogService.recordRunLogs(actuator(), Map.of("temperature", "24.0"), ExecutedByType.USER, 1L);
 
-        verify(actuatorRunLogRepository).save(any(ActuatorRunLog.class));
+        verify(actuatorRunLogRepository).saveAll(any());
         verify(eventPublisher, never()).publishEvent(any());
     }
 
