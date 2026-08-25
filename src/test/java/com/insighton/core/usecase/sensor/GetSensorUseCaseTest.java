@@ -37,7 +37,7 @@ class GetSensorUseCaseTest {
         Long userId = 1L;
         Long sensorId = 10L;
         Long groupId = 5L;
-        SensorResponse expected = new SensorResponse(sensorId, 20L, 30L, "EUI-1", "센서A", OffsetDateTime.now());
+        SensorResponse expected = new SensorResponse(sensorId, 20L, 30L, "EUI-1", "센서A", OffsetDateTime.now(), OffsetDateTime.now());
 
         given(sensorService.getSensorGroupId(sensorId)).willReturn(groupId);
         given(sensorService.getSensorById(sensorId)).willReturn(expected);
