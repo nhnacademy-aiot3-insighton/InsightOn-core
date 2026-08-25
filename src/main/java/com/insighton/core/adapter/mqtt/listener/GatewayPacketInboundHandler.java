@@ -7,6 +7,7 @@ import com.insighton.core.adapter.mqtt.cache.GatewayGroupMappingCache;
 import com.insighton.core.adapter.mqtt.cache.dto.SensorCacheEntry;
 import com.insighton.core.adapter.mqtt.connection.DynamicMqttGatewayManager;
 import com.insighton.core.adapter.mqtt.connection.GatewayHeartbeatTracker;
+import com.insighton.core.adapter.mqtt.connection.SensorHeartbeatTracker;
 import com.insighton.core.adapter.mqtt.listener.dto.CleanTelemetryPacket;
 import com.insighton.core.adapter.mqtt.listener.dto.TelemetryEventMessage;
 import com.insighton.core.domain.sensors.service.SensorService;
@@ -39,10 +40,11 @@ public class GatewayPacketInboundHandler implements MessageHandler {
     private final MqttPayloadParser payloadParser;
     private final SensorLookupCacheService sensorLookupCacheService;
     private final GatewayGroupMappingCache groupMappingCache;
-    private final GatewayHeartbeatTracker heartbeatTracker;
+    private final GatewayHeartbeatTracker gatewayHeartbeatTracker;
     private final TelemetryPublisher telemetryPublisher;
     private final TelemetryInfluxWriter influxWriter;
     private final SensorService sensorService;
+    private final SensorHeartbeatTracker sensorHeartbeatTracker;
 
     /**
      * MQTT로부터 수신한 메시지 하나를 처리함. 실제 로직은 {@link #handlePacket(Message)}에 있고
@@ -92,7 +94,7 @@ public class GatewayPacketInboundHandler implements MessageHandler {
             return;   // gatewayId 없이는 groupId도 못 구해 Auto-Provisioning 불가
         }
 
-        heartbeatTracker.recordHeartbeat(gatewayId);
+        gatewayHeartbeatTracker.recordHeartbeat(gatewayId);
 
         Optional<CleanTelemetryPacket> optionalPacket = payloadParser.parse(message.getPayload());
 
@@ -124,6 +126,8 @@ public class GatewayPacketInboundHandler implements MessageHandler {
                         packet.sensorName(),
                         fields.keySet()
                 ));
+
+        sensorHeartbeatTracker.recordHeartbeat(sensor.sensorId());
 
         Long locationId = sensor.locationId();
 

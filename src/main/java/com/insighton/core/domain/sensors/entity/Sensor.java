@@ -46,6 +46,9 @@ public class Sensor {
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt; // 생성 일시
 
+    @Column(name = "last_seen_at")
+    private OffsetDateTime lastSeenAt; // 마지막 수신 일시
+
     // =================================================
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name =  "group_id", nullable = false)
@@ -59,5 +62,9 @@ public class Sensor {
         if (newSensorName != null && !newSensorName.trim().isEmpty()) {
             this.sensorName = newSensorName;
         }
+    }
+
+    public void updateLastSeen(OffsetDateTime seenAt) {
+        this.lastSeenAt = seenAt;
     }
 }
