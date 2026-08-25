@@ -65,7 +65,7 @@ class SensorAttributeServiceTest {
 
         MetricDefinition definition = MetricDefinition.builder()
                 .metricKey("co2").metricName("이산화탄소").unit("ppm").build();
-        given(metricDefinitionRepository.findByMetricKeyIgnoreCase("co2")).willReturn(Optional.of(definition));
+        given(metricDefinitionRepository.findByMetricKeyInIgnoreCase(List.of("co2"))).willReturn(List.of(definition));
 
         List<SensorAttributeResponse> result = attributeService.getAllAttributeBySensorId(1L);
 
@@ -80,7 +80,7 @@ class SensorAttributeServiceTest {
 
         SensorAttribute attribute = SensorAttribute.builder().sensor(sensor).metricKey("deprecated_key").build();
         given(attributeRepository.findBySensorSensorId(1L)).willReturn(List.of(attribute));
-        given(metricDefinitionRepository.findByMetricKeyIgnoreCase("deprecated_key")).willReturn(Optional.empty());
+        given(metricDefinitionRepository.findByMetricKeyInIgnoreCase(List.of("deprecated_key"))).willReturn(List.of());
 
         assertThrows(MetricKeyNotFoundException.class,
                 () -> attributeService.getAllAttributeBySensorId(1L));

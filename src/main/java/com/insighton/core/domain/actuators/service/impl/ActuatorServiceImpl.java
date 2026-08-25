@@ -47,9 +47,9 @@ public class ActuatorServiceImpl implements ActuatorService {
     @Transactional
     public Long createActuator(Long groupsId, ActuatorRequest request) {
 
-        // 조회 및 검증 - 사용자는 locationId를 모르므로 그룹 내 이름으로 찾음
-        Location locations = locationsRepository.findByGroupGroupIdAndLocationName(groupsId, request.locationName())
-                .orElseThrow(() -> LocationNotFoundException.notFoundLocationByName(request.locationName()));
+        // 조회 및 검증 - locationId가 요청 그룹 소속인지 함께 확인 (다른 그룹 location 지정 방지)
+        Location locations = locationsRepository.findByLocationIdAndGroupGroupId(request.locationId(), groupsId)
+                .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(request.locationId()));
 
         Actuator entity = Actuator.builder()
                 .location(locations)

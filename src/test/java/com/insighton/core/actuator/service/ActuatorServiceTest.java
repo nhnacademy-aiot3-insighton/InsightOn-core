@@ -45,11 +45,11 @@ class ActuatorServiceTest {
     private ActuatorServiceImpl actuatorsService;
 
     @Test
-    @DisplayName("createActuator - locationName이 groupsId 소속이 아니면 LocationNotFoundException")
+    @DisplayName("createActuator - locationId가 groupsId 소속이 아니면 LocationNotFoundException")
     void 생성_다른그룹location_거부() {
-        given(locationRepository.findByGroupGroupIdAndLocationName(10L, "없는장소")).willReturn(Optional.empty());
+        given(locationRepository.findByLocationIdAndGroupGroupId(99L, 10L)).willReturn(Optional.empty());
 
-        ActuatorRequest request = new ActuatorRequest("없는장소", "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"));
+        ActuatorRequest request = new ActuatorRequest(99L, "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"));
 
         assertThrows(LocationNotFoundException.class,
                 () -> actuatorsService.createActuator(10L, request));
@@ -148,10 +148,10 @@ class ActuatorServiceTest {
     @DisplayName("createActuator - 정상 생성, 생성된 ID 반환")
     void 생성_성공() {
         Location location = mock(Location.class);
-        given(locationRepository.findByGroupGroupIdAndLocationName(10L, "거실")).willReturn(Optional.of(location));
+        given(locationRepository.findByLocationIdAndGroupGroupId(50L, 10L)).willReturn(Optional.of(location));
         given(actuatorRepository.save(any(Actuator.class))).willReturn(Actuator.builder().actuatorId(100L).build());
 
-        ActuatorRequest request = new ActuatorRequest("거실", "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"));
+        ActuatorRequest request = new ActuatorRequest(50L, "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"));
         Long result = actuatorsService.createActuator(10L, request);
 
         assertThat(result).isEqualTo(100L);
