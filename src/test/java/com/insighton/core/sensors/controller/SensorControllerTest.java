@@ -90,7 +90,7 @@ class SensorControllerTest {
     }
 
     @Test
-    @DisplayName("검색 성공 - locationName/sensorName이 SensorUpdateRequest로 묶여서 전달됨")
+    @DisplayName("검색 성공 - locationId/sensorName이 SensorUpdateRequest로 묶여서 전달됨")
     void 검색_성공() throws Exception {
         given(searchSensorUseCase.searchSensors(eq(1L), eq(5L), isNull(), isNull(), any(SensorUpdateRequest.class)))
                 .willReturn(java.util.List.of(sampleResponse()));
@@ -98,12 +98,12 @@ class SensorControllerTest {
         mockMvc.perform(get("/api/v1/sensor/search")
                         .header("X-USER-ID", 1L)
                         .param("groupId", "5")
-                        .param("locationName", "4층")
+                        .param("locationId", "20")
                         .param("sensorName", "CO2"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1));
 
-        verify(searchSensorUseCase).searchSensors(1L, 5L, null, null, new SensorUpdateRequest("4층", "CO2"));
+        verify(searchSensorUseCase).searchSensors(1L, 5L, null, null, new SensorUpdateRequest(20L, "CO2"));
     }
 
 //    @Test
@@ -122,7 +122,7 @@ class SensorControllerTest {
     @Test
     @DisplayName("위치만 수정 성공")
     void 위치만_수정_성공() throws Exception {
-        SensorUpdateRequest request = new SensorUpdateRequest("4층", null);
+        SensorUpdateRequest request = new SensorUpdateRequest(20L, null);
 
         mockMvc.perform(put("/api/v1/sensor/{id}", 1L)
                         .header("X-USER-ID", 1L)
@@ -180,9 +180,9 @@ class SensorControllerTest {
     @Test
     @DisplayName("존재하지 않는 위치면 404")
     void 없는_위치_404() throws Exception {
-        SensorUpdateRequest request = new SensorUpdateRequest("없는위치", null);
+        SensorUpdateRequest request = new SensorUpdateRequest(999L, null);
 
-        willThrow(LocationNotFoundException.notFoundLocationByName("없는위치"))
+        willThrow(LocationNotFoundException.notFoundLocationByLocationId(999L))
                 .given(updateSensorUseCase).updateSensor(anyLong(), anyLong(), any());
 
         mockMvc.perform(put("/api/v1/sensor/{id}", 1L)

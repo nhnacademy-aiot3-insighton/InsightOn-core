@@ -18,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -55,15 +57,26 @@ public class SensorAttributeServiceImpl implements SensorAttributeService {
         sensorRepository.findById(sensorId)
                 .orElseThrow(() -> new SensorNotFoundException(sensorId));
 
-        // 2. DB에서 장치 속성 목록 조회 후 Enum 정보를 매핑하여 DTO로 변환
-        return attributeRepository.findBySensorSensorId(sensorId)
-                .stream()
-                .map(attr -> {
-                    // metricKey만으로는 한글명/단위를 모르니, metric_definitions에서 표준 정의를 조인해서 붙여줌
-                    MetricDefinition metricDefinition = metricDefinitionRepository
-                            .findByMetricKeyIgnoreCase(attr.getMetricKey())
-                            .orElseThrow(() -> new MetricKeyNotFoundException(attr.getMetricKey()));
+        // 2. DB에서 장치 속성 목록 조회
+        List<SensorAttribute> attributes = attributeRepository.findBySensorSensorId(sensorId);
 
+        // 3. metricKey만으로는 한글명/단위를 모르니, metric_definitions에서 표준 정의를 배치로 한 번에 조회 (N+1 방지)
+        // Map 키는 소문자로 통일 - 리포지토리 쪽 대소문자 무시 비교와 맞춰야 아래 조회에서 안 놓침
+        Map<String, MetricDefinition> definitionsByKey = metricDefinitionRepository
+                .findByMetricKeyInIgnoreCase(attributes.stream()
+                        .map(attr -> attr.getMetricKey().toLowerCase())
+                        .distinct()
+                        .toList())
+                .stream()
+                .collect(Collectors.toMap(m -> m.getMetricKey().toLowerCase(), m -> m));
+
+        // 4. 조회된 정의와 매핑하여 DTO로 변환
+        return attributes.stream()
+                .map(attr -> {
+                    MetricDefinition metricDefinition = definitionsByKey.get(attr.getMetricKey().toLowerCase());
+                    if (metricDefinition == null) {
+                        throw new MetricKeyNotFoundException(attr.getMetricKey());
+                    }
                     return new SensorAttributeResponse(
                             attr.getMetricKey(),
                             metricDefinition.getMetricName(),

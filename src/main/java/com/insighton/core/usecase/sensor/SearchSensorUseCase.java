@@ -17,9 +17,9 @@ public class SearchSensorUseCase {
     private final SensorService sensorService;
 
     @Transactional(readOnly = true)
-    public List<SensorResponse> searchSensors(Long userId, Long groupId, String eui, Long locationId,
+    public List<SensorResponse> searchSensors(Long userId, Long groupId, Long id, String eui,
                                               SensorUpdateRequest request) {
         groupMemberService.validateGroupMembers(groupId, userId);
-        return sensorService.searchSensors(groupId, eui, locationId, request);
+        return sensorService.searchSensors(groupId, id, eui, request);
     }
 }

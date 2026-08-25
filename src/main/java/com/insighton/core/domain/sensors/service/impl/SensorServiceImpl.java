@@ -17,7 +17,6 @@ import com.insighton.core.domain.sensorattributes.repository.MetricDefinitionRep
 import com.insighton.core.domain.sensorattributes.repository.SensorAttributeRepository;
 import com.insighton.core.domain.sensors.dto.SensorResponse;
 import com.insighton.core.domain.sensors.dto.SensorUpdateRequest;
-import com.insighton.core.domain.sensors.entity.QSensor;
 import com.insighton.core.domain.sensors.entity.Sensor;
 import com.insighton.core.domain.sensors.event.SensorCacheEvictEvent;
 import com.insighton.core.domain.sensors.event.SensorCacheSyncEvent;
@@ -25,10 +24,10 @@ import com.insighton.core.domain.sensors.exception.InvalidSensorValueException;
 import com.insighton.core.domain.sensors.exception.SensorNotFoundException;
 import com.insighton.core.domain.sensors.repository.SensorRepository;
 import com.insighton.core.domain.sensors.service.SensorService;
-import com.querydsl.core.BooleanBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,7 +36,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.StreamSupport;
 
 @Slf4j
 @Service
@@ -100,7 +98,17 @@ public class SensorServiceImpl implements SensorService {
 
 
         // 센서 정보를 sensors DB 테이블에 저장
-        Sensor savedSensor = sensorRepository.save(sensor);
+        // 위 사전 체크(findBySensorEui)는 캐시 만료 후 재조회 케이스만 방어할 뿐, 체크~save() 사이에
+        // 끼어드는 진짜 동시 요청은 못 막음 - 그 경우 유니크 제약 위반(DataIntegrityViolationException)을
+        // 직접 잡아서, 먼저 저장된 쪽을 조회해 쓰는 것으로 복구
+        Sensor savedSensor;
+        try {
+            savedSensor = sensorRepository.save(sensor);
+        } catch (DataIntegrityViolationException e) {
+            savedSensor = sensorRepository.findBySensorEui(sensorEui)
+                    .orElseThrow(() -> e);
+        }
+        final Sensor finalSavedSensor = savedSensor; // 람다에서 캡처하려면 effectively final 필요 (try/catch 양쪽에서 대입돼서 그대로는 안 됨)
 
         // 패킷 안에 있던 데이터 항목들(예: ["co2", "temperature"])을 확인해 속성(Attribute) 테이블도 채움
         if (metricKeys != null && !metricKeys.isEmpty()) {
@@ -111,7 +119,7 @@ public class SensorServiceImpl implements SensorService {
                     .map(MetricDefinition::getMetricKey) // 정규화된(canonical) 키로 통일 - 패킷 원본 대소문자를 그대로 안 씀
                     .distinct() // 패킷에 "co2"와 "CO2"가 같이 왔어도 정규화 후엔 같은 값이라 중복 제거 (유니크 제약 위반 방지)
                     .map(normalizedKey -> SensorAttribute.builder()
-                            .sensor(savedSensor)
+                            .sensor(finalSavedSensor)
                             .metricKey(normalizedKey)
                             .build())
                     .toList();
@@ -172,12 +180,12 @@ public class SensorServiceImpl implements SensorService {
             throw new InvalidSensorValueException("변경할 값이 없습니다.");
         }
 
-        boolean hasLocationName = request.locationName() != null && !request.locationName().isBlank();
+        boolean hasLocationId = request.locationId() != null;
         boolean hasSensorName = request.sensorName() != null && !request.sensorName().isBlank();
 
         // 둘 다 비어있으면(null 또는 빈 문자열) 의미없는 요청으로 간주 - 하나만 비어있으면
         // 그 필드는 기존 값 유지로 취급하고 나머지 필드만 반영함
-        if (!hasLocationName && !hasSensorName) {
+        if (!hasLocationId && !hasSensorName) {
             throw new InvalidSensorValueException("변경할 값이 없습니다.");
         }
 
@@ -185,13 +193,11 @@ public class SensorServiceImpl implements SensorService {
                 .orElseThrow(() -> new SensorNotFoundException(sensorId));
 
 
-        if (hasLocationName) {
-            // 사용자는 locationId를 모르므로 센서가 속한 그룹 내에서 이름으로 찾음
-            // (그룹 스코프로 찾기 때문에 다른 그룹 소속 location으로 잘못 옮겨질 걱정도 없음)
-            Location location = locationsRepository.findByGroupGroupIdAndLocationName(
-                            // 예) 그룹 1에서 장소(1층어디회의실)은 하나밖에없으니 거기에 맞는 장소가 나옴
-                            sensor.getGroup().getGroupId(), request.locationName())
-                    .orElseThrow(() -> LocationNotFoundException.notFoundLocationByName(request.locationName()));
+        if (hasLocationId) {
+            // 센서가 속한 그룹 소속 location인지 함께 확인 (다른 그룹 소속 location으로 잘못 옮겨질 걱정도 없음)
+            Location location = locationsRepository.findByLocationIdAndGroupGroupId(
+                            request.locationId(), sensor.getGroup().getGroupId())
+                    .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(request.locationId()));
             // 그 정소를 가지고 센서는 업데이트함
             sensor.updateLocation(location);
 
@@ -247,28 +253,9 @@ public class SensorServiceImpl implements SensorService {
     }
 
     @Override
-    public List<SensorResponse> searchSensors(Long groupId, String eui, Long locationId,
-                                              SensorUpdateRequest request) {
-
-        QSensor sensor = QSensor.sensor;
-        BooleanBuilder builder = new BooleanBuilder();
-        builder.and(sensor.group.groupId.eq(groupId)); // 항상 그룹 스코프로 제한
-
-        // eui/locationId/locationName/sensorName 중 값이 있는 조건만 AND로 조합 (없는 조건은 건너뜀)
-        if (eui != null && !eui.trim().isEmpty()) {
-            builder.and(sensor.sensorEui.eq(eui));
-        }
-        if (locationId != null) {
-            builder.and(sensor.location.locationId.eq(locationId));
-        }
-        if (request.locationName() != null && !request.locationName().isBlank()) {
-            builder.and(sensor.location.locationName.eq(request.locationName()));
-        }
-        if (request.sensorName() != null && !request.sensorName().trim().isEmpty()) {
-            builder.and(sensor.sensorName.eq(request.sensorName()));
-        }
-
-        return StreamSupport.stream(sensorRepository.findAll(builder).spliterator(), false)
+    public List<SensorResponse> searchSensors(Long groupId, Long id, String eui, SensorUpdateRequest request) {
+        // 조건 조합(QueryDSL)은 리포지토리 구현체 안에 있음 - 서비스는 조건만 그대로 넘기고 결과를 DTO로 매핑
+        return sensorRepository.search(groupId, id, eui, request.locationId(), request.sensorName()).stream()
                 .map(this::toDto)
                 .toList();
     }

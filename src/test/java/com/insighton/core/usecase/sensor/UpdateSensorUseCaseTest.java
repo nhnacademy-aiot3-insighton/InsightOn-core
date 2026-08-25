@@ -36,7 +36,7 @@ class UpdateSensorUseCaseTest {
         Long userId = 1L;
         Long sensorId = 10L;
         Long groupId = 5L;
-        SensorUpdateRequest request = new SensorUpdateRequest("4층", "새이름");
+        SensorUpdateRequest request = new SensorUpdateRequest(20L, "새이름");
 
         given(sensorService.getSensorGroupId(sensorId)).willReturn(groupId);
 
@@ -51,7 +51,7 @@ class UpdateSensorUseCaseTest {
     void updateSensor_fail_sensorNotFound() {
         Long userId = 1L;
         Long sensorId = 999L;
-        SensorUpdateRequest request = new SensorUpdateRequest("4층", null);
+        SensorUpdateRequest request = new SensorUpdateRequest(20L, null);
 
         given(sensorService.getSensorGroupId(sensorId)).willThrow(new SensorNotFoundException(sensorId));
 
@@ -68,7 +68,7 @@ class UpdateSensorUseCaseTest {
         Long userId = 1L;
         Long sensorId = 10L;
         Long groupId = 5L;
-        SensorUpdateRequest request = new SensorUpdateRequest("4층", null);
+        SensorUpdateRequest request = new SensorUpdateRequest(20L, null);
 
         given(sensorService.getSensorGroupId(sensorId)).willReturn(groupId);
         given(groupMemberService.validateGroupAdmin(groupId, userId))
@@ -86,7 +86,7 @@ class UpdateSensorUseCaseTest {
         Long userId = 999L;
         Long sensorId = 10L;
         Long groupId = 5L;
-        SensorUpdateRequest request = new SensorUpdateRequest("4층", null);
+        SensorUpdateRequest request = new SensorUpdateRequest(20L, null);
 
         given(sensorService.getSensorGroupId(sensorId)).willReturn(groupId);
         given(groupMemberService.validateGroupAdmin(groupId, userId))
