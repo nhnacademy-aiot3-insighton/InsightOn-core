@@ -17,7 +17,6 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -41,7 +40,7 @@ class SearchSensorUseCaseTest {
         Long groupId = 5L;
         SensorUpdateRequest request = new SensorUpdateRequest(null, null);
         List<SensorResponse> expected = List.of(
-                new SensorResponse(1L, 2L, 3L, "EUI-1", "센서A", OffsetDateTime.now()));
+                new SensorResponse(1L, 2L, 3L, "EUI-1", "센서A", OffsetDateTime.now(), OffsetDateTime.now()));
 
         given(sensorService.searchSensors(groupId, null, null, request)).willReturn(expected);
 
