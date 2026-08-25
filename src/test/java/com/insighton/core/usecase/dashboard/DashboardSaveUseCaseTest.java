@@ -167,23 +167,30 @@ class DashboardSaveUseCaseTest {
         @DisplayName("위젯 ID 목록으로 차트 데이터 맵 구성 성공")
         void saveDashboardInfluxDB_success() {
             // given
+            Long locationId = 10L;
+            Long dashboardId = 50L;
             List<Long> widgetIds = List.of(1L, 2L);
+
+            Dashboard mockDashboard = mock(Dashboard.class);
+            given(mockDashboard.getDashboardId()).willReturn(dashboardId);
+            given(dashboardService.getDashboardEntity(locationId)).willReturn(mockDashboard);
+
             ChartDataResponse mockChartData1 = mock(ChartDataResponse.class);
             ChartDataResponse mockChartData2 = mock(ChartDataResponse.class);
 
-            given(widgetService.getWidgetChartData(1L)).willReturn(mockChartData1);
-            given(widgetService.getWidgetChartData(2L)).willReturn(mockChartData2);
+            given(widgetService.getWidgetChartData(dashboardId, 1L)).willReturn(mockChartData1);
+            given(widgetService.getWidgetChartData(dashboardId, 2L)).willReturn(mockChartData2);
 
             // when
-            Map<Long, ChartDataResponse> result = dashboardSaveUseCase.saveDashboardInfluxDB(widgetIds);
+            Map<Long, ChartDataResponse> result = dashboardSaveUseCase.saveDashboardInfluxDB(locationId, widgetIds);
 
             // then
             assertThat(result).hasSize(2);
             assertThat(result.get(1L)).isEqualTo(mockChartData1);
             assertThat(result.get(2L)).isEqualTo(mockChartData2);
 
-            verify(widgetService, times(1)).getWidgetChartData(1L);
-            verify(widgetService, times(1)).getWidgetChartData(2L);
+            verify(widgetService, times(1)).getWidgetChartData(dashboardId, 1L);
+            verify(widgetService, times(1)).getWidgetChartData(dashboardId, 2L);
         }
     }
 }

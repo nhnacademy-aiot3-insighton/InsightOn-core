@@ -42,14 +42,14 @@ public class SensorController {
     public ResponseEntity<List<SensorResponse>> search(
             @RequestHeader("X-USER-ID") Long userid,
             @RequestParam Long groupId,
+            @RequestParam(required = false) Long id,
             @RequestParam(required = false) String eui,
             @RequestParam(required = false) Long locationId,
-            @RequestParam(required = false) String locationName,
             @RequestParam(required = false) String sensorName) {
 
         // 조건 검색 수행 후 리스트 반환
-        List<SensorResponse> result = searchSensorUseCase.searchSensors(userid, groupId, eui, locationId,
-                new SensorUpdateRequest(locationName, sensorName));
+        List<SensorResponse> result = searchSensorUseCase.searchSensors(userid, groupId, id, eui,
+                new SensorUpdateRequest(locationId, sensorName));
         return ResponseEntity.ok(result);
     }
 
@@ -69,7 +69,6 @@ public class SensorController {
             @PathVariable("id") Long sensorId,
             @RequestBody @Valid SensorUpdateRequest request
             ){
-        // locationId 대신 locationName을 그대로 전달 - 서비스 계층에서 그룹 내 이름으로 위치를 찾음
         updateSensorUseCase.updateSensor(userId, sensorId, request);
         return ResponseEntity.noContent().build();
     }

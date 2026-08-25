@@ -101,4 +101,56 @@ class SensorRepositoryTest {
 
         assertThat(sensorRepository.findAll()).isEmpty();
     }
+
+    @Test
+    @DisplayName("search - 조건 없으면 groupId 소속 전체 반환")
+    void 검색_조건없음_그룹전체() {
+        List<Sensor> result = sensorRepository.search(1L, null, null, null, null);
+
+        assertThat(result).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("search - id로 단건 좁히기")
+    void 검색_id조건() {
+        List<Sensor> result = sensorRepository.search(1L, 1L, null, null, null);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getSensorEui()).isEqualTo("EUI-100");
+    }
+
+    @Test
+    @DisplayName("search - eui로 단건 좁히기")
+    void 검색_eui조건() {
+        List<Sensor> result = sensorRepository.search(1L, null, "EUI-104", null, null);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getSensorId()).isEqualTo(2L);
+    }
+
+    @Test
+    @DisplayName("search - locationId로 단건 좁히기")
+    void 검색_locationId조건() {
+        List<Sensor> result = sensorRepository.search(1L, null, null, 1L, null);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getSensorEui()).isEqualTo("EUI-104");
+    }
+
+    @Test
+    @DisplayName("search - sensorName으로 단건 좁히기")
+    void 검색_sensorName조건() {
+        List<Sensor> result = sensorRepository.search(1L, null, null, null, "센서A");
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getSensorEui()).isEqualTo("EUI-100");
+    }
+
+    @Test
+    @DisplayName("search - 다른 그룹의 groupId를 넘기면 그 그룹 소속 센서는 안 나옴")
+    void 검색_다른그룹은_제외() {
+        List<Sensor> result = sensorRepository.search(2L, null, null, null, null);
+
+        assertThat(result).isEmpty();
+    }
 }

@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -46,30 +47,30 @@ public class ActuatorRunLogServiceImpl implements ActuatorRunLogService {
         String actuatorId = String.valueOf(actuator.getActuatorId());
         String actuatorType = actuator.getActuatorType().name();
 
-        // 상태 맵을 순회하며 매핑되는 CommandType을 찾아 실행 로그를 저장
+        // 상태 맵을 순회하며 매핑되는 CommandType을 찾아 실행 로그 엔티티를 모음
+        List<ActuatorRunLog> logEntities = new ArrayList<>();
         newState.forEach((key, value) -> CommandType.fromStateKey(key).ifPresentOrElse(
-                commandType -> {
-                    // 액추에이터 실행 로그 엔티티를 생성하고 DB에 저장
-                    ActuatorRunLog logEntity = ActuatorRunLog.builder()
-                            .actuator(actuator)
-                            .commandType(commandType)
-                            .commandValue(String.valueOf(value))
-                            .executedByType(executedByType)
-                            .executedByUserId(executedByUserId)
-                            .executedAt(OffsetDateTime.now())
-                            .build();
-                    actuatorRunLogRepository.save(logEntity);
-
-                    // 파워 상태 명령만 InfluxDB 시계열 대상 - 이벤트만 발행하고 실제 쓰기는 트랜잭션 커밋 후로 미룸
-                    if (commandType == CommandType.POWER_STATUS) {
-                        eventPublisher.publishEvent(new ActuatorStatusChangedEvent(
-                                groupId, locationId, actuatorId, actuatorType,
-                                logEntity.getCommandValue(), logEntity.getExecutedAt()));
-                    }
-                },
+                commandType -> logEntities.add(ActuatorRunLog.builder()
+                        .actuator(actuator)
+                        .commandType(commandType)
+                        .commandValue(String.valueOf(value))
+                        .executedByType(executedByType)
+                        .executedByUserId(executedByUserId)
+                        .executedAt(OffsetDateTime.now())
+                        .build()),
                 // 매핑 안 되는 키는 로그만 남기지 않고 넘어감
                 () -> log.info("알 수 없는 제어 명령키 - 실행 로그 남기지 못함: {}", key)
         ));
+
+        // 모은 로그를 한 번에 배치 저장 (N번의 개별 insert 방지)
+        actuatorRunLogRepository.saveAll(logEntities);
+
+        // 파워 상태 명령만 InfluxDB 시계열 대상 - 이벤트만 발행하고 실제 쓰기는 트랜잭션 커밋 후로 미룸
+        logEntities.stream()
+                .filter(logEntity -> logEntity.getCommandType() == CommandType.POWER_STATUS)
+                .forEach(logEntity -> eventPublisher.publishEvent(new ActuatorStatusChangedEvent(
+                        groupId, locationId, actuatorId, actuatorType,
+                        logEntity.getCommandValue(), logEntity.getExecutedAt())));
     }
 
     @Override

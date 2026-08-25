@@ -15,7 +15,7 @@ public interface SensorService {
     //단일 장치 상세 조회
     SensorResponse getSensorById(Long sensorId);
 
-    // 업데이트 - newLocationName은 사용자가 화면에 보이는 장소 이름으로 넘김 (locationId를 몰라도 됨)
+    // 업데이트 - locationId가 있으면 위치도 함께 변경 (프론트가 드롭다운으로 선택해서 넘겨줌)
     void updateSensor(Long sensorId, SensorUpdateRequest request);
 
 
@@ -25,8 +25,8 @@ public interface SensorService {
     // 전체 장치 삭제 (권한 체크 필요 - userId, 삭제 대상 groupId 추가)
     void deleteAll(Long groupId);
 
-    // 조건별 장치 검색 (eui/locationId/locationName/sensorName 중 있는 조건만 AND로 조합)
-    List<SensorResponse> searchSensors(Long groupId, String eui, Long locationId, SensorUpdateRequest request);
+    // 조건별 장치 검색 (id/eui/locationId/sensorName 중 있는 조건만 AND로 조합)
+    List<SensorResponse> searchSensors(Long groupId, Long id, String eui, SensorUpdateRequest request);
 
     // 장소 미배정(location이 null인) 센서 목록 조회 - 자동 등록됐지만 아직 설치 위치를 안 정한 센서 파악용
     List<SensorResponse> getUnassignedSensors(Long groupId);

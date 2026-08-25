@@ -1,10 +1,9 @@
 package com.insighton.core.widgets.controller;
 
 import com.insighton.core.controller.api.ChartDataController;
-import com.insighton.core.domain.groupmember.service.GroupMemberService;
 import com.insighton.core.domain.widgets.dto.chart.ChartDataResponse;
 import com.insighton.core.domain.widgets.exception.WidgetNotFoundException;
-import com.insighton.core.domain.widgets.service.WidgetService;
+import com.insighton.core.usecase.chartdata.ChartDataUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -28,10 +27,7 @@ class ChartDataControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private WidgetService widgetService;
-
-    @MockitoBean
-    private GroupMemberService groupMemberService;
+    private ChartDataUseCase chartDataUseCase;
 
     @Nested
     @DisplayName("성공 케이스")
@@ -42,25 +38,24 @@ class ChartDataControllerTest {
         void getWidgetChartData_success() throws Exception {
             // given
             Long userId = 1L;
-            Long widgetId = 1L;
             Long groupId = 10L;
+            Long locationId = 5L;
+            Long widgetId = 1L;
             ChartDataResponse mockResponse = ChartDataResponse.builder()
                     .labels(List.of("10:00", "10:15"))
                     .datasets(List.of())
                     .build();
 
-            given(widgetService.getWidgetGroupId(widgetId)).willReturn(groupId);
-            given(widgetService.getWidgetChartData(widgetId)).willReturn(mockResponse);
+            given(chartDataUseCase.getWidgetChartData(userId, groupId, locationId, widgetId)).willReturn(mockResponse);
 
             // when & then
-            mockMvc.perform(get("/api/v1/dashboard/widgets/{widget-id}/chart-data", widgetId)
-                            .header("X-User-Id", userId))
+            mockMvc.perform(get("/api/v1/groups/{group-id}/location/{location-id}/dashboard/widgets/{widget-id}/chart-data", groupId, locationId, widgetId)
+                            .header("X-USER-ID", userId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.labels.length()").value(2))
                     .andExpect(jsonPath("$.labels[0]").value("10:00"));
 
-            verify(groupMemberService).validateGroupMembers(groupId, userId);
-            verify(widgetService).getWidgetChartData(widgetId);
+            verify(chartDataUseCase).getWidgetChartData(userId, groupId, locationId, widgetId);
         }
     }
 
@@ -71,7 +66,8 @@ class ChartDataControllerTest {
         @Test
         @DisplayName("PathVariable 타입 오류 시 400 Bad Request")
         void invalidPathVariable_returnsBadRequest() throws Exception {
-            mockMvc.perform(get("/api/v1/dashboard/widgets/{widget-id}/chart-data", "invalid-id"))
+            mockMvc.perform(get("/api/v1/groups/{group-id}/location/{location-id}/dashboard/widgets/{widget-id}/chart-data", 1L, 1L, "invalid-id")
+                            .header("X-USER-ID", 1L))
                     .andExpect(status().isBadRequest());
         }
 
@@ -80,13 +76,15 @@ class ChartDataControllerTest {
         void widgetNotFound_returnsError() throws Exception {
             // given
             Long userId = 1L;
+            Long groupId = 10L;
+            Long locationId = 5L;
             Long widgetId = 999L;
-            given(widgetService.getWidgetChartData(widgetId))
+            given(chartDataUseCase.getWidgetChartData(userId, groupId, locationId, widgetId))
                     .willThrow(WidgetNotFoundException.notFoundWidgetByWidgetId(widgetId));
 
             // when & then
-            mockMvc.perform(get("/api/v1/dashboard/widgets/{widget-id}/chart-data", widgetId)
-                            .header("X-User-Id", userId))
+            mockMvc.perform(get("/api/v1/groups/{group-id}/location/{location-id}/dashboard/widgets/{widget-id}/chart-data", groupId, locationId, widgetId)
+                            .header("X-USER-ID", userId))
                     .andExpect(status().isNotFound());
         }
     }
