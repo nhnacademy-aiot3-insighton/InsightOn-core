@@ -47,7 +47,7 @@ public class GatewayMqttConnectionReconciler {
     @Value("${instance.slot-index:0}")
     private int instanceSlotIndex;
 
-    @Value("${instance.total-count:1}")
+    @Value("${instance.total-count:2}")
     private int instanceTotalCount;
 
     private String instanceId;
