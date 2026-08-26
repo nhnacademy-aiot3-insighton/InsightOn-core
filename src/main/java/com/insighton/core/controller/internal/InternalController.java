@@ -2,7 +2,7 @@ package com.insighton.core.controller.internal;
 
 import com.insighton.core.domain.groupmember.dto.request.GroupMemberJoinRequest;
 import com.insighton.core.domain.groupmember.dto.response.GroupMemberResponse;
-import com.insighton.core.domain.groupmember.dto.response.ManagerGroupResponse;
+import com.insighton.core.domain.groupmember.dto.response.UserGroupResponse;
 import com.insighton.core.domain.groupmember.service.GroupMemberService;
 import com.insighton.core.domain.location.dto.response.LocationListResponse;
 import com.insighton.core.domain.location.dto.response.LocationResponse;
@@ -81,12 +81,22 @@ public class InternalController {
      * @param userId 조회할 user ID
      * @return 권한이 있으면 true, 없으면 false
      */
-    @GetMapping("/users/{user-id}/manager-group")
-    public ResponseEntity<ManagerGroupResponse> existsManagerGroup(
+    @GetMapping("/users/{user-id}/group")
+    public ResponseEntity<UserGroupResponse> existsManagerGroup(
             @PathVariable("user-id") Long userId) {
 
-        ManagerGroupResponse response = groupMemberService.existsManagerGroupAuth(userId);
+        UserGroupResponse response = groupMemberService.userGroupAuth(userId);
 
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/users/{user-id}/manager-group")
+    public ResponseEntity<Boolean> isGroupManager(
+            @PathVariable("user-id") Long userId
+    ) {
+        boolean isAdmin = groupMemberService.existsManagerGroupAuth(userId);
+
+        return ResponseEntity.ok(isAdmin);
+    }
+
 }
