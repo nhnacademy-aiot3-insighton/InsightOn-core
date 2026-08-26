@@ -5,13 +5,9 @@ import com.insighton.core.domain.groupmember.dto.request.GroupMemberJoinRequest;
 import com.insighton.core.domain.groupmember.dto.response.AuthUserResponse;
 import com.insighton.core.domain.groupmember.dto.response.GroupMemberListResponse;
 import com.insighton.core.domain.groupmember.dto.response.GroupMemberResponse;
-import com.insighton.core.domain.groupmember.dto.response.ManagerGroupResponse;
+import com.insighton.core.domain.groupmember.dto.response.UserGroupResponse;
 import com.insighton.core.domain.groupmember.entity.GroupMember;
-import com.insighton.core.domain.groupmember.exception.AlreadyJoinedException;
-import com.insighton.core.domain.groupmember.exception.CannotKickSelfException;
-import com.insighton.core.domain.groupmember.exception.GroupMemberNotFoundException;
-import com.insighton.core.domain.groupmember.exception.ManagerRoleRequiredForTransferException;
-import com.insighton.core.domain.groupmember.exception.SuperManagerCannotLeaveException;
+import com.insighton.core.domain.groupmember.exception.*;
 import com.insighton.core.domain.groupmember.repository.GroupMemberRepository;
 import com.insighton.core.domain.groupmember.service.GroupMemberService;
 import com.insighton.core.domain.groups.entity.Group;
@@ -266,7 +262,7 @@ public class GroupMemberServiceImpl implements GroupMemberService {
      */
     @Override
     @Transactional
-    public ManagerGroupResponse existsManagerGroupAuth(Long userId) {
+    public UserGroupResponse userGroupAuth(Long userId) {
         GroupMember member = groupMemberRepository.findByUserId(userId)
                 .orElseThrow(() -> GroupMemberNotFoundException.byUserId(userId));
 
@@ -274,7 +270,18 @@ public class GroupMemberServiceImpl implements GroupMemberService {
 
         String groupName = member.getGroup().getName();
 
-        return new ManagerGroupResponse(isAdmin, groupName);
+        return new UserGroupResponse(isAdmin, groupName);
+    }
+
+    /**
+     * Auth 요청
+     */
+    @Transactional
+    public boolean existsManagerGroupAuth(Long userId) {
+        GroupMember member = groupMemberRepository.findByUserId(userId)
+                .orElseThrow(() -> GroupMemberNotFoundException.byUserId(userId));
+
+        return member.isManager() || member.isSuperManager();
     }
 
     /**
