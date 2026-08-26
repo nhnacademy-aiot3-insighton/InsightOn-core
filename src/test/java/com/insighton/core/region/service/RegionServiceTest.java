@@ -64,7 +64,7 @@ class RegionServiceTest {
             given(regionRegistry.findGridCoordinate("Seoul", "Jongno")).willReturn(Optional.of(GRID_DTO));
 
             // when
-            GroupRegionDto result = regionService.cacheGroupRegion(GROUP_ID, "Seoul,Jongno");
+            GroupRegionDto result = regionService.cacheGroupRegion(GROUP_ID, "Seoul Jongno");
 
             // then
             assertThat(result.groupId()).isEqualTo(GROUP_ID);
@@ -126,7 +126,7 @@ class RegionServiceTest {
             given(regionRegistry.findGridCoordinate("Atlantis", "Nowhere")).willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> regionService.cacheGroupRegion(GROUP_ID, "Atlantis,Nowhere"))
+            assertThatThrownBy(() -> regionService.cacheGroupRegion(GROUP_ID, "Atlantis Nowhere"))
                     .isInstanceOf(RegionNotFoundException.class);
             verify(groupRegionRepository, never()).save(any());
         }
