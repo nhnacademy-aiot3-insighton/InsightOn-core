@@ -36,7 +36,7 @@ class GetUnassignedSensorsUseCaseTest {
     void getUnassignedSensors_success() {
         Long userId = 1L;
         Long groupId = 5L;
-        SensorResponse response = new SensorResponse(10L, 20L, null, "EUI-1", "센서A", OffsetDateTime.now());
+        SensorResponse response = new SensorResponse(10L, 20L, null, "EUI-1", "센서A", OffsetDateTime.now(), OffsetDateTime.now());
         given(sensorService.getUnassignedSensors(groupId)).willReturn(List.of(response));
 
         List<SensorResponse> result = getUnassignedSensorsUseCase.getUnassignedSensors(userId, groupId);

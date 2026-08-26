@@ -17,7 +17,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.OffsetDateTime;
-import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
@@ -54,7 +53,7 @@ class SensorControllerTest {
         return new SensorResponse(
                 1L, 10L, 20L,
                 "EUI-0001", "4층 CO2 센서",
-                OffsetDateTime.now()
+                OffsetDateTime.now(), OffsetDateTime.now()
         );
     }
 

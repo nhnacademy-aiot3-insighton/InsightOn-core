@@ -6,6 +6,7 @@ import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.insighton.core.usecase.groupregistration.GroupRegionResolutionUseCase;
 import com.insighton.core.usecase.weather.WeatherRecoveryUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,9 @@ class WeatherRecoveryControllerTest {
 
     @MockitoBean
     private WeatherRecoveryUseCase weatherRecoveryUseCase;
+
+    @MockitoBean
+    private GroupRegionResolutionUseCase groupRegionResolutionUseCase;
 
     @Test
     @DisplayName("그룹 ID를 통한 날씨 복구 조회 성공")

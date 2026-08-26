@@ -311,7 +311,7 @@ public class WidgetServiceImpl implements WidgetService {
         // null이나 빈 값 체크
         if (Objects.nonNull(config.sensorEui()) && !config.sensorEui().isBlank()) {
             // 이스케이프 처리
-            flux.append("   |> filter(fn: (r) => r.sensorEui == \"").append(sanitize(config.sensorEui())).append("\")\n");
+            flux.append("   |> filter(fn: (r) => r.sensor_eui == \"").append(sanitize(config.sensorEui())).append("\")\n");
         }
 
         if (Objects.nonNull(config.fields()) && !config.fields().isEmpty()) {
