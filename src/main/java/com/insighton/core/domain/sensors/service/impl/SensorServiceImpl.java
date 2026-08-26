@@ -281,7 +281,8 @@ public class SensorServiceImpl implements SensorService {
                 e.getLocation() != null ? e.getLocation().getLocationId() : null,
                 e.getSensorEui(),
                 e.getSensorName(),
-                e.getCreatedAt()
+                e.getCreatedAt(),
+                e.getLastSeenAt()
         );
     }
 
