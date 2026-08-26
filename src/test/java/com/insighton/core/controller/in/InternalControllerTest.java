@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.insighton.core.controller.internal.InternalController;
 import com.insighton.core.domain.groupmember.dto.request.GroupMemberJoinRequest;
 import com.insighton.core.domain.groupmember.dto.response.GroupMemberResponse;
-import com.insighton.core.domain.groupmember.dto.response.ManagerGroupResponse;
+import com.insighton.core.domain.groupmember.dto.response.UserGroupResponse;
 import com.insighton.core.domain.groupmember.entity.GroupMember;
 import com.insighton.core.domain.groupmember.service.GroupMemberService;
 import com.insighton.core.domain.location.dto.response.LocationListResponse;
@@ -117,8 +117,8 @@ class InternalControllerTest {
     @Test
     @DisplayName("유저 관리자 권한 확인 성공 - existsManagerGroup")
     void existsManagerGroup_success() throws Exception {
-        ManagerGroupResponse response = new ManagerGroupResponse(true, "테스트 그룹");
-        given(groupMemberService.existsManagerGroupAuth(10L)).willReturn(response);
+        UserGroupResponse response = new UserGroupResponse(true, "테스트 그룹");
+        given(groupMemberService.userGroupAuth(10L)).willReturn(response);
 
         mockMvc.perform(get("/internal/v1/users/10/manager-group"))
                 .andDo(print())

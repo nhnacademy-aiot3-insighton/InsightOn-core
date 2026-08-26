@@ -5,7 +5,7 @@ import com.insighton.core.domain.groupmember.dto.request.GroupMemberJoinRequest;
 import com.insighton.core.domain.groupmember.dto.response.AuthUserResponse;
 import com.insighton.core.domain.groupmember.dto.response.GroupMemberListResponse;
 import com.insighton.core.domain.groupmember.dto.response.GroupMemberResponse;
-import com.insighton.core.domain.groupmember.dto.response.ManagerGroupResponse;
+import com.insighton.core.domain.groupmember.dto.response.UserGroupResponse;
 import com.insighton.core.domain.groupmember.entity.GroupMember;
 import com.insighton.core.domain.groupmember.exception.AlreadyJoinedException;
 import com.insighton.core.domain.groupmember.exception.CannotKickSelfException;
@@ -450,7 +450,7 @@ class GroupMemberServiceTest {
         given(groupMemberRepository.findByUserId(userId)).willReturn(Optional.of(member));
 
         // when
-        ManagerGroupResponse response = groupMemberService.existsManagerGroupAuth(userId);
+        UserGroupResponse response = groupMemberService.userGroupAuth(userId);
 
         // then
         assertThat(response).isNotNull();
