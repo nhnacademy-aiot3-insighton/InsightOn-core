@@ -24,6 +24,7 @@ public class DashboardServiceImpl implements DashboardService {
     @Override
     @Transactional
     public void createDashboard(Location location, DashboardRequest request) {
+        log.debug("대시보드 생성 요청 - locationId: {}, title: {}", location.getLocationId(), request.title());
         Dashboard dashboard = Dashboard.builder()
                 .location(location).title(request.title()).build();
 
@@ -34,9 +35,11 @@ public class DashboardServiceImpl implements DashboardService {
     @Override
     @Transactional(readOnly = true)
     public DashboardResponse getDashboard(Long locationId, List<WidgetsListResponse> widgetsList) {
+        log.debug("대시보드 조회 요청 - locationId: {}", locationId);
         Dashboard dashboard = dashboardRepository.findByLocationLocationId(locationId)
                 .orElseThrow(() -> new DashboardNotFoundException(locationId));
 
+        log.info("대시보드 조회 완료 - locationId: {}, dashboardId: {}, title: {}", locationId, dashboard.getDashboardId(), dashboard.getTitle());
         return DashboardResponse.builder()
                 .dashboardId(dashboard.getDashboardId())
                 .title(dashboard.getTitle())
@@ -47,6 +50,7 @@ public class DashboardServiceImpl implements DashboardService {
     @Override
     @Transactional
     public void updateDashboardTitle(DashboardRequest request) {
+        log.debug("대시보드 제목 수정 요청 - locationId: {}, title: {}", request.locationId(), request.title());
         Dashboard dashboard = getDashboardWithLockByLocationId(request.locationId());
 
         dashboard.updateTitle(request.title());
@@ -56,6 +60,7 @@ public class DashboardServiceImpl implements DashboardService {
     @Override
     @Transactional
     public void deleteDashboard(Long locationId) {
+        log.debug("대시보드 삭제 요청 - locationId: {}", locationId);
         Dashboard dashboard = getDashboardWithLockByLocationId(locationId);
 
         dashboardRepository.delete(dashboard);
@@ -65,12 +70,14 @@ public class DashboardServiceImpl implements DashboardService {
     @Override
     @Transactional
     public Dashboard getDashboardEntity(Long locationId) {
+        log.debug("대시보드 엔티티 조회 - locationId: {}", locationId);
         return dashboardRepository.findByLocationLocationId(locationId)
                 .orElseThrow(() -> new DashboardNotFoundException(locationId));
     }
 
     @Override
     public Dashboard getDashboardWithLockByLocationId(Long locationId) {
+        log.debug("대시보드 비관적 락 조회 - locationId: {}", locationId);
         return dashboardRepository.findWithLockByLocationLocationId(locationId)
                 .orElseThrow(() -> new DashboardNotFoundException(locationId));
     }
