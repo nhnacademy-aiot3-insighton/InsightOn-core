@@ -59,28 +59,33 @@ public class GroupServiceImpl implements GroupService {
     @Override
     @Transactional(readOnly = true)
     public GroupResponse getGroupPreview(String inviteToken, Long groupId) {
+        log.debug("그룹 미리보기 조회 요청 - groupId: {}", groupId);
         // token으로 대상 그룹 조회 (token이 존재하지 않을 시 exception 던지기)
         Group groupEntity = groupRepository.findByInviteTokenAndGroupId(inviteToken, groupId)
                 .orElseThrow(InviteTokenNotFoundException::new);
 
+        log.info("그룹 미리보기 조회 완료 - groupId: {}, name: {}", groupId, groupEntity.getName());
         return GroupResponse.ofPublic(groupEntity);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<GroupAdminResponse> getGroupList(String userRole, Long userId, Pageable pageable) {
+        log.debug("그룹 목록 조회 요청 - userId: {}, role: {}, page: {}", userId, userRole, pageable.getPageNumber());
 
         if ("ADMIN".equals(userRole)) {
-
-            return groupRepository.findAll(pageable)
+            Page<GroupAdminResponse> result = groupRepository.findAll(pageable)
                     .map(group -> new GroupAdminResponse(
                             group.getGroupId(),
                             group.getName(),
                             group.getDescription(),
                             group.getGroupRegion()
                     ));
+            log.info("그룹 목록 조회 완료 - totalElements: {}", result.getTotalElements());
+            return result;
         }
         // 시스템 관리자가 아닐 경우에 접근권한에러 던지기
+        log.warn("그룹 목록 조회 권한 없음 - userId: {}, role: {}", userId, userRole);
         throw new UnAuthorizedAccessException(userId);
     }
 
@@ -117,9 +122,12 @@ public class GroupServiceImpl implements GroupService {
     @Override
     @Transactional(readOnly = true)
     public Group validateGroupByInviteToken(String inviteToken) {
+        log.debug("초대 토큰으로 그룹 검증 요청");
         // inviteToken으로 대상 그룹이 존재하는지 확인 및 조회
-        return groupRepository.findByInviteToken(inviteToken)
+        Group group = groupRepository.findByInviteToken(inviteToken)
                 .orElseThrow(InviteTokenNotFoundException::new);
+        log.info("초대 토큰 그룹 검증 완료 - groupId: {}", group.getGroupId());
+        return group;
     }
 
     /**
@@ -127,6 +135,7 @@ public class GroupServiceImpl implements GroupService {
      */
     @Override
     public Group groupFindById(Long groupId) {
+        log.debug("그룹 단건 조회 - groupId: {}", groupId);
         return groupRepository.findById(groupId)
                 .orElseThrow(() -> new GroupNotFoundException(groupId));
     }
@@ -134,15 +143,19 @@ public class GroupServiceImpl implements GroupService {
     @Override
     @Transactional(readOnly = true)
     public void validateInviteToken(Long groupId, String inviteToken) {
+        log.debug("초대 토큰 일치 여부 검증 - groupId: {}", groupId);
         Group groupEntity = groupFindById(groupId);
         if (!Objects.equals(groupEntity.getInviteToken(), inviteToken)) {
+            log.warn("초대 토큰 불일치 - groupId: {}", groupId);
             throw new InvitationTokenMismatchException();
         }
+        log.info("초대 토큰 검증 통과 - groupId: {}", groupId);
     }
 
     @Override
     @Transactional
     public Group findWithLockByGroupId(Long groupId) {
+        log.debug("그룹 비관적 락 조회 - groupId: {}", groupId);
         return groupRepository.findWithLockByGroupId(groupId)
                 .orElseThrow(() -> new GroupNotFoundException(groupId));
     }

@@ -66,18 +66,23 @@ public class GroupMemberServiceImpl implements GroupMemberService {
     @Override
     @Transactional(readOnly = true)
     public List<GroupMemberListResponse> getGroupMemberList(Long userId, Long groupId) {
+        log.debug("그룹 멤버 목록 조회 요청 - userId: {}, groupId: {}", userId, groupId);
         GroupMember members = validateGroupMembers(groupId, userId);
 
         if (members.isMember()) {
+            log.warn("그룹 멤버 목록 조회 권한 없음 - userId: {}, groupId: {}", userId, groupId);
             throw new UnAuthorizedAccessException(userId);
         }
 
-        return groupMemberRepository.findAllByGroupGroupId(groupId);
+        List<GroupMemberListResponse> result = groupMemberRepository.findAllByGroupGroupId(groupId);
+        log.info("그룹 멤버 목록 조회 완료 - groupId: {}, count: {}", groupId, result.size());
+        return result;
     }
 
     @Override
     @Transactional(readOnly = true)
     public GroupMemberResponse getGroupMember(Long userId, Long groupId, Long groupMemberId) {
+        log.debug("그룹 멤버 단건 조회 요청 - userId: {}, groupId: {}, groupMemberId: {}", userId, groupId, groupMemberId);
 
         GroupMember requester = validateGroupMembers(groupId, userId);
 
@@ -88,11 +93,13 @@ public class GroupMemberServiceImpl implements GroupMemberService {
 
         // 둘 다 해당하지 않으면 에러
         if (requester.isMember() && !isSelf) {
+            log.warn("그룹 멤버 단건 조회 권한 없음 - userId: {}, groupMemberId: {}", userId, groupMemberId);
             throw new UnAuthorizedAccessException(userId);
         }
 
         AuthUserResponse authUserResponse = authClient.getUserResponse(members.getUserId());
 
+        log.info("그룹 멤버 단건 조회 완료 - groupMemberId: {}, targetUserId: {}", groupMemberId, members.getUserId());
         return GroupMemberResponse.builder()
                 .userId(members.getUserId())
                 .groupId(members.getGroup().getGroupId())
@@ -106,8 +113,10 @@ public class GroupMemberServiceImpl implements GroupMemberService {
     @Override
     @Transactional(readOnly = true)
     public GroupMemberResponse getGroupMemberAI(Long userId, Long groupId) {
+        log.debug("AI용 그룹 멤버 조회 요청 - userId: {}, groupId: {}", userId, groupId);
         GroupMember members = validateGroupMembers(groupId, userId);
 
+        log.info("AI용 그룹 멤버 조회 완료 - userId: {}, groupId: {}, role: {}", userId, groupId, members.getGroupRole());
         return GroupMemberResponse.builder()
                 .userId(members.getUserId())
                 .groupId(members.getGroup().getGroupId())
@@ -118,8 +127,10 @@ public class GroupMemberServiceImpl implements GroupMemberService {
     @Override
     @Transactional(readOnly = true)
     public Long getMyGroupId(Long userId) {
+        log.debug("내 그룹 ID 조회 요청 - userId: {}", userId);
         GroupMember member = groupMemberRepository.findByUserId(userId)
                 .orElseThrow(() -> GroupMemberNotFoundException.byUserId(userId));
+        log.info("내 그룹 ID 조회 완료 - userId: {}, groupId: {}", userId, member.getGroup().getGroupId());
         return member.getGroup().getGroupId();
     }
 
@@ -148,7 +159,11 @@ public class GroupMemberServiceImpl implements GroupMemberService {
         }
 
         // 3. targetUser가 Member권한일 때 Manager로 변경
-        targetMember.updateRole(targetMember.getGroupRole() == GroupMember.GroupRole.MEMBER ? GroupMember.GroupRole.MANAGER : GroupMember.GroupRole.MEMBER);
+        GroupMember.GroupRole newRole = targetMember.getGroupRole() == GroupMember.GroupRole.MEMBER
+                ? GroupMember.GroupRole.MANAGER : GroupMember.GroupRole.MEMBER;
+        targetMember.updateRole(newRole);
+        log.info("매니저 역할 토글 완료 - adminId: {}, targetGroupMemberId: {}, groupId: {}, newRole: {}",
+                adminId, targetGroupMemberId, groupId, newRole);
     }
 
     @Override
@@ -170,6 +185,8 @@ public class GroupMemberServiceImpl implements GroupMemberService {
         }
         superManager.updateRole(GroupMember.GroupRole.MANAGER);
         targetMember.updateRole(GroupMember.GroupRole.SUPER_MANAGER);
+        log.info("슈퍼매니저 권한 위임 완료 - 기존 superManagerUserId: {}, 새 superManagerGroupMemberId: {}, groupId: {}",
+                superManagerUserId, targetGroupMemberId, groupId);
     }
 
     @Override
@@ -263,14 +280,16 @@ public class GroupMemberServiceImpl implements GroupMemberService {
     @Override
     @Transactional
     public UserGroupResponse userGroupAuth(Long userId) {
+        log.debug("유저 그룹 소속/권한 확인 요청 (Auth) - userId: {}", userId);
         GroupMember member = groupMemberRepository.findByUserId(userId)
                 .orElseThrow(() -> GroupMemberNotFoundException.byUserId(userId));
 
-        boolean isAdmin = member.isManager() || member.isSuperManager();
+        boolean isGroup = groupMemberRepository.existsByUserId(userId);
 
         String groupName = member.getGroup().getName();
 
-        return new UserGroupResponse(isAdmin, groupName);
+        log.info("유저 그룹 소속/권한 확인 완료 (Auth) - userId: {}, groupName: {}, isGroup: {}", userId, groupName, isGroup);
+        return new UserGroupResponse(isGroup, groupName);
     }
 
     /**
@@ -278,10 +297,13 @@ public class GroupMemberServiceImpl implements GroupMemberService {
      */
     @Transactional
     public boolean existsManagerGroupAuth(Long userId) {
+        log.debug("매니저 권한 여부 확인 요청 (Auth) - userId: {}", userId);
         GroupMember member = groupMemberRepository.findByUserId(userId)
                 .orElseThrow(() -> GroupMemberNotFoundException.byUserId(userId));
 
-        return member.isManager() || member.isSuperManager();
+        boolean result = member.isManager() || member.isSuperManager();
+        log.info("매니저 권한 여부 확인 완료 (Auth) - userId: {}, isManager: {}", userId, result);
+        return result;
     }
 
     /**
@@ -289,6 +311,7 @@ public class GroupMemberServiceImpl implements GroupMemberService {
      */
     @Override
     public GroupMember validateGroupMembers(Long groupId, Long userId) {
+        log.debug("그룹 멤버 소속 검증 - groupId: {}, userId: {}", groupId, userId);
         return groupMemberRepository.findByGroupGroupIdAndUserId(groupId, userId)
                 .orElseThrow(() -> GroupMemberNotFoundException.byUserIdAndGroupId(userId, groupId));
     }
@@ -298,8 +321,11 @@ public class GroupMemberServiceImpl implements GroupMemberService {
      */
     @Override
     public void validateUserNotInAnyGroup(Long userId) {
+        log.debug("어떤 그룹에도 미소속 여부 검증 - userId: {}", userId);
         if (groupMemberRepository.existsByUserId(userId)) {
+            log.warn("이미 그룹에 소속된 유저 - userId: {}", userId);
             throw new AlreadyJoinedException(userId);
         }
+        log.debug("그룹 미소속 검증 통과 - userId: {}", userId);
     }
 }
