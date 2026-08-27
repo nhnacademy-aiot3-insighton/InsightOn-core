@@ -102,9 +102,9 @@ class GroupMemberRepositoryTest {
     }
 
     @Test
-    @DisplayName("그룹 ID로 멤버 목록 조회 (DTO 변환 확인)")
-    void findAllByGroupGroupId() {
-        List<GroupMemberListResponse> list = groupMemberRepository.findAllByGroupGroupId(1L);
+    @DisplayName("그룹 ID로 멤버 목록 조회 (엔티티 목록 확인)")
+    void findByGroupGroupId() {
+        List<GroupMember> list = groupMemberRepository.findByGroupGroupId(1L);
         assertThat(list).hasSize(1);
     }
 
@@ -150,7 +150,7 @@ class GroupMemberRepositoryTest {
         groupMemberRepository.deleteAllByGroupGroupId(1L);
 
         // 삭제 후 확인
-        assertThat(groupMemberRepository.findAllByGroupGroupId(1L)).isEmpty();
+        assertThat(groupMemberRepository.findByGroupGroupId(1L)).isEmpty();
     }
 
 }
