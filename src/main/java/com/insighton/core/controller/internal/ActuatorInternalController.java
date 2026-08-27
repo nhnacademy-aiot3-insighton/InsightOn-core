@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -67,14 +68,15 @@ public class ActuatorInternalController {
             throw new ActuatorLocationsActuatorTypeNotFound(locationId, actuatorType);
         }
 
-        // 요청받은 명령/값을 적용할 상태 맵으로 조립
-        Map<String, Object> newState = Map.of(request.command(), request.commandValue());
-
-        // 검증 먼저
-        ActuatorCommandPreset.validateCommandValues(actuatorType, newState);
-
-        // 검증 통과 후 대상 액추에이터 전체에 동일하게 상태 적용 (보통 1개, 같은 타입이 여러 대면 전부)
+        // 대상 액추에이터 전체에 상태 적용 (보통 1개, 같은 타입이 여러 대면 전부)
         for (Actuator actuator : actuators) {
+            // updateActuatorState는 병합이 아니라 통째 교체라 새 값 1개만 보내면 나머지(전원/모드/온도)가 날아가므로, 기존 상태를 복사해 그 위에 새 값만 얹어서 전달
+            Map<String, Object> newState = new HashMap<>(
+                    actuator.getCurrentState() != null ? actuator.getCurrentState() : Map.of());
+            newState.put(request.command(), request.commandValue());
+
+            ActuatorCommandPreset.validateCommandValues(actuatorType, newState);
+
             actuatorService.updateActuatorState(
                     null, actuator.getActuatorId(), newState, request.callerService(), null);
         }
