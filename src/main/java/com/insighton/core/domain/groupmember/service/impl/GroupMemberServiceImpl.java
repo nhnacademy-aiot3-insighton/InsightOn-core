@@ -266,11 +266,11 @@ public class GroupMemberServiceImpl implements GroupMemberService {
         GroupMember member = groupMemberRepository.findByUserId(userId)
                 .orElseThrow(() -> GroupMemberNotFoundException.byUserId(userId));
 
-        boolean isAdmin = member.isManager() || member.isSuperManager();
+        boolean isGroup = groupMemberRepository.existsByUserId(userId);
 
         String groupName = member.getGroup().getName();
 
-        return new UserGroupResponse(isAdmin, groupName);
+        return new UserGroupResponse(isGroup, groupName);
     }
 
     /**
