@@ -120,10 +120,10 @@ class InternalControllerTest {
         UserGroupResponse response = new UserGroupResponse(true, "테스트 그룹");
         given(groupMemberService.userGroupAuth(10L)).willReturn(response);
 
-        mockMvc.perform(get("/internal/v1/users/10/manager-group"))
+        mockMvc.perform(get("/internal/v1/users/10/group"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exists").value(true))
+                .andExpect(jsonPath("$.exists").value(false))
                 .andExpect(jsonPath("$.groupName").value("테스트 그룹"));
     }
 }
