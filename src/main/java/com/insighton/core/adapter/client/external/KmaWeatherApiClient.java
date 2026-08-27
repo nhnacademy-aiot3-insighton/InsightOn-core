@@ -72,6 +72,16 @@ public class KmaWeatherApiClient {
                     resultMap.putIfAbsent(item.category(), item.fcstValue());
                 }
             }
+
+            // TMX(최고기온)/TMN(최저기온)은 하루 중 특정 시각(각각 15시/06시 발표분)에만 실려서
+            // 위 필터(targetFcstTime과 정확히 일치)엔 걸리지 않는 경우가 많음 - 날짜만 같으면
+            // 시각 무관하게 별도로 채움
+            for (Item item : items) {
+                if (targetFcstDate.equals(item.fcstDate())
+                        && ("TMX".equals(item.category()) || "TMN".equals(item.category()))) {
+                    resultMap.putIfAbsent(item.category(), item.fcstValue());
+                }
+            }
         }
 
         return resultMap;
