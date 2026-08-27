@@ -12,6 +12,7 @@ import lombok.Builder;
 @Builder
 public record GroupMemberListResponse(
         Long groupMemberId,
+        Long userId,
         String userName,
         GroupMember.GroupRole groupRole) {
 }

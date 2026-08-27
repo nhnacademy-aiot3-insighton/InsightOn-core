@@ -89,6 +89,7 @@ public class GroupMemberServiceImpl implements GroupMemberService {
                     }
                     return GroupMemberListResponse.builder()
                             .groupMemberId(gm.getGroupMemberId())
+                            .userId(userId)
                             .userName(userName)
                             .groupRole(gm.getGroupRole())
                             .build();
