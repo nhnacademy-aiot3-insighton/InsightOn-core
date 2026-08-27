@@ -12,7 +12,7 @@ public class SidoNameParser {
 
         return switch (sidoName) {
             case "서울특별시" -> "서울";
-            case "전남광주통합특별시" -> "전남광주";
+            case "전남광주통합특별시" -> "광주";
             case "부산광역시" -> "부산";
             case "대구광역시" -> "대구";
             case "인천광역시" -> "인천";
