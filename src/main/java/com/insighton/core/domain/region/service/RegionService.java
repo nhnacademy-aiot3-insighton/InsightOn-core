@@ -39,7 +39,7 @@ public class RegionService {
     }
 
     public GroupRegionDto cacheGroupRegion(Long groupId, String groupRegion) {
-        String[] parts = groupRegion.split(",", 2);
+        String[] parts = groupRegion.split(" ", 2);
         if (parts.length != 2) {
             throw new RegionNotFoundException("올바르지 않은 지역 형식입니다: " + groupRegion);
         }

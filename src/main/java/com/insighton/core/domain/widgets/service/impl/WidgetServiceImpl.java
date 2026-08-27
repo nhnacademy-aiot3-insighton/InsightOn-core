@@ -50,7 +50,7 @@ public class WidgetServiceImpl implements WidgetService {
     @Override
     @Transactional
     public Long createWidget(Dashboard dashboard, WidgetSaveRequest request) {
-
+        log.debug("위젯 생성 요청 - dashboardId: {}", dashboard.getDashboardId());
         Widget widget = Widget.builder()
                 .dashboard(dashboard)
                 .xPos(request.xPos() != null ? request.xPos() : 0)
@@ -60,7 +60,7 @@ public class WidgetServiceImpl implements WidgetService {
                 .widgetConfig(request.widgetConfig())
                 .build();
         Widget newWidget = widgetRepository.save(widget);
-        log.info("위젯 생성 완료 - dashboardId: {}", dashboard.getDashboardId());
+        log.info("위젯 생성 완료 - dashboardId: {}, widgetId: {}", dashboard.getDashboardId(), newWidget.getWidgetId());
         return newWidget.getWidgetId();
     }
 
@@ -92,6 +92,7 @@ public class WidgetServiceImpl implements WidgetService {
     @Override
     @Transactional(readOnly = true)
     public Widget getWidget(Long dashboardId, Long widgetId) {
+        log.debug("위젯 단건 조회 - dashboardId: {}, widgetId: {}", dashboardId, widgetId);
         return widgetRepository.findByWidgetIdAndDashboardDashboardId(widgetId, dashboardId)
                 .orElseThrow(() -> WidgetNotFoundException.notFoundWidgetByWidgetId(widgetId));
     }
@@ -99,10 +100,11 @@ public class WidgetServiceImpl implements WidgetService {
     @Override
     @Transactional(readOnly = true)
     public List<WidgetsListResponse> getWidgetList(Long dashboardId) {
-
+        log.debug("위젯 목록 조회 요청 - dashboardId: {}", dashboardId);
         List<Widget> widgets = widgetRepository.findAllByDashboardDashboardId(dashboardId);
 
         if (widgets.isEmpty()) {
+            log.info("위젯 목록 조회 완료 - dashboardId: {}, count: 0", dashboardId);
             return List.of();
         }
 
@@ -123,6 +125,7 @@ public class WidgetServiceImpl implements WidgetService {
             responses.add(response);
         }
 
+        log.info("위젯 목록 조회 완료 - dashboardId: {}, count: {}", dashboardId, responses.size());
         return responses;
     }
 
@@ -152,6 +155,7 @@ public class WidgetServiceImpl implements WidgetService {
 
     @Override
     public List<Long> getWidgetIdsByDashboardId(Long dashboardId) {
+        log.debug("대시보드 하위 위젯 ID 목록 조회 - dashboardId: {}", dashboardId);
         return widgetRepository.findAllByDashboardDashboardId(dashboardId)
                 .stream()
                 .map(Widget::getWidgetId)
@@ -162,12 +166,15 @@ public class WidgetServiceImpl implements WidgetService {
     @Override
     @Transactional(readOnly = true)
     public ChartDataResponse getWidgetChartData(Long dashboardId, Long targetWidgetId) {
+        log.debug("위젯 차트 데이터 조회 요청 - dashboardId: {}, widgetId: {}", dashboardId, targetWidgetId);
 
         WidgetConfig config = getWidgetConfigFromCache(dashboardId, targetWidgetId);
 
         List<FluxTable> tables = getWidgetData(config);
 
-        return convertToChartData(tables);
+        ChartDataResponse response = convertToChartData(tables);
+        log.info("위젯 차트 데이터 조회 완료 - dashboardId: {}, widgetId: {}", dashboardId, targetWidgetId);
+        return response;
     }
 
     @Override

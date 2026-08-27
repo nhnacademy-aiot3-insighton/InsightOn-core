@@ -126,4 +126,15 @@ class InternalControllerTest {
                 .andExpect(jsonPath("$.exists").value(true))
                 .andExpect(jsonPath("$.groupName").value("테스트 그룹"));
     }
+
+    @Test
+    @DisplayName("유저 그룹 매니저 권한 여부 확인 성공 - isGroupManager")
+    void isGroupManager_success() throws Exception {
+        given(groupMemberService.existsManagerGroupAuth(10L)).willReturn(true);
+
+        mockMvc.perform(get("/internal/v1/users/10/manager-group"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(true));
+    }
 }

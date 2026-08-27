@@ -47,16 +47,20 @@ public class LocationServiceImpl implements LocationService {
     @Override
     @Transactional(readOnly = true)
     public List<LocationListResponse> getLocationList(Long groupId) {
-
-        return locationRepository.findAllByGroupGroupId(groupId);
+        log.debug("위치 목록 조회 요청 - groupId: {}", groupId);
+        List<LocationListResponse> result = locationRepository.findAllByGroupGroupId(groupId);
+        log.info("위치 목록 조회 완료 - groupId: {}, count: {}", groupId, result.size());
+        return result;
     }
 
     @Override
     @Transactional(readOnly = true)
     public LocationResponse getLocation(Long locationId, Long groupId) {
+        log.debug("위치 상세 조회 요청 - locationId: {}, groupId: {}", locationId, groupId);
         // 어떤 걸 검증해야하나... 흠냐
         Location location = getLocationByGroupId(locationId, groupId);
 
+        log.info("위치 상세 조회 완료 - locationId: {}, name: {}", locationId, location.getLocationName());
         return LocationResponse.builder()
                 .locationId(locationId)
                 .groupId(groupId)
@@ -69,9 +73,11 @@ public class LocationServiceImpl implements LocationService {
     @Override
     @Transactional(readOnly = true)
     public LocationResponse getLocationAI(Long locationId) {
+        log.debug("AI용 위치 조회 요청 - locationId: {}", locationId);
         Location location = locationRepository.findById(locationId)
                 .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(locationId));
 
+        log.info("AI용 위치 조회 완료 - locationId: {}, name: {}", locationId, location.getLocationName());
         return LocationResponse.builder()
                 .locationId(locationId)
                 .groupId(location.getGroup().getGroupId())
@@ -126,6 +132,7 @@ public class LocationServiceImpl implements LocationService {
     @Override
 //    @Transactional(readOnly = true)
     public Location getLocationByGroupId(Long locationId, Long groupId) {
+        log.debug("위치 단건 조회 (헬퍼) - locationId: {}, groupId: {}", locationId, groupId);
         return locationRepository.findByLocationIdAndGroupGroupId(locationId, groupId)
                 .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(locationId));
     }
@@ -133,6 +140,9 @@ public class LocationServiceImpl implements LocationService {
     @Override
     @Transactional
     public List<Location> getLocationListByGroupId(Long groupId) {
-        return locationRepository.findByGroupGroupId(groupId);
+        log.debug("그룹별 위치 엔티티 목록 조회 - groupId: {}", groupId);
+        List<Location> result = locationRepository.findByGroupGroupId(groupId);
+        log.info("그룹별 위치 엔티티 목록 조회 완료 - groupId: {}, count: {}", groupId, result.size());
+        return result;
     }
 }

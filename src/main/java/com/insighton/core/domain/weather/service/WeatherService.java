@@ -15,9 +15,12 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
+import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class WeatherService {
@@ -100,12 +103,22 @@ public class WeatherService {
 
     public WeatherDataDto fetchWeatherData(int gridX, int gridY, String sidoName, String cityName, String baseDate,
                                            String baseTime) {
-        CurrentWeatherDto current = currentWeather(gridX, gridY, baseDate, baseTime);
-        ForecastWeatherDto forecast = forecastWeather(gridX, gridY, baseDate, baseTime);
-        UltraForecastWeatherDto ultraForecast = ultraForecastWeather(gridX, gridY, baseDate, baseTime);
-        AirQualityDto air = airQuality(gridX, gridY, sidoName, cityName, baseDate, baseTime);
+        // 항목 하나가 실패해도 나머지 조회가 막히지 않도록 개별 격리 - 실패한 항목만 null로 남기고 계속 진행
+        CurrentWeatherDto current = safeFetch(() -> currentWeather(gridX, gridY, baseDate, baseTime), "초단기실황");
+        ForecastWeatherDto forecast = safeFetch(() -> forecastWeather(gridX, gridY, baseDate, baseTime), "단기예보");
+        UltraForecastWeatherDto ultraForecast = safeFetch(() -> ultraForecastWeather(gridX, gridY, baseDate, baseTime), "초단기예보");
+        AirQualityDto air = safeFetch(() -> airQuality(gridX, gridY, sidoName, cityName, baseDate, baseTime), "미세먼지");
 
         return new WeatherDataDto(current, forecast, ultraForecast, air);
+    }
+
+    private <T> T safeFetch(Supplier<T> fetcher, String label) {
+        try {
+            return fetcher.get();
+        } catch (Exception e) {
+            log.warn("{} 조회 실패 - 해당 항목만 null로 저장", label, e);
+            return null;
+        }
     }
 
     /**
