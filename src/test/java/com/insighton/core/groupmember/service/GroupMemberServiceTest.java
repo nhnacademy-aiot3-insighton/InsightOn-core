@@ -445,8 +445,8 @@ class GroupMemberServiceTest {
         GroupMember member = mock(GroupMember.class);
         Group group = mock(Group.class);
         given(group.getName()).willReturn("테스트 그룹");
+        given(groupMemberRepository.existsByUserId(userId)).willReturn(true);
         given(member.getGroup()).willReturn(group);
-        given(member.isManager()).willReturn(true);
         given(groupMemberRepository.findByUserId(userId)).willReturn(Optional.of(member));
 
         // when
