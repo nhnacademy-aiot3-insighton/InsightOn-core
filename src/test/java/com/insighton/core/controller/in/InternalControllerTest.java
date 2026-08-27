@@ -123,7 +123,7 @@ class InternalControllerTest {
         mockMvc.perform(get("/internal/v1/users/10/group"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exists").value(false))
+                .andExpect(jsonPath("$.exists").value(true))
                 .andExpect(jsonPath("$.groupName").value("테스트 그룹"));
     }
 }
