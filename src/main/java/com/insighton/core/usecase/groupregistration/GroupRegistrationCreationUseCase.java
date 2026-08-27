@@ -19,7 +19,7 @@ public class GroupRegistrationCreationUseCase {
     public GroupRegistrationResponse createRequest(Long requesterId, CreateGroupRegistrationRequest request) {
         regionService.validateRegion(request.state(), request.city());
 
-        String groupRegion = "%s,%s".formatted(request.state(), request.city());
+        String groupRegion = "%s %s".formatted(request.state(), request.city());
         return groupRegistrationService.createRequest(requesterId, request.groupName(), request.description(), groupRegion);
     }
 }

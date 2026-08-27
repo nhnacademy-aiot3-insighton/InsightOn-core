@@ -38,7 +38,7 @@ class GroupRegistrationCreationUseCaseTest {
     private GroupRegistrationCreationUseCase groupRegistrationCreationUseCase;
 
     private GroupRegistrationResponse dummyResponse() {
-        return new GroupRegistrationResponse(10L, REQUESTER_ID, "Test Group", "Desc", "Seoul,Jongno",
+        return new GroupRegistrationResponse(10L, REQUESTER_ID, "Test Group", "Desc", "Seoul Jongno",
                 GroupRegistrationStatus.PENDING, null, OffsetDateTime.now(), null);
     }
 
@@ -47,14 +47,14 @@ class GroupRegistrationCreationUseCaseTest {
     class Success {
 
         @Test
-        @DisplayName("신청 생성 성공 - 지역 검증 후 state,city로 조합해서 Service에 위임")
+        @DisplayName("신청 생성 성공 - 지역 검증 후 \"state city\"로 조합해서 Service에 위임")
         void createRequest_success() {
             // given
             CreateGroupRegistrationRequest request = new CreateGroupRegistrationRequest("Test Group", "Desc", "Seoul", "Jongno");
             GroupRegistrationResponse expected = dummyResponse();
             given(regionService.validateRegion("Seoul", "Jongno"))
                     .willReturn(new RegionGridDto("Seoul", "Jongno", 60, 127));
-            given(groupRegistrationService.createRequest(REQUESTER_ID, "Test Group", "Desc", "Seoul,Jongno"))
+            given(groupRegistrationService.createRequest(REQUESTER_ID, "Test Group", "Desc", "Seoul Jongno"))
                     .willReturn(expected);
 
             // when
@@ -62,7 +62,7 @@ class GroupRegistrationCreationUseCaseTest {
 
             // then
             assertThat(result).isEqualTo(expected);
-            verify(groupRegistrationService).createRequest(REQUESTER_ID, "Test Group", "Desc", "Seoul,Jongno");
+            verify(groupRegistrationService).createRequest(REQUESTER_ID, "Test Group", "Desc", "Seoul Jongno");
         }
     }
 
