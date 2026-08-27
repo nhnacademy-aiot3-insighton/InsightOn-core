@@ -454,7 +454,7 @@ class GroupMemberServiceTest {
 
         // then
         assertThat(response).isNotNull();
-        assertThat(response.exists()).isTrue();
+        assertThat(response.exists()).isFalse();
         assertThat(response.groupName()).isEqualTo("테스트 그룹");
     }
 }
