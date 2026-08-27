@@ -101,13 +101,21 @@ class GroupMemberServiceTest {
         GroupMember requester = mock(GroupMember.class);
         given(requester.isMember()).willReturn(false);
         given(groupMemberRepository.findByGroupGroupIdAndUserId(1L, 1L)).willReturn(Optional.of(requester));
-        given(groupMemberRepository.findAllByGroupGroupId(1L)).willReturn(List.of(mock(GroupMemberListResponse.class)));
+        
+        GroupMember targetMember = mock(GroupMember.class);
+        given(targetMember.getGroupMemberId()).willReturn(100L);
+        given(targetMember.getUserId()).willReturn(1L);
+        given(targetMember.getGroupRole()).willReturn(GroupMember.GroupRole.MEMBER);
+        
+        given(groupMemberRepository.findByGroupGroupId(1L)).willReturn(List.of(targetMember));
+        given(authClient.getUserResponse(1L)).willReturn(new AuthUserResponse(1L, "테스트유저", "010-0000-0000", "ACTIVE"));
 
         // when
         List<GroupMemberListResponse> result = groupMemberService.getGroupMemberList(1L, 1L);
 
         // then
         assertThat(result).hasSize(1);
+        assertThat(result.get(0).userName()).isEqualTo("테스트유저");
     }
 
     @Test
@@ -448,6 +456,7 @@ class GroupMemberServiceTest {
         given(groupMemberRepository.existsByUserId(userId)).willReturn(true);
         given(member.getGroup()).willReturn(group);
         given(groupMemberRepository.findByUserId(userId)).willReturn(Optional.of(member));
+        given(groupMemberRepository.existsByUserId(userId)).willReturn(true);
 
         // when
         UserGroupResponse response = groupMemberService.userGroupAuth(userId);
