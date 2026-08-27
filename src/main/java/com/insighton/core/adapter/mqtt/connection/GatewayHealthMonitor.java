@@ -27,6 +27,7 @@ public class GatewayHealthMonitor {
     private final DynamicMqttGatewayManager gatewayManager;
     private final GatewayHeartbeatTracker heartbeatTracker;
     private final GatewayRepository gatewayRepository;
+    private final GatewayMqttConnectionReconciler reconciler;
     private final ApplicationEventPublisher eventPublisher;
 
     @Value("${gateway.health.fault-threshold-seconds:1800}")
@@ -61,6 +62,8 @@ public class GatewayHealthMonitor {
                 if(gateway.getStatus() != GatewayStatus.FAULT) {
                     gateway.markFault();
                     log.warn("Gateway {} 마지막 수신 {}초 전 - FAULT 전환", gateway.getGatewayId(), idleSeconds);
+
+                    reconciler.forceReconnect(gateway.getGatewayId());
 
                     eventPublisher.publishEvent(new GatewayStatusChangedEvent(
                             gateway.getGatewayId(), gateway.getGroupId(), gateway.getName(),
