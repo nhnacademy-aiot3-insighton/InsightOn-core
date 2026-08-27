@@ -30,10 +30,10 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> 
     /**
      * group ID로 Group 내에 있는 GroupMemberList 조회
      *
-     * @param groupId 조회하고자 하는 group의 ID
+     * @param groupId 조회하고자 하는 group of ID
      * @return Group 내에 있는 GroupMemberList 반환
      */
-    List<GroupMemberListResponse> findAllByGroupGroupId(Long groupId);
+    List<GroupMember> findByGroupGroupId(Long groupId);
 
     /**
      * 이미 그룹에 존재하는 user인지 조회

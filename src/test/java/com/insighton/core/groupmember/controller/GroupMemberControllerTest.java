@@ -44,7 +44,7 @@ class GroupMemberControllerTest {
         @DisplayName("그룹 멤버 리스트 조회 성공 - JSON 배열 및 응답 구조 검증")
         void getGroupMemberList_success() throws Exception {
             // given
-            GroupMemberListResponse mockResponse = new GroupMemberListResponse(100L, 1L, GroupMember.GroupRole.MEMBER);
+            GroupMemberListResponse mockResponse = new GroupMemberListResponse(100L, "테스트유저", GroupMember.GroupRole.MEMBER);
             List<GroupMemberListResponse> mockList = List.of(mockResponse);
             given(groupMemberService.getGroupMemberList(1L, 1L)).willReturn(mockList);
 
