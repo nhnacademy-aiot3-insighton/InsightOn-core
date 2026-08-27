@@ -67,14 +67,35 @@ public class GroupMemberServiceImpl implements GroupMemberService {
     @Transactional(readOnly = true)
     public List<GroupMemberListResponse> getGroupMemberList(Long userId, Long groupId) {
         log.debug("그룹 멤버 목록 조회 요청 - userId: {}, groupId: {}", userId, groupId);
-        GroupMember members = validateGroupMembers(groupId, userId);
+        GroupMember requester = validateGroupMembers(groupId, userId);
 
-        if (members.isMember()) {
+        if (requester.isMember()) {
             log.warn("그룹 멤버 목록 조회 권한 없음 - userId: {}, groupId: {}", userId, groupId);
             throw new UnAuthorizedAccessException(userId);
         }
 
-        List<GroupMemberListResponse> result = groupMemberRepository.findAllByGroupGroupId(groupId);
+        List<GroupMember> memberList = groupMemberRepository.findByGroupGroupId(groupId);
+
+        List<GroupMemberListResponse> result = memberList.stream()
+                .map(gm -> {
+                    String userName = "알 수 없음";
+                    try {
+                        AuthUserResponse authUser = authClient.getUserResponse(gm.getUserId());
+                        if (authUser != null && authUser.userName() != null) {
+                            userName = authUser.userName();
+                        }
+                    } catch (Exception e) {
+                        log.warn("Auth 유저 정보 조회 실패 - userId: {}", gm.getUserId(), e);
+                    }
+                    return GroupMemberListResponse.builder()
+                            .groupMemberId(gm.getGroupMemberId())
+                            .userId(gm.getUserId())
+                            .userName(userName)
+                            .groupRole(gm.getGroupRole())
+                            .build();
+                })
+                .toList();
+
         log.info("그룹 멤버 목록 조회 완료 - groupId: {}, count: {}", groupId, result.size());
         return result;
     }
