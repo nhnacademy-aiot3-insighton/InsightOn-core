@@ -149,6 +149,20 @@ public class GatewayMqttConnectionReconciler {
         releaseDroppedGateways(stillExisting);
     }
 
+    /**
+     * 특정 게이트웨이의 연결을 강제로 해제해 다음 tick에 재등록(재연결)되도록 함.
+     * GatewayHealthMonitor가 하트비트 기준 FAULT 판정했을 때 호출함 — 실제 소켓만 죽고
+     * 우리 쪽 Redis 락은 멀쩡한 경우를 이걸로 복구시킴.
+     *
+     * @param gatewayId 강제 재연결시킬 게이트웨이 PK
+     */
+    public void forceReconnect(Long gatewayId) {
+        gatewayManager.unregisterGateway(gatewayId);
+        lockService.release(gatewayId, instanceId);
+        connectionInfoCache.remove(gatewayId);
+        log.info("Gateway {} 강제 재연결 트리거 (instance={})", gatewayId, instanceId);
+    }
+
     private void releaseDroppedGateways(Set<Long> stillExisting) {
         for(Long ownerId : gatewayManager.getRegisterGatewayIds()) {
             if(stillExisting.contains(ownerId)) {
