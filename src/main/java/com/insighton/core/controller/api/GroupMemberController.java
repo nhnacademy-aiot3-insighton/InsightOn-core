@@ -3,6 +3,7 @@ package com.insighton.core.controller.api;
 import com.insighton.core.domain.groupmember.dto.response.GroupMemberListResponse;
 import com.insighton.core.domain.groupmember.dto.response.GroupMemberResponse;
 import com.insighton.core.domain.groupmember.service.GroupMemberService;
+import com.insighton.core.usecase.groupmember.GroupMemberInviteUserCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,20 @@ import java.util.List;
 @RequestMapping("/api/v1/groups/{group-id}/members")
 public class GroupMemberController {
     private final GroupMemberService groupMemberService;
+    private final GroupMemberInviteUserCase groupMemberInviteUserCase;
+
+    /**
+     * 이메일로 그룹 멤버 바로 초대/추가
+     */
+    @PostMapping("/invite")
+    public ResponseEntity<Void> inviteMemberByEmail(
+            @RequestHeader("X-USER-ID") Long userId,
+            @PathVariable("group-id") Long groupId,
+            @RequestParam("email") String email) {
+        groupMemberInviteUserCase.inviteMemberByEmail(userId, groupId, email);
+
+        return ResponseEntity.ok().build();
+    }
 
     /**
      * 그룹 멤버 리스트 조회(관리자용(?))
