@@ -23,18 +23,16 @@ public record WeatherInternalResponse(
         AirQualityDto airQuality = weatherDataDto.airQuality();
 
         return new WeatherInternalResponse(
-                parseDoubleOrNull(current.temp()),
-                // 초단기실황엔 하늘상태 필드가 없어 단기예보값으로 대체(현재/예보 동일값)
-                forecast.skyStatus(),
-                current.precipitationType(),
-                parseDoubleOrNull(current.humidity()),
-                parseDoubleOrNull(forecast.maxTemp()),
-                parseDoubleOrNull(forecast.minTemp()),
-                airQuality.pm10Grade(),
-                parseDoubleOrNull(forecast.temperature()),
-                forecast.skyStatus(),
-                forecast.forecastPrecipitationType(),
-                // Core에 예보 습도 데이터 소스가 없어 null
+                current != null ? parseDoubleOrNull(current.temp()) : null,
+                forecast != null ? forecast.skyStatus() : null,
+                current != null ? current.precipitationType() : null,
+                current != null ? parseDoubleOrNull(current.humidity()) : null,
+                forecast != null ? parseDoubleOrNull(forecast.maxTemp()) : null,
+                forecast != null ? parseDoubleOrNull(forecast.minTemp()) : null,
+                airQuality != null ? airQuality.pm10Grade() : null,
+                forecast != null ? parseDoubleOrNull(forecast.temperature()) : null,
+                forecast != null ? forecast.skyStatus() : null,
+                forecast != null ? forecast.forecastPrecipitationType() : null,
                 null
         );
     }
