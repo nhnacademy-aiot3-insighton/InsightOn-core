@@ -59,12 +59,12 @@ public class GroupServiceImpl implements GroupService {
     @Override
     @Transactional(readOnly = true)
     public GroupResponse getGroupPreview(String inviteToken, Long groupId) {
-        log.debug("그룹 미리보기 조회 요청 - groupId: {}", groupId);
+        log.debug("그룹 미리보기 조회 요청 - inviteToken: {}", inviteToken);
         // token으로 대상 그룹 조회 (token이 존재하지 않을 시 exception 던지기)
-        Group groupEntity = groupRepository.findByInviteTokenAndGroupId(inviteToken, groupId)
+        Group groupEntity = groupRepository.findByInviteToken(inviteToken)
                 .orElseThrow(InviteTokenNotFoundException::new);
 
-        log.info("그룹 미리보기 조회 완료 - groupId: {}, name: {}", groupId, groupEntity.getName());
+        log.info("그룹 미리보기 조회 완료 - groupId: {}, name: {}", groupEntity.getGroupId(), groupEntity.getName());
         return GroupResponse.ofPublic(groupEntity);
     }
 

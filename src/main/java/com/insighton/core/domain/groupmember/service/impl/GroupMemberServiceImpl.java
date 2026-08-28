@@ -118,15 +118,26 @@ public class GroupMemberServiceImpl implements GroupMemberService {
             throw new UnAuthorizedAccessException(userId);
         }
 
-        AuthUserResponse authUserResponse = authClient.getUserResponse(members.getUserId());
+        String userName = "알 수 없음";
+        String userPhoneNumber = null;
+        try {
+            AuthUserResponse authUserResponse = authClient.getUserResponse(members.getUserId());
+            if (authUserResponse != null) {
+                if (authUserResponse.userName() != null) userName = authUserResponse.userName();
+                if (authUserResponse.userPhoneNumber() != null) userPhoneNumber = authUserResponse.userPhoneNumber();
+            }
+        } catch (Exception e) {
+            log.warn("Auth 유저 정보 조회 실패 - userId: {}", members.getUserId(), e);
+        }
 
         log.info("그룹 멤버 단건 조회 완료 - groupMemberId: {}, targetUserId: {}", groupMemberId, members.getUserId());
         return GroupMemberResponse.builder()
+                .groupMemberId(members.getGroupMemberId())
                 .userId(members.getUserId())
                 .groupId(members.getGroup().getGroupId())
                 .groupRole(members.getGroupRole())
-                .userName(authUserResponse.userName())
-                .userPhoneNumber(authUserResponse.userPhoneNumber())
+                .userName(userName)
+                .userPhoneNumber(userPhoneNumber)
                 .joinedAt(members.getJoinedAt())
                 .build();
     }
