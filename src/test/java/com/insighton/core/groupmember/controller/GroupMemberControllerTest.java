@@ -36,9 +36,23 @@ class GroupMemberControllerTest {
     @MockitoBean
     private GroupMemberService groupMemberService;
 
+    @MockitoBean
+    private com.insighton.core.usecase.groupmember.GroupMemberInviteUserCase groupMemberInviteUserCase;
+
     @Nested
     @DisplayName("성공 케이스")
     class SuccessCases {
+
+        @Test
+        @DisplayName("이메일로 그룹 멤버 초대 성공 - 200 OK 응답 및 UseCase 호출 검증")
+        void inviteMemberByEmail_success() throws Exception {
+            mockMvc.perform(post("/api/v1/groups/{group-id}/members/invite", 1L)
+                            .header("X-USER-ID", 1L)
+                            .param("email", "testuser@insighton.io"))
+                    .andExpect(status().isOk());
+
+            verify(groupMemberInviteUserCase).inviteMemberByEmail(1L, 1L, "testuser@insighton.io");
+        }
 
         @Test
         @DisplayName("그룹 멤버 리스트 조회 성공 - JSON 배열 및 응답 구조 검증")
