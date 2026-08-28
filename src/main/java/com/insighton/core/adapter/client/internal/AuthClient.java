@@ -10,4 +10,7 @@ public interface AuthClient {
 
     @GetMapping("/internal/v1/users/{user-id}")
     AuthUserResponse getUserResponse(@PathVariable("user-id") Long userId);
+
+    @GetMapping("/internal/v1/users/invite/{user-email}")
+    AuthUserResponse getUserResponseEmail(@PathVariable("user-email") String userEmail);
 }
