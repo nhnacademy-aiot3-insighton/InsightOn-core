@@ -17,6 +17,7 @@ import java.time.OffsetDateTime;
  */
 @Builder
 public record GroupMemberResponse(
+        Long groupMemberId,
         Long userId,
         Long groupId,
         GroupMember.GroupRole groupRole,
