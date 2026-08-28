@@ -169,7 +169,7 @@ public class GroupServiceTest {
             Long groupId = 1L;
             String token = "token";
             Group mockGroup = Group.builder().name("T").description("D").groupRegion("L").inviteToken(token).build();
-            given(groupRepository.findByInviteTokenAndGroupId(token, groupId)).willReturn(Optional.of(mockGroup));
+            given(groupRepository.findByInviteToken(token)).willReturn(Optional.of(mockGroup));
 
             // when
             GroupResponse response = groupService.getGroupPreview(token, groupId);
@@ -288,7 +288,7 @@ public class GroupServiceTest {
         @DisplayName("그룹 정보 미리 조회 실패 - token이 존재하지 않을 때")
         void getGroupPreview_tokenNotFound() {
             // given
-            given(groupRepository.findByInviteTokenAndGroupId("bad-token", 1L)).willReturn(Optional.empty());
+            given(groupRepository.findByInviteToken("bad-token")).willReturn(Optional.empty());
 
             // when & then
             assertThatThrownBy(() -> groupService.getGroupPreview("bad-token", 1L))

@@ -61,7 +61,7 @@ class GroupMemberControllerTest {
         @DisplayName("멤버 상세 조회 성공 - JSON 객체 응답 검증")
         void getGroupMember_success() throws Exception {
             // given
-            GroupMemberResponse mockResponse = new GroupMemberResponse(1L, 1L, GroupMember.GroupRole.MEMBER, "testName", "010-0000-0000", OffsetDateTime.now());
+            GroupMemberResponse mockResponse = new GroupMemberResponse(100L, 1L, 1L, GroupMember.GroupRole.MEMBER, "testName", "010-0000-0000", OffsetDateTime.now());
             given(groupMemberService.getGroupMember(1L, 1L, 1L)).willReturn(mockResponse);
 
             // when & then
