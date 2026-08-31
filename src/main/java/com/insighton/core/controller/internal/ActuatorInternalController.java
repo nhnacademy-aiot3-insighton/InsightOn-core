@@ -27,7 +27,7 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/internal/v1")
-public class ActuatorInternalController implements ActuatorInternalControllerApi {
+public class ActuatorInternalController {
 
 
     private final ActuatorRunLogService actuatorRunLogService;
@@ -35,7 +35,6 @@ public class ActuatorInternalController implements ActuatorInternalControllerApi
     private final ActuatorRepository actuatorRepository;
 
     // AI 리포트 생성 배치 전용 - location 범위/기간별 액추에이터 실행 원본 로그 조회
-    @Override
     @GetMapping("/actuators/run-logs")
     public ResponseEntity<List<ActuatorRunLogInternalResponse>> getRunLogs(
             @RequestParam List<Long> locationIds,
@@ -48,7 +47,6 @@ public class ActuatorInternalController implements ActuatorInternalControllerApi
 
 
     // 룰엔진/AI 등 내부 시스템 전용 액추에이터 상태 변경 - 실제 조작(쓰기)이므로 인증 필수 유지
-    @Override
     @PutMapping("/locations/{location-id}/actuators/state")
     public ResponseEntity<Void> updateActuatorStateBySystem(
             @PathVariable("location-id") Long locationId,
