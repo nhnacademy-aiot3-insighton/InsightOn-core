@@ -82,8 +82,14 @@ public class DashboardSaveUseCase {
         Map<Long, ChartDataResponse> updatedChartDataMap = new HashMap<>();
 
         for (Long widgetId : widgetIds) {
-            ChartDataResponse chartData = widgetService.getWidgetChartData(dashboardId, widgetId);
-            updatedChartDataMap.put(widgetId, chartData);
+            try {
+                ChartDataResponse chartData = widgetService.getWidgetChartData(dashboardId, widgetId);
+                updatedChartDataMap.put(widgetId, chartData);
+            } catch (Exception e) {
+                org.slf4j.LoggerFactory.getLogger(DashboardSaveUseCase.class)
+                        .warn("[DashboardSaveUseCase] InfluxDB 조회 실패 (로컬/연결 미가동 또는 데이터 없음). widgetId: {}, message: {}", widgetId, e.getMessage());
+                updatedChartDataMap.put(widgetId, new ChartDataResponse(Collections.emptyList(), Collections.emptyList()));
+            }
         }
 
         return updatedChartDataMap;
