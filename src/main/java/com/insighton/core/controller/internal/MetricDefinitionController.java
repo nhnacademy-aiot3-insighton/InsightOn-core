@@ -14,15 +14,17 @@ import java.util.List;
 @RestController
 @RequestMapping("/internal/v1/metric-definitions")
 @RequiredArgsConstructor
-public class MetricDefinitionController {
+public class MetricDefinitionController implements MetricDefinitionControllerApi {
 
     private final SensorAttributeService sensorAttributeService;
 
+    @Override
     @GetMapping
     public ResponseEntity<List<MetricDefinitionResponse>> getAllMetricDefinitions(){
         return ResponseEntity.ok(sensorAttributeService.getAllMetricDefinitions());
     }
 
+    @Override
     @PostMapping
     public ResponseEntity<Void> createMetricDefinition(@Valid @RequestBody MetricDefinitionCreateRequest request) {
         sensorAttributeService.createMetricDefinition(request);
