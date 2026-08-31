@@ -1,4 +1,4 @@
-package com.insighton.core.controller.api;
+package com.insighton.core.controller.swagger;
 
 import com.insighton.core.domain.sensors.dto.SensorResponse;
 import com.insighton.core.domain.sensors.dto.SensorUpdateRequest;

@@ -1,5 +1,6 @@
 package com.insighton.core.controller.internal;
 
+import com.insighton.core.controller.swagger.MetricDefinitionControllerApi;
 import com.insighton.core.domain.sensorattributes.dto.MetricDefinitionCreateRequest;
 import com.insighton.core.domain.sensorattributes.dto.MetricDefinitionResponse;
 import com.insighton.core.domain.sensorattributes.service.SensorAttributeService;
