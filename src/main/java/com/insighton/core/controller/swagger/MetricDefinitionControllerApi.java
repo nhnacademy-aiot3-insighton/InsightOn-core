@@ -1,4 +1,4 @@
-package com.insighton.core.controller.internal;
+package com.insighton.core.controller.swagger;
 
 import com.insighton.core.domain.sensorattributes.dto.MetricDefinitionCreateRequest;
 import com.insighton.core.domain.sensorattributes.dto.MetricDefinitionResponse;

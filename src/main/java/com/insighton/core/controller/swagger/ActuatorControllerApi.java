@@ -1,4 +1,4 @@
-package com.insighton.core.controller.api;
+package com.insighton.core.controller.swagger;
 
 import com.insighton.core.domain.actuatorrunlogs.dto.ActuatorRunLogResponse;
 import com.insighton.core.domain.actuators.dto.ActuatorNameUpdateRequest;

@@ -1,5 +1,6 @@
 package com.insighton.core.controller.api;
 
+import com.insighton.core.controller.swagger.ActuatorControllerApi;
 import com.insighton.core.domain.actuatorrunlogs.dto.ActuatorRunLogResponse;
 import com.insighton.core.domain.actuators.dto.ActuatorNameUpdateRequest;
 import com.insighton.core.domain.actuators.dto.ActuatorRequest;

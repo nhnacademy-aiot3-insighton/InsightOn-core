@@ -1,5 +1,6 @@
 package com.insighton.core.controller.internal;
 
+import com.insighton.core.controller.swagger.ActuatorInternalControllerApi;
 import com.insighton.core.domain.actuatorrunlogs.dto.ActuatorRunLogInternalResponse;
 import com.insighton.core.domain.actuatorrunlogs.entity.ExecutedByType;
 import com.insighton.core.domain.actuatorrunlogs.service.ActuatorRunLogService;

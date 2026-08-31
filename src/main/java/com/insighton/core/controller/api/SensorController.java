@@ -1,5 +1,6 @@
 package com.insighton.core.controller.api;
 
+import com.insighton.core.controller.swagger.SensorControllerApi;
 import com.insighton.core.domain.sensors.dto.SensorResponse;
 import com.insighton.core.domain.sensors.dto.SensorUpdateRequest;
 import com.insighton.core.usecase.sensor.DeleteAllSensorUseCase;

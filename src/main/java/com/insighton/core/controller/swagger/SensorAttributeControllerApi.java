@@ -1,4 +1,4 @@
-package com.insighton.core.controller.api;
+package com.insighton.core.controller.swagger;
 
 import com.insighton.core.domain.sensorattributes.dto.SensorAttributeResponse;
 import io.swagger.v3.oas.annotations.Operation;

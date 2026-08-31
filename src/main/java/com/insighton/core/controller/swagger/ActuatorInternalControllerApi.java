@@ -1,4 +1,4 @@
-package com.insighton.core.controller.internal;
+package com.insighton.core.controller.swagger;
 
 import com.insighton.core.domain.actuatorrunlogs.dto.ActuatorRunLogInternalResponse;
 import com.insighton.core.domain.actuators.dto.ActuatorCommandRequest;
