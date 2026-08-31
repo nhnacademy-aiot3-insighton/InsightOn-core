@@ -26,7 +26,7 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/groups/{group-id}/actuators")
-public class ActuatorController {
+public class ActuatorController implements ActuatorControllerApi {
 
     private final CreateActuatorUseCase createActuatorUseCase;
     private final GetActuatorUseCase getActuatorUseCase;
@@ -39,6 +39,7 @@ public class ActuatorController {
 
 
     // 액추에이터 생성
+    @Override
     @PostMapping
     public ResponseEntity<Long> createActuator(
             @RequestHeader("X-USER-ID") Long userId,
@@ -49,6 +50,7 @@ public class ActuatorController {
     }
 
     // 단일 액추에이터 조회
+    @Override
     @GetMapping("/{actuator-id}")
     public ResponseEntity<ActuatorResponse> getActuatorById(
             @RequestHeader("X-USER-ID") Long userId,
@@ -58,6 +60,7 @@ public class ActuatorController {
     }
 
     // 위치별 액추에이터 목록 조회
+    @Override
     @GetMapping("/location/{location-id}")
     public ResponseEntity<List<ActuatorResponse>> getActuatorsByLocationId(
             @RequestHeader("X-USER-ID") Long userId,
@@ -67,6 +70,7 @@ public class ActuatorController {
     }
 
     // 유저 전용 액추에이터 업데이트
+    @Override
     @PutMapping("/{actuator-id}/state")
     public ResponseEntity<Void> updateActuatorState(
             @RequestHeader("X-USER-ID") Long userId,
@@ -80,6 +84,7 @@ public class ActuatorController {
 
 
     // 실행 이력 조회 - getActuatorById의 소유권/권한 검증을 그대로 재사용
+    @Override
     @GetMapping("/{actuator-id}/logs")
     public ResponseEntity<Page<ActuatorRunLogResponse>> getActuatorRunLogs(
             @RequestHeader("X-USER-ID") Long userId,
@@ -90,6 +95,7 @@ public class ActuatorController {
     }
 
     // 액추에이터 이름 수정
+    @Override
     @PutMapping("/{actuator-id}/name")
     public ResponseEntity<Void> updateActuatorName(
             @RequestHeader("X-USER-ID") Long userId,
@@ -101,6 +107,7 @@ public class ActuatorController {
     }
 
     // 액추에이터 삭제
+    @Override
     @DeleteMapping("/{actuator-id}")
     public ResponseEntity<Void> deleteActuatorById(
             @RequestHeader("X-USER-ID") Long userId,
@@ -111,6 +118,7 @@ public class ActuatorController {
     }
 
     // 그룹 소속 액추에이터 전체 삭제
+    @Override
     @DeleteMapping
     public ResponseEntity<Void> deleteAll(
             @RequestHeader("X-USER-ID") Long userId,
