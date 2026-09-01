@@ -1,5 +1,6 @@
 package com.insighton.core.controller.api;
 
+import com.insighton.core.controller.swagger.ChartDataControllerApi;
 import com.insighton.core.domain.widgets.dto.chart.ChartDataResponse;
 import com.insighton.core.usecase.chartdata.ChartDataUseCase;
 import lombok.RequiredArgsConstructor;
@@ -11,15 +12,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-public class ChartDataController {
+public class ChartDataController implements ChartDataControllerApi {
     private final ChartDataUseCase chartDataUseCase;
 
-    /**
-     * chart.js에서 주기적으로 호출할 API
-     *
-     * @param widgetId 관련 Widget ID
-     * @return influxDB에서 query문을 날려 가져온 값을 dto에 담아 반환
-     */
+    @Override
     @GetMapping("/api/v1/groups/{group-id}/location/{location-id}/dashboard/widgets/{widget-id}/chart-data")
     public ResponseEntity<ChartDataResponse> getWidgetChartData(
             @RequestHeader("X-USER-ID") Long userId,
