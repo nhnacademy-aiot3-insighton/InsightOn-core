@@ -13,6 +13,7 @@ import com.insighton.core.domain.actuators.exception.InvalidActuatorValueExcepti
 import com.insighton.core.domain.actuators.exception.InvalidServiceCredentialException;
 import com.insighton.core.domain.actuators.repository.ActuatorRepository;
 import com.insighton.core.domain.actuators.service.ActuatorService;
+import com.insighton.core.usecase.actuator.UpdateActuatorStateByGroupUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -30,8 +31,9 @@ import java.util.Map;
 @RequestMapping("/internal/v1")
 public class ActuatorInternalController implements ActuatorInternalControllerApi {
 
-
     private final ActuatorRunLogService actuatorRunLogService;
+    private final UpdateActuatorStateByGroupUseCase updateActuatorStateByGroupUseCase;
+    // 구버전 무그룹 엔드포인트 전용 의존성 - Engine/AI 전환 완료 후 이 필드들과 아래 구버전 메서드 통째로 제거 예정
     private final ActuatorService actuatorService;
     private final ActuatorRepository actuatorRepository;
 
@@ -46,9 +48,19 @@ public class ActuatorInternalController implements ActuatorInternalControllerApi
         return ResponseEntity.ok(actuatorRunLogService.getRunLogsForReport(locationIds, from, to));
     }
 
+    // 룰엔진/AI 등 내부 시스템 전용 액추에이터 상태 변경
+    @Override
+    @PutMapping("/groups/{groupId}/locations/{locationId}/actuators/state")
+    public ResponseEntity<Void> updateActuatorStateByGroup(
+            @PathVariable Long groupId,
+            @PathVariable Long locationId,
+            @Valid @RequestBody ActuatorCommandRequest request) {
 
+        updateActuatorStateByGroupUseCase.execute(groupId, locationId, request);
+        return ResponseEntity.ok().build();
+    }
 
-    // 룰엔진/AI 등 내부 시스템 전용 액추에이터 상태 변경 - 실제 조작(쓰기)이므로 인증 필수 유지
+    // [Deprecated] 그룹 소유권 검증 없는 구버전 - Engine/AI가 신규 API로 전환 완료할 때까지만 임시로 유지, 전환 확인되면 이 메서드 통째로 제거
     @Override
     @PutMapping("/locations/{location-id}/actuators/state")
     public ResponseEntity<Void> updateActuatorStateBySystem(
@@ -56,7 +68,7 @@ public class ActuatorInternalController implements ActuatorInternalControllerApi
             @Valid @RequestBody ActuatorCommandRequest request) {
 
         // 이 내부 API는 시스템(AI/RuleEngine)만 호출 가능 - USER가 오면 즉시 차단
-        if(request.callerService() == ExecutedByType.USER){
+        if (request.callerService() == ExecutedByType.USER) {
             throw new InvalidServiceCredentialException("이 내부 API는 USER가 호출할 수 없습니다");
         }
 
@@ -67,7 +79,7 @@ public class ActuatorInternalController implements ActuatorInternalControllerApi
         List<Actuator> actuators = actuatorRepository.findByLocationLocationIdAndActuatorType(locationId, actuatorType);
 
         // 해당하는 액추에이터가 하나도 없으면 404로 명확히 구분 (AI가 "적용 안 됐다"를 알 수 있어야 함)
-        if(actuators.isEmpty()){
+        if (actuators.isEmpty()) {
             throw new ActuatorLocationsActuatorTypeNotFound(locationId, actuatorType);
         }
 
@@ -96,5 +108,4 @@ public class ActuatorInternalController implements ActuatorInternalControllerApi
             throw new InvalidActuatorValueException("알 수 없는 actuatorType입니다: " + actuatorType);
         }
     }
-
 }
