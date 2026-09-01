@@ -41,7 +41,7 @@ public class DashboardController implements DashboardControllerApi {
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupId,
             @PathVariable("location-id") Long locationId,
-            @RequestBody List<@Valid WidgetSaveRequest> requests) {
+            @RequestBody List<WidgetSaveRequest> requests) {
 
         List<Long> widgetIds = dashboardSaveUseCase.saveDashboard(userId, groupId, locationId, requests);
 

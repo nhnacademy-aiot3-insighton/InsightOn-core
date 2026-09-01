@@ -38,6 +38,6 @@ public interface DashboardControllerApi {
             @Parameter(description = "로그인 유저 ID", required = true) Long userId,
             @Parameter(description = "그룹 ID", required = true) Long groupId,
             @Parameter(description = "위치 ID", required = true) Long locationId,
-            @Valid List<@Valid WidgetSaveRequest> requests
+            List<@Valid WidgetSaveRequest> requests
     );
 }
