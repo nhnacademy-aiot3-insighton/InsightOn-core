@@ -26,10 +26,4 @@ public interface ActuatorInternalControllerApi {
             @Parameter(description = "그룹 ID") Long groupId,
             @Parameter(description = "위치 ID") Long locationId,
             @Valid ActuatorCommandRequest request);
-
-    // 구버전 - 그룹 소유권 검증 없음. Engine/AI가 신규 API(updateActuatorStateByGroup)로 전환 완료할 때까지만 임시로 유지
-    @Operation(summary = "[Deprecated] 시스템 전용 액추에이터 상태 변경 - 그룹 검증 없음, Engine/AI 전환 후 제거 예정")
-    ResponseEntity<Void> updateActuatorStateBySystem(
-            @Parameter(description = "위치 ID") Long locationId,
-            @Valid ActuatorCommandRequest request);
 }
