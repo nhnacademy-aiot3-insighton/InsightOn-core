@@ -1,5 +1,6 @@
 package com.insighton.core.controller.api;
 
+import com.insighton.core.controller.swagger.SensorAttributeControllerApi;
 import com.insighton.core.domain.sensorattributes.dto.SensorAttributeResponse;
 import com.insighton.core.usecase.sensorattribute.DeleteAttributeUseCase;
 import com.insighton.core.usecase.sensorattribute.GetAllAttributeUseCase;
@@ -12,11 +13,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/sensor/{sensor-id}/attribute")
 @RequiredArgsConstructor
-public class SensorAttributeController {
+public class SensorAttributeController implements SensorAttributeControllerApi {
 
     private final GetAllAttributeUseCase getAllAttributeUseCase;
     private final DeleteAttributeUseCase deleteAttributeUseCase;
 
+    @Override
     @GetMapping
     public ResponseEntity<List<SensorAttributeResponse>> getSensorAttribute(
             @RequestHeader("X-USER-ID") Long userId,
@@ -24,6 +26,7 @@ public class SensorAttributeController {
         return ResponseEntity.ok(getAllAttributeUseCase.getAllAttributeBySensorId(userId, sensorId));
     }
 
+    @Override
     @DeleteMapping("/{metric-key}")
     public ResponseEntity<Void> deleteSensorAttribute(
             @RequestHeader("X-USER-ID") Long userId,
