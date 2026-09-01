@@ -21,8 +21,9 @@ public interface ActuatorInternalControllerApi {
             @Parameter(description = "조회 시작 시각") OffsetDateTime from,
             @Parameter(description = "조회 종료 시각") OffsetDateTime to);
 
-    @Operation(summary = "시스템(AI/룰엔진) 전용 액추에이터 상태 변경")
-    ResponseEntity<Void> updateActuatorStateBySystem(
+    @Operation(summary = "시스템(AI/룰엔진) 전용 액추에이터 상태 변경 - 그룹 소유권 검증 포함")
+    ResponseEntity<Void> updateActuatorStateByGroup(
+            @Parameter(description = "그룹 ID") Long groupId,
             @Parameter(description = "위치 ID") Long locationId,
             @Valid ActuatorCommandRequest request);
 }
