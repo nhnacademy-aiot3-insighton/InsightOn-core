@@ -340,7 +340,7 @@ public class WidgetServiceImpl implements WidgetService {
                     if (Objects.nonNull(config.aggregateWindow())) {
                         validateDuration(config.aggregateWindow());
                         flux.append("   |> aggregateWindow(every: ").append(config.aggregateWindow())
-                                .append(", fn: mean, createEmpty: false)\n");
+                                .append(", fn: mean, timeSrc: \"_start\", createEmpty: false)\n");
                     }
                     break;
             }

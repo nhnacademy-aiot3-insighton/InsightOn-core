@@ -1,5 +1,6 @@
 package com.insighton.core.controller.api;
 
+import com.insighton.core.controller.swagger.GroupControllerApi;
 import com.insighton.core.domain.groupmember.dto.request.GroupMemberJoinRequest;
 import com.insighton.core.domain.groupmember.dto.response.MyGroupIdResponse;
 import com.insighton.core.domain.groupmember.service.GroupMemberService;
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/groups")
-public class GroupController {
+public class GroupController implements GroupControllerApi {
     private final GroupCreateUseCase coreUseCase;
     private final GroupGetUseCase getGroupUseCase;
     private final GroupTokenUseCase groupTokenUseCase;
@@ -36,6 +37,7 @@ public class GroupController {
      * @param userId login한 user의 ID
      * @return 소속된 groupId
      */
+    @Override
     @GetMapping("/my")
     public ResponseEntity<MyGroupIdResponse> getMyGroupId(
             @RequestHeader("X-USER-ID") Long userId) {
@@ -44,13 +46,7 @@ public class GroupController {
         return ResponseEntity.ok(new MyGroupIdResponse(groupId));
     }
 
-    /**
-     * 그룹 생성
-     *
-     * @param userId              login한 user의 ID
-     * @param groupsCreateRequest 그룹 생성 요청 정보
-     * @return 성공시 상태 201 반환
-     */
+    @Override
     @PostMapping("/create")
     public ResponseEntity<Void> createGroup(
             @RequestHeader("X-USER-ID") Long userId,
@@ -61,13 +57,7 @@ public class GroupController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    /**
-     * 내 그룹 정보 조회
-     *
-     * @param userId  login한 user의 ID
-     * @param groupId 내가 속한 group의 ID
-     * @return 토큰 정보가 빠진 그룹 조회 정보 반환
-     */
+    @Override
     @GetMapping("/{group-id}/my-group")
     public ResponseEntity<GroupResponse> getMyGroup(
             @RequestHeader("X-USER-ID") Long userId,
@@ -77,14 +67,7 @@ public class GroupController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * 내가 초대받은 회사의 정보
-     *
-     * @param inviteToken 초대 토큰
-     * @param userId      login한 user의 ID
-     * @param groupId     내가 속한 group의 ID
-     * @return 초대 받은 회사의 정보 반환(token null)
-     */
+    @Override
     @GetMapping("/{group-id}/preview")
     public ResponseEntity<GroupResponse> getGroupPreview(
             @RequestHeader("X-USER-ID") Long userId,
@@ -95,13 +78,7 @@ public class GroupController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * 초대 토큰으로 그룹 가입 (이미 계정이 있는 로그인 유저용 — 회원가입 시 토큰을 안 넣은 경우 등)
-     *
-     * @param userId      login한 user의 ID
-     * @param inviteToken 초대 토큰
-     * @return 성공 시 상태 200 반환
-     */
+    @Override
     @PostMapping("/join")
     public ResponseEntity<Void> joinGroup(
             @RequestHeader("X-USER-ID") Long userId,
@@ -114,13 +91,7 @@ public class GroupController {
         return ResponseEntity.ok().build();
     }
 
-    /**
-     * 시스템 관리자용 그룹 리스트 조회
-     *
-     * @param userRole login한 user의 role
-     * @param userId   시스템 관리자의 ID
-     * @return 시스템에 생성된 그룹들 리스트
-     */
+    @Override
     @GetMapping("/admin/group-list")
     public ResponseEntity<Page<GroupAdminResponse>> getGroupList(
             @RequestHeader("X-USER-ROLE") String userRole,
@@ -132,14 +103,7 @@ public class GroupController {
         return ResponseEntity.ok(groupsListResponses);
     }
 
-
-    /**
-     * 토큰 재발급
-     *
-     * @param userId  재발급 하려는 user의 ID
-     * @param groupId 재발급 하려는 group의 ID
-     * @return 성공시 상태 200 반환(?)
-     */
+    @Override
     @PutMapping("/{group-id}/invite-token/new")
     public ResponseEntity<Void> newInviteToken(
             @RequestHeader("X-USER-ID") Long userId,
@@ -149,15 +113,7 @@ public class GroupController {
         return ResponseEntity.ok().build();
     }
 
-
-    /**
-     * 그룹 수정
-     *
-     * @param userId  login한 user의 ID
-     * @param groupId 수정하려는 Group의 ID
-     * @param request group 수정 요청 정보
-     * @return 성공 시 상태 200 반환
-     */
+    @Override
     @PutMapping("/{group-id}/update")
     public ResponseEntity<Void> updateGroup(
             @RequestHeader("X-USER-ID") Long userId,
@@ -168,13 +124,7 @@ public class GroupController {
         return ResponseEntity.ok().build();
     }
 
-    /**
-     * 그룹 삭제
-     *
-     * @param groupId 삭제할 그룹의 ID
-     * @param userId  삭제할 권한을 가진 user ID
-     * @return 성공 시 상태 204 반환
-     */
+    @Override
     @DeleteMapping("/{group-id}/delete")
     public ResponseEntity<Void> deleteGroup(
             @RequestHeader("X-USER-ID") Long userId,

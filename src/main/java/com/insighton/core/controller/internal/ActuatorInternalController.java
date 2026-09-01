@@ -1,5 +1,6 @@
 package com.insighton.core.controller.internal;
 
+import com.insighton.core.controller.swagger.ActuatorInternalControllerApi;
 import com.insighton.core.domain.actuatorrunlogs.dto.ActuatorRunLogInternalResponse;
 import com.insighton.core.domain.actuatorrunlogs.entity.ExecutedByType;
 import com.insighton.core.domain.actuatorrunlogs.service.ActuatorRunLogService;
@@ -12,6 +13,7 @@ import com.insighton.core.domain.actuators.exception.InvalidActuatorValueExcepti
 import com.insighton.core.domain.actuators.exception.InvalidServiceCredentialException;
 import com.insighton.core.domain.actuators.repository.ActuatorRepository;
 import com.insighton.core.domain.actuators.service.ActuatorService;
+import com.insighton.core.usecase.actuator.UpdateActuatorStateByGroupUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -27,14 +29,13 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/internal/v1")
-public class ActuatorInternalController {
-
+public class ActuatorInternalController implements ActuatorInternalControllerApi {
 
     private final ActuatorRunLogService actuatorRunLogService;
-    private final ActuatorService actuatorService;
-    private final ActuatorRepository actuatorRepository;
+    private final UpdateActuatorStateByGroupUseCase updateActuatorStateByGroupUseCase;
 
     // AI 리포트 생성 배치 전용 - location 범위/기간별 액추에이터 실행 원본 로그 조회
+    @Override
     @GetMapping("/actuators/run-logs")
     public ResponseEntity<List<ActuatorRunLogInternalResponse>> getRunLogs(
             @RequestParam List<Long> locationIds,
@@ -44,54 +45,15 @@ public class ActuatorInternalController {
         return ResponseEntity.ok(actuatorRunLogService.getRunLogsForReport(locationIds, from, to));
     }
 
-
-
-    // 룰엔진/AI 등 내부 시스템 전용 액추에이터 상태 변경 - 실제 조작(쓰기)이므로 인증 필수 유지
-    @PutMapping("/locations/{location-id}/actuators/state")
-    public ResponseEntity<Void> updateActuatorStateBySystem(
-            @PathVariable("location-id") Long locationId,
+    // 룰엔진/AI 등 내부 시스템 전용 액추에이터 상태 변경
+    @Override
+    @PutMapping("/groups/{groupId}/locations/{locationId}/actuators/state")
+    public ResponseEntity<Void> updateActuatorStateByGroup(
+            @PathVariable Long groupId,
+            @PathVariable Long locationId,
             @Valid @RequestBody ActuatorCommandRequest request) {
 
-        // 이 내부 API는 시스템(AI/RuleEngine)만 호출 가능 - USER가 오면 즉시 차단
-        if(request.callerService() == ExecutedByType.USER){
-            throw new InvalidServiceCredentialException("이 내부 API는 USER가 호출할 수 없습니다");
-        }
-
-        // 문자열 actuatorType을 enum으로 변환, 존재하지 않는 값이면 400으로 처리
-        ActuatorType actuatorType = parseActuatorType(request.actuatorType());
-
-        // 요청받은 location+actuatorType 조합에 해당하는 액추에이터 전부 조회 (AI는 개별 actuatorId를 모르므로)
-        List<Actuator> actuators = actuatorRepository.findByLocationLocationIdAndActuatorType(locationId, actuatorType);
-
-        // 해당하는 액추에이터가 하나도 없으면 404로 명확히 구분 (AI가 "적용 안 됐다"를 알 수 있어야 함)
-        if(actuators.isEmpty()){
-            throw new ActuatorLocationsActuatorTypeNotFound(locationId, actuatorType);
-        }
-
-        // 대상 액추에이터 전체에 상태 적용 (보통 1개, 같은 타입이 여러 대면 전부)
-        for (Actuator actuator : actuators) {
-            // updateActuatorState는 병합이 아니라 통째 교체라 새 값 1개만 보내면 나머지(전원/모드/온도)가 날아가므로, 기존 상태를 복사해 그 위에 새 값만 얹어서 전달
-            Map<String, Object> newState = new HashMap<>(
-                    actuator.getCurrentState() != null ? actuator.getCurrentState() : Map.of());
-            newState.put(request.command(), request.commandValue());
-
-            ActuatorCommandPreset.validateCommandValues(actuatorType, newState);
-
-            actuatorService.updateActuatorState(
-                    null, actuator.getActuatorId(), newState, request.callerService(), null);
-        }
-
+        updateActuatorStateByGroupUseCase.execute(groupId, locationId, request);
         return ResponseEntity.ok().build();
     }
-
-    // ActuatorType.valueOf()가 정의 안 된 값(오타 등)을 받으면 IllegalArgumentException을 던지는데,
-    // 이건 GlobalExceptionHandler에 등록 안 되어있어서 그대로 두면 500으로 나감 -> 400으로 변환
-    private ActuatorType parseActuatorType(String actuatorType) {
-        try {
-            return ActuatorType.valueOf(actuatorType); // 유효하지 않는 문자열이면 여기서 예외 발생
-        } catch (IllegalArgumentException e) {
-            throw new InvalidActuatorValueException("알 수 없는 actuatorType입니다: " + actuatorType);
-        }
-    }
-
 }

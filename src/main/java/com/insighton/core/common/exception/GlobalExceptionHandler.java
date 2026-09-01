@@ -102,6 +102,24 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), message));
     }
 
+    @ExceptionHandler(feign.FeignException.class)
+    public ResponseEntity<ErrorResponse> handleFeignException(feign.FeignException e) {
+        log.warn("내부 서비스 Feign 통신 예외 발생 - status: {}, message: {}", e.status(), e.getMessage());
+        int status = e.status() > 0 ? e.status() : HttpStatus.INTERNAL_SERVER_ERROR.value();
+
+        String message = "내부 서비스 통신 오류가 발생했습니다.";
+        try {
+            String body = e.contentUTF8();
+            if (body != null && !body.isBlank()) {
+                message = body;
+            }
+        } catch (Exception ignored) {
+        }
+
+        return ResponseEntity.status(status)
+                .body(new ErrorResponse(status, message));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnhandledException(Exception e) {
         log.error("Unhandled Exception Occurred: ", e);
