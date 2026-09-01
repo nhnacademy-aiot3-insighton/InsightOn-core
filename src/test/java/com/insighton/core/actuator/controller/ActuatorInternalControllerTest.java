@@ -6,10 +6,12 @@ import com.insighton.core.domain.actuatorrunlogs.dto.ActuatorRunLogInternalRespo
 import com.insighton.core.domain.actuatorrunlogs.entity.ExecutedByType;
 import com.insighton.core.domain.actuatorrunlogs.service.ActuatorRunLogService;
 import com.insighton.core.domain.actuators.dto.ActuatorCommandRequest;
-import com.insighton.core.domain.actuators.entity.Actuator;
 import com.insighton.core.domain.actuators.entity.ActuatorType;
-import com.insighton.core.domain.actuators.repository.ActuatorRepository;
-import com.insighton.core.domain.actuators.service.ActuatorService;
+import com.insighton.core.domain.actuators.exception.ActuatorLocationsActuatorTypeNotFound;
+import com.insighton.core.domain.actuators.exception.InvalidActuatorValueException;
+import com.insighton.core.domain.actuators.exception.InvalidServiceCredentialException;
+import com.insighton.core.domain.location.exception.LocationNotFoundException;
+import com.insighton.core.usecase.actuator.UpdateActuatorStateByGroupUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,12 +22,11 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.never;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -39,8 +40,7 @@ class ActuatorInternalControllerTest {
     @Autowired private ObjectMapper objectMapper;
 
     @MockitoBean private ActuatorRunLogService actuatorRunLogService;
-    @MockitoBean private ActuatorService actuatorService;
-    @MockitoBean private ActuatorRepository actuatorRepository;
+    @MockitoBean private UpdateActuatorStateByGroupUseCase updateActuatorStateByGroupUseCase;
 
     @Test
     @DisplayName("AI 리포트용 실행 로그 조회 성공 - 인증 헤더 없이도 호출 가능")
@@ -68,22 +68,52 @@ class ActuatorInternalControllerTest {
     }
 
     @Test
-    @DisplayName("시스템 상태변경 - USER가 호출하면 403")
+    @DisplayName("시스템 상태변경 - groupId/locationId를 그대로 유스케이스에 위임하고 200 반환")
+    void 시스템상태변경_성공_위임() throws Exception {
+        ActuatorCommandRequest request = new ActuatorCommandRequest("AIRCON", "power", "ON", ExecutedByType.RULE_ENGINE);
+
+        mockMvc.perform(put("/internal/v1/groups/{groupId}/locations/{locationId}/actuators/state", 5L, 20L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+
+        verify(updateActuatorStateByGroupUseCase).execute(5L, 20L, request);
+    }
+
+    @Test
+    @DisplayName("시스템 상태변경 - USER가 호출하면 403 (유스케이스 예외가 그대로 매핑됨)")
     void 시스템상태변경_USER호출_403() throws Exception {
         ActuatorCommandRequest request = new ActuatorCommandRequest("AIRCON", "power", "ON", ExecutedByType.USER);
+        willThrow(new InvalidServiceCredentialException("이 내부 API는 USER가 호출할 수 없습니다"))
+                .given(updateActuatorStateByGroupUseCase).execute(5L, 20L, request);
 
-        mockMvc.perform(put("/internal/v1/locations/{location-id}/actuators/state", 20L)
+        mockMvc.perform(put("/internal/v1/groups/{groupId}/locations/{locationId}/actuators/state", 5L, 20L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden());
     }
 
     @Test
+    @DisplayName("시스템 상태변경 - groupId+locationId 소유권 불일치면 404")
+    void 시스템상태변경_그룹불일치_404() throws Exception {
+        ActuatorCommandRequest request = new ActuatorCommandRequest("AIRCON", "power", "ON", ExecutedByType.RULE_ENGINE);
+        willThrow(LocationNotFoundException.notFoundLocationByLocationId(20L))
+                .given(updateActuatorStateByGroupUseCase).execute(5L, 20L, request);
+
+        mockMvc.perform(put("/internal/v1/groups/{groupId}/locations/{locationId}/actuators/state", 5L, 20L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     @DisplayName("시스템 상태변경 - 존재하지 않는 actuatorType이면 400")
     void 시스템상태변경_알수없는타입_400() throws Exception {
         ActuatorCommandRequest request = new ActuatorCommandRequest("UNKNOWN_TYPE", "power", "ON", ExecutedByType.RULE_ENGINE);
+        willThrow(new InvalidActuatorValueException("알 수 없는 actuatorType입니다: UNKNOWN_TYPE"))
+                .given(updateActuatorStateByGroupUseCase).execute(5L, 20L, request);
 
-        mockMvc.perform(put("/internal/v1/locations/{location-id}/actuators/state", 20L)
+        mockMvc.perform(put("/internal/v1/groups/{groupId}/locations/{locationId}/actuators/state", 5L, 20L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -92,50 +122,26 @@ class ActuatorInternalControllerTest {
     @Test
     @DisplayName("시스템 상태변경 - 해당 위치+타입 조합의 액추에이터가 없으면 404")
     void 시스템상태변경_대상없음_404() throws Exception {
-        given(actuatorRepository.findByLocationLocationIdAndActuatorType(20L, ActuatorType.AIRCON))
-                .willReturn(List.of());
-
         ActuatorCommandRequest request = new ActuatorCommandRequest("AIRCON", "power", "ON", ExecutedByType.RULE_ENGINE);
+        willThrow(new ActuatorLocationsActuatorTypeNotFound(20L, ActuatorType.AIRCON))
+                .given(updateActuatorStateByGroupUseCase).execute(5L, 20L, request);
 
-        mockMvc.perform(put("/internal/v1/locations/{location-id}/actuators/state", 20L)
+        mockMvc.perform(put("/internal/v1/groups/{groupId}/locations/{locationId}/actuators/state", 5L, 20L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    @DisplayName("시스템 상태변경 - 허용 안 된 명령값이면 400, 상태변경 호출 안 함")
+    @DisplayName("시스템 상태변경 - 허용 안 된 명령값이면 400")
     void 시스템상태변경_비허용값_400() throws Exception {
-        Actuator actuator = Actuator.builder().actuatorId(1L).actuatorType(ActuatorType.AIRCON).build();
-        given(actuatorRepository.findByLocationLocationIdAndActuatorType(20L, ActuatorType.AIRCON))
-                .willReturn(List.of(actuator));
-
         ActuatorCommandRequest request = new ActuatorCommandRequest("AIRCON", "power", "EXPLODE", ExecutedByType.RULE_ENGINE);
+        willThrow(new InvalidActuatorValueException("허용되지 않은 값"))
+                .given(updateActuatorStateByGroupUseCase).execute(5L, 20L, request);
 
-        mockMvc.perform(put("/internal/v1/locations/{location-id}/actuators/state", 20L)
+        mockMvc.perform(put("/internal/v1/groups/{groupId}/locations/{locationId}/actuators/state", 5L, 20L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
-
-        verify(actuatorService, never()).updateActuatorState(any(), any(), any(), any(), any());
-    }
-
-    @Test
-    @DisplayName("시스템 상태변경 - 정상 처리, 같은 위치+타입 액추에이터 전부에 상태 반영")
-    void 시스템상태변경_성공() throws Exception {
-        Actuator a1 = Actuator.builder().actuatorId(1L).actuatorType(ActuatorType.AIRCON).build();
-        Actuator a2 = Actuator.builder().actuatorId(2L).actuatorType(ActuatorType.AIRCON).build();
-        given(actuatorRepository.findByLocationLocationIdAndActuatorType(20L, ActuatorType.AIRCON))
-                .willReturn(List.of(a1, a2));
-
-        ActuatorCommandRequest request = new ActuatorCommandRequest("AIRCON", "power", "ON", ExecutedByType.RULE_ENGINE);
-
-        mockMvc.perform(put("/internal/v1/locations/{location-id}/actuators/state", 20L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
-
-        verify(actuatorService).updateActuatorState(null, 1L, Map.of("power", "ON"), ExecutedByType.RULE_ENGINE, null);
-        verify(actuatorService).updateActuatorState(null, 2L, Map.of("power", "ON"), ExecutedByType.RULE_ENGINE, null);
     }
 }
