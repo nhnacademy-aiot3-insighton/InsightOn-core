@@ -1,5 +1,6 @@
 package com.insighton.core.controller.api;
 
+import com.insighton.core.controller.swagger.LocationControllerApi;
 import com.insighton.core.domain.location.dto.request.LocationCreateRequest;
 import com.insighton.core.domain.location.dto.request.LocationUpdateRequest;
 import com.insighton.core.domain.location.dto.response.LocationListResponse;
@@ -16,7 +17,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/groups/{group-id}/location")
-public class LocationController {
+public class LocationController implements LocationControllerApi {
     private final LocationCreateUseCase locationCreateUseCase;
     private final LocationGetUseCase locationGetUseCase;
     private final LocationModeUpdateUseCase locationModeUpdateUseCase;
@@ -31,6 +32,7 @@ public class LocationController {
      * @param request location 생성 요청
      * @return 성공 시 상태 201 반환
      */
+    @Override
     @PostMapping("/create")
     public ResponseEntity<Void> createLocation(
             @RequestHeader("X-USER-ID") Long userId,
@@ -49,6 +51,7 @@ public class LocationController {
      * @param groupId location list들이 속해있는 group ID
      * @return location list 반환
      */
+    @Override
     @GetMapping("/list")
     public ResponseEntity<List<LocationListResponse>> getLocationList(
             @RequestHeader("X-USER-ID") Long userId,
@@ -67,6 +70,7 @@ public class LocationController {
      * @param locationId 상세 조회 할 location ID
      * @return location 상세 정보 반환
      */
+    @Override
     @GetMapping("/{location-id}")
     public ResponseEntity<LocationResponse> getLocation(
             @RequestHeader("X-USER-ID") Long userId,
@@ -86,6 +90,7 @@ public class LocationController {
      * @param locationId 변경하려는 location의 ID
      * @return 성공 시 상태 200 반환
      */
+    @Override
     @PutMapping("/{location-id}/toggle-mode")
     public ResponseEntity<Void> toggleAutoControlMode(
             @RequestHeader("X-USER-ID") Long userId,
@@ -106,6 +111,7 @@ public class LocationController {
      * @param request    변경하려는 name이 담겨있는 DTO(?)
      * @return 성공 시 상태 200 반환
      */
+    @Override
     @PutMapping("/{location-id}/update")
     public ResponseEntity<Void> updateName(
             @RequestHeader("X-USER-ID") Long userId,
@@ -126,6 +132,7 @@ public class LocationController {
      * @param locationId 삭제하려는 location의 ID
      * @return 성공 시 상태 204 반환
      */
+    @Override
     @DeleteMapping("/{location-id}/delete")
     public ResponseEntity<Void> deleteLocation(
             @RequestHeader("X-USER-ID") Long userId,
