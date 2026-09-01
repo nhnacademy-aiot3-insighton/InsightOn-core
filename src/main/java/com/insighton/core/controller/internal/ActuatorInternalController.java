@@ -33,9 +33,6 @@ public class ActuatorInternalController implements ActuatorInternalControllerApi
 
     private final ActuatorRunLogService actuatorRunLogService;
     private final UpdateActuatorStateByGroupUseCase updateActuatorStateByGroupUseCase;
-    // 구버전 무그룹 엔드포인트 전용 의존성 - Engine/AI 전환 완료 후 이 필드들과 아래 구버전 메서드 통째로 제거 예정
-    private final ActuatorService actuatorService;
-    private final ActuatorRepository actuatorRepository;
 
     // AI 리포트 생성 배치 전용 - location 범위/기간별 액추에이터 실행 원본 로그 조회
     @Override
