@@ -1,5 +1,6 @@
 package com.insighton.core.domain.actuators.entity;
 
+import com.insighton.core.domain.actuators.control.ControlProvider;
 import com.insighton.core.domain.location.entity.Location;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -45,6 +46,13 @@ public class Actuator {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt; // 최초 등록 시간
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "control_provider", length = 30)
+    private ControlProvider controlProvider; // 실제 제어 플랫폼 (null이면 미연결)
+
+    @Column(name = "external_device_id", length = 150)
+    private String externalDeviceId; // 공급자 쪽 장치 식별자
 
     // 상태 갱신 -> 변경시간 기록
     public void updateState(Map<String, Object> newState) {

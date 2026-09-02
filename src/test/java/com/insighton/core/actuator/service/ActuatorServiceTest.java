@@ -49,7 +49,7 @@ class ActuatorServiceTest {
     void 생성_다른그룹location_거부() {
         given(locationRepository.findByLocationIdAndGroupGroupId(99L, 10L)).willReturn(Optional.empty());
 
-        ActuatorRequest request = new ActuatorRequest(99L, "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"));
+        ActuatorRequest request = new ActuatorRequest(99L, "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"), null, null);
 
         assertThrows(LocationNotFoundException.class,
                 () -> actuatorsService.createActuator(10L, request));
@@ -151,7 +151,7 @@ class ActuatorServiceTest {
         given(locationRepository.findByLocationIdAndGroupGroupId(50L, 10L)).willReturn(Optional.of(location));
         given(actuatorRepository.save(any(Actuator.class))).willReturn(Actuator.builder().actuatorId(100L).build());
 
-        ActuatorRequest request = new ActuatorRequest(50L, "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"));
+        ActuatorRequest request = new ActuatorRequest(50L, "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"), null, null);
         Long result = actuatorsService.createActuator(10L, request);
 
         assertThat(result).isEqualTo(100L);

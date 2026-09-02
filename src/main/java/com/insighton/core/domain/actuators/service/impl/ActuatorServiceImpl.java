@@ -56,6 +56,8 @@ public class ActuatorServiceImpl implements ActuatorService {
                 .sensorName(request.sensorName())
                 .actuatorType(request.actuatorType())
                 .currentState(request.currentState())
+                .controlProvider(request.controlProvider())
+                .externalDeviceId(request.externalDeviceId())
                 .stateUpdatedAt(OffsetDateTime.now())
                 .createdAt(OffsetDateTime.now())
                 .build();
@@ -80,6 +82,19 @@ public class ActuatorServiceImpl implements ActuatorService {
                 .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(locationId));
 
         return actuatorRepository.findByLocationLocationId(locationId).stream()
+                .map(ActuatorResponse::from)
+                .toList();
+    }
+
+    @Override
+    public List<ActuatorResponse> getActuatorsByGroupId(Long groupId) {
+        List<Long> locationIds = locationsRepository.findAllByGroupGroupId(groupId).stream()
+                .map(LocationListResponse::locationId)
+                .toList();
+        if (locationIds.isEmpty()) {
+            return List.of();
+        }
+        return actuatorRepository.findByLocationLocationIdIn(locationIds).stream()
                 .map(ActuatorResponse::from)
                 .toList();
     }
