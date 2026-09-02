@@ -261,17 +261,7 @@ PUT /internal/v1/groups/{groupId}/locations/{locationId}/actuators/state
 }
 ```
 
-> ⚠️ **AI 쪽 수정 필요 (미완)** — `InsightOn-ai`의 `CoreClient.executeActuatorCommand`가 `/internal/v1/locations/{id}/actuators/state`를 호출하는데, CORE에는 `/internal/v1/groups/{groupId}/locations/{id}/actuators/state`만 있습니다. `/groups/{groupId}`가 빠져 **404** → `ActuatorCommandExecutor`가 `FeignException.NotFound`를 잡아 `ActuatorNotFoundException`으로 변환 → 제안 수락이 실패합니다.
->
-> AI 팀 작업 (groupId는 두 호출부 모두 이미 확보돼 있음):
-> | 파일 | 변경 |
-> |---|---|
-> | `adapter/client/CoreClient.java` | `@PutMapping("/groups/{group-id}/locations/{location-id}/actuators/state")` + `@PathVariable("group-id") Long groupId` |
-> | `adapter/client/ActuatorCommandExecutor.java` | `execute(Long groupId, Long locationId, ...)` 로 시그니처 확장 |
-> | `domain/suggestion/service/impl/SuggestionLogServiceImpl.java` (`accept`) | `execute(suggestionLog.getGroupId(), ...)` |
-> | `domain/suggestion/batch/SuggestionGenerationScheduler.java` (`applyDraft`) | `execute(location.groupId(), ...)` |
->
-> 이게 되기 전까지 **AI 제안 수락으로는 어댑터 흐름을 탈 수 없습니다.** 로컬 확인은 §12(사용자 직접 조작) 경로로 하세요 — 같은 Facade→어댑터→시뮬레이터를 탑니다.
+> `InsightOn-ai`의 `CoreClient` · `ActuatorCommandExecutor` · `SuggestionLogServiceImpl` · `SuggestionGenerationScheduler`도 이 경로(`groups/{groupId}` 포함)에 맞춰져 있습니다 (`InsightOn-ai` PR #115, 커밋 `57d3c3e`·`3c2b904`). 바디 DTO(`actuatorType`/`command`/`commandValue`/`callerService`)는 그대로입니다.
 
 ---
 
@@ -630,7 +620,9 @@ public void updateActuatorState(Long groupsId, Long actuatorId, Map<String,Objec
 - `callerService` 자리에 `ExecutedByType.USER` → §7-3 소유권 검증이 **켜짐**
 - 개별 `actuatorId`를 Front가 알고 있어 §6의 "location+종류로 조회" 단계 없음
 
-> **로컬 확인은 이 경로로.** AI 경로는 §4의 수정이 끝나야 동작하므로, 지금은 Front 액추에이터 카드에서 전원/모드/온도를 직접 눌러 어댑터→시뮬레이터 흐름을 확인합니다. 대상 액추에이터는 공급자를 골라 등록한 것이어야 합니다(§6 주의). 성공하면 `core-local.log`에 `[SmartThings] … →`, `simulator-local.log`에 `[SMART_THINGS] … ←`.
+> **로컬 확인은 이 경로가 가장 간단합니다.** Front 액추에이터 카드에서 전원/모드/온도를 직접 누르면 §7 이후(어댑터→시뮬레이터)를 그대로 탑니다. 대상 액추에이터는 공급자를 골라 등록한 것이어야 합니다(§6 주의). 성공하면 `core-local.log`에 `[SmartThings] … →`, `simulator-local.log`에 `[SMART_THINGS] … ←`.
+>
+> AI 제안 수락 경로로 확인하려면 추가로: `InsightOn-ai`를 `dev` 프로파일로 실행 + `core-service.url`을 CORE 로컬 포트(`http://localhost:8300`)로 맞춤.
 
 ---
 
