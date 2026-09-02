@@ -1,8 +1,6 @@
 package com.insighton.core.controller.swagger;
 
 import com.insighton.core.domain.actuatorrunlogs.dto.ActuatorRunLogResponse;
-import com.insighton.core.domain.actuators.control.ControlProvider;
-import com.insighton.core.domain.actuators.control.ProviderDevice;
 import com.insighton.core.domain.actuators.dto.ActuatorNameUpdateRequest;
 import com.insighton.core.domain.actuators.dto.ActuatorRequest;
 import com.insighton.core.domain.actuators.dto.ActuatorResponse;
@@ -38,12 +36,6 @@ public interface ActuatorControllerApi {
             @Parameter(description = "사용자 ID") Long userId,
             @Parameter(description = "그룹 ID") Long groupsId,
             @Parameter(description = "위치 ID") Long locationId);
-
-    @Operation(summary = "공급자 계정에 연결된 장치 목록 조회 (등록 시 매핑용)")
-    ResponseEntity<List<ProviderDevice>> getProviderDevices(
-            @Parameter(description = "사용자 ID") Long userId,
-            @Parameter(description = "그룹 ID") Long groupsId,
-            @Parameter(description = "제어 공급자") ControlProvider provider);
 
     @Operation(summary = "액추에이터 상태 변경")
     ResponseEntity<Void> updateActuatorState(

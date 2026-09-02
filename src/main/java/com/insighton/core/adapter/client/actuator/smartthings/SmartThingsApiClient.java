@@ -2,7 +2,6 @@ package com.insighton.core.adapter.client.actuator.smartthings;
 
 import com.insighton.core.adapter.client.actuator.smartthings.dto.SmartThingsCommandRequest;
 import com.insighton.core.adapter.client.actuator.smartthings.dto.SmartThingsCommandResponse;
-import com.insighton.core.adapter.client.actuator.smartthings.dto.SmartThingsDeviceListResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -15,22 +14,6 @@ import org.springframework.web.client.RestClientResponseException;
 public class SmartThingsApiClient {
 
     private final RestClient smartThingsRestClient;
-
-    public SmartThingsDeviceListResponse listDevices() {
-        try {
-            return smartThingsRestClient.get()
-                    .uri("/v1/devices")
-                    .retrieve()
-                    .body(SmartThingsDeviceListResponse.class);
-        } catch (RestClientResponseException e) {
-            throw new SmartThingsApiException(
-                    "SmartThings 장치 목록 조회 실패 (" + e.getStatusCode() + "): " + e.getResponseBodyAsString(), e);
-        } catch (SmartThingsApiException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new SmartThingsApiException("SmartThings 장치 목록 호출 중 오류: " + e.getMessage(), e);
-        }
-    }
 
     public SmartThingsCommandResponse sendCommands(String deviceId, SmartThingsCommandRequest request) {
         try {

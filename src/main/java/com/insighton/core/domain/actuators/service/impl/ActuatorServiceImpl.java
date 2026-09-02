@@ -3,6 +3,7 @@ package com.insighton.core.domain.actuators.service.impl;
 import com.insighton.core.domain.actuatorrunlogs.entity.ExecutedByType;
 import com.insighton.core.domain.actuatorrunlogs.repository.ActuatorRunLogRepository;
 import com.insighton.core.domain.actuatorrunlogs.service.ActuatorRunLogService;
+import com.insighton.core.domain.actuators.control.ExternalDeviceIdGenerator;
 import com.insighton.core.domain.actuators.dto.ActuatorRequest;
 import com.insighton.core.domain.actuators.dto.ActuatorResponse;
 import com.insighton.core.domain.actuators.entity.Actuator;
@@ -51,13 +52,18 @@ public class ActuatorServiceImpl implements ActuatorService {
         Location locations = locationsRepository.findByLocationIdAndGroupGroupId(request.locationId(), groupsId)
                 .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(request.locationId()));
 
+        // 공급자를 지정했으면 CORE가 장치 식별자를 자동 부여한다. 미지정이면 미연결(UNBOUND) 상태로 생성.
+        String externalDeviceId = request.controlProvider() == null
+                ? null
+                : ExternalDeviceIdGenerator.generate(request.controlProvider(), request.actuatorType());
+
         Actuator entity = Actuator.builder()
                 .location(locations)
                 .sensorName(request.sensorName())
                 .actuatorType(request.actuatorType())
                 .currentState(request.currentState())
                 .controlProvider(request.controlProvider())
-                .externalDeviceId(request.externalDeviceId())
+                .externalDeviceId(externalDeviceId)
                 .stateUpdatedAt(OffsetDateTime.now())
                 .createdAt(OffsetDateTime.now())
                 .build();
@@ -82,19 +88,6 @@ public class ActuatorServiceImpl implements ActuatorService {
                 .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(locationId));
 
         return actuatorRepository.findByLocationLocationId(locationId).stream()
-                .map(ActuatorResponse::from)
-                .toList();
-    }
-
-    @Override
-    public List<ActuatorResponse> getActuatorsByGroupId(Long groupId) {
-        List<Long> locationIds = locationsRepository.findAllByGroupGroupId(groupId).stream()
-                .map(LocationListResponse::locationId)
-                .toList();
-        if (locationIds.isEmpty()) {
-            return List.of();
-        }
-        return actuatorRepository.findByLocationLocationIdIn(locationIds).stream()
                 .map(ActuatorResponse::from)
                 .toList();
     }

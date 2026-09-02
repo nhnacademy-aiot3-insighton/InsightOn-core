@@ -3,6 +3,7 @@ package com.insighton.core.actuator.service;
 import com.insighton.core.domain.actuatorrunlogs.entity.ExecutedByType;
 import com.insighton.core.domain.actuatorrunlogs.repository.ActuatorRunLogRepository;
 import com.insighton.core.domain.actuatorrunlogs.service.ActuatorRunLogService;
+import com.insighton.core.domain.actuators.control.ControlProvider;
 import com.insighton.core.domain.actuators.dto.ActuatorRequest;
 import com.insighton.core.domain.actuators.dto.ActuatorResponse;
 import com.insighton.core.domain.actuators.entity.ActuatorType;
@@ -17,6 +18,7 @@ import com.insighton.core.domain.location.repository.LocationRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -49,7 +51,7 @@ class ActuatorServiceTest {
     void 생성_다른그룹location_거부() {
         given(locationRepository.findByLocationIdAndGroupGroupId(99L, 10L)).willReturn(Optional.empty());
 
-        ActuatorRequest request = new ActuatorRequest(99L, "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"), null, null);
+        ActuatorRequest request = new ActuatorRequest(99L, "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"), null);
 
         assertThrows(LocationNotFoundException.class,
                 () -> actuatorsService.createActuator(10L, request));
@@ -151,10 +153,43 @@ class ActuatorServiceTest {
         given(locationRepository.findByLocationIdAndGroupGroupId(50L, 10L)).willReturn(Optional.of(location));
         given(actuatorRepository.save(any(Actuator.class))).willReturn(Actuator.builder().actuatorId(100L).build());
 
-        ActuatorRequest request = new ActuatorRequest(50L, "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"), null, null);
+        ActuatorRequest request = new ActuatorRequest(50L, "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"), null);
         Long result = actuatorsService.createActuator(10L, request);
 
         assertThat(result).isEqualTo(100L);
+    }
+
+    @Test
+    @DisplayName("createActuator - controlProvider를 지정하면 external_device_id를 자동 생성해 저장한다")
+    void 생성_공급자지정_externalDeviceId자동생성() {
+        Location location = mock(Location.class);
+        given(locationRepository.findByLocationIdAndGroupGroupId(50L, 10L)).willReturn(Optional.of(location));
+        given(actuatorRepository.save(any(Actuator.class))).willReturn(Actuator.builder().actuatorId(100L).build());
+
+        ActuatorRequest request = new ActuatorRequest(50L, "천장에어컨", ActuatorType.AIRCON,
+                Map.of("power", "OFF"), ControlProvider.LG_THINQ);
+        actuatorsService.createActuator(10L, request);
+
+        ArgumentCaptor<Actuator> captor = ArgumentCaptor.forClass(Actuator.class);
+        verify(actuatorRepository).save(captor.capture());
+        assertThat(captor.getValue().getControlProvider()).isEqualTo(ControlProvider.LG_THINQ);
+        assertThat(captor.getValue().getExternalDeviceId()).matches("lg-aircon-[0-9a-f]{8}");
+    }
+
+    @Test
+    @DisplayName("createActuator - controlProvider가 없으면 external_device_id도 null (미연결 상태)")
+    void 생성_공급자없음_미연결() {
+        Location location = mock(Location.class);
+        given(locationRepository.findByLocationIdAndGroupGroupId(50L, 10L)).willReturn(Optional.of(location));
+        given(actuatorRepository.save(any(Actuator.class))).willReturn(Actuator.builder().actuatorId(100L).build());
+
+        ActuatorRequest request = new ActuatorRequest(50L, "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"), null);
+        actuatorsService.createActuator(10L, request);
+
+        ArgumentCaptor<Actuator> captor = ArgumentCaptor.forClass(Actuator.class);
+        verify(actuatorRepository).save(captor.capture());
+        assertThat(captor.getValue().getControlProvider()).isNull();
+        assertThat(captor.getValue().getExternalDeviceId()).isNull();
     }
 
     @Test

@@ -78,29 +78,4 @@ class LgThinQApiClientTest {
         assertThatThrownBy(() -> client.control("lg-aircon-001", powerOn()))
                 .isInstanceOf(LgThinQApiException.class);
     }
-
-    @Test
-    @DisplayName("listDevices - GET /devices 로 장치 목록(배열)을 조회한다")
-    void listDevices_성공() {
-        server.expect(requestTo(BASE_URL + "/devices"))
-                .andExpect(method(HttpMethod.GET))
-                .andRespond(withSuccess(
-                        "[{\"deviceId\":\"lg-aircon-001\",\"deviceInfo\":{\"deviceType\":\"AIRCON\",\"alias\":\"대회의실 에어컨\"}}]",
-                        MediaType.APPLICATION_JSON));
-
-        var devices = client.listDevices();
-
-        assertThat(devices).hasSize(1);
-        assertThat(devices.get(0).deviceId()).isEqualTo("lg-aircon-001");
-        assertThat(devices.get(0).deviceInfo().alias()).isEqualTo("대회의실 에어컨");
-    }
-
-    @Test
-    @DisplayName("listDevices - 4xx면 LgThinQApiException")
-    void listDevices_4xx() {
-        server.expect(requestTo(BASE_URL + "/devices"))
-                .andRespond(withStatus(HttpStatus.UNAUTHORIZED));
-
-        assertThatThrownBy(() -> client.listDevices()).isInstanceOf(LgThinQApiException.class);
-    }
 }

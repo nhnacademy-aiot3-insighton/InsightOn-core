@@ -84,8 +84,14 @@ simulator.provider-token=local-sim-token
 3. **InsightOn-front** — 선택. Active profiles = `local`, port 8400. 브라우저 개발자도구에서 쿠키 `userId=3`, `groupId=1` 직접 심기 (로그인 흐름 생략)
 
 ```bash
-# CORE ↔ 시뮬레이터 연결 확인 — LG 장치 목록이 나오면 정상
-curl -H "X-USER-ID: 3" "http://localhost:8300/api/v1/groups/1/actuators/provider-devices?provider=LG_THINQ"
+# 시뮬레이터 단독 확인 — 아무 deviceId나 받고 ACCEPTED를 돌려주면 정상
+curl -s -XPOST "http://localhost:8090/smartthings/v1/devices/ping/commands" \
+  -H "Authorization: Bearer local-sim-token" -H "Content-Type: application/json" \
+  -d '{"commands":[{"component":"main","capability":"switch","command":"on","arguments":[]}]}'
+# → {"results":[{"id":"...","status":"ACCEPTED"}]}
+
+# CORE ↔ 시뮬레이터 연결 확인 — Front에서 공급자를 지정해 액추에이터를 만들고 카드에서 전원을 눌러본다.
+# (또는 AI/룰엔진 경로: PUT /internal/v1/groups/1/locations/{id}/actuators/state)
 
 # 로그 (액추에이터 조작하면 양쪽에 JSON이 찍힘)
 tail -f core-local.log      | grep -E '\[SmartThings\]|\[LG ThinQ\]'   # CORE가 내보낸 JSON
@@ -171,7 +177,8 @@ logging.level.com.nhnacademy.insightonfront=DEBUG
 지금은 CORE가 공급자(SmartThings / LG ThinQ)별 **어댑터**를 통해 실제 API를 호출합니다. 개발·시연 환경에서는 그 API 자리에 **시뮬레이터**가 들어갑니다. 시뮬레이터는 두 공식 API의 경로·페이로드를 그대로 흉내 내므로, CORE 입장에서는 상대가 시뮬레이터인지 실제 클라우드인지 구별하지 않습니다.
 
 - **CORE ↔ 시뮬레이터는 코드·DTO를 하나도 공유하지 않습니다.** HTTP + JSON 계약으로만 통신합니다.
-- **시뮬레이터는 상태를 저장하지 않습니다.** "이 deviceId가 어느 공급자의 어떤 종류인가"라는 고정 카탈로그만 압니다.
+- **시뮬레이터는 상태도 기기 목록도 저장하지 않습니다.** 받은 명령 JSON을 파싱해 형식만 검증하고 `ACCEPTED`(혹은 `messageId`)를 돌려줍니다. deviceId가 무엇이든(실제 SmartThings처럼 UUID여도) 받습니다.
+- **어느 공급자의 어떤 종류인지는 전부 CORE가 압니다.** 액추에이터를 등록할 때 공급자·종류를 고르면 `control_provider`·`actuator_type` 컬럼에 저장되고, `external_device_id`는 CORE가 자동 생성합니다 (`ExternalDeviceIdGenerator`).
 - **상태의 진실은 CORE DB입니다.** 어댑터는 "공급자가 명령을 수락함 → 요청값이 적용됨"으로 간주하고 그 값을 CORE DB에 저장합니다.
 
 ---
@@ -188,8 +195,9 @@ logging.level.com.nhnacademy.insightonfront=DEBUG
 | `SmartThingsActuatorAdapter` / `LgThinQActuatorAdapter` | `adapter/client/actuator/` | 공급자별 제어 구현 |
 | `SmartThingsCommandAssembler` / `LgThinQControlAssembler` | 〃 | 중립 상태 → 공급자 JSON |
 | `SmartThingsApiClient` / `LgThinQApiClient` | 〃 | `RestClient`로 실제 HTTP |
-| `SmartThingsController` / `LgThinQController` | actuator-simulator | 공급자 공식 API 흉내 |
-| `DeviceCatalogRegistry` | actuator-simulator `catalog/` | 14대 고정 카탈로그, id → (공급자, 종류) |
+| `ExternalDeviceIdGenerator` | `domain/actuators/control/` | 등록 시 `external_device_id` 자동 생성 (`{공급자}-{종류}-{랜덤8자}`) |
+| `SmartThingsController` / `LgThinQController` | actuator-simulator | 공급자 공식 API 흉내 — 명령 파싱 + `ACCEPTED` 응답 (상태·카탈로그 없음) |
+| `SmartThingsRequestTranslator` / `LgThinQRequestTranslator` | actuator-simulator | 받은 공급자 JSON → 중립 명령 (형식 검증용, 잘못되면 400) |
 
 ---
 
@@ -223,7 +231,7 @@ sequenceDiagram
     AS-->>AD: {"commands":[{switch:on}, {airConditionerMode:cool}, {thermostatCoolingSetpoint:25}]}
     AD->>CL: sendCommands("st-aircon-001", request)
     CL->>SIM: POST {base-url}/v1/devices/st-aircon-001/commands<br/>Authorization: Bearer <token>
-    SIM->>SIM: 토큰 확인 → catalog.byId("st-aircon-001") → "SMART_THINGS / AIRCON"
+    SIM->>SIM: 토큰 확인 → 명령 JSON 파싱(형식 검증) → 반영 키 3개
     SIM-->>CL: {"results":[{"status":"ACCEPTED"} x3]}
     CL-->>AD: SmartThingsCommandResponse
     AD->>AD: results 전부 ACCEPTED 확인
@@ -253,7 +261,17 @@ PUT /internal/v1/groups/{groupId}/locations/{locationId}/actuators/state
 }
 ```
 
-> ⚠️ **현재 AI 쪽 버그**: `CoreClient.executeActuatorCommand`의 경로가 `/internal/v1/locations/{id}/actuators/state`로 `/groups/{groupId}`가 빠져 있어, 지금 CORE와 맞지 않습니다. AI 팀에서 경로 + `groupId` 파라미터 추가가 필요합니다.
+> ⚠️ **AI 쪽 수정 필요 (미완)** — `InsightOn-ai`의 `CoreClient.executeActuatorCommand`가 `/internal/v1/locations/{id}/actuators/state`를 호출하는데, CORE에는 `/internal/v1/groups/{groupId}/locations/{id}/actuators/state`만 있습니다. `/groups/{groupId}`가 빠져 **404** → `ActuatorCommandExecutor`가 `FeignException.NotFound`를 잡아 `ActuatorNotFoundException`으로 변환 → 제안 수락이 실패합니다.
+>
+> AI 팀 작업 (groupId는 두 호출부 모두 이미 확보돼 있음):
+> | 파일 | 변경 |
+> |---|---|
+> | `adapter/client/CoreClient.java` | `@PutMapping("/groups/{group-id}/locations/{location-id}/actuators/state")` + `@PathVariable("group-id") Long groupId` |
+> | `adapter/client/ActuatorCommandExecutor.java` | `execute(Long groupId, Long locationId, ...)` 로 시그니처 확장 |
+> | `domain/suggestion/service/impl/SuggestionLogServiceImpl.java` (`accept`) | `execute(suggestionLog.getGroupId(), ...)` |
+> | `domain/suggestion/batch/SuggestionGenerationScheduler.java` (`applyDraft`) | `execute(location.groupId(), ...)` |
+>
+> 이게 되기 전까지 **AI 제안 수락으로는 어댑터 흐름을 탈 수 없습니다.** 로컬 확인은 §12(사용자 직접 조작) 경로로 하세요 — 같은 Facade→어댑터→시뮬레이터를 탑니다.
 
 ---
 
@@ -304,6 +322,8 @@ public void execute(Long groupId, Long locationId, ActuatorCommandRequest reques
 ```
 
 > AI는 개별 `actuatorId`를 모릅니다. `location + 종류`만 지정하면 여기서 대상을 `actuatorId=9`로 확정합니다.
+>
+> ⚠️ 여기서 확정된 액추에이터에 `control_provider`가 없으면(등록 시 공급자 미선택) §7-4에서 400으로 거절됩니다. **AI/룰엔진 경로로 실제 제어를 테스트하려면 대상 액추에이터가 공급자에 연결돼 있어야 합니다** — Front 등록 폼에서 공급자를 골라 만들거나, 기존 것은 `UPDATE core.actuators SET control_provider='SMART_THINGS', external_device_id='st-aircon-1' WHERE actuator_id=<id>;`.
 
 ---
 
@@ -439,9 +459,18 @@ private SmartThingsCommandRequest.Command modeCommand(ActuatorType actuatorType,
 |---|---|---|
 | 공급자 → 어느 **어댑터 클래스** | `ActuatorControlFacade:65` `adapterRegistry.get(getControlProvider())` | `control_provider` |
 | 종류 → 어느 **capability / 속성그룹** | `SmartThingsCommandAssembler:63` `switch(actuatorType)` | `actuator_type` |
-| 어느 **기기**로 (URL 경로) | `SmartThingsApiClient:38` `.uri(".../{deviceId}/commands", externalDeviceId)` | `external_device_id` |
+| 어느 **기기**로 (URL 경로) | `SmartThingsApiClient` `.uri(".../{deviceId}/commands", externalDeviceId)` | `external_device_id` |
 
-이 세 컬럼은 **Front "공급자 장치" 섹션에서 액추에이터를 등록할 때** 채워집니다. 공급자를 고르면 `control_provider`, 목록에서 장치를 고르면 `external_device_id`, 그 장치 타입에 맞춰 `actuator_type`이 자동 지정됩니다.
+이 세 컬럼은 **액추에이터를 등록할 때** 채워집니다. Front 등록 폼에서 **이름 · 공급자 · 종류**만 고르면 — 공급자가 `control_provider`, 종류가 `actuator_type` — `external_device_id`는 CORE가 자동 생성합니다:
+
+[`../src/main/java/com/insighton/core/domain/actuators/control/ExternalDeviceIdGenerator.java`](../src/main/java/com/insighton/core/domain/actuators/control/ExternalDeviceIdGenerator.java)
+```java
+// {공급자}-{종류}-{랜덤8자}   예) lg-aircon-a1b2c3d4, st-purifier-9f8e7d6c
+ExternalDeviceIdGenerator.generate(provider, actuatorType)
+```
+`ActuatorServiceImpl.createActuator()`가 `controlProvider != null`일 때만 호출합니다 (공급자 미지정 → `external_device_id`도 null → UNBOUND).
+
+> 시뮬레이터는 아무 deviceId나 받으므로 이 자동 생성값으로 충분합니다. **실제 SmartThings/LG ThinQ 연동**으로 바뀌면 공급자 계정이 발급한 deviceId(UUID)를 저장해야 하므로, 그때 등록 화면에 "공급자 계정의 장치 목록" 조회를 다시 붙입니다.
 
 ---
 
@@ -537,15 +566,17 @@ actuator.lg-thinq.base-url    = http://localhost:8090/lg
 `smartthings/SmartThingsController.java` → `executeCommands()`
 ```java
 tokenValidator.validate(authorization);          // 1. Bearer 토큰 (틀리면 401)
-catalog.byId(deviceId);                          // 2. catalog.byId("st-aircon-001")  (없으면 404)
 log.info("[SMART_THINGS] {} ← {}", deviceId, toJson(request));   // 받은 raw JSON 로그
-ProviderCommand command = translator.translate(deviceId, request);   // 3. JSON → 중립 명령 (역변환)
-return assembler.commandResponse(command.desiredState().keySet());   // 4. {"results":[ACCEPTED...]}
+ProviderCommand command = translator.translate(deviceId, request);   // 2. JSON → 중립 명령 (형식 검증)
+return assembler.commandResponse(command.desiredState().keySet());   // 3. {"results":[ACCEPTED...]}
 ```
 
-- **카탈로그** (`catalog/DeviceCatalogRegistry.java`) — 14대 고정 상수. `byId("st-aircon-001")` → `DeviceCatalog("st-aircon-001", "SMART_THINGS", "AIRCON", "회의실 에어컨")`
+- **기기 카탈로그도 상태도 없습니다.** deviceId는 검증하지 않고 그대로 받습니다. 어느 공급자/종류인지는 CORE가 이미 알고 JSON을 만들어 보냈습니다.
 - **RequestTranslator** (`smartthings/SmartThingsRequestTranslator.java`) — 9-1 Assembler의 역방향. `capability:"switch"` → `power`, `"cool"` → `COOL` 등. 지원 안 하는 capability면 400.
-- **상태를 저장하지 않습니다.** `translate`를 호출하는 이유는 (a) 잘못된 payload면 400을 내기 위해, (b) 응답 result 개수를 맞추기 위해서입니다.
+- `translate`를 호출하는 이유는 (a) 잘못된 payload면 400을 내기 위해, (b) 응답 result 개수를 반영 키 수에 맞추기 위해서입니다.
+- LG는 `lg/LgThinQController.java` → `control()` — 같은 구조, 응답만 `{"messageId":"<uuid>"}`.
+
+남은 endpoint는 `POST .../commands`(SmartThings)와 `POST .../{id}/control`(LG) 둘뿐입니다. 목록·상태 조회 endpoint는 없습니다.
 
 응답: `{"results":[{"id":"<uuid>","status":"ACCEPTED"}, {...}, {...}]}` (키 3개니까 3개)
 
@@ -599,6 +630,8 @@ public void updateActuatorState(Long groupsId, Long actuatorId, Map<String,Objec
 - `callerService` 자리에 `ExecutedByType.USER` → §7-3 소유권 검증이 **켜짐**
 - 개별 `actuatorId`를 Front가 알고 있어 §6의 "location+종류로 조회" 단계 없음
 
+> **로컬 확인은 이 경로로.** AI 경로는 §4의 수정이 끝나야 동작하므로, 지금은 Front 액추에이터 카드에서 전원/모드/온도를 직접 눌러 어댑터→시뮬레이터 흐름을 확인합니다. 대상 액추에이터는 공급자를 골라 등록한 것이어야 합니다(§6 주의). 성공하면 `core-local.log`에 `[SmartThings] … →`, `simulator-local.log`에 `[SMART_THINGS] … ←`.
+
 ---
 
 ## 13. 실패 시
@@ -637,7 +670,8 @@ ALTER TABLE core.actuators ADD COLUMN external_device_id  varchar(150);
 2. `ActuatorControlAdapter`를 구현한 `XxxActuatorAdapter` (`@Component`) — Registry가 자동 인식
 3. 그 공급자 형식의 `Assembler` · `ApiClient` · `dto/`
 4. `ActuatorRestClientConfig`에 `RestClient` 빈 + properties에 base-url/token
-5. Front 등록 폼과 "공급자 장치" 섹션의 공급자 목록에 추가
-6. (시연용) 시뮬레이터에 `xxx/` 패키지 + 카탈로그 항목
+5. `ExternalDeviceIdGenerator`의 `providerPrefix()` switch에 접두사 한 줄
+6. Front 등록 폼(`panel.html`)의 공급자 select에 `<option>` 추가
+7. (시연용) 시뮬레이터에 `xxx/` 패키지 (Controller + RequestTranslator + dto)
 
 `ActuatorControlFacade` · UseCase · 컨트롤러 · DB 스키마는 그대로입니다.
