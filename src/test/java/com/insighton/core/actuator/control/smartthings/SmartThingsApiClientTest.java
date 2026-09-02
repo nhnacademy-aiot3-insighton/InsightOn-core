@@ -4,7 +4,6 @@ import com.insighton.core.adapter.client.actuator.smartthings.SmartThingsApiClie
 import com.insighton.core.adapter.client.actuator.smartthings.SmartThingsApiException;
 import com.insighton.core.adapter.client.actuator.smartthings.dto.SmartThingsCommandRequest;
 import com.insighton.core.adapter.client.actuator.smartthings.dto.SmartThingsCommandResponse;
-import com.insighton.core.adapter.client.actuator.smartthings.dto.SmartThingsDeviceListResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -85,30 +84,5 @@ class SmartThingsApiClientTest {
 
         assertThatThrownBy(() -> client.sendCommands("st-aircon-001", onRequest()))
                 .isInstanceOf(SmartThingsApiException.class);
-    }
-
-    @Test
-    @DisplayName("listDevices - GET /v1/devices 로 장치 목록을 조회한다")
-    void listDevices_성공() {
-        server.expect(requestTo(BASE_URL + "/v1/devices"))
-                .andExpect(method(HttpMethod.GET))
-                .andExpect(header("Authorization", "Bearer test-token"))
-                .andRespond(withSuccess(
-                        "{\"items\":[{\"deviceId\":\"st-aircon-001\",\"label\":\"회의실 에어컨\",\"type\":\"AIRCON\"}]}",
-                        MediaType.APPLICATION_JSON));
-
-        SmartThingsDeviceListResponse response = client.listDevices();
-
-        assertThat(response.items()).hasSize(1);
-        assertThat(response.items().get(0).deviceId()).isEqualTo("st-aircon-001");
-    }
-
-    @Test
-    @DisplayName("listDevices - 4xx면 SmartThingsApiException")
-    void listDevices_4xx() {
-        server.expect(requestTo(BASE_URL + "/v1/devices"))
-                .andRespond(withStatus(HttpStatus.UNAUTHORIZED));
-
-        assertThatThrownBy(() -> client.listDevices()).isInstanceOf(SmartThingsApiException.class);
     }
 }

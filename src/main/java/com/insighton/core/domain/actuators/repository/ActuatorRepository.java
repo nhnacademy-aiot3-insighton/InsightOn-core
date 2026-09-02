@@ -12,9 +12,6 @@ public interface ActuatorRepository extends JpaRepository<Actuator, Long> {
     // 특정 위치(locationId)에 속한 모든 액추에이터 조회
     List<Actuator> findByLocationLocationId(Long locationId);
 
-    // 여러 위치(그룹 소속 위치 전체 등)에 속한 액추에이터 조회
-    List<Actuator> findByLocationLocationIdIn(List<Long> locationIds);
-
     // 액추에이터 종류(ActuatorType)별 목록 조회
     List<Actuator> findByActuatorType(ActuatorType actuatorType);
 

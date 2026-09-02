@@ -6,7 +6,6 @@ import com.insighton.core.adapter.client.actuator.lg.LgThinQApiException;
 import com.insighton.core.adapter.client.actuator.lg.LgThinQControlAssembler;
 import com.insighton.core.adapter.client.actuator.lg.dto.LgThinQControlRequest;
 import com.insighton.core.adapter.client.actuator.lg.dto.LgThinQControlResponse;
-import com.insighton.core.adapter.client.actuator.lg.dto.LgThinQDeviceListItem;
 import com.insighton.core.domain.actuators.control.ActuatorControlCommand;
 import com.insighton.core.domain.actuators.control.ActuatorControlResult;
 import com.insighton.core.domain.actuators.control.ControlProvider;
@@ -18,7 +17,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -86,20 +84,5 @@ class LgThinQActuatorAdapterTest {
         assertThatThrownBy(() -> adapter.control(command()))
                 .isInstanceOf(LgThinQApiException.class)
                 .hasMessageContaining("공급자 500");
-    }
-
-    @Test
-    @DisplayName("listDevices - apiClient 응답을 ProviderDevice로 변환")
-    void listDevices() {
-        given(apiClient.listDevices()).willReturn(List.of(
-                new LgThinQDeviceListItem("lg-aircon-001",
-                        new LgThinQDeviceListItem.DeviceInfo("AIRCON", "대회의실 에어컨"))));
-
-        var result = adapter.listDevices();
-
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).externalDeviceId()).isEqualTo("lg-aircon-001");
-        assertThat(result.get(0).name()).isEqualTo("대회의실 에어컨");
-        assertThat(result.get(0).actuatorType()).isEqualTo("AIRCON");
     }
 }

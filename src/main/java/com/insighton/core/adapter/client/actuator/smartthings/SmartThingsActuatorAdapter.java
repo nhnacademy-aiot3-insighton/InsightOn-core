@@ -2,18 +2,14 @@ package com.insighton.core.adapter.client.actuator.smartthings;
 
 import com.insighton.core.adapter.client.actuator.smartthings.dto.SmartThingsCommandRequest;
 import com.insighton.core.adapter.client.actuator.smartthings.dto.SmartThingsCommandResponse;
-import com.insighton.core.adapter.client.actuator.smartthings.dto.SmartThingsDeviceListResponse;
 import com.insighton.core.domain.actuators.control.ActuatorControlAdapter;
 import com.insighton.core.domain.actuators.control.ActuatorControlCommand;
 import com.insighton.core.domain.actuators.control.ActuatorControlResult;
 import com.insighton.core.domain.actuators.control.ControlProvider;
-import com.insighton.core.domain.actuators.control.ProviderDevice;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 // SMART_THINGS 공급자용 Adapter. Registry가 이 빈을 supports() 기준으로 자동 편입한다.
 @Component
@@ -49,17 +45,6 @@ public class SmartThingsActuatorAdapter implements ActuatorControlAdapter {
 
         // 공급자가 명령을 수락했으므로, 요청한 desiredState가 그대로 적용됐다고 보고 CORE에 반영한다.
         return new ActuatorControlResult(command.desiredState(), summarize(response));
-    }
-
-    @Override
-    public List<ProviderDevice> listDevices() {
-        SmartThingsDeviceListResponse response = apiClient.listDevices();
-        if (response == null || response.items() == null) {
-            return List.of();
-        }
-        return response.items().stream()
-                .map(item -> new ProviderDevice(item.deviceId(), item.label(), item.type()))
-                .toList();
     }
 
     private String summarize(SmartThingsCommandResponse response) {

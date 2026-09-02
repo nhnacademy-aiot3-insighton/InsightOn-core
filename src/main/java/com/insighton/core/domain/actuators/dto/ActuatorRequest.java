@@ -23,9 +23,8 @@ public record ActuatorRequest(
         @NotNull(message = "초기 상태값 필수")
         Map<String, Object> currentState, // JSONB에 저장될 초기 상태 객체
 
-        ControlProvider controlProvider, // 선택 - 없으면 미연결(UNBOUND) 상태로 생성됨
-
-        String externalDeviceId // 선택 - 공급자 쪽 장치 식별자
+        ControlProvider controlProvider // 선택 - 없으면 미연결(UNBOUND) 상태로 생성됨.
+        // 지정하면 CORE가 external_device_id를 자동 생성한다 (ExternalDeviceIdGenerator)
 
 ) {
 }

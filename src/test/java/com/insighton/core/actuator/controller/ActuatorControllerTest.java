@@ -55,29 +55,11 @@ class ActuatorControllerTest {
     private DeleteActuatorUseCase deleteActuatorUseCase;
     @MockitoBean
     private DeleteAllActuatorUseCase deleteAllActuatorUseCase;
-    @MockitoBean
-    private ListProviderDevicesUseCase listProviderDevicesUseCase;
-
-    @Test
-    @DisplayName("공급자 장치 목록 조회 성공")
-    void 공급자장치목록_조회_성공() throws Exception {
-        given(listProviderDevicesUseCase.execute(1L, 10L,
-                com.insighton.core.domain.actuators.control.ControlProvider.SMART_THINGS))
-                .willReturn(List.of(new com.insighton.core.domain.actuators.control.ProviderDevice(
-                        "st-aircon-001", "회의실 에어컨", "AIRCON")));
-
-        mockMvc.perform(get("/api/v1/groups/{group-id}/actuators/provider-devices", 10L)
-                        .header("X-USER-ID", 1L)
-                        .param("provider", "SMART_THINGS"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].externalDeviceId").value("st-aircon-001"))
-                .andExpect(jsonPath("$[0].actuatorType").value("AIRCON"));
-    }
 
     @Test
     @DisplayName("액추에이터 생성 성공")
     void 생성_성공() throws Exception {
-        ActuatorRequest request = new ActuatorRequest(20L, "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"), null, null);
+        ActuatorRequest request = new ActuatorRequest(20L, "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"), null);
         given(createActuatorUseCase.createActuator(eq(1L), eq(10L), any())).willReturn(100L);
 
         mockMvc.perform(post("/api/v1/groups/{group-id}/actuators", 10L)

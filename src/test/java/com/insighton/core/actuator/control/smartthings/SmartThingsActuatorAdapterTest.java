@@ -6,7 +6,6 @@ import com.insighton.core.adapter.client.actuator.smartthings.SmartThingsApiExce
 import com.insighton.core.adapter.client.actuator.smartthings.SmartThingsCommandAssembler;
 import com.insighton.core.adapter.client.actuator.smartthings.dto.SmartThingsCommandRequest;
 import com.insighton.core.adapter.client.actuator.smartthings.dto.SmartThingsCommandResponse;
-import com.insighton.core.adapter.client.actuator.smartthings.dto.SmartThingsDeviceListResponse;
 import com.insighton.core.domain.actuators.control.ActuatorControlCommand;
 import com.insighton.core.domain.actuators.control.ActuatorControlResult;
 import com.insighton.core.domain.actuators.control.ControlProvider;
@@ -101,19 +100,5 @@ class SmartThingsActuatorAdapterTest {
         assertThatThrownBy(() -> adapter.control(command()))
                 .isInstanceOf(SmartThingsApiException.class)
                 .hasMessageContaining("공급자 500");
-    }
-
-    @Test
-    @DisplayName("listDevices - apiClient 응답을 ProviderDevice로 변환")
-    void listDevices() {
-        given(apiClient.listDevices()).willReturn(new SmartThingsDeviceListResponse(
-                List.of(new SmartThingsDeviceListResponse.Item("st-aircon-001", "회의실 에어컨", "AIRCON"))));
-
-        var result = adapter.listDevices();
-
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).externalDeviceId()).isEqualTo("st-aircon-001");
-        assertThat(result.get(0).name()).isEqualTo("회의실 에어컨");
-        assertThat(result.get(0).actuatorType()).isEqualTo("AIRCON");
     }
 }
