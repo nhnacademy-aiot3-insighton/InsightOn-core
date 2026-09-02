@@ -1,5 +1,6 @@
 package com.insighton.core.common.exception;
 
+import com.insighton.core.domain.actuators.exception.UnsupportedControlProviderException;
 import com.insighton.core.domain.actuators.exception.*;
 import com.insighton.core.domain.dashboards.exception.DashboardNotFoundException;
 import com.insighton.core.domain.gateway.exception.*;
@@ -83,7 +84,8 @@ public class GlobalExceptionHandler {
             RegionNotFoundException.class, InvalidDateTimeFormatException.class,
             InvitationTokenMismatchException.class, WeatherApiException.class,
             MissingServletRequestParameterException.class, MissingRequestHeaderException.class,
-            MethodArgumentTypeMismatchException.class, HttpMessageNotReadableException.class
+            MethodArgumentTypeMismatchException.class, HttpMessageNotReadableException.class,
+            UnsupportedControlProviderException.class
     })
     public ResponseEntity<ErrorResponse> handleBadRequest(Exception e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -100,6 +102,15 @@ public class GlobalExceptionHandler {
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), message));
+    }
+
+    // 액추에이터 공급자(SmartThings/LG ThinQ) 호출 실패 - CORE 버그가 아니라 외부 공급자 장애이므로 502
+    @ExceptionHandler(ActuatorControlException.class)
+    public ResponseEntity<ErrorResponse> handleActuatorControl(
+            ActuatorControlException e) {
+        log.warn("액추에이터 공급자 제어 실패: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .body(new ErrorResponse(HttpStatus.BAD_GATEWAY.value(), e.getMessage()));
     }
 
     @ExceptionHandler(feign.FeignException.class)

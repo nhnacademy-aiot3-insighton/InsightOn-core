@@ -18,6 +18,9 @@ public interface ActuatorService {
     // 위치 ID별 액추에이터 목록 조회
     List<ActuatorResponse> getActuatorsByLocationId(Long groupId, Long locationId);
 
+    // 그룹 소속 액추에이터 전체 조회 (공급자 장치 매핑 현황 계산용)
+    List<ActuatorResponse> getActuatorsByGroupId(Long groupId);
+
     // actingUserId: 권한 검증용이 아니라 실행 이력(run log) 기록 대상 - 시스템 호출은 null
     void updateActuatorState(Long groupsId, Long actuatorId, Map<String, Object> newState, ExecutedByType executedByType, Long actingUserId);
 

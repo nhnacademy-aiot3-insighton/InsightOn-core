@@ -37,7 +37,7 @@ class CreateActuatorUseCaseTest {
     void createActuator_success() {
         Long userId = 1L;
         Long groupId = 5L;
-        ActuatorRequest request = new ActuatorRequest(20L, "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"));
+        ActuatorRequest request = new ActuatorRequest(20L, "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"), null, null);
 
         given(actuatorService.createActuator(groupId, request)).willReturn(100L);
 
@@ -52,7 +52,7 @@ class CreateActuatorUseCaseTest {
     void createActuator_fail_noPermission() {
         Long userId = 1L;
         Long groupId = 5L;
-        ActuatorRequest request = new ActuatorRequest(20L, "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"));
+        ActuatorRequest request = new ActuatorRequest(20L, "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"), null, null);
 
         given(groupMemberService.validateGroupAdmin(groupId, userId))
                 .willThrow(NoPermissionException.forAdmin(userId));

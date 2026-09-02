@@ -2,6 +2,8 @@ package com.insighton.core.controller.api;
 
 import com.insighton.core.controller.swagger.ActuatorControllerApi;
 import com.insighton.core.domain.actuatorrunlogs.dto.ActuatorRunLogResponse;
+import com.insighton.core.domain.actuators.control.ControlProvider;
+import com.insighton.core.domain.actuators.control.ProviderDevice;
 import com.insighton.core.domain.actuators.dto.ActuatorNameUpdateRequest;
 import com.insighton.core.domain.actuators.dto.ActuatorRequest;
 import com.insighton.core.domain.actuators.dto.ActuatorResponse;
@@ -11,6 +13,7 @@ import com.insighton.core.usecase.actuator.DeleteAllActuatorUseCase;
 import com.insighton.core.usecase.actuator.GetActuatorRunLogsUseCase;
 import com.insighton.core.usecase.actuator.GetActuatorUseCase;
 import com.insighton.core.usecase.actuator.GetActuatorsByLocationUseCase;
+import com.insighton.core.usecase.actuator.ListProviderDevicesUseCase;
 import com.insighton.core.usecase.actuator.UpdateActuatorNameUseCase;
 import com.insighton.core.usecase.actuator.UpdateActuatorStateUseCase;
 import jakarta.validation.Valid;
@@ -37,6 +40,7 @@ public class ActuatorController implements ActuatorControllerApi {
     private final GetActuatorRunLogsUseCase getActuatorRunLogsUseCase;
     private final DeleteActuatorUseCase deleteActuatorUseCase;
     private final DeleteAllActuatorUseCase deleteAllActuatorUseCase;
+    private final ListProviderDevicesUseCase listProviderDevicesUseCase;
 
 
     // 액추에이터 생성
@@ -68,6 +72,16 @@ public class ActuatorController implements ActuatorControllerApi {
             @PathVariable ("group-id") Long groupsId,
             @PathVariable ("location-id") Long locationId) {
         return ResponseEntity.ok(getActuatorsByLocationUseCase.getActuatorsByLocationId(userId, groupsId, locationId));
+    }
+
+    // 공급자 계정에 연결된 장치 목록 - 액추에이터 등록 화면에서 매핑할 externalDeviceId 선택용
+    @Override
+    @GetMapping("/provider-devices")
+    public ResponseEntity<List<ProviderDevice>> getProviderDevices(
+            @RequestHeader("X-USER-ID") Long userId,
+            @PathVariable("group-id") Long groupsId,
+            @RequestParam("provider") ControlProvider provider) {
+        return ResponseEntity.ok(listProviderDevicesUseCase.execute(userId, groupsId, provider));
     }
 
     // 유저 전용 액추에이터 업데이트
