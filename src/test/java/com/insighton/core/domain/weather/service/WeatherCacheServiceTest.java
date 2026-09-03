@@ -10,6 +10,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import com.insighton.core.domain.weather.dto.CurrentWeatherDto;
+import com.insighton.core.domain.weather.dto.MidTermTemperatureDto;
 import com.insighton.core.domain.weather.dto.UltraForecastWeatherDto;
 import com.insighton.core.domain.weather.dto.WeatherDataDto;
 import java.time.Duration;
@@ -33,6 +34,9 @@ class WeatherCacheServiceTest {
     private RedisTemplate<String, WeatherDataDto> weatherRedisTemplate;
 
     @Mock
+    private RedisTemplate<String, MidTermTemperatureDto> midTermTemperatureRedisTemplate;
+
+    @Mock
     private StringRedisTemplate stringRedisTemplate;
 
     @Mock
@@ -42,11 +46,15 @@ class WeatherCacheServiceTest {
     private ValueOperations<String, WeatherDataDto> weatherValueOperations;
 
     @Mock
+    private ValueOperations<String, MidTermTemperatureDto> midTermValueOperations;
+
+    @Mock
     private ValueOperations<String, String> stringValueOperations;
 
     @BeforeEach
     void setUp() {
-        weatherCacheService = new WeatherCacheService(weatherRedisTemplate, stringRedisTemplate, weatherService);
+        weatherCacheService = new WeatherCacheService(weatherRedisTemplate, midTermTemperatureRedisTemplate,
+                stringRedisTemplate, weatherService);
     }
 
     @Test
@@ -55,10 +63,11 @@ class WeatherCacheServiceTest {
         // given
         int gridX = 60, gridY = 127;
         String cacheKey = "weather:grid:60:127";
-        WeatherDataDto mockWeatherData = new WeatherDataDto(null, null, null, null);
+        WeatherDataDto mockWeatherData = new WeatherDataDto(null, null, null, null, null);
 
         given(weatherRedisTemplate.opsForValue()).willReturn(weatherValueOperations);
         given(weatherValueOperations.get(cacheKey)).willReturn(mockWeatherData);
+        given(midTermTemperatureRedisTemplate.opsForValue()).willReturn(midTermValueOperations);
 
         // when
         WeatherDataDto result = weatherCacheService.getWeatherDate(gridX, gridY, "서울특별시", "강남구", "20260601", "1200");
@@ -76,10 +85,11 @@ class WeatherCacheServiceTest {
         int gridX = 60, gridY = 127;
         String cacheKey = "weather:grid:60:127";
         String lockKey = cacheKey + ":lock";
-        WeatherDataDto mockWeatherData = new WeatherDataDto(null, null, null, null);
+        WeatherDataDto mockWeatherData = new WeatherDataDto(null, null, null, null, null);
 
         given(weatherRedisTemplate.opsForValue()).willReturn(weatherValueOperations);
         given(stringRedisTemplate.opsForValue()).willReturn(stringValueOperations);
+        given(midTermTemperatureRedisTemplate.opsForValue()).willReturn(midTermValueOperations);
 
         // 1차 캐시 미스
         given(weatherValueOperations.get(cacheKey)).willReturn(null);
@@ -113,7 +123,7 @@ class WeatherCacheServiceTest {
 
         CurrentWeatherDto newCurrent = new CurrentWeatherDto("25.0", "50", "0.0", null);
         UltraForecastWeatherDto newUltra = new UltraForecastWeatherDto("0.0");
-        WeatherDataDto cachedData = new WeatherDataDto(null, null, null, null);
+        WeatherDataDto cachedData = new WeatherDataDto(null, null, null, null, null);
 
         given(stringRedisTemplate.opsForValue()).willReturn(stringValueOperations);
         given(weatherRedisTemplate.opsForValue()).willReturn(weatherValueOperations);

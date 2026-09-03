@@ -2,6 +2,7 @@ package com.insighton.core.adapter.client.external;
 
 import com.insighton.core.domain.weather.dto.KmaWeatherResponseDto;
 import com.insighton.core.domain.weather.dto.KmaWeatherResponseDto.Item;
+import com.insighton.core.domain.weather.dto.MidTermTemperatureResponseDto;
 import com.insighton.core.domain.weather.exception.WeatherApiException;
 import java.net.URI;
 import java.util.HashMap;
@@ -23,6 +24,12 @@ public class KmaWeatherApiClient {
 
     @Value("${weather.api.kma-key}")
     private String kmaApiKey;
+
+    @Value("${weather.api.kma-midterm-base-url}")
+    private String kmaMidtermBaseUrl;
+
+    @Value("${weather.api.kma-midterm-key}")
+    private String kmaMidtermApiKey;
 
     public Map<String, String> fetchKmaApi(String endpoint, int nx, int ny, String baseDate, String baseTime,
                                            boolean isNcst) {
@@ -85,5 +92,34 @@ public class KmaWeatherApiClient {
         }
 
         return resultMap;
+    }
+
+    // 기상청 중기기온조회(getMidTa) - 단기/초단기예보와 파라미터(regId/tmFc)와 응답 구조가 모두 달라 별도 메서드로 분리
+    public MidTermTemperatureResponseDto.Item fetchMidTermTemperature(String regId, String tmFc) {
+        String fullUrl = String.format(
+                "%s/getMidTa?serviceKey=%s&pageNo=1&numOfRows=10&dataType=JSON&regId=%s&tmFc=%s",
+                kmaMidtermBaseUrl, kmaMidtermApiKey, regId, tmFc
+        );
+
+        MidTermTemperatureResponseDto response;
+        try {
+            response = kmaRestClient.get()
+                    .uri(URI.create(fullUrl))
+                    .retrieve()
+                    .body(MidTermTemperatureResponseDto.class);
+        } catch (Exception e) {
+            throw new WeatherApiException("기상청 중기기온 API 호출 중 오류 발생");
+        }
+
+        if (response == null || response.response() == null || response.response().body() == null) {
+            throw new WeatherApiException("기상청 중기기온 API 응답 구조를 파악할 수 없습니다.");
+        }
+
+        MidTermTemperatureResponseDto.Body body = response.response().body();
+        if (body.items() == null || body.items().item() == null || body.items().item().isEmpty()) {
+            throw new WeatherApiException("기상청 중기기온 API 응답에 데이터가 없습니다. (regId=" + regId + ")");
+        }
+
+        return body.items().item().get(0);
     }
 }

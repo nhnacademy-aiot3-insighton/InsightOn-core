@@ -14,10 +14,12 @@ public final class ActuatorCommandPreset {
     private ActuatorCommandPreset() {}
 
     private static final Map<ActuatorType, Map<CommandType, CommandValueRule>> RULES = Map.of(
-            // 에어컨
+            // 에어컨 (OPERATION_MODE 는 공급자 union - AIRCLEAN 은 LG 전용, 어댑터가 SmartThings면 거절)
             ActuatorType.AIRCON, Map.of(
                     CommandType.POWER_STATUS, new CommandValueRule.AllowedValues(Set.of("ON", "OFF")),
-                    CommandType.OPERATION_MODE, new CommandValueRule.AllowedValues(Set.of("COOL", "DRY", "FAN", "AUTO")),
+                    CommandType.OPERATION_MODE, new CommandValueRule.AllowedValues(Set.of("COOL", "DRY", "FAN", "AUTO", "AIRCLEAN")),
+                    // 바람 방향 - 공급자별 wire 표현만 다름(ST fanOscillationMode / LG rotateUpDown). 수동 조작 전용
+                    CommandType.WIND_DIRECTION, new CommandValueRule.AllowedValues(Set.of("FIXED", "SWING")),
                     CommandType.SET_TEMPERATURE, new CommandValueRule.NumericRange(18, 30)
             ),
             // 공기 청정기
