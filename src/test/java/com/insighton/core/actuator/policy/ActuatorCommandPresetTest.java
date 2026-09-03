@@ -23,7 +23,8 @@ class ActuatorCommandPresetTest {
         Set<CommandType> result = ActuatorCommandPreset.getSupportedCommands(ActuatorType.AIRCON);
 
         assertThat(result).containsExactlyInAnyOrder(
-                CommandType.POWER_STATUS, CommandType.OPERATION_MODE, CommandType.SET_TEMPERATURE);
+                CommandType.POWER_STATUS, CommandType.OPERATION_MODE,
+                CommandType.WIND_DIRECTION, CommandType.SET_TEMPERATURE);
     }
 
     @Test

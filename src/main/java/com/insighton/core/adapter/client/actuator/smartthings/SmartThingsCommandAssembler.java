@@ -2,6 +2,7 @@ package com.insighton.core.adapter.client.actuator.smartthings;
 
 import com.insighton.core.adapter.client.actuator.smartthings.dto.SmartThingsCommandRequest;
 import com.insighton.core.domain.actuators.control.ActuatorControlCommand;
+import com.insighton.core.domain.actuators.control.NeutralCommand;
 import com.insighton.core.domain.actuators.entity.ActuatorType;
 import org.springframework.stereotype.Component;
 
@@ -9,39 +10,35 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-// 공급자 독립 공통 명령(ActuatorControlCommand) -> SmartThings capability 명령(SmartThingsCommandRequest).
-// 지원 범위(플랜 §14): AIRCON power/mode/temperature, AIR_PURIFIER/VENTILATION_FAN power/mode.
-// 장치 타입별 capability는 실제 장치 모델마다 다를 수 있어 공식형 근사 매핑 subset만 구현.
+// 공급자 독립 공통 명령(ActuatorControlCommand) -> SmartThings "Execute commands" 요청.
+// 명령별 capability 매핑은 SmartThingsVocab enum이 담당한다.
+// 실제: POST https://api.smartthings.com/v1/devices/{id}/commands  (docs/provider-contract.md §4)
 @Component
 public class SmartThingsCommandAssembler {
 
     private static final String COMPONENT_MAIN = "main";
 
-    // AIRCON: CORE OPERATION_MODE -> SmartThings airConditionerMode
-    private static final Map<String, String> AIRCON_MODE = Map.of(
-            "COOL", "cool", "DRY", "dry", "FAN", "wind", "AUTO", "auto");
+    // Vocab enum으로 처리하는 명령들 (값이 고정 매핑). TEMPERATURE 는 값이 동적이라 아래에서 별도 처리.
+    private static final List<NeutralCommand> VOCAB_COMMANDS =
+            List.of(NeutralCommand.POWER, NeutralCommand.MODE, NeutralCommand.WIND_DIRECTION);
 
-    // AIR_PURIFIER: CORE mode -> SmartThings airPurifierFanMode
-    private static final Map<String, String> PURIFIER_MODE = Map.of(
-            "AUTO", "auto", "SLEEP", "sleep", "TURBO", "turbo");
-
-    // VENTILATION_FAN: CORE mode -> SmartThings fanSpeed(정수)
-    private static final Map<String, Integer> FAN_SPEED = Map.of(
-            "LOW", 1, "MID", 2, "HIGH", 3);
-
+    // desiredState의 각 중립 키를 Vocab에서 찾아 SmartThings command 배열로 조립 (해당 키 없으면 건너뜀)
     public SmartThingsCommandRequest assemble(ActuatorControlCommand command) {
+        ActuatorType type = command.actuatorType();
         Map<String, Object> state = command.desiredState();
         List<SmartThingsCommandRequest.Command> commands = new ArrayList<>();
 
-        if (state.containsKey("power")) {
-            commands.add(switchCommand(state.get("power")));
+        for (NeutralCommand nc : VOCAB_COMMANDS) {
+            if (state.containsKey(nc.stateKey())) {
+                commands.add(fromVocab(type, nc, state.get(nc.stateKey())));
+            }
         }
-        if (state.containsKey("mode")) {
-            commands.add(modeCommand(command.actuatorType(), state.get("mode")));
-        }
-        if (state.containsKey("temperature")) {
-            requireAircon(command.actuatorType(), "temperature");
-            commands.add(coolingSetpointCommand(state.get("temperature")));
+        // 온도는 값이 동적이라 Vocab이 아니라 여기서 직접 capability로
+        if (state.containsKey(NeutralCommand.TEMPERATURE.stateKey())) {
+            requireAircon(type, "temperature");
+            commands.add(new SmartThingsCommandRequest.Command(COMPONENT_MAIN,
+                    "thermostatCoolingSetpoint", "setCoolingSetpoint",
+                    List.of(toNumber(state.get(NeutralCommand.TEMPERATURE.stateKey())))));
         }
 
         if (commands.isEmpty()) {
@@ -50,52 +47,16 @@ public class SmartThingsCommandAssembler {
         return new SmartThingsCommandRequest(commands);
     }
 
-    private SmartThingsCommandRequest.Command switchCommand(Object power) {
-        String value = String.valueOf(power);
-        String stCommand = switch (value.toUpperCase()) {
-            case "ON" -> "on";
-            case "OFF" -> "off";
-            default -> throw new SmartThingsApiException("지원하지 않는 power 값입니다: " + value);
-        };
-        return new SmartThingsCommandRequest.Command(COMPONENT_MAIN, "switch", stCommand, List.of());
+    // 중립 (명령, 값) 을 Vocab에서 찾아 capability 명령으로 변환
+    private SmartThingsCommandRequest.Command fromVocab(ActuatorType type, NeutralCommand command, Object neutralValue) {
+        SmartThingsVocab v = SmartThingsVocab.find(type, command, String.valueOf(neutralValue))
+                .orElseThrow(() -> new SmartThingsApiException(
+                        "SmartThings가 지원하지 않는 " + command + " 값입니다: " + neutralValue
+                                + " (actuatorType=" + type + ")"));
+        return new SmartThingsCommandRequest.Command(COMPONENT_MAIN, v.capability(), v.stCommand(), v.arguments());
     }
 
-    private SmartThingsCommandRequest.Command modeCommand(ActuatorType actuatorType, Object mode) {
-        String key = String.valueOf(mode).toUpperCase();
-        return switch (actuatorType) {
-            case AIRCON -> capabilityCommand("airConditionerMode", "setAirConditionerMode",
-                    lookup(AIRCON_MODE, key, "mode"));
-            case AIR_PURIFIER -> capabilityCommand("airPurifierFanMode", "setAirPurifierFanMode",
-                    lookup(PURIFIER_MODE, key, "mode"));
-            case VENTILATION_FAN -> capabilityCommand("fanSpeed", "setFanSpeed",
-                    lookupInt(FAN_SPEED, key));
-        };
-    }
-
-    private SmartThingsCommandRequest.Command coolingSetpointCommand(Object temperature) {
-        return capabilityCommand("thermostatCoolingSetpoint", "setCoolingSetpoint", toNumber(temperature));
-    }
-
-    private SmartThingsCommandRequest.Command capabilityCommand(String capability, String command, Object argument) {
-        return new SmartThingsCommandRequest.Command(COMPONENT_MAIN, capability, command, List.of(argument));
-    }
-
-    private String lookup(Map<String, String> table, String key, String field) {
-        String v = table.get(key);
-        if (v == null) {
-            throw new SmartThingsApiException("지원하지 않는 " + field + " 값입니다: " + key);
-        }
-        return v;
-    }
-
-    private Integer lookupInt(Map<String, Integer> table, String key) {
-        Integer v = table.get(key);
-        if (v == null) {
-            throw new SmartThingsApiException("지원하지 않는 mode 값입니다: " + key);
-        }
-        return v;
-    }
-
+    // AIRCON 전용 명령을 다른 종류에 보내면 거절
     private void requireAircon(ActuatorType actuatorType, String field) {
         if (actuatorType != ActuatorType.AIRCON) {
             throw new SmartThingsApiException(

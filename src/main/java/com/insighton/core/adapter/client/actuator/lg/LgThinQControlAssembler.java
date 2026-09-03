@@ -1,84 +1,70 @@
 package com.insighton.core.adapter.client.actuator.lg;
 
-import com.insighton.core.adapter.client.actuator.lg.dto.LgThinQControlRequest;
 import com.insighton.core.domain.actuators.control.ActuatorControlCommand;
+import com.insighton.core.domain.actuators.control.NeutralCommand;
 import com.insighton.core.domain.actuators.entity.ActuatorType;
 import org.springframework.stereotype.Component;
 
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
-// 공급자 독립 공통 명령(ActuatorControlCommand) -> LG ThinQ operation payload.
-// 지원 범위(플랜 §14): AIRCON power/mode/temperature, AIR_PURIFIER/VENTILATION_FAN power/mode.
+// 공급자 독립 공통 명령(ActuatorControlCommand) -> LG ThinQ Connect control payload.
+// payload는 resource로 중첩된 property bag: { "<resource>": { "<property>": <value> }, ... }
+// 명령별 resource/property 매핑은 LgThinQVocab enum이 담당한다.
+// 실제: POST https://api-kic.lgthinq.com/devices/{id}/control  (docs/provider-contract.md §5)
 @Component
 public class LgThinQControlAssembler {
 
-    // AIRCON: CORE OPERATION_MODE -> LG currentJobMode
-    private static final Map<String, String> AIRCON_JOB_MODE = Map.of(
-            "COOL", "COOL", "DRY", "AIR_DRY", "FAN", "FAN", "AUTO", "AUTO");
+    private static final String TEMPERATURE_RESOURCE = "temperature";
+    private static final String TEMPERATURE_UNIT = "C";
 
-    // AIR_PURIFIER: CORE mode -> LG airPurifierJobMode.currentJobMode
-    private static final Map<String, String> PURIFIER_JOB_MODE = Map.of(
-            "AUTO", "AUTO", "SLEEP", "SLEEP", "TURBO", "TURBO");
+    // Vocab enum으로 처리하는 명령들. TEMPERATURE 는 값이 동적이라 아래에서 별도 처리.
+    private static final List<NeutralCommand> VOCAB_COMMANDS =
+            List.of(NeutralCommand.POWER, NeutralCommand.MODE, NeutralCommand.WIND_DIRECTION);
 
-    // VENTILATION_FAN: CORE mode -> LG windStrength
-    private static final Map<String, String> WIND_STRENGTH = Map.of(
-            "LOW", "LOW", "MID", "MID", "HIGH", "HIGH");
-
-    public LgThinQControlRequest assemble(ActuatorControlCommand command) {
+    // desiredState의 각 중립 키를 Vocab에서 찾아 resource -> { property -> value } 로 조립 (변경하는 resource만)
+    public Map<String, Object> assemble(ActuatorControlCommand command) {
         ActuatorType type = command.actuatorType();
         Map<String, Object> state = command.desiredState();
+        Map<String, Object> payload = new LinkedHashMap<>();
 
-        LgThinQControlRequest.Operation operation = null;
-        LgThinQControlRequest.AirConJobMode airConJobMode = null;
-        LgThinQControlRequest.Temperature temperature = null;
-        LgThinQControlRequest.AirPurifierJobMode airPurifierJobMode = null;
-        LgThinQControlRequest.WindStrength windStrength = null;
-
-        if (state.containsKey("power")) {
-            operation = new LgThinQControlRequest.Operation(toOperationMode(state.get("power")));
-        }
-        if (state.containsKey("mode")) {
-            String key = String.valueOf(state.get("mode")).toUpperCase();
-            switch (type) {
-                case AIRCON -> airConJobMode = new LgThinQControlRequest.AirConJobMode(
-                        lookup(AIRCON_JOB_MODE, key));
-                case AIR_PURIFIER -> airPurifierJobMode = new LgThinQControlRequest.AirPurifierJobMode(
-                        lookup(PURIFIER_JOB_MODE, key));
-                case VENTILATION_FAN -> windStrength = new LgThinQControlRequest.WindStrength(
-                        lookup(WIND_STRENGTH, key));
+        for (NeutralCommand nc : VOCAB_COMMANDS) {
+            if (state.containsKey(nc.stateKey())) {
+                putVocab(payload, type, nc, state.get(nc.stateKey()));
             }
         }
-        if (state.containsKey("temperature")) {
+        // 온도는 값이 동적이라 Vocab이 아니라 여기서 직접 temperature resource로 ({targetTemperature, unit:"C"})
+        if (state.containsKey(NeutralCommand.TEMPERATURE.stateKey())) {
             if (type != ActuatorType.AIRCON) {
                 throw new LgThinQApiException(
                         "LG ThinQ 어댑터는 temperature를 AIRCON에서만 지원합니다 (actuatorType=" + type + ")");
             }
-            temperature = new LgThinQControlRequest.Temperature(toTargetTemperature(state.get("temperature")));
+            Map<String, Object> temp = new LinkedHashMap<>();
+            temp.put("targetTemperature", toTargetTemperature(state.get(NeutralCommand.TEMPERATURE.stateKey())));
+            temp.put("unit", TEMPERATURE_UNIT);
+            payload.put(TEMPERATURE_RESOURCE, temp);
         }
 
-        if (operation == null && airConJobMode == null && temperature == null
-                && airPurifierJobMode == null && windStrength == null) {
+        if (payload.isEmpty()) {
             throw new LgThinQApiException("LG ThinQ로 변환할 수 있는 명령이 없습니다: " + state);
         }
-        return new LgThinQControlRequest(operation, airConJobMode, temperature, airPurifierJobMode, windStrength);
+        return payload;
     }
 
-    private String toOperationMode(Object power) {
-        return switch (String.valueOf(power).toUpperCase()) {
-            case "ON" -> "POWER_ON";
-            case "OFF" -> "POWER_OFF";
-            default -> throw new LgThinQApiException("지원하지 않는 power 값입니다: " + power);
-        };
+    // 중립 (명령, 값) 을 Vocab에서 찾아 resource.property 로 얹는다 (같은 resource면 병합)
+    @SuppressWarnings("unchecked")
+    private void putVocab(Map<String, Object> payload, ActuatorType type, NeutralCommand command, Object neutralValue) {
+        LgThinQVocab v = LgThinQVocab.find(type, command, String.valueOf(neutralValue))
+                .orElseThrow(() -> new LgThinQApiException(
+                        "LG ThinQ가 지원하지 않는 " + command + " 값입니다: " + neutralValue
+                                + " (actuatorType=" + type + ")"));
+        Map<String, Object> resource = (Map<String, Object>) payload.computeIfAbsent(
+                v.resource(), k -> new LinkedHashMap<String, Object>());
+        resource.put(v.property(), v.lgValue());
     }
 
-    private String lookup(Map<String, String> table, String key) {
-        String v = table.get(key);
-        if (v == null) {
-            throw new LgThinQApiException("지원하지 않는 mode 값입니다: " + key);
-        }
-        return v;
-    }
-
+    // 섭씨 정수로 반올림 (LG targetTemperature는 정수)
     private Integer toTargetTemperature(Object temperature) {
         try {
             return (int) Math.round(Double.parseDouble(String.valueOf(temperature)));

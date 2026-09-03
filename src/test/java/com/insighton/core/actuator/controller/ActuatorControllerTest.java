@@ -85,7 +85,8 @@ class ActuatorControllerTest {
     @DisplayName("위치별 액추에이터 목록 조회 성공")
     void 위치별조회_성공() throws Exception {
         ActuatorResponse actuator = new ActuatorResponse(1L, 20L, "에어컨", ActuatorType.AIRCON,
-                Map.of("power", "ON"), OffsetDateTime.now(), OffsetDateTime.now(), null, null);
+                Map.of("power", "ON"), OffsetDateTime.now(), OffsetDateTime.now(), null, null,
+                Map.of("mode", java.util.List.of("COOL", "AUTO")));
         given(getActuatorsByLocationUseCase.getActuatorsByLocationId(1L, 10L, 20L))
                 .willReturn(List.of(actuator));
 

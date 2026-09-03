@@ -42,6 +42,8 @@ class ActuatorServiceTest {
     @Mock private LocationRepository locationRepository;
     @Mock private ActuatorRunLogService actuatorRunLogService; // 없으면 상태변경 시 NPE
     @Mock private ActuatorRunLogRepository actuatorRunLogRepository; // 없으면 삭제 시 NPE
+    @Mock(strictness = Mock.Strictness.LENIENT)
+    private com.insighton.core.domain.actuators.control.ProviderCommandCatalog providerCommandCatalog;
 
     @InjectMocks
     private ActuatorServiceImpl actuatorsService;

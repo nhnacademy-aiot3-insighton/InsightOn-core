@@ -108,6 +108,23 @@ class SmartThingsCommandAssemblerTest {
     }
 
     @Test
+    @DisplayName("windDirection FIXED/SWING -> fanOscillationMode/setFanOscillationMode (fixed/all)")
+    void windDirection() {
+        var fixed = assembler.assemble(aircon(Map.of("windDirection", "FIXED"))).commands().get(0);
+        assertThat(fixed.capability()).isEqualTo("fanOscillationMode");
+        assertThat(fixed.arguments()).containsExactly("fixed");
+        assertThat(assembler.assemble(aircon(Map.of("windDirection", "SWING"))).commands().get(0).arguments())
+                .containsExactly("all");
+    }
+
+    @Test
+    @DisplayName("SmartThings 에어컨엔 AIRCLEAN 매핑이 없어 SmartThingsApiException")
+    void aircon_airclean_미지원() {
+        assertThatThrownBy(() -> assembler.assemble(aircon(Map.of("mode", "AIRCLEAN"))))
+                .isInstanceOf(SmartThingsApiException.class);
+    }
+
+    @Test
     @DisplayName("VENTILATION_FAN mode -> fanSpeed/setFanSpeed (LOW/MID/HIGH -> 1/2/3 정수)")
     void fan_mode() {
         ActuatorControlCommand mid = new ActuatorControlCommand(
