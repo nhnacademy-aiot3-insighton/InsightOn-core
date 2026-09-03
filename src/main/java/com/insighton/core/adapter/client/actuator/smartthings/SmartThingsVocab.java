@@ -6,6 +6,7 @@ import com.insighton.core.domain.actuators.entity.ActuatorType;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -78,7 +79,7 @@ public enum SmartThingsVocab {
 
     // (종류, 명령, 중립값) 으로 매핑 항목 조회
     public static Optional<SmartThingsVocab> find(ActuatorType type, NeutralCommand command, String neutralValue) {
-        String needle = neutralValue == null ? null : neutralValue.toUpperCase();
+        String needle = neutralValue == null ? null : neutralValue.toUpperCase(Locale.ROOT);
         for (SmartThingsVocab v : values()) {
             boolean typeOk = v.type == null || v.type == type;
             if (typeOk && v.command == command && v.neutralValue.equals(needle)) {
