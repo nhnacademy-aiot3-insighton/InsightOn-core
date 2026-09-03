@@ -12,7 +12,7 @@ import java.util.Map;
 // 공급자 독립 공통 명령(ActuatorControlCommand) -> LG ThinQ Connect control payload.
 // payload는 resource로 중첩된 property bag: { "<resource>": { "<property>": <value> }, ... }
 // 명령별 resource/property 매핑은 LgThinQVocab enum이 담당한다.
-// 실제: POST https://api-kic.lgthinq.com/devices/{id}/control  (docs/provider-contract.md §5)
+// 실제: POST https://api-kic.lgthinq.com/devices/{id}/control
 @Component
 public class LgThinQControlAssembler {
 

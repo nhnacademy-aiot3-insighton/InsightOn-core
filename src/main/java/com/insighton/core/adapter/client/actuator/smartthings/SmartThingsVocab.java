@@ -18,7 +18,7 @@ import java.util.Optional;
  * 응답 {@code {"results":[{"id":"<uuid>","status":"ACCEPTED"}]}}.
  *
  * <p>TEMPERATURE는 값이 동적(정수)이라 enum 항목이 아니라 {@link SmartThingsCommandAssembler}에서 직접 처리.
- * [근사] 주석 = 실제 장치 profile 확인 전까지의 근사값 (docs/provider-contract.md §4).
+ * [근사] 주석 = 실제 장치 profile 확인 전까지의 근사값.
  */
 public enum SmartThingsVocab {
 

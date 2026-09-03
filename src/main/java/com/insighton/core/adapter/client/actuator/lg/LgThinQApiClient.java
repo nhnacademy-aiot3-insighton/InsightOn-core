@@ -13,7 +13,7 @@ import java.util.UUID;
 // LG ThinQ Connect API로 HTTP 요청을 보내는 얇은 클라이언트.
 // base-url + 공통 헤더(Authorization, x-api-key, x-client-id, x-country, x-service-phase)는 lgThinQRestClient 빈이 설정.
 // 요청마다 얹는 것: x-message-id(매번 새 base64url uuid), x-conditional-control:true(제어).
-// 실제: POST https://api-kic.lgthinq.com/devices/{id}/control  (docs/provider-contract.md §1·§2)
+// 실제: POST https://api-kic.lgthinq.com/devices/{id}/control
 @Component
 @RequiredArgsConstructor
 public class LgThinQApiClient {

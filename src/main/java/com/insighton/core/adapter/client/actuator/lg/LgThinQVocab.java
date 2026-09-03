@@ -20,7 +20,7 @@ import java.util.Optional;
  *
  * <p>TEMPERATURE는 값이 동적이라 enum 항목이 아니라 {@link LgThinQControlAssembler}에서 직접 처리
  * (resource {@code "temperature"}, property {@code "targetTemperature"} + {@code "unit":"C"}).
- * [근사] 주석 = 실제 장치 profile 확인 전까지의 근사값 (docs/provider-contract.md §5).
+ * [근사] 주석 = 실제 장치 profile 확인 전까지의 근사값.
  */
 public enum LgThinQVocab {
 

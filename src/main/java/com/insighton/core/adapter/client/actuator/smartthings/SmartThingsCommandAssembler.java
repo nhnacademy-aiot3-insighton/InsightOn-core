@@ -12,7 +12,7 @@ import java.util.Map;
 
 // 공급자 독립 공통 명령(ActuatorControlCommand) -> SmartThings "Execute commands" 요청.
 // 명령별 capability 매핑은 SmartThingsVocab enum이 담당한다.
-// 실제: POST https://api.smartthings.com/v1/devices/{id}/commands  (docs/provider-contract.md §4)
+// 실제: POST https://api.smartthings.com/v1/devices/{id}/commands
 @Component
 public class SmartThingsCommandAssembler {
 
