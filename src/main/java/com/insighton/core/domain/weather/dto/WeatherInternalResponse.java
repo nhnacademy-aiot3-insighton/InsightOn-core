@@ -15,12 +15,15 @@ public record WeatherInternalResponse(
         Double forecastTemperature,
         String forecastSkyStatus,
         String forecastPrecipitationType,
-        Double forecastHumidity
+        Double forecastHumidity,
+        Double midTermAvgMaxTemp, // 4~10일 후 평균 최고기온 전망
+        Double midTermAvgMinTemp  // 4~10일 후 평균 최저기온 전망
 ) {
     public static WeatherInternalResponse from(WeatherDataDto weatherDataDto) {
         CurrentWeatherDto current = weatherDataDto.current();
         ForecastWeatherDto forecast = weatherDataDto.forecast();
         AirQualityDto airQuality = weatherDataDto.airQuality();
+        MidTermTemperatureDto midTerm = weatherDataDto.midTermTemperature();
 
         return new WeatherInternalResponse(
                 current != null ? parseDoubleOrNull(current.temp()) : null,
@@ -33,7 +36,9 @@ public record WeatherInternalResponse(
                 forecast != null ? parseDoubleOrNull(forecast.temperature()) : null,
                 forecast != null ? forecast.skyStatus() : null,
                 forecast != null ? forecast.forecastPrecipitationType() : null,
-                null
+                null,
+                midTerm != null ? parseDoubleOrNull(midTerm.avgMaxTemp()) : null,
+                midTerm != null ? parseDoubleOrNull(midTerm.avgMinTemp()) : null
         );
     }
 

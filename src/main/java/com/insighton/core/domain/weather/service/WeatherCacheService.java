@@ -3,6 +3,7 @@ package com.insighton.core.domain.weather.service;
 import com.insighton.core.domain.weather.dto.AirQualityDto;
 import com.insighton.core.domain.weather.dto.CurrentWeatherDto;
 import com.insighton.core.domain.weather.dto.ForecastWeatherDto;
+import com.insighton.core.domain.weather.dto.MidTermTemperatureDto;
 import com.insighton.core.domain.weather.dto.UltraForecastWeatherDto;
 import com.insighton.core.domain.weather.dto.WeatherDataDto;
 import com.insighton.core.domain.weather.exception.WeatherApiException;
@@ -29,6 +30,7 @@ public class WeatherCacheService {
                     "else return 0 end";
 
     private final RedisTemplate<String, WeatherDataDto> weatherRedisTemplate;
+    private final RedisTemplate<String, MidTermTemperatureDto> midTermTemperatureRedisTemplate;
     private final StringRedisTemplate stringRedisTemplate;
     private final WeatherService weatherService;
 
@@ -36,31 +38,72 @@ public class WeatherCacheService {
                                          String baseTime) {
         String cacheKey = String.format("weather:grid:%d:%d", gridX, gridY);
 
+        WeatherDataDto coreData;
+
         // 1. 1차 캐시 확인
         WeatherDataDto cachedData = weatherRedisTemplate.opsForValue().get(cacheKey);
         if (cachedData != null) {
             log.info("[Cache hit] key: {}", cacheKey);
-            return cachedData;
+            coreData = cachedData;
+        } else {
+            log.info("[Cache Miss] key: {} - 동시성 제어를 위한 락 시도", cacheKey);
+
+            // 2. 고유 요청 토큰 생성 및 락 획득 시도
+            String lockKey = cacheKey + ":lock";
+            String lockToken = UUID.randomUUID().toString();
+            boolean acquired = acquireLock(lockKey, lockToken);
+
+            if (!acquired) {
+                coreData = waitForCache(cacheKey, lockKey, lockToken, gridX, gridY, sidoName, cityName, baseDate,
+                        baseTime);
+            } else {
+                try {
+                    // 3. 락 획득 성공 시 공통 로딩/적재 메서드 수행
+                    coreData = loadAndCacheData(cacheKey, gridX, gridY, sidoName, cityName, baseDate, baseTime);
+                } finally {
+                    // 4. 본인 토큰 검증 후 락 해제
+                    releaseLock(lockKey, lockToken);
+                }
+            }
         }
 
-        log.info("[Cache Miss] key: {} - 동시성 제어를 위한 락 시도", cacheKey);
+        // 5. 중기기온전망은 하루 2회만 갱신되므로 gridX/Y 캐시와 분리된 전용 캐시(regId 기준)에서 병합
+        MidTermTemperatureDto midTerm = getOrLoadMidTerm(sidoName, baseDate, baseTime);
+        return withMidTerm(coreData, midTerm);
+    }
 
-        // 2. 고유 요청 토큰 생성 및 락 획득 시도
-        String lockKey = cacheKey + ":lock";
-        String lockToken = UUID.randomUUID().toString();
-        boolean acquired = acquireLock(lockKey, lockToken);
+    /**
+     * 중기기온전망 전용 캐시 조회/적재 - regId 기준이라 같은 시/도 내 여러 그룹이 캐시를 공유하며,
+     * TTL도 다음 발표시각(06시/18시)까지로 잡아 불필요한 재호출을 줄임
+     */
+    private MidTermTemperatureDto getOrLoadMidTerm(String sidoName, String baseDate, String baseTime) {
+        String regId = weatherService.resolveMidTermRegId(sidoName);
+        String cacheKey = "weather:midterm:" + regId;
 
-        if (!acquired) {
-            return waitForCache(cacheKey, lockKey, lockToken, gridX, gridY, sidoName, cityName, baseDate, baseTime);
+        MidTermTemperatureDto cached = midTermTemperatureRedisTemplate.opsForValue().get(cacheKey);
+        if (cached != null) {
+            log.info("[중기기온 Cache hit] key: {}", cacheKey);
+            return cached;
         }
 
         try {
-            // 3. 락 획득 성공 시 공통 로딩/적재 메서드 수행
-            return loadAndCacheData(cacheKey, gridX, gridY, sidoName, cityName, baseDate, baseTime);
-        } finally {
-            // 4. 본인 토큰 검증 후 락 해제
-            releaseLock(lockKey, lockToken);
+            MidTermTemperatureDto fresh = weatherService.midTermTemperature(sidoName, baseDate, baseTime);
+            Duration ttl = CacheTimeUtils.getDurationUntilNextMidFcst();
+            midTermTemperatureRedisTemplate.opsForValue().set(cacheKey, fresh, ttl);
+            log.info("[중기기온 Cache Miss 적재] key: {}, TTL: {}분", cacheKey, ttl.toMinutes());
+            return fresh;
+        } catch (Exception e) {
+            log.warn("중기기온전망 조회 실패 - null로 반환", e);
+            return null;
         }
+    }
+
+    private WeatherDataDto withMidTerm(WeatherDataDto coreData, MidTermTemperatureDto midTerm) {
+        if (coreData == null) {
+            return null;
+        }
+        return new WeatherDataDto(coreData.current(), coreData.forecast(), coreData.ultraForecastWeather(),
+                coreData.airQuality(), midTerm);
     }
 
     /**
@@ -93,7 +136,8 @@ public class WeatherCacheService {
                     newCurrent,
                     cachedData.forecast(),
                     newUltraForecast,
-                    cachedData.airQuality()
+                    cachedData.airQuality(),
+                    null
             );
 
             Duration ttl = weatherRedisTemplate.getExpire(cacheKey, java.util.concurrent.TimeUnit.SECONDS) > 0
@@ -136,7 +180,8 @@ public class WeatherCacheService {
                     cachedData.current(),
                     newForecast,
                     cachedData.ultraForecastWeather(),
-                    cachedData.airQuality()
+                    cachedData.airQuality(),
+                    null
             );
 
             Duration ttl = weatherRedisTemplate.getExpire(cacheKey, java.util.concurrent.TimeUnit.SECONDS) > 0
@@ -182,7 +227,8 @@ public class WeatherCacheService {
                     cachedData.current(),
                     cachedData.forecast(),
                     cachedData.ultraForecastWeather(),
-                    newAirQuality
+                    newAirQuality,
+                    null
             );
 
             Duration ttl = weatherRedisTemplate.getExpire(cacheKey, java.util.concurrent.TimeUnit.SECONDS) > 0
