@@ -5,3 +5,4 @@ public record MidTermTemperatureDto(
         String avgMinTemp  // 4~10일 후 평균 최저기온 전망
 ) {
 }
+

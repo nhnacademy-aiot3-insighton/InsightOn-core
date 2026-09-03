@@ -4,3 +4,4 @@ public record UltraForecastWeatherDto(
         String ultraHourlyRainFall
 ) {
 }
+

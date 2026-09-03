@@ -134,6 +134,4 @@ public class GroupController implements GroupControllerApi {
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
-
-
 }
