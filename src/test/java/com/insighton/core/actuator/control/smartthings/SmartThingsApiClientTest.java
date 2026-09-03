@@ -74,6 +74,7 @@ class SmartThingsApiClientTest {
         assertThatThrownBy(() -> client.sendCommands("missing", onRequest()))
                 .isInstanceOf(SmartThingsApiException.class)
                 .hasMessageContaining("404");
+        server.verify();
     }
 
     @Test
@@ -84,5 +85,6 @@ class SmartThingsApiClientTest {
 
         assertThatThrownBy(() -> client.sendCommands("st-aircon-001", onRequest()))
                 .isInstanceOf(SmartThingsApiException.class);
+        server.verify();
     }
 }

@@ -37,13 +37,16 @@ public class LgThinQActuatorAdapter implements ActuatorControlAdapter {
         log.info("[LG ThinQ] {} → {}", command.externalDeviceId(), toJson(payload));
         LgThinQControlResponse response = apiClient.control(command.externalDeviceId(), payload);
 
-        if (response != null && response.error() != null) {
+        // 응답 본문이 없으면 수락 여부를 알 수 없으므로 실패로 본다 (SmartThings 어댑터와 동일)
+        if (response == null) {
+            throw new LgThinQApiException("LG ThinQ 응답이 비어 있습니다");
+        }
+        if (response.error() != null) {
             throw new LgThinQApiException("LG ThinQ가 명령을 거부했습니다: " + response.error());
         }
 
         // 공급자가 명령을 수락했으므로 요청한 desiredState가 그대로 적용됐다고 보고 CORE에 반영한다.
-        return new ActuatorControlResult(command.desiredState(),
-                response == null ? null : ("messageId=" + response.messageId()));
+        return new ActuatorControlResult(command.desiredState(), "messageId=" + response.messageId());
     }
 
     // 이 종류가 LG ThinQ에서 지원하는 SELECT 명령값 (Front 칩 렌더용)

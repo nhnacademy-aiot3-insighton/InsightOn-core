@@ -1,8 +1,11 @@
 package com.insighton.core.common.config;
 
+import java.time.Duration;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.ClientHttpRequestFactory;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
 // 액추에이터 공급자(SmartThings / LG ThinQ) 호출용 RestClient 빈.
@@ -39,10 +42,19 @@ public class ActuatorRestClientConfig {
     @Value("${actuator.lg-thinq.country:KR}")
     private String lgThinQCountry;
 
+    // 공급자 호출이 무한정 매달리지 않도록 연결 3초 / 응답 10초 타임아웃 (동기 요청 스레드 보호)
+    private static ClientHttpRequestFactory timeoutRequestFactory() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(Duration.ofSeconds(3));
+        factory.setReadTimeout(Duration.ofSeconds(10));
+        return factory;
+    }
+
     // SmartThings 호출용: base-url + Authorization: Bearer
     @Bean
     public RestClient smartThingsRestClient() {
         return RestClient.builder()
+                .requestFactory(timeoutRequestFactory())
                 .baseUrl(smartThingsBaseUrl)
                 .defaultHeader("Authorization", "Bearer " + smartThingsToken)
                 .build();
@@ -52,6 +64,7 @@ public class ActuatorRestClientConfig {
     @Bean
     public RestClient lgThinQRestClient() {
         return RestClient.builder()
+                .requestFactory(timeoutRequestFactory())
                 .baseUrl(lgThinQBaseUrl)
                 .defaultHeader("Authorization", "Bearer " + lgThinQToken)
                 .defaultHeader("x-api-key", lgThinQApiKey)
