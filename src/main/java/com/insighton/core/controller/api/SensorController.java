@@ -27,7 +27,6 @@ public class SensorController implements SensorControllerApi {
     private final DeleteSensorUseCase deleteSensorUseCase;
     private final DeleteAllSensorUseCase deleteAllSensorUseCase;
 
-
     // 단일 센서 조회 API (GET /api/v1/sensors/{id})
     @Override
     @GetMapping("/{id}")
