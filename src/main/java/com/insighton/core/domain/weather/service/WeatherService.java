@@ -6,14 +6,18 @@ import com.insighton.core.domain.weather.dto.AirQualityDto;
 import com.insighton.core.domain.weather.dto.CurrentWeatherDto;
 import com.insighton.core.domain.weather.dto.ForecastBaseDateTime;
 import com.insighton.core.domain.weather.dto.ForecastWeatherDto;
+import com.insighton.core.domain.weather.dto.MidTermTemperatureDto;
+import com.insighton.core.domain.weather.dto.MidTermTemperatureResponseDto;
 import com.insighton.core.domain.weather.dto.UltraForecastWeatherDto;
 import com.insighton.core.domain.weather.dto.WeatherDataDto;
 import com.insighton.core.domain.weather.exception.WeatherApiException;
+import com.insighton.core.domain.weather.parser.MidTermRegionCodeMapper;
 import com.insighton.core.domain.weather.parser.SidoNameParser;
 import com.insighton.core.domain.weather.util.WeatherCodeMapper;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +32,7 @@ public class WeatherService {
     private final KmaWeatherApiClient kmaWeatherApiClient;
     private final AirQualityApiClient airQualityApiClient;
     private final SidoNameParser sidoNameParser;
+    private final MidTermRegionCodeMapper midTermRegionCodeMapper;
 
     public CurrentWeatherDto currentWeather(int gridX, int gridY, String baseDate, String baseTime) {
         // 기상청 초단기실황
@@ -101,15 +106,54 @@ public class WeatherService {
         }
     }
 
+    public String resolveMidTermRegId(String sidoName) {
+        return midTermRegionCodeMapper.toRegId(sidoNameParser.parse(sidoName));
+    }
+
+    public MidTermTemperatureDto midTermTemperature(String sidoName, String baseDate, String baseTime) {
+        // 기상청 중기기온전망 (4~10일 후 최고/최저기온 평균) - WeatherCacheService가 전용 캐시로 감싸서 호출함
+        try {
+            String regId = resolveMidTermRegId(sidoName);
+            String tmFc = getRecentMidFcstTmFc(baseDate, baseTime);
+
+            MidTermTemperatureResponseDto.Item item = kmaWeatherApiClient.fetchMidTermTemperature(regId, tmFc);
+
+            List<String> maxValues = List.of(item.taMax4(), item.taMax5(), item.taMax6(), item.taMax7(),
+                    item.taMax8(), item.taMax9(), item.taMax10());
+            List<String> minValues = List.of(item.taMin4(), item.taMin5(), item.taMin6(), item.taMin7(),
+                    item.taMin8(), item.taMin9(), item.taMin10());
+
+            return new MidTermTemperatureDto(average(maxValues), average(minValues));
+        } catch (Exception e) {
+            throw new WeatherApiException("중기기온전망 API 연동 중 오류 발생");
+        }
+    }
+
+    private String average(List<String> values) {
+        double sum = 0;
+        int count = 0;
+        for (String value : values) {
+            if (value != null && !value.isBlank() && !"-".equals(value)) {
+                try {
+                    sum += Double.parseDouble(value);
+                    count++;
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        }
+        return count == 0 ? "N/A" : String.format("%.1f", sum / count);
+    }
+
     public WeatherDataDto fetchWeatherData(int gridX, int gridY, String sidoName, String cityName, String baseDate,
                                            String baseTime) {
         // 항목 하나가 실패해도 나머지 조회가 막히지 않도록 개별 격리 - 실패한 항목만 null로 남기고 계속 진행
+        // 중기기온전망은 별도 TTL로 WeatherCacheService가 전용 캐시에서 관리하므로 여기서는 포함하지 않음
         CurrentWeatherDto current = safeFetch(() -> currentWeather(gridX, gridY, baseDate, baseTime), "초단기실황");
         ForecastWeatherDto forecast = safeFetch(() -> forecastWeather(gridX, gridY, baseDate, baseTime), "단기예보");
         UltraForecastWeatherDto ultraForecast = safeFetch(() -> ultraForecastWeather(gridX, gridY, baseDate, baseTime), "초단기예보");
         AirQualityDto air = safeFetch(() -> airQuality(gridX, gridY, sidoName, cityName, baseDate, baseTime), "미세먼지");
 
-        return new WeatherDataDto(current, forecast, ultraForecast, air);
+        return new WeatherDataDto(current, forecast, ultraForecast, air, null);
     }
 
     private <T> T safeFetch(Supplier<T> fetcher, String label) {
@@ -183,5 +227,32 @@ public class WeatherService {
         }
 
         return new ForecastBaseDateTime(targetDate, targetTime);
+    }
+
+    /**
+     * 기상청 중기예보(/getMidTa) 발표시각(tmFc) 계산 로직 - 중기예보는 1일 2회(06시, 18시) 발표되며,
+     * 시스템 반영 시간을 고려해 각 발표 시각보다 10분 뒤를 기준으로 최근 발표분을 찾습니다.
+     */
+    private String getRecentMidFcstTmFc(String baseDate, String baseTime) {
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+        LocalDate date = LocalDate.parse(baseDate, dateFormatter);
+
+        int hour = Integer.parseInt(baseTime.substring(0, 2));
+        int minute = Integer.parseInt(baseTime.substring(2, 4));
+        LocalTime requestTime = LocalTime.of(hour, minute);
+
+        LocalDate targetDate = date;
+        int targetHour;
+
+        if (!requestTime.isBefore(LocalTime.of(18, 10))) {
+            targetHour = 18;
+        } else if (!requestTime.isBefore(LocalTime.of(6, 10))) {
+            targetHour = 6;
+        } else {
+            targetDate = date.minusDays(1);
+            targetHour = 18;
+        }
+
+        return targetDate.format(dateFormatter) + String.format("%02d00", targetHour);
     }
 }

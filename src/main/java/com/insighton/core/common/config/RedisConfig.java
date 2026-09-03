@@ -3,6 +3,7 @@ package com.insighton.core.common.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.insighton.core.adapter.mqtt.listener.dto.TelemetryEventMessage;
+import com.insighton.core.domain.weather.dto.MidTermTemperatureDto;
 import com.insighton.core.domain.weather.dto.WeatherDataDto;
 import com.insighton.core.domain.widgets.entity.WidgetConfig;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -59,6 +60,30 @@ public class RedisConfig {
         return redisTemplate;
     }
 
+
+    // 중기기온전망 전용 캐시 - 하루 2회(06시/18시)만 갱신되므로 시간 단위로 만료되는
+    // weatherRedisTemplate 캐시와 분리해 훨씬 긴 TTL로 관리함 (WeatherCacheService 참고)
+    @Bean
+    public RedisTemplate<String, MidTermTemperatureDto> midTermTemperatureRedisTemplate(
+            RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, MidTermTemperatureDto> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(connectionFactory);
+
+        StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
+        redisTemplate.setKeySerializer(stringRedisSerializer);
+        redisTemplate.setHashKeySerializer(stringRedisSerializer);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+
+        Jackson2JsonRedisSerializer<MidTermTemperatureDto> serializer =
+                new Jackson2JsonRedisSerializer<>(objectMapper, MidTermTemperatureDto.class);
+
+        redisTemplate.setValueSerializer(serializer);
+        redisTemplate.setHashValueSerializer(serializer);
+
+        return redisTemplate;
+    }
 
     @Bean
     public RedisTemplate<String, WidgetConfig> widgetRedisTemplate(RedisConnectionFactory connectionFactory) {
