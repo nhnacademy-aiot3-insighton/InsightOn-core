@@ -6,6 +6,7 @@ import com.insighton.core.domain.actuators.entity.ActuatorType;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -84,7 +85,7 @@ public enum LgThinQVocab {
 
     // (종류, 명령, 중립값) 으로 매핑 항목 조회
     public static Optional<LgThinQVocab> find(ActuatorType type, NeutralCommand command, String neutralValue) {
-        String needle = neutralValue == null ? null : neutralValue.toUpperCase();
+        String needle = neutralValue == null ? null : neutralValue.toUpperCase(Locale.ROOT);
         for (LgThinQVocab v : values()) {
             if (v.type == type && v.command == command && v.neutralValue.equals(needle)) {
                 return Optional.of(v);
