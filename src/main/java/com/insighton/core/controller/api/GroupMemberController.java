@@ -1,5 +1,6 @@
 package com.insighton.core.controller.api;
 
+import com.insighton.core.controller.swagger.GroupMemberControllerApi;
 import com.insighton.core.domain.groupmember.dto.response.GroupMemberListResponse;
 import com.insighton.core.domain.groupmember.dto.response.GroupMemberResponse;
 import com.insighton.core.domain.groupmember.service.GroupMemberService;
@@ -14,13 +15,11 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/groups/{group-id}/members")
-public class GroupMemberController {
+public class GroupMemberController implements GroupMemberControllerApi {
     private final GroupMemberService groupMemberService;
     private final GroupMemberInviteUserCase groupMemberInviteUserCase;
 
-    /**
-     * 이메일로 그룹 멤버 바로 초대/추가
-     */
+    @Override
     @PostMapping("/invite")
     public ResponseEntity<Void> inviteMemberByEmail(
             @RequestHeader("X-USER-ID") Long userId,
@@ -38,6 +37,7 @@ public class GroupMemberController {
      * @param groupId 조회하려는 group의 ID
      * @return groupMemberList 반환
      */
+    @Override
     @GetMapping
     public ResponseEntity<List<GroupMemberListResponse>> getGroupMemberList(
             @RequestHeader("X-USER-ID") Long userId,
@@ -56,6 +56,7 @@ public class GroupMemberController {
      * @param groupMemberId 조회하려는 member의 ID
      * @return member의 상세 정보 반환
      */
+    @Override
     @GetMapping("/{group-member-id}")
     public ResponseEntity<GroupMemberResponse> getGroupMember(
             @RequestHeader("X-USER-ID") Long userId,
@@ -76,6 +77,7 @@ public class GroupMemberController {
      * @param groupMemberId 변경 타겟인 member의 ID
      * @return 성공 시 상태 200 반환
      */
+    @Override
     @PutMapping("/{group-member-id}/toggle-manager")
     public ResponseEntity<Void> toggleManagerRole(
             @RequestHeader("X-USER-ID") Long userId,
@@ -95,6 +97,7 @@ public class GroupMemberController {
      * @param groupMemberId target의 Group Member ID
      * @return 성공 시 상태 200 반환
      */
+    @Override
     @PutMapping("/{group-member-id}/toggle-super-manager")
     public ResponseEntity<Void> toggleSuperManagerRole(
             @RequestHeader("X-USER-ID") Long userId,
@@ -114,6 +117,7 @@ public class GroupMemberController {
      * @param groupMemberId 추방하려는 member의 ID
      * @return 성공 시 상태 204 반환
      */
+    @Override
     @DeleteMapping("/{group-member-id}/kick-member")
     public ResponseEntity<Void> kickGroupMember(
             @RequestHeader("X-USER-ID") Long userId,
@@ -132,6 +136,7 @@ public class GroupMemberController {
      * @param groupId 떠나려는 group의 ID
      * @return 성공 시 상태 204 반환
      */
+    @Override
     @DeleteMapping("/leave-group")
     public ResponseEntity<Void> deleteGroupMemberAll(
             @RequestHeader("X-USER-ID") Long userId,
