@@ -2,12 +2,8 @@ package com.insighton.core.usecase.actuator;
 
 import com.insighton.core.common.annotation.UseCase;
 import com.insighton.core.domain.actuatorrunlogs.entity.ExecutedByType;
-import com.insighton.core.domain.actuators.dto.ActuatorResponse;
-import com.insighton.core.domain.actuators.policy.ActuatorCommandPreset;
-import com.insighton.core.domain.actuators.service.ActuatorService;
 import com.insighton.core.domain.groupmember.service.GroupMemberService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 
@@ -16,17 +12,14 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class UpdateActuatorStateUseCase {
     private final GroupMemberService groupMemberService;
-    private final ActuatorService actuatorService;
+    private final ActuatorControlFacade actuatorControlFacade;
 
-    @Transactional
     public void updateActuatorState(Long userId, Long groupsId, Long actuatorId, Map<String, Object> newState) {
+        // 매니저 이상 권한 검증 - Facade는 소유권만 확인하므로 역할 검증은 여기 유지
         groupMemberService.validateGroupAdmin(groupsId, userId);
 
-        // 명령 값 검증을 위해 actuatorType이 필요 - 조회하면서 소유권 검증도 같이 됨
-        ActuatorResponse actuator = actuatorService.getActuatorById(groupsId, actuatorId);
-        ActuatorCommandPreset.validateCommandValues(actuator.actuatorType(), newState);
-
-        // 컨트롤러를 통한 사용자 요청이므로 항상 USER + 호출자 userId를 실행이력에 남김
-        actuatorService.updateActuatorState(groupsId, actuatorId, newState, ExecutedByType.USER, userId);
+        // 조회, 소유권, 상태 병합, 명령 검증, 공급자 Adapter 호출, 성공 후 저장은 전부 Facade가 담당
+        // @Transactional 없음 - Facade 안에서 외부 호출 후 저장하므로 트랜잭션으로 감쌀 수 없음
+        actuatorControlFacade.control(groupsId, actuatorId, newState, ExecutedByType.USER, userId);
     }
 }
