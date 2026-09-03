@@ -1,5 +1,6 @@
 package com.insighton.core.controller.api;
 
+import com.insighton.core.controller.swagger.ActuatorControllerApi;
 import com.insighton.core.domain.actuatorrunlogs.dto.ActuatorRunLogResponse;
 import com.insighton.core.domain.actuators.dto.ActuatorNameUpdateRequest;
 import com.insighton.core.domain.actuators.dto.ActuatorRequest;
@@ -19,7 +20,7 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/groups/{group-id}/actuators")
-public class ActuatorController {
+public class ActuatorController implements ActuatorControllerApi {
 
     private final CreateActuatorUseCase createActuatorUseCase;
     private final GetActuatorUseCase getActuatorUseCase;
@@ -33,6 +34,7 @@ public class ActuatorController {
 
     // 액추에이터 생성
     @PostMapping
+    @Override
     public ResponseEntity<Long> createActuator(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupsId,
@@ -43,6 +45,7 @@ public class ActuatorController {
 
     // 단일 액추에이터 조회
     @GetMapping("/{actuator-id}")
+    @Override
     public ResponseEntity<ActuatorResponse> getActuatorById(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id") Long groupsId,
@@ -52,6 +55,7 @@ public class ActuatorController {
 
     // 위치별 액추에이터 목록 조회
     @GetMapping("/location/{location-id}")
+    @Override
     public ResponseEntity<List<ActuatorResponse>> getActuatorsByLocationId(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable ("group-id") Long groupsId,
@@ -61,6 +65,7 @@ public class ActuatorController {
 
     // 유저 전용 액추에이터 업데이트
     @PutMapping("/{actuator-id}/state")
+    @Override
     public ResponseEntity<Void> updateActuatorState(
             @RequestHeader("X-USER-ID") Long userId,
             @PathVariable("group-id")Long groupsId,
