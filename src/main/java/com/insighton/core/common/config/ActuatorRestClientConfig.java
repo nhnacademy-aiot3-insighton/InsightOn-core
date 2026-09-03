@@ -27,7 +27,7 @@ public class ActuatorRestClientConfig {
     @Value("${actuator.lg-thinq.token}")
     private String lgThinQToken;
 
-    // LG ThinQ Connect 필수 헤더 (docs/provider-contract.md §2)
+    // LG ThinQ Connect 필수 헤더
     //  api-key   : 실제로는 SDK에 내장된 공개 고정키
     //  client-id : 우리 앱을 식별하는 고정 UUID (요청마다 바뀌는 x-message-id 와 다름)
     @Value("${actuator.lg-thinq.api-key}")
