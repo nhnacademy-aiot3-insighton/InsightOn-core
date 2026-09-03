@@ -59,7 +59,7 @@ class ActuatorControllerTest {
     @Test
     @DisplayName("액추에이터 생성 성공")
     void 생성_성공() throws Exception {
-        ActuatorRequest request = new ActuatorRequest(20L, "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"));
+        ActuatorRequest request = new ActuatorRequest(20L, "에어컨", ActuatorType.AIRCON, Map.of("power", "OFF"), null);
         given(createActuatorUseCase.createActuator(eq(1L), eq(10L), any())).willReturn(100L);
 
         mockMvc.perform(post("/api/v1/groups/{group-id}/actuators", 10L)
@@ -85,7 +85,8 @@ class ActuatorControllerTest {
     @DisplayName("위치별 액추에이터 목록 조회 성공")
     void 위치별조회_성공() throws Exception {
         ActuatorResponse actuator = new ActuatorResponse(1L, 20L, "에어컨", ActuatorType.AIRCON,
-                Map.of("power", "ON"), OffsetDateTime.now(), OffsetDateTime.now());
+                Map.of("power", "ON"), OffsetDateTime.now(), OffsetDateTime.now(), null, null,
+                Map.of("mode", java.util.List.of("COOL", "AUTO")));
         given(getActuatorsByLocationUseCase.getActuatorsByLocationId(1L, 10L, 20L))
                 .willReturn(List.of(actuator));
 
