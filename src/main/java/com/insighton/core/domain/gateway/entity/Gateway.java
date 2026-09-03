@@ -94,4 +94,5 @@ public class Gateway {
     public void markFault() {
         this.status = GatewayStatus.FAULT;
     }
+
 }
