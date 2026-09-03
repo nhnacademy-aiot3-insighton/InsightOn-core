@@ -78,6 +78,16 @@ class LgThinQActuatorAdapterTest {
     }
 
     @Test
+    @DisplayName("응답이 null이면 LgThinQApiException (수락 여부 불명)")
+    void control_응답없음() {
+        given(assembler.assemble(any())).willReturn(assembled());
+        given(apiClient.control(any(), any())).willReturn(null);
+
+        assertThatThrownBy(() -> adapter.control(command()))
+                .isInstanceOf(LgThinQApiException.class);
+    }
+
+    @Test
     @DisplayName("apiClient가 던진 LgThinQApiException은 그대로 전파")
     void control_클라이언트예외전파() {
         given(assembler.assemble(any())).willReturn(assembled());
