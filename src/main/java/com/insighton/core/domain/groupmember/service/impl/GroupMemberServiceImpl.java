@@ -313,15 +313,19 @@ public class GroupMemberServiceImpl implements GroupMemberService {
     @Transactional
     public UserGroupResponse userGroupAuth(Long userId) {
         log.debug("유저 그룹 소속/권한 확인 요청 (Auth) - userId: {}", userId);
-        GroupMember member = groupMemberRepository.findByUserId(userId)
-                .orElseThrow(() -> GroupMemberNotFoundException.byUserId(userId));
+        try {
+            GroupMember member = groupMemberRepository.findByUserId(userId)
+                    .orElseThrow(() -> GroupMemberNotFoundException.byUserId(userId));
+            boolean isGroup = groupMemberRepository.existsByUserId(userId);
 
-        boolean isGroup = groupMemberRepository.existsByUserId(userId);
+            String groupName = member.getGroup().getName();
+            log.info("유저 그룹 소속/권한 확인 완료 (Auth) - userId: {}, groupName: {}, isGroup: {}", userId, groupName, isGroup);
+            return new UserGroupResponse(isGroup, groupName);
+        } catch (GroupMemberNotFoundException e) {
+            return new UserGroupResponse(false, null);
+        }
 
-        String groupName = member.getGroup().getName();
 
-        log.info("유저 그룹 소속/권한 확인 완료 (Auth) - userId: {}, groupName: {}, isGroup: {}", userId, groupName, isGroup);
-        return new UserGroupResponse(isGroup, groupName);
     }
 
     /**
