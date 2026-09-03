@@ -1,6 +1,7 @@
 package com.insighton.core.domain.actuators.dto;
 
 
+import com.insighton.core.domain.actuators.control.ControlProvider;
 import com.insighton.core.domain.actuators.entity.ActuatorType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -20,8 +21,10 @@ public record ActuatorRequest(
         ActuatorType actuatorType, // 액추에이터 종류
 
         @NotNull(message = "초기 상태값 필수")
-        Map<String, Object> currentState // JSONB에 저장될 초기 상태 객체
+        Map<String, Object> currentState, // JSONB에 저장될 초기 상태 객체
 
+        ControlProvider controlProvider // 선택 - 없으면 미연결(UNBOUND) 상태로 생성됨.
+        // 지정하면 CORE가 external_device_id를 자동 생성한다 (ExternalDeviceIdGenerator)
 
 ) {
 }

@@ -13,10 +13,12 @@ import java.util.Optional;
 public enum CommandType {
     POWER_STATUS("power"),
     OPERATION_MODE("mode"),
+    WIND_DIRECTION("windDirection"), // 에어컨 바람 방향(FIXED/SWING) - 수동 조작 전용
     SET_TEMPERATURE("temperature");
 
     private final String stateKey;
 
+    // stateKey 문자열로 역조회 (대소문자 무시)
     public static Optional<CommandType> fromStateKey(String key){
         if(key == null){
             return Optional.empty();
