@@ -5,6 +5,7 @@ import com.insighton.core.domain.actuators.entity.ActuatorType;
 import com.insighton.core.domain.actuators.entity.Actuator;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Map;
 
 public record ActuatorResponse(
@@ -16,10 +17,17 @@ public record ActuatorResponse(
         OffsetDateTime stateUpdatedAt, // 상태 변경 일시
         OffsetDateTime createdAt, // 생성 일시
         ControlProvider controlProvider, // 제어 공급자 (null이면 미연결)
-        String externalDeviceId // 공급자 쪽 장치 식별자
+        String externalDeviceId, // 공급자 쪽 장치 식별자
+        // 이 공급자+종류로 가능한 SELECT형 명령값. key=stateKey(mode/windDirection), value=중립값 목록. Front 조작 UI 렌더용.
+        Map<String, List<String>> supportedValues
 ) {
 
-    public static ActuatorResponse from(Actuator entity){
+    // supportedValues 없이 (내부용/테스트용). Front로 나가는 응답은 from(entity, catalog.supportedValues(...)) 사용.
+    public static ActuatorResponse from(Actuator entity) {
+        return from(entity, Map.of());
+    }
+
+    public static ActuatorResponse from(Actuator entity, Map<String, List<String>> supportedValues) {
         return new ActuatorResponse(
                 entity.getActuatorId(),
                 entity.getLocation().getLocationId(),
@@ -29,7 +37,8 @@ public record ActuatorResponse(
                 entity.getStateUpdatedAt(),
                 entity.getCreatedAt(),
                 entity.getControlProvider(),
-                entity.getExternalDeviceId()
+                entity.getExternalDeviceId(),
+                supportedValues
         );
     }
 }

@@ -15,6 +15,7 @@ public class SmartThingsApiClient {
 
     private final RestClient smartThingsRestClient;
 
+    // POST /v1/devices/{id}/commands 전송. 4xx/5xx·연결오류·역직렬화오류는 SmartThingsApiException으로 감싼다
     public SmartThingsCommandResponse sendCommands(String deviceId, SmartThingsCommandRequest request) {
         try {
             return smartThingsRestClient.post()

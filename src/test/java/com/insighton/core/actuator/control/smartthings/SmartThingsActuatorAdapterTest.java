@@ -101,4 +101,13 @@ class SmartThingsActuatorAdapterTest {
                 .isInstanceOf(SmartThingsApiException.class)
                 .hasMessageContaining("공급자 500");
     }
+
+    @Test
+    @DisplayName("supportedValues - SmartThings 에어컨 mode엔 AIRCLEAN 없음, windDirection은 있음")
+    void supportedValues() {
+        java.util.Map<String, java.util.List<String>> ac = adapter.supportedValues(ActuatorType.AIRCON);
+        assertThat(ac.get("mode")).containsExactly("COOL", "DRY", "FAN", "AUTO");
+        assertThat(ac.get("mode")).doesNotContain("AIRCLEAN");
+        assertThat(ac.get("windDirection")).containsExactly("FIXED", "SWING");
+    }
 }

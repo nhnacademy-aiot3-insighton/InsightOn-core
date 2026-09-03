@@ -4,6 +4,7 @@ import com.insighton.core.domain.actuatorrunlogs.entity.ExecutedByType;
 import com.insighton.core.domain.actuatorrunlogs.repository.ActuatorRunLogRepository;
 import com.insighton.core.domain.actuatorrunlogs.service.ActuatorRunLogService;
 import com.insighton.core.domain.actuators.control.ExternalDeviceIdGenerator;
+import com.insighton.core.domain.actuators.control.ProviderCommandCatalog;
 import com.insighton.core.domain.actuators.dto.ActuatorRequest;
 import com.insighton.core.domain.actuators.dto.ActuatorResponse;
 import com.insighton.core.domain.actuators.entity.Actuator;
@@ -32,6 +33,13 @@ public class ActuatorServiceImpl implements ActuatorService {
     private final ActuatorRepository actuatorRepository; // 액추에이터 조회/저장
     private final ActuatorRunLogService actuatorRunLogService; // 제어 이력 기록용
     private final ActuatorRunLogRepository actuatorRunLogRepository;
+    private final ProviderCommandCatalog providerCommandCatalog; // 공급자+종류별 지원 명령값 (Front 조작 UI 기준)
+
+    // 조회 응답에 공급자+종류별 지원 명령값을 채워 Front가 카드별로 다르게 렌더할 수 있게 한다
+    private ActuatorResponse toResponse(Actuator entity) {
+        return ActuatorResponse.from(entity, providerCommandCatalog.supportedValues(
+                entity.getControlProvider(), entity.getActuatorType()));
+    }
 
     // 대상 액추에이터가 실제로 groupsId 소속인지 확인 (locationId -> location.groupId 교차검증)
     // 다른 그룹 리소스 존재 여부를 노출하지 않기 위해 404로 통일
@@ -77,7 +85,7 @@ public class ActuatorServiceImpl implements ActuatorService {
 
         validateActuatorOwnership(entity, groupId);
 
-        return ActuatorResponse.from(entity);
+        return toResponse(entity);
     }
 
     @Override
@@ -88,7 +96,7 @@ public class ActuatorServiceImpl implements ActuatorService {
                 .orElseThrow(() -> LocationNotFoundException.notFoundLocationByLocationId(locationId));
 
         return actuatorRepository.findByLocationLocationId(locationId).stream()
-                .map(ActuatorResponse::from)
+                .map(this::toResponse)
                 .toList();
     }
 

@@ -4,7 +4,6 @@ import com.insighton.core.adapter.client.actuator.lg.LgThinQActuatorAdapter;
 import com.insighton.core.adapter.client.actuator.lg.LgThinQApiClient;
 import com.insighton.core.adapter.client.actuator.lg.LgThinQApiException;
 import com.insighton.core.adapter.client.actuator.lg.LgThinQControlAssembler;
-import com.insighton.core.adapter.client.actuator.lg.dto.LgThinQControlRequest;
 import com.insighton.core.adapter.client.actuator.lg.dto.LgThinQControlResponse;
 import com.insighton.core.domain.actuators.control.ActuatorControlCommand;
 import com.insighton.core.domain.actuators.control.ActuatorControlResult;
@@ -39,8 +38,12 @@ class LgThinQActuatorAdapterTest {
         return new ActuatorControlCommand("lg-aircon-001", ActuatorType.AIRCON, Map.of("power", "ON"));
     }
 
-    private static LgThinQControlRequest assembled() {
-        return new LgThinQControlRequest(new LgThinQControlRequest.Operation("POWER_ON"), null, null, null, null);
+    private static Map<String, Object> assembled() {
+        return Map.of("operation", Map.of("airConOperationMode", "POWER_ON"));
+    }
+
+    private static LgThinQControlResponse ok(String messageId) {
+        return new LgThinQControlResponse(messageId, "2026-09-03T00:00:00Z", Map.of(), null);
     }
 
     @Test
@@ -54,8 +57,7 @@ class LgThinQActuatorAdapterTest {
     void control_성공() {
         ActuatorControlCommand cmd = command();
         given(assembler.assemble(cmd)).willReturn(assembled());
-        given(apiClient.control(eq("lg-aircon-001"), any()))
-                .willReturn(new LgThinQControlResponse("m-1", null));
+        given(apiClient.control(eq("lg-aircon-001"), any())).willReturn(ok("m-1"));
 
         ActuatorControlResult result = adapter.control(cmd);
 
@@ -68,7 +70,7 @@ class LgThinQActuatorAdapterTest {
     void control_error응답() {
         given(assembler.assemble(any())).willReturn(assembled());
         given(apiClient.control(any(), any()))
-                .willReturn(new LgThinQControlResponse(null,
+                .willReturn(new LgThinQControlResponse(null, null, null,
                         new LgThinQControlResponse.Error("2000", "unsupported property")));
 
         assertThatThrownBy(() -> adapter.control(command()))
@@ -84,5 +86,13 @@ class LgThinQActuatorAdapterTest {
         assertThatThrownBy(() -> adapter.control(command()))
                 .isInstanceOf(LgThinQApiException.class)
                 .hasMessageContaining("공급자 500");
+    }
+
+    @Test
+    @DisplayName("supportedValues - LG 에어컨은 mode에 AIRCLEAN 포함 + windDirection")
+    void supportedValues() {
+        java.util.Map<String, java.util.List<String>> ac = adapter.supportedValues(ActuatorType.AIRCON);
+        assertThat(ac.get("mode")).containsExactly("COOL", "DRY", "FAN", "AUTO", "AIRCLEAN");
+        assertThat(ac.get("windDirection")).containsExactly("FIXED", "SWING");
     }
 }
