@@ -21,6 +21,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Objects;
 
+import static org.bouncycastle.asn1.x500.style.RFC4519Style.member;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -334,10 +336,15 @@ public class GroupMemberServiceImpl implements GroupMemberService {
     @Transactional
     public boolean existsManagerGroupAuth(Long userId) {
         log.debug("매니저 권한 여부 확인 요청 (Auth) - userId: {}", userId);
-        GroupMember member = groupMemberRepository.findByUserId(userId)
-                .orElseThrow(() -> GroupMemberNotFoundException.byUserId(userId));
+        boolean result;
+        try {
+            GroupMember member = groupMemberRepository.findByUserId(userId)
+                    .orElseThrow(() -> GroupMemberNotFoundException.byUserId(userId));
 
-        boolean result = member.isManager() || member.isSuperManager();
+            result = member.isManager() || member.isSuperManager();
+        } catch (GroupMemberNotFoundException e) {
+            result = false;
+        }
         log.info("매니저 권한 여부 확인 완료 (Auth) - userId: {}, isManager: {}", userId, result);
         return result;
     }
