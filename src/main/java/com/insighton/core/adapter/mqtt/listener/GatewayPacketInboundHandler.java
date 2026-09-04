@@ -139,6 +139,15 @@ public class GatewayPacketInboundHandler implements MessageHandler {
             return;
         }
 
+        if(fields.isEmpty()) {
+            // ChirpStack object가 null인 경우(codec 디코드 실패, keep-alive성 업링크 등) 여기 해당함.
+            // 하트비트/auto-provision은 위에서 이미 처리했으니 생존 신호와 센서 등록은 반영되고,
+            // 측정값 자체가 없는 적재/발행만 막음 — InfluxDB에 빈 Point가 만들어져 조용히 스킵되거나
+            // Rule Engine이 빈 fields를 역직렬화하다 실패하는 걸 소스에서 미리 차단함
+            log.info("측정값 없는 패킷 드롭 (fields 비어있음, sensorEui = {}, sensorId = {})", sensorEui, sensor.sensorId());
+            return;
+        }
+
         Instant time = Instant.parse(packet.time());
 
         influxWriter.write(new DynamicTelemetryMeasurement(
