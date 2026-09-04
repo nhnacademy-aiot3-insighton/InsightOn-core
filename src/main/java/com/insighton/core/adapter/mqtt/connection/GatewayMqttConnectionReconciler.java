@@ -7,7 +7,6 @@ import com.insighton.core.domain.gateway.repository.GatewayRepository;
 import com.insighton.core.adapter.mqtt.cache.GatewayConnectionInfoCache;
 import com.insighton.core.adapter.mqtt.cache.GatewayGroupMappingCache;
 import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -19,6 +18,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.event.ContextClosedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -248,8 +249,13 @@ public class GatewayMqttConnectionReconciler {
      * MQTT 연결 자체(Paho 클라이언트 disconnect)는 Spring Integration의
      * {@code IntegrationFlowRegistration}이 컨텍스트 종료 시 자체적으로 처리하므로, 여기서는
      * Redis 락 반납만 책임짐.
+     * {@code @PreDestroy} 대신 {@code ContextClosedEvent}를 쓰는 이유: 컨텍스트 종료 순서상
+     * SmartLifecycle 빈(LettuceConnectionFactory 포함)의 stop()이 먼저 실행되고 그 다음에야
+     * {@code @PreDestroy}가 실행되는데, 그 시점엔 이미 Redis 연결이 끊긴 뒤라 락 반납이 항상
+     * 실패했음. ContextClosedEvent는 SmartLifecycle 정지보다 먼저 발행되므로 Redis가 아직
+     * 살아있는 시점에 반납할 수 있음.
      */
-    @PreDestroy
+    @EventListener(ContextClosedEvent.class)
     void releaseOwnedLocks() {
         Set<Long> owned = gatewayManager.getRegisterGatewayIds();
         owned.forEach(gatewayId -> lockService.release(gatewayId, instanceId));
