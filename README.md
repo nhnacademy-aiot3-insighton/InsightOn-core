@@ -152,11 +152,19 @@ MQTT 접속 정보(`connection_config`)는 `Gateway` 엔티티에 저장되고, 
 2. **파싱 성공/실패와 무관하게** 먼저 게이트웨이 하트비트 기록 (디코딩 안 되는 패킷도 게이트웨이가 살아있다는 신호는 됨)
 3. 페이로드 파싱 실패 시 드롭
 4. 그룹 매핑 캐시 미스 시 드롭
-5. **센서 자동 프로비저닝**: EUI 캐시에 없으면 `SensorServiceImpl.autoProvision` 호출 (아래 참고)
+5. **센서 조회/자동 프로비저닝**: `SensorLookupCacheService.lookup()`으로 EUI 조회, 완전 미스면 `SensorServiceImpl.autoProvision` 호출 (아래 참고)
 6. 센서 하트비트 기록
 7. `locationId == null`이면 드롭 — 새로 자동 프로비저닝된 센서는 항상 위치 미배정 상태이며, InfluxDB에 `location_id` 태그 없이 쓰면 나중에 되돌릴 수 없어 의도적으로 스킵
 8. `fields`(디코딩된 측정값)가 비어있으면 드롭 — ChirpStack 코덱 디코딩 실패나 킵얼라이브성 업링크(`object: null`) 케이스. 하트비트/프로비저닝은 이미 끝난 상태이므로 안전
 9. 성공 시 InfluxDB 쓰기 + 텔레메트리 발행 동시 수행
+
+> ⚠️ **알려진 버그**: 5번 조회가 Caffeine/Redis를 모두 미스하고 PostgreSQL까지 내려가는 경로에서,
+> 이미 존재하지만 아직 위치가 배치되지 않은 센서를 다시 조회하면 7번의 `locationId == null` 분기에
+> 도달하지 못합니다. `SensorLookupCacheService.toCacheEntry()`가 `sensor.getLocation().getLocationId()`를
+> null 가드 없이 호출해 그 자리에서 `NullPointerException`이 발생하기 때문입니다. 이 예외는 5번(하트비트
+> 기록보다 앞)에서 터지므로 6번 센서 하트비트 기록도 건너뛰고, `handleMessage()`의 바깥 try/catch에서
+> 잡혀 패킷은 결국 폐기되긴 하지만 "공간 미배치" 정상 드롭 로그가 아니라 "패킷 처리 실패" 예외 로그로
+> 남습니다. 자세한 내용은 [알려진 제약 / TODO](#알려진-제약--todo) 참고.
 
 ### 5. 센서 자동 프로비저닝 (`SensorServiceImpl.autoProvision`)
 
@@ -312,6 +320,13 @@ Swagger 문서는 `com.insighton.core.controller.swagger.*ControllerApi` 인터�
 
 ## 알려진 제약 / TODO
 
+- **`SensorLookupCacheService.toCacheEntry()` NPE 버그** (`adapter/mqtt/cache/SensorLookupCacheService.java:93`) —
+  Caffeine/Redis를 모두 미스하고 PostgreSQL에서 직접 조회한 센서의 `location`이 아직 null이면
+  `sensor.getLocation().getLocationId()`가 널 가드 없이 호출되어 NPE가 발생함. 메서드 자체 Javadoc은
+  "반드시 null 가드가 필요함"이라 명시하고 있지만 실제 구현에는 가드가 빠져 있음. 영향: 해당 패킷은
+  `GatewayPacketInboundHandler.handleMessage()`의 바깥 try/catch에서 잡혀 폐기되고, 예외가 센서
+  하트비트 기록(`sensorHeartbeatTracker.recordHeartbeat`)보다 먼저 발생하므로 센서 하트비트도 갱신되지
+  않음 — 위치 미배치 상태가 오래 지속되는 센서일수록(캐시 TTL 만료 후 재조회 시) 이 경로를 반복적으로 탈 수 있음
 - `GatewayMqttLockService`의 renew/release가 원자적이지 않음 (코드 내 TODO: Lua 스크립트 도입 검토)
 - 다중 인스턴스 MQTT 소유권 조정 로직(`GatewayMqttConnectionReconciler` 등)에 대한 테스트 커버리지 부족
 - `X-User-Id`/`X-User-Role` 헤더 표기(`X-User-*` vs `X-USER-*`)가 컨트롤러마다 일관되지 않음
