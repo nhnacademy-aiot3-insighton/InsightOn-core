@@ -1,5 +1,6 @@
 package com.insighton.core.controller.api;
 
+import com.insighton.core.controller.swagger.GroupRegistrationControllerApi;
 import com.insighton.core.domain.groupregistration.dto.CreateGroupRegistrationRequest;
 import com.insighton.core.domain.groupregistration.dto.GroupRegistrationResponse;
 import com.insighton.core.domain.groupregistration.entity.GroupRegistrationStatus;
@@ -18,15 +19,13 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/group-registrations")
-public class GroupRegistrationController {
+public class GroupRegistrationController implements GroupRegistrationControllerApi {
 
     private final GroupRegistrationService groupRegistrationService;
     private final GroupRegistrationApprovalUseCase approvalUseCase;
     private final GroupRegistrationCreationUseCase groupRegistrationCreationUseCase;
 
-    /**
-     * 그룹 생성 신청
-     */
+    @Override
     @PostMapping
     public ResponseEntity<GroupRegistrationResponse> createRequest(@RequestHeader("X-User-Id") Long requesterId,
                                                                    @Valid @RequestBody CreateGroupRegistrationRequest registrationRequest
@@ -35,9 +34,7 @@ public class GroupRegistrationController {
         return ResponseEntity.status(HttpStatus.CREATED).body(registrationResponse);
     }
 
-    /**
-     * 전체 그룹 등록 신청 목록 조회 (관리자용)
-     */
+    @Override
     @GetMapping
     public ResponseEntity<Page<GroupRegistrationResponse>> getGroupRegistrations(@RequestHeader(value = "X-User-Role", required = false) String userRole,
                                                                                  @RequestParam(required = false) GroupRegistrationStatus status,
@@ -47,9 +44,7 @@ public class GroupRegistrationController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    /**
-     * 내 그룹 등록 신청 목록 조회
-     */
+    @Override
     @GetMapping("/my")
     public ResponseEntity<Page<GroupRegistrationResponse>> getMyGroupRegistrations(@RequestHeader("X-User-Id") Long requesterId,
                                                                                    @PageableDefault(sort = "groupRegistrationId") Pageable pageable
@@ -58,9 +53,7 @@ public class GroupRegistrationController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    /**
-     * 그룹 등록 신청 상세 조회
-     */
+    @Override
     @GetMapping("/{group-registration-id}")
     public ResponseEntity<GroupRegistrationResponse> getGroupRegistration(@RequestHeader("X-User-Id") Long userId,
                                                                           @RequestHeader(value = "X-User-Role", required = false) String userRole,
@@ -70,9 +63,7 @@ public class GroupRegistrationController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    /**
-     * 그룹 등록 신청 취소
-     */
+    @Override
     @PutMapping("/{group-registration-id}/cancel")
     public ResponseEntity<Void> cancelGroupRegistration(@RequestHeader("X-User-Id") Long requesterId,
                                                         @PathVariable("group-registration-id") Long groupRegistrationId
@@ -81,10 +72,7 @@ public class GroupRegistrationController {
         return ResponseEntity.ok().build();
     }
 
-
-    /**
-     * 그룹 등록 신청 승인 (관리자용) — 승인과 동시에 Group 생성까지 이어짐
-     */
+    @Override
     @PutMapping("/{group-registration-id}/approve")
     public ResponseEntity<Void> approveGroupRegistration(@RequestHeader(value = "X-User-Role", required = false) String userRole,
                                                          @RequestHeader("X-User-Id") Long approverId,
@@ -94,9 +82,7 @@ public class GroupRegistrationController {
         return ResponseEntity.ok().build();
     }
 
-    /**
-     * 그룹 등록 신청 거절 (관리자용)
-     */
+    @Override
     @PutMapping("/{group-registration-id}/reject")
     public ResponseEntity<Void> rejectGroupRegistration(@RequestHeader(value = "X-User-Role", required = false) String userRole,
                                                         @RequestHeader("X-User-Id") Long approverId,
