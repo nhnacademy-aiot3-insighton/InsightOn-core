@@ -81,16 +81,19 @@ class SmartThingsCommandAssemblerTest {
     @Test
     @DisplayName("변환할 명령이 하나도 없으면 SmartThingsApiException")
     void 빈상태() {
-        assertThatThrownBy(() -> assembler.assemble(aircon(Map.of("unknownKey", "x"))))
+        ActuatorControlCommand cmd = aircon(Map.of("unknownKey", "x"));
+        assertThatThrownBy(() -> assembler.assemble(cmd))
                 .isInstanceOf(SmartThingsApiException.class);
     }
 
     @Test
     @DisplayName("지원하지 않는 power/mode 값이면 SmartThingsApiException")
     void 비허용값() {
-        assertThatThrownBy(() -> assembler.assemble(aircon(Map.of("power", "EXPLODE"))))
+        ActuatorControlCommand badPower = aircon(Map.of("power", "EXPLODE"));
+        assertThatThrownBy(() -> assembler.assemble(badPower))
                 .isInstanceOf(SmartThingsApiException.class);
-        assertThatThrownBy(() -> assembler.assemble(aircon(Map.of("mode", "HYPERCOOL"))))
+        ActuatorControlCommand badMode = aircon(Map.of("mode", "HYPERCOOL"));
+        assertThatThrownBy(() -> assembler.assemble(badMode))
                 .isInstanceOf(SmartThingsApiException.class);
     }
 
@@ -120,7 +123,8 @@ class SmartThingsCommandAssemblerTest {
     @Test
     @DisplayName("SmartThings 에어컨엔 AIRCLEAN 매핑이 없어 SmartThingsApiException")
     void aircon_airclean_미지원() {
-        assertThatThrownBy(() -> assembler.assemble(aircon(Map.of("mode", "AIRCLEAN"))))
+        ActuatorControlCommand cmd = aircon(Map.of("mode", "AIRCLEAN"));
+        assertThatThrownBy(() -> assembler.assemble(cmd))
                 .isInstanceOf(SmartThingsApiException.class);
     }
 
