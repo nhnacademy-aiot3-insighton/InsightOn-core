@@ -131,10 +131,12 @@ class DashboardServiceTest {
         void getDashboard_notFound() {
             // given
             Long locationId = 999L;
+            List<WidgetsListResponse> emptyWidgets = List.of();
+
             given(dashboardRepository.findByLocationLocationId(locationId)).willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> dashboardService.getDashboard(locationId, List.of()))
+            assertThatThrownBy(() -> dashboardService.getDashboard(locationId, emptyWidgets))
                     .isInstanceOf(DashboardNotFoundException.class);
         }
 
