@@ -24,6 +24,7 @@ class UpdateSensorUseCaseTest {
     @Mock
     private GroupMemberService groupMemberService;
 
+
     @Mock
     private SensorService sensorService;
 
