@@ -10,8 +10,6 @@ import org.springframework.stereotype.Component;
  * Gateway 하나당 MQTT 연결을 정확히 한 인스턴스만 할 수 있도록 조율
  * Redis 분산 Lock
  */
-//TODO: LuaScript 도입 가능
-// renew / release는 원자적 연산은 아님 레이스 감수해야 함 보완하고 싶다면 LuaScript 고려할 것
 @Slf4j
 @Component
 @RequiredArgsConstructor

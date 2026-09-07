@@ -33,9 +33,7 @@ public class InfluxConfig {
 
     @Bean(destroyMethod = "close")
     public WriteApi writeApi(InfluxDBClient influxDBClient) {
-
-        //TODO: batchSize 조절하기
-        // 현재는 기본 값 테스트 후 추후 조정 필요
+        
         WriteOptions options = WriteOptions.builder()
                 .batchSize(1000) // 몇 포인트 모이면 플러시 할 지
                 .flushInterval(1000) // 몇 ms마다 강제 플러시 할지 (배치 안 찼어도 강제 플러시)
