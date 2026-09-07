@@ -78,16 +78,19 @@ class LgThinQControlAssemblerTest {
     @Test
     @DisplayName("변환할 명령이 없으면 LgThinQApiException")
     void 빈상태() {
-        assertThatThrownBy(() -> assembler.assemble(aircon(Map.of("unknown", "x"))))
+        ActuatorControlCommand cmd = aircon(Map.of("unknown", "x"));
+        assertThatThrownBy(() -> assembler.assemble(cmd))
                 .isInstanceOf(LgThinQApiException.class);
     }
 
     @Test
     @DisplayName("지원하지 않는 power/mode 값이면 LgThinQApiException")
     void 비허용값() {
-        assertThatThrownBy(() -> assembler.assemble(aircon(Map.of("power", "EXPLODE"))))
+        ActuatorControlCommand badPower = aircon(Map.of("power", "EXPLODE"));
+        assertThatThrownBy(() -> assembler.assemble(badPower))
                 .isInstanceOf(LgThinQApiException.class);
-        assertThatThrownBy(() -> assembler.assemble(aircon(Map.of("mode", "HYPERCOOL"))))
+        ActuatorControlCommand badMode = aircon(Map.of("mode", "HYPERCOOL"));
+        assertThatThrownBy(() -> assembler.assemble(badMode))
                 .isInstanceOf(LgThinQApiException.class);
     }
 

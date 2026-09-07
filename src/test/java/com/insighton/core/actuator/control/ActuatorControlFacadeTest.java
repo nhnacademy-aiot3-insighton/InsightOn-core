@@ -120,7 +120,8 @@ class ActuatorControlFacadeTest {
         given(adapterRegistry.get(ControlProvider.SMART_THINGS)).willReturn(adapter);
         given(adapter.control(any())).willThrow(new RuntimeException("공급자 500"));
 
-        assertThatThrownBy(() -> facade.control(5L, 1L, Map.of("power", "ON"), ExecutedByType.RULE_ENGINE, null))
+        Map<String, Object> desired = Map.of("power", "ON");
+        assertThatThrownBy(() -> facade.control(5L, 1L, desired, ExecutedByType.RULE_ENGINE, null))
                 .isInstanceOf(RuntimeException.class);
 
         verify(actuatorService, never()).updateActuatorState(any(), any(), any(), any(), any());
@@ -135,7 +136,8 @@ class ActuatorControlFacadeTest {
                 .build();
         given(actuatorRepository.findById(1L)).willReturn(Optional.of(unbound));
 
-        assertThatThrownBy(() -> facade.control(5L, 1L, Map.of("power", "ON"), ExecutedByType.RULE_ENGINE, null))
+        Map<String, Object> desired = Map.of("power", "ON");
+        assertThatThrownBy(() -> facade.control(5L, 1L, desired, ExecutedByType.RULE_ENGINE, null))
                 .isInstanceOf(InvalidActuatorValueException.class);
 
         verifyNoInteractions(adapterRegistry);
@@ -152,7 +154,8 @@ class ActuatorControlFacadeTest {
                 .build();
         given(actuatorRepository.findById(1L)).willReturn(Optional.of(noDeviceId));
 
-        assertThatThrownBy(() -> facade.control(5L, 1L, Map.of("power", "ON"), ExecutedByType.RULE_ENGINE, null))
+        Map<String, Object> desired = Map.of("power", "ON");
+        assertThatThrownBy(() -> facade.control(5L, 1L, desired, ExecutedByType.RULE_ENGINE, null))
                 .isInstanceOf(InvalidActuatorValueException.class);
 
         verifyNoInteractions(adapterRegistry);
@@ -161,7 +164,8 @@ class ActuatorControlFacadeTest {
     @Test
     @DisplayName("빈 상태값이면 조회도 하지 않고 InvalidActuatorValueException")
     void control_빈상태값_거절() {
-        assertThatThrownBy(() -> facade.control(5L, 1L, Map.of(), ExecutedByType.RULE_ENGINE, null))
+        Map<String, Object> empty = Map.of();
+        assertThatThrownBy(() -> facade.control(5L, 1L, empty, ExecutedByType.RULE_ENGINE, null))
                 .isInstanceOf(InvalidActuatorValueException.class);
 
         verifyNoInteractions(actuatorRepository);
@@ -172,7 +176,8 @@ class ActuatorControlFacadeTest {
     void control_없는액추에이터() {
         given(actuatorRepository.findById(999L)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> facade.control(5L, 999L, Map.of("power", "ON"), ExecutedByType.RULE_ENGINE, null))
+        Map<String, Object> desired = Map.of("power", "ON");
+        assertThatThrownBy(() -> facade.control(5L, 999L, desired, ExecutedByType.RULE_ENGINE, null))
                 .isInstanceOf(ActuatorNotFoundException.class);
     }
 
@@ -182,7 +187,8 @@ class ActuatorControlFacadeTest {
         given(actuatorRepository.findById(1L))
                 .willReturn(Optional.of(bound(ControlProvider.SMART_THINGS, state("power", "OFF"))));
 
-        assertThatThrownBy(() -> facade.control(5L, 1L, Map.of("power", "EXPLODE"), ExecutedByType.RULE_ENGINE, null))
+        Map<String, Object> desired = Map.of("power", "EXPLODE");
+        assertThatThrownBy(() -> facade.control(5L, 1L, desired, ExecutedByType.RULE_ENGINE, null))
                 .isInstanceOf(InvalidActuatorValueException.class);
 
         verifyNoInteractions(adapterRegistry);
@@ -202,7 +208,8 @@ class ActuatorControlFacadeTest {
         given(actuatorRepository.findById(1L)).willReturn(Optional.of(actuator));
         given(locationRepository.findByLocationIdAndGroupGroupId(50L, 5L)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> facade.control(5L, 1L, Map.of("power", "ON"), ExecutedByType.USER, 1L))
+        Map<String, Object> desired = Map.of("power", "ON");
+        assertThatThrownBy(() -> facade.control(5L, 1L, desired, ExecutedByType.USER, 1L))
                 .isInstanceOf(ActuatorNotFoundException.class);
 
         verifyNoInteractions(adapterRegistry);
