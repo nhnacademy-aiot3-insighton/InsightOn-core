@@ -105,20 +105,6 @@ class DashboardServiceTest {
             verify(dashboardRepository, times(1)).delete(mockDashboard);
         }
 
-        @Test
-        @DisplayName("LocationId로 대시보드 엔티티 조회 성공")
-        void getDashboardByLocationId_success() {
-            // given
-            Long locationId = 1L;
-            Dashboard mockDashboard = mock(Dashboard.class);
-            given(dashboardRepository.findByLocationLocationId(locationId)).willReturn(Optional.of(mockDashboard));
-
-            // when
-            Dashboard result = dashboardService.getDashboardEntity(locationId);
-
-            // then
-            assertThat(result).isEqualTo(mockDashboard);
-        }
 
         @Test
         @DisplayName("getDashboardEntity 메서드 조회 성공")
@@ -182,7 +168,7 @@ class DashboardServiceTest {
             assertThatThrownBy(() -> dashboardService.updateDashboardTitle(nullRequest))
                     .isInstanceOf(EmptyValueException.class);
         }
-        
+
         @Test
         @DisplayName("대시보드 삭제 실패 - 대시보드가 존재하지 않을 때 DashboardNotFoundException 발생")
         void deleteDashboard_notFound() {
