@@ -77,7 +77,8 @@ class LgThinQApiClientTest {
                 .andRespond(withStatus(HttpStatus.NOT_FOUND)
                         .body("{\"error\":{\"code\":\"2000\",\"message\":\"device not found\"}}"));
 
-        assertThatThrownBy(() -> client.control("missing", powerOn()))
+        Map<String, Object> body = powerOn();
+        assertThatThrownBy(() -> client.control("missing", body))
                 .isInstanceOf(LgThinQApiException.class)
                 .hasMessageContaining("404");
     }
@@ -88,7 +89,8 @@ class LgThinQApiClientTest {
         server.expect(requestTo(BASE_URL + "/devices/lg-aircon-001/control"))
                 .andRespond(withStatus(HttpStatus.INTERNAL_SERVER_ERROR));
 
-        assertThatThrownBy(() -> client.control("lg-aircon-001", powerOn()))
+        Map<String, Object> body = powerOn();
+        assertThatThrownBy(() -> client.control("lg-aircon-001", body))
                 .isInstanceOf(LgThinQApiException.class);
     }
 }
