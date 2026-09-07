@@ -2,8 +2,12 @@ package com.insighton.core.domain.gateway;
 
 import com.insighton.core.domain.gateway.entity.Gateway;
 import com.insighton.core.domain.gateway.exception.InvalidGatewayConnectionConfigException;
+import org.jspecify.annotations.NonNull;
+
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * 게이트웨이 단위 MQTT 접속 정보를 담는 값 객체.
@@ -68,5 +72,48 @@ public record MqttGatewayConnectionInfo (
                 (String) config.get("username"),
                 (String) config.get("password")
         );
+    }
+
+    /**
+     * record 기본 equals는 배열 필드({@code brokerUrls}, {@code topics})를 참조로 비교하므로,
+     * 내용이 같아도 인스턴스가 다르면 항상 false가 나옴 — {@code .from()}이 매 호출마다 새 배열을
+     * 만들기 때문에 내용 기준 비교가 되도록 직접 오버라이드함.
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof MqttGatewayConnectionInfo(
+                Long id, String clientId1, String[] urls, String[] topics1, String username1, String password1
+        ))) {
+            return false;
+        }
+        return Objects.equals(gatewayId, id)
+                && Objects.equals(clientId, clientId1)
+                && Arrays.equals(brokerUrls, urls)
+                && Arrays.equals(topics, topics1)
+                && Objects.equals(username, username1)
+                && Objects.equals(password, password1);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(gatewayId, clientId, username, password);
+        result = 31 * result + Arrays.hashCode(brokerUrls);
+        result = 31 * result + Arrays.hashCode(topics);
+        return result;
+    }
+
+    @Override
+    public @NonNull String toString() {
+        return "MqttGatewayConnectionInfo[" +
+                "gatewayId=" + gatewayId +
+                ", clientId=" + clientId +
+                ", brokerUrls=" + Arrays.toString(brokerUrls) +
+                ", topics=" + Arrays.toString(topics) +
+                ", username=" + username +
+                ", password=" + password +
+                ']';
     }
 }
