@@ -148,7 +148,7 @@ class GroupControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk());
 
-            verify(groupUpdateUseCase).updateGroup(eq(request), eq(1L), eq(1L));
+            verify(groupUpdateUseCase).updateGroup(request, 1L, 1L);
         }
 
         @Test
