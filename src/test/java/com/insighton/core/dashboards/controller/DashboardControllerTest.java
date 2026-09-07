@@ -97,7 +97,7 @@ class DashboardControllerTest {
                     .andExpect(jsonPath("$['1'].labels.length()").value(2));
 
             verify(dashboardSaveUseCase).saveDashboard(eq(userId), eq(groupId), eq(locationId), any());
-            verify(dashboardSaveUseCase).saveDashboardInfluxDB(eq(locationId), eq(widgetIds));
+            verify(dashboardSaveUseCase).saveDashboardInfluxDB(locationId, widgetIds);
         }
     }
 
