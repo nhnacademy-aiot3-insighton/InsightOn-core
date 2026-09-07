@@ -26,33 +26,48 @@ import java.util.Optional;
 public enum LgThinQVocab {
 
     // power — 종류별 operation property가 다름
-    AC_POWER_ON(ActuatorType.AIRCON, NeutralCommand.POWER, "ON", "operation", "airConOperationMode", "POWER_ON"),
-    AC_POWER_OFF(ActuatorType.AIRCON, NeutralCommand.POWER, "OFF", "operation", "airConOperationMode", "POWER_OFF"),
-    AP_POWER_ON(ActuatorType.AIR_PURIFIER, NeutralCommand.POWER, "ON", "operation", "airPurifierOperationMode", "POWER_ON"), // [근사]
-    AP_POWER_OFF(ActuatorType.AIR_PURIFIER, NeutralCommand.POWER, "OFF", "operation", "airPurifierOperationMode", "POWER_OFF"),
-    VF_POWER_ON(ActuatorType.VENTILATION_FAN, NeutralCommand.POWER, "ON", "operation", "airFanOperationMode", "POWER_ON"),   // [근사]
-    VF_POWER_OFF(ActuatorType.VENTILATION_FAN, NeutralCommand.POWER, "OFF", "operation", "airFanOperationMode", "POWER_OFF"),
+    AC_POWER_ON(ActuatorType.AIRCON, NeutralCommand.POWER, "ON", Keys.OPERATION, "airConOperationMode", Keys.POWER_ON),
+    AC_POWER_OFF(ActuatorType.AIRCON, NeutralCommand.POWER, "OFF", Keys.OPERATION, "airConOperationMode", Keys.POWER_OFF),
+    AP_POWER_ON(ActuatorType.AIR_PURIFIER, NeutralCommand.POWER, "ON", Keys.OPERATION, "airPurifierOperationMode", Keys.POWER_ON), // [근사]
+    AP_POWER_OFF(ActuatorType.AIR_PURIFIER, NeutralCommand.POWER, "OFF", Keys.OPERATION, "airPurifierOperationMode", Keys.POWER_OFF),
+    VF_POWER_ON(ActuatorType.VENTILATION_FAN, NeutralCommand.POWER, "ON", Keys.OPERATION, "airFanOperationMode", Keys.POWER_ON),   // [근사]
+    VF_POWER_OFF(ActuatorType.VENTILATION_FAN, NeutralCommand.POWER, "OFF", Keys.OPERATION, "airFanOperationMode", Keys.POWER_OFF),
 
     // 에어컨 mode → airConJobMode.currentJobMode
-    AC_COOL(ActuatorType.AIRCON, NeutralCommand.MODE, "COOL", "airConJobMode", "currentJobMode", "COOL"),
-    AC_DRY(ActuatorType.AIRCON, NeutralCommand.MODE, "DRY", "airConJobMode", "currentJobMode", "AIR_DRY"),
-    AC_FAN(ActuatorType.AIRCON, NeutralCommand.MODE, "FAN", "airConJobMode", "currentJobMode", "FAN"),
-    AC_AUTO(ActuatorType.AIRCON, NeutralCommand.MODE, "AUTO", "airConJobMode", "currentJobMode", "AUTO"),
-    AC_AIRCLEAN(ActuatorType.AIRCON, NeutralCommand.MODE, "AIRCLEAN", "airConJobMode", "currentJobMode", "AIR_CLEAN"), // LG 에어컨 전용 (공기청정)
+    AC_COOL(ActuatorType.AIRCON, NeutralCommand.MODE, "COOL", Keys.AIRCON_JOB_MODE, Keys.CURRENT_JOB_MODE, "COOL"),
+    AC_DRY(ActuatorType.AIRCON, NeutralCommand.MODE, "DRY", Keys.AIRCON_JOB_MODE, Keys.CURRENT_JOB_MODE, "AIR_DRY"),
+    AC_FAN(ActuatorType.AIRCON, NeutralCommand.MODE, "FAN", Keys.AIRCON_JOB_MODE, Keys.CURRENT_JOB_MODE, "FAN"),
+    AC_AUTO(ActuatorType.AIRCON, NeutralCommand.MODE, "AUTO", Keys.AIRCON_JOB_MODE, Keys.CURRENT_JOB_MODE, "AUTO"),
+    AC_AIRCLEAN(ActuatorType.AIRCON, NeutralCommand.MODE, "AIRCLEAN", Keys.AIRCON_JOB_MODE, Keys.CURRENT_JOB_MODE, "AIR_CLEAN"), // LG 에어컨 전용 (공기청정)
 
     // 에어컨 바람 방향 → windDirection.rotateUpDown (LG 는 상하 스윙 boolean)
     AC_WIND_FIXED(ActuatorType.AIRCON, NeutralCommand.WIND_DIRECTION, "FIXED", "windDirection", "rotateUpDown", Boolean.FALSE),
     AC_WIND_SWING(ActuatorType.AIRCON, NeutralCommand.WIND_DIRECTION, "SWING", "windDirection", "rotateUpDown", Boolean.TRUE),
 
     // 공기청정기 mode → airPurifierJobMode.currentJobMode
-    AP_AUTO(ActuatorType.AIR_PURIFIER, NeutralCommand.MODE, "AUTO", "airPurifierJobMode", "currentJobMode", "AUTO"),
-    AP_SLEEP(ActuatorType.AIR_PURIFIER, NeutralCommand.MODE, "SLEEP", "airPurifierJobMode", "currentJobMode", "SLEEP"),
-    AP_TURBO(ActuatorType.AIR_PURIFIER, NeutralCommand.MODE, "TURBO", "airPurifierJobMode", "currentJobMode", "CLEAN"), // [근사]
+    AP_AUTO(ActuatorType.AIR_PURIFIER, NeutralCommand.MODE, "AUTO", Keys.AIR_PURIFIER_JOB_MODE, Keys.CURRENT_JOB_MODE, "AUTO"),
+    AP_SLEEP(ActuatorType.AIR_PURIFIER, NeutralCommand.MODE, "SLEEP", Keys.AIR_PURIFIER_JOB_MODE, Keys.CURRENT_JOB_MODE, "SLEEP"),
+    AP_TURBO(ActuatorType.AIR_PURIFIER, NeutralCommand.MODE, "TURBO", Keys.AIR_PURIFIER_JOB_MODE, Keys.CURRENT_JOB_MODE, "CLEAN"), // [근사]
 
     // 환풍기 mode → airFlow.windStrength
-    VF_LOW(ActuatorType.VENTILATION_FAN, NeutralCommand.MODE, "LOW", "airFlow", "windStrength", "LOW"),
-    VF_MID(ActuatorType.VENTILATION_FAN, NeutralCommand.MODE, "MID", "airFlow", "windStrength", "MID"),
-    VF_HIGH(ActuatorType.VENTILATION_FAN, NeutralCommand.MODE, "HIGH", "airFlow", "windStrength", "HIGH");
+    VF_LOW(ActuatorType.VENTILATION_FAN, NeutralCommand.MODE, "LOW", Keys.AIR_FLOW, Keys.WIND_STRENGTH, "LOW"),
+    VF_MID(ActuatorType.VENTILATION_FAN, NeutralCommand.MODE, "MID", Keys.AIR_FLOW, Keys.WIND_STRENGTH, "MID"),
+    VF_HIGH(ActuatorType.VENTILATION_FAN, NeutralCommand.MODE, "HIGH", Keys.AIR_FLOW, Keys.WIND_STRENGTH, "HIGH");
+
+    // enum 상수 인자에서는 같은 enum의 static 필드를 못 참조하므로(forward reference) 별도 홀더에 모음
+    private static final class Keys {
+        private static final String OPERATION = "operation";
+        private static final String POWER_ON = "POWER_ON";
+        private static final String POWER_OFF = "POWER_OFF";
+        private static final String AIRCON_JOB_MODE = "airConJobMode";
+        private static final String AIR_PURIFIER_JOB_MODE = "airPurifierJobMode";
+        private static final String AIR_FLOW = "airFlow";
+        private static final String CURRENT_JOB_MODE = "currentJobMode";
+        private static final String WIND_STRENGTH = "windStrength";
+
+        private Keys() {
+        }
+    }
 
     private final ActuatorType type;
     private final NeutralCommand command;
