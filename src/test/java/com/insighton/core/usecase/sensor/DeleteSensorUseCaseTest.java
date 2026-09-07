@@ -21,7 +21,6 @@ class DeleteSensorUseCaseTest {
     @Mock
     private GroupMemberService groupMemberService;
 
-
     @Mock
     private SensorService sensorService;
 

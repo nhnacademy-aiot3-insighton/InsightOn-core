@@ -28,7 +28,6 @@ class SearchSensorUseCaseTest {
     @Mock
     private GroupMemberService groupMemberService;
 
-
     @Mock
     private SensorService sensorService;
 
