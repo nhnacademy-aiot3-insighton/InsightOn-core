@@ -116,10 +116,12 @@ class DashboardSaveUseCaseTest {
             Long groupId = 1L;
             Long locationId = 10L;
 
+            List<WidgetSaveRequest> emptyRequests = List.of(); // 람다 외부로 추출
+
             given(groupMemberService.validateGroupAdmin(groupId, userId)).willThrow(NoPermissionException.forAdmin(200L));
 
             // when & then
-            assertThatThrownBy(() -> dashboardSaveUseCase.saveDashboard(userId, groupId, locationId, List.of()))
+            assertThatThrownBy(() -> dashboardSaveUseCase.saveDashboard(userId, groupId, locationId, emptyRequests))
                     .isInstanceOf(NoPermissionException.class);
 
             verify(groupMemberService, times(1)).validateGroupAdmin(groupId, userId);
