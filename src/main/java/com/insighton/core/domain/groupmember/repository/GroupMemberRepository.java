@@ -1,6 +1,5 @@
 package com.insighton.core.domain.groupmember.repository;
 
-import com.insighton.core.domain.groupmember.dto.response.GroupMemberListResponse;
 import com.insighton.core.domain.groupmember.entity.GroupMember;
 import org.springframework.data.jpa.repository.JpaRepository;
 
