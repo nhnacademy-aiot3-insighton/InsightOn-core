@@ -73,7 +73,8 @@ class LgThinQActuatorAdapterTest {
                 .willReturn(new LgThinQControlResponse(null, null, null,
                         new LgThinQControlResponse.Error("2000", "unsupported property")));
 
-        assertThatThrownBy(() -> adapter.control(command()))
+        ActuatorControlCommand cmd = command();
+        assertThatThrownBy(() -> adapter.control(cmd))
                 .isInstanceOf(LgThinQApiException.class);
     }
 
@@ -83,7 +84,8 @@ class LgThinQActuatorAdapterTest {
         given(assembler.assemble(any())).willReturn(assembled());
         given(apiClient.control(any(), any())).willReturn(null);
 
-        assertThatThrownBy(() -> adapter.control(command()))
+        ActuatorControlCommand cmd = command();
+        assertThatThrownBy(() -> adapter.control(cmd))
                 .isInstanceOf(LgThinQApiException.class);
     }
 
@@ -93,7 +95,8 @@ class LgThinQActuatorAdapterTest {
         given(assembler.assemble(any())).willReturn(assembled());
         given(apiClient.control(any(), any())).willThrow(new LgThinQApiException("공급자 500"));
 
-        assertThatThrownBy(() -> adapter.control(command()))
+        ActuatorControlCommand cmd = command();
+        assertThatThrownBy(() -> adapter.control(cmd))
                 .isInstanceOf(LgThinQApiException.class)
                 .hasMessageContaining("공급자 500");
     }

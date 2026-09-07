@@ -117,8 +117,9 @@ class ActuatorServiceTest {
     @Test
     @DisplayName("updateActuatorState - 빈 상태값이면 InvalidActuatorValueException")
     void 상태변경_빈값_거부() {
+        Map<String, Object> empty = Map.of();
         assertThrows(InvalidActuatorValueException.class,
-                () -> actuatorsService.updateActuatorState(10L, 1L, Map.of(), ExecutedByType.USER, 1L));
+                () -> actuatorsService.updateActuatorState(10L, 1L, empty, ExecutedByType.USER, 1L));
     }
 
     @Test
@@ -225,8 +226,9 @@ class ActuatorServiceTest {
     void 상태변경_없는액추에이터() {
         given(actuatorRepository.findById(999L)).willReturn(Optional.empty());
 
+        Map<String, Object> desired = Map.of("power", "ON");
         assertThrows(ActuatorNotFoundException.class,
-                () -> actuatorsService.updateActuatorState(10L, 999L, Map.of("power", "ON"), ExecutedByType.USER, 1L));
+                () -> actuatorsService.updateActuatorState(10L, 999L, desired, ExecutedByType.USER, 1L));
     }
 
     @Test
@@ -253,8 +255,9 @@ class ActuatorServiceTest {
         given(actuatorRepository.findById(1L)).willReturn(Optional.of(entity));
         given(locationRepository.findByLocationIdAndGroupGroupId(50L, 10L)).willReturn(Optional.empty());
 
+        Map<String, Object> desired = Map.of("power", "ON");
         assertThrows(ActuatorNotFoundException.class,
-                () -> actuatorsService.updateActuatorState(10L, 1L, Map.of("power", "ON"), ExecutedByType.USER, 1L));
+                () -> actuatorsService.updateActuatorState(10L, 1L, desired, ExecutedByType.USER, 1L));
 
         verify(actuatorRunLogService, never()).recordRunLogs(any(), any(), any(), any());
     }

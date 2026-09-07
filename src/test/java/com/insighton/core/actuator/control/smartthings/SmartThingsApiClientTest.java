@@ -71,7 +71,8 @@ class SmartThingsApiClientTest {
         server.expect(requestTo(BASE_URL + "/v1/devices/missing/commands"))
                 .andRespond(withStatus(HttpStatus.NOT_FOUND).body("{\"error\":\"device not found\"}"));
 
-        assertThatThrownBy(() -> client.sendCommands("missing", onRequest()))
+        SmartThingsCommandRequest request = onRequest();
+        assertThatThrownBy(() -> client.sendCommands("missing", request))
                 .isInstanceOf(SmartThingsApiException.class)
                 .hasMessageContaining("404");
         server.verify();
@@ -83,7 +84,8 @@ class SmartThingsApiClientTest {
         server.expect(requestTo(BASE_URL + "/v1/devices/st-aircon-001/commands"))
                 .andRespond(withServerError());
 
-        assertThatThrownBy(() -> client.sendCommands("st-aircon-001", onRequest()))
+        SmartThingsCommandRequest request = onRequest();
+        assertThatThrownBy(() -> client.sendCommands("st-aircon-001", request))
                 .isInstanceOf(SmartThingsApiException.class);
         server.verify();
     }
