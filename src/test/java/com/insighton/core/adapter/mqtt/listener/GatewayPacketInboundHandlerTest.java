@@ -1,5 +1,6 @@
 package com.insighton.core.adapter.mqtt.listener;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
@@ -89,5 +90,79 @@ class GatewayPacketInboundHandlerTest {
         // then
         verify(influxWriter).write(any());
         verify(telemetryPublisher).publish(any(TelemetryEventMessage.class));
+    }
+
+    @Test
+    void gatewayId_헤더가_없으면_하트비트_기록_없이_드롭된다() {
+        Message<byte[]> message = MessageBuilder.withPayload(new byte[0]).build();
+
+        handler().handleMessage(message);
+
+        verify(gatewayHeartbeatTracker, never()).recordHeartbeat(any());
+        verify(payloadParser, never()).parse(any());
+    }
+
+    @Test
+    void 페이로드_파싱에_실패하면_드롭된다() {
+        given(payloadParser.parse(any())).willReturn(Optional.empty());
+
+        handler().handleMessage(messageWithGatewayId());
+
+        // gatewayId 헤더는 있으므로 하트비트는 기록되지만, 파싱 실패라 그 이후 진행은 없음
+        verify(gatewayHeartbeatTracker).recordHeartbeat(1L);
+        verify(groupMappingCache, never()).get(any());
+    }
+
+    @Test
+    void 게이트웨이의_group_매핑이_캐시에_없으면_드롭된다() {
+        given(payloadParser.parse(any()))
+                .willReturn(Optional.of(new CleanTelemetryPacket("2026-09-04T00:00:00Z", "eui-1", "sensor-1",
+                        Map.of("co2", 800))));
+        given(groupMappingCache.get(1L)).willReturn(Optional.empty());
+
+        handler().handleMessage(messageWithGatewayId());
+
+        verify(sensorLookupCacheService, never()).lookup(any());
+    }
+
+    @Test
+    void 캐시에_없는_센서는_auto_provision으로_등록된다() {
+        Map<String, Object> fields = Map.of("co2", 800);
+        given(payloadParser.parse(any()))
+                .willReturn(Optional.of(new CleanTelemetryPacket("2026-09-04T00:00:00Z", "eui-1", "sensor-1", fields)));
+        given(groupMappingCache.get(1L)).willReturn(Optional.of(10L));
+        given(sensorLookupCacheService.lookup("eui-1")).willReturn(Optional.empty());
+        given(sensorService.autoProvision(1L, 10L, "eui-1", "sensor-1", fields.keySet()))
+                .willReturn(new SensorCacheEntry(100L, "eui-1", 1L, 200L));
+
+        handler().handleMessage(messageWithGatewayId());
+
+        verify(sensorService).autoProvision(1L, 10L, "eui-1", "sensor-1", fields.keySet());
+        verify(influxWriter).write(any());
+    }
+
+    @Test
+    void 공간_미배치_센서는_드롭된다() {
+        given(payloadParser.parse(any()))
+                .willReturn(Optional.of(new CleanTelemetryPacket("2026-09-04T00:00:00Z", "eui-1", "sensor-1",
+                        Map.of("co2", 800))));
+        given(groupMappingCache.get(1L)).willReturn(Optional.of(10L));
+        given(sensorLookupCacheService.lookup("eui-1"))
+                .willReturn(Optional.of(new SensorCacheEntry(100L, "eui-1", 1L, null))); // locationId 없음
+
+        handler().handleMessage(messageWithGatewayId());
+
+        verify(sensorHeartbeatTracker).recordHeartbeat(100L); // 하트비트는 기록됨
+        verify(influxWriter, never()).write(any());
+        verify(telemetryPublisher, never()).publish(any());
+    }
+
+    @Test
+    void 패킷_처리_중_예외가_나도_MQTT_연결까지_전파되지_않는다() {
+        // 패킷 하나의 처리 실패가 Paho 콜백까지 올라가면 MQTT 연결 자체가 끊기므로(Lost connection),
+        // handleMessage()가 반드시 여기서 예외를 막아야 함
+        given(payloadParser.parse(any())).willThrow(new RuntimeException("파싱 중 알 수 없는 오류"));
+
+        assertThatCode(() -> handler().handleMessage(messageWithGatewayId())).doesNotThrowAnyException();
     }
 }
