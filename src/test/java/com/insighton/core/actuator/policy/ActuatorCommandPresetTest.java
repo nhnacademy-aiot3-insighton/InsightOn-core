@@ -32,7 +32,11 @@ class ActuatorCommandPresetTest {
     void 지원커맨드_공기청정기_온도미지원() {
         Set<CommandType> result = ActuatorCommandPreset.getSupportedCommands(ActuatorType.AIR_PURIFIER);
 
-        assertThat(result).doesNotContain(CommandType.SET_TEMPERATURE);
+        // 빈 Set이면 doesNotContain은 공허하게 통과해버리므로, 실제로 지원 명령이 채워져 있는지 먼저 확인
+        assertThat(result)
+                .isNotEmpty()
+                .containsExactlyInAnyOrder(CommandType.POWER_STATUS, CommandType.OPERATION_MODE)
+                .doesNotContain(CommandType.SET_TEMPERATURE);
     }
 
     @Test
