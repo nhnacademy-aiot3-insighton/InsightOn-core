@@ -1,5 +1,6 @@
 package com.insighton.core.controller.api;
 
+import com.insighton.core.controller.swagger.GatewayControllerApi;
 import com.insighton.core.domain.gateway.dto.GatewayCreateRequest;
 import com.insighton.core.domain.gateway.dto.GatewayResponse;
 import com.insighton.core.domain.gateway.dto.GatewayUpdateRequest;
@@ -28,34 +29,39 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/gateways")
 @RequiredArgsConstructor
-public class GatewayController {
+public class GatewayController implements GatewayControllerApi {
 
     private final GatewayService gatewayService;
 
+    @Override
     @PostMapping
     public ResponseEntity<GatewayResponse> create(@RequestHeader("X-User-Id") Long userId,
                                                   @Valid @RequestBody GatewayCreateRequest request) {
         return ResponseEntity.ok(gatewayService.create(userId, request));
     }
 
+    @Override
     @GetMapping("/{gatewayId}")
     public ResponseEntity<GatewayResponse> getById(@RequestHeader("X-User-Id") Long userId,
                                                    @PathVariable Long gatewayId) {
         return ResponseEntity.ok(gatewayService.getById(userId, gatewayId));
     }
 
+    @Override
     @GetMapping
     public ResponseEntity<GatewayResponse> getByGroupId(@RequestHeader("X-User-Id") Long userId,
                                                          @RequestParam Long groupId) {
         return ResponseEntity.ok(gatewayService.getByGroupId(userId, groupId));
     }
 
+    @Override
     @GetMapping("/admin")
     public ResponseEntity<Page<GatewayResponse>> getAll(@RequestHeader("X-User-Role") String userRole,
                                                          @PageableDefault(size = 20) Pageable pageable) {
         return ResponseEntity.ok(gatewayService.getAll(userRole, pageable));
     }
 
+    @Override
     @PutMapping("/{gatewayId}")
     public ResponseEntity<Void> update(@RequestHeader("X-User-Id") Long userId,
                                                   @PathVariable Long gatewayId,
@@ -64,6 +70,7 @@ public class GatewayController {
         return ResponseEntity.noContent().build();
     }
 
+    @Override
     @DeleteMapping("/{gatewayId}")
     public ResponseEntity<Void> delete(@RequestHeader("X-User-Id") Long userId,
                                        @PathVariable Long gatewayId) {
