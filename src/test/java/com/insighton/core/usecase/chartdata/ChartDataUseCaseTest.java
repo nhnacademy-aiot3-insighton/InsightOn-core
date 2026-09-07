@@ -117,32 +117,5 @@ class ChartDataUseCaseTest {
             verify(dashboardService, times(1)).getDashboardEntity(locationId);
             verifyNoInteractions(widgetService);
         }
-
-//        @Test
-//        @DisplayName("차트 데이터 조회 실패 - 대시보드에 해당 위젯이 존재하지 않는 경우 예외 발생")
-//        void getWidgetChartData_fail_widgetNotFound() {
-//            // given
-//            Long userId = 100L;
-//            Long groupId = 1L;
-//            Long locationId = 10L;
-//            Long widgetId = 999L;
-//            Long dashboardId = 50L;
-//
-//            Dashboard mockDashboard = mock(Dashboard.class);
-//            given(mockDashboard.getDashboardId()).willReturn(dashboardId);
-//
-//            given(dashboardService.getDashboardEntity(locationId)).willReturn(mockDashboard);
-//            given(widgetService.getWidget(dashboardId, widgetId))
-//                    .willThrow(WidgetNotFoundException.notFoundWidgetByWidgetId(widgetId));
-//
-//            // when & then
-////            assertThatThrownBy(() -> chartDataUseCase.getWidgetChartData(userId, groupId, locationId, widgetId))
-////                    .isInstanceOf(WidgetNotFoundException.class);
-//
-//            verify(groupMemberService, times(1)).validateGroupMembers(groupId, userId);
-//            verify(dashboardService, times(1)).getDashboardEntity(locationId);
-//            verify(widgetService, times(1)).getWidget(dashboardId, widgetId);
-//            verify(widgetService, never()).getWidgetChartData(dashboardId, widgetId);
-//        }
     }
 }
