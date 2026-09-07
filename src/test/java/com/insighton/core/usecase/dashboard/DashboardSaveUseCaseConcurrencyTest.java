@@ -12,7 +12,6 @@ import com.insighton.core.domain.location.repository.LocationRepository;
 import com.insighton.core.domain.region.loader.RegionCsvLoader;
 import com.insighton.core.domain.widgets.dto.request.WidgetSaveRequest;
 import com.insighton.core.domain.widgets.entity.Widget;
-import com.insighton.core.domain.widgets.entity.WidgetConfig;
 import com.insighton.core.domain.widgets.exception.AlreadyDashboardSaveException;
 import com.insighton.core.domain.widgets.repository.InfluxDbRepository;
 import com.insighton.core.domain.widgets.repository.WidgetRepository;
@@ -21,8 +20,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
@@ -177,13 +174,9 @@ class DashboardSaveUseCaseConcurrencyTest {
             assertThat(resultA).contains(widgetIdA);
 
             // 2. 요청 B는 요청 A에 의해 락 대기 후 실행되므로, 상대방(A)이 Widget B를 삭제했음을 감지하고 AlreadyDashboardSaveException 발생
-            assertThatThrownBy(() -> {
-                try {
-                    future2.get();
-                } catch (ExecutionException e) {
-                    throw e.getCause();
-                }
-            }).isInstanceOf(AlreadyDashboardSaveException.class);
+            assertThatThrownBy(future2::get)
+                    .isInstanceOf(ExecutionException.class)
+                    .hasCauseInstanceOf(AlreadyDashboardSaveException.class);
 
             executorService.shutdown();
         }
