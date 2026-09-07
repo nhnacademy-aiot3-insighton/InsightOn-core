@@ -66,7 +66,7 @@ public record MqttGatewayConnectionInfo (
 
         return new MqttGatewayConnectionInfo(
                 gateway.getGatewayId(),
-                "insightonsdf-" + gateway.getGatewayId(),
+                "insighton-" + gateway.getGatewayId(),
                 brokerUrl,
                 topics,
                 (String) config.get("username"),
