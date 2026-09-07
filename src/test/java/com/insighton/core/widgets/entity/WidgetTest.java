@@ -28,8 +28,8 @@ class WidgetTest {
                 .widgetConfig(initialConfig)
                 .build();
 
-        assertThat(widget.getXPos()).isEqualTo(0);
-        assertThat(widget.getYPos()).isEqualTo(0);
+        assertThat(widget.getXPos()).isZero();
+        assertThat(widget.getYPos()).isZero();
         assertThat(widget.getWidth()).isEqualTo(2);
         assertThat(widget.getHeight()).isEqualTo(2);
 

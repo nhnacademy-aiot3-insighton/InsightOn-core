@@ -18,12 +18,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class LocationDeleteUseCaseTest {
@@ -76,7 +72,7 @@ class LocationDeleteUseCaseTest {
         verify(widgetService, times(1)).deleteAllWidget(dashboardId);
         verify(dashboardService, times(1)).deleteDashboard(targetLocationId);
         verify(locationService, times(1)).deleteLocation(targetLocationId, groupId);
-        verify(eventPublisher, times(1)).publishEvent(eq(new LocationDeletedEvent(targetLocationId)));
+        verify(eventPublisher, times(1)).publishEvent(new LocationDeletedEvent(targetLocationId));
     }
 
     @Test

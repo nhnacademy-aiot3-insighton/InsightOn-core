@@ -85,7 +85,7 @@ class DashboardControllerTest {
                     .datasets(List.of())
                     .build();
 
-            given(dashboardSaveUseCase.saveDashboardInfluxDB(eq(locationId), eq(widgetIds)))
+            given(dashboardSaveUseCase.saveDashboardInfluxDB(locationId, widgetIds))
                     .willReturn(Map.of(1L, mockChartData));
 
             // when & then
