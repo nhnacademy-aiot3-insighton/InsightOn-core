@@ -119,7 +119,6 @@ class DashboardSaveUseCaseTest {
             List<WidgetSaveRequest> emptyRequests = List.of(); // 람다 외부로 추출
 
             given(groupMemberService.validateGroupAdmin(groupId, userId)).willThrow(NoPermissionException.forAdmin(200L));
-            List<WidgetSaveRequest> requests = List.of();
 
             // when & then
             assertThatThrownBy(() -> dashboardSaveUseCase.saveDashboard(userId, groupId, locationId, emptyRequests))
