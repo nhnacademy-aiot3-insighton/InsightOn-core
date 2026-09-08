@@ -40,6 +40,7 @@ public class WidgetServiceImpl implements WidgetService {
     private static final String BUCKET_NAME = "insighton-bucket";
     private static final String MEASUREMENT_NAME = "sensor_data";
     private static final String WIDGET_CONFIG_KEY_PREFIX = "widget:config:";
+    private static final String FLUX_QUOTE_END = "\")\n";
     private static final Duration CACHE_TTL = Duration.ofDays(1);
 
     private final WidgetRepository widgetRepository;
@@ -311,14 +312,14 @@ public class WidgetServiceImpl implements WidgetService {
         // 입력 값 검증.
         validateDuration(config.range());
 
-        flux.append("from(bucket: \"").append(BUCKET_NAME).append("\")\n")
+        flux.append("from(bucket: \"").append(BUCKET_NAME).append(FLUX_QUOTE_END)
                 .append("   |> range(start: ").append(config.range()).append(")\n")
-                .append("   |> filter(fn: (r) => r._measurement == \"").append(MEASUREMENT_NAME).append("\")\n");
+                .append("   |> filter(fn: (r) => r._measurement == \"").append(MEASUREMENT_NAME).append(FLUX_QUOTE_END);
 
         // null이나 빈 값 체크
         if (Objects.nonNull(config.sensorEui()) && !config.sensorEui().isBlank()) {
             // 이스케이프 처리
-            flux.append("   |> filter(fn: (r) => r.sensor_eui == \"").append(sanitize(config.sensorEui())).append("\")\n");
+            flux.append("   |> filter(fn: (r) => r.sensor_eui == \"").append(sanitize(config.sensorEui())).append(FLUX_QUOTE_END);
         }
 
         if (Objects.nonNull(config.fields()) && !config.fields().isEmpty()) {

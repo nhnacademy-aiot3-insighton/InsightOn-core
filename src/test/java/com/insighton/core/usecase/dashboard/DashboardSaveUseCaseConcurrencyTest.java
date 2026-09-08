@@ -173,7 +173,9 @@ class DashboardSaveUseCaseConcurrencyTest {
             assertThat(resultA).isNotEmpty();
             assertThat(resultA).contains(widgetIdA);
 
+            // 2. 요청 B는 요청 A에 의해 락 대기 후 실행되므로, 상대방(A)이 Widget B를 삭제했음을 감지하고 AlreadyDashboardSaveException 발생
             assertThatThrownBy(future2::get)
+                    .isInstanceOf(ExecutionException.class)
                     .hasCauseInstanceOf(AlreadyDashboardSaveException.class);
 
             executorService.shutdown();
