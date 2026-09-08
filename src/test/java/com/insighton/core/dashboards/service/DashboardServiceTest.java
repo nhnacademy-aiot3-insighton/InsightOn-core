@@ -133,7 +133,6 @@ class DashboardServiceTest {
             List<WidgetsListResponse> emptyWidgets = List.of();
 
             given(dashboardRepository.findByLocationLocationId(locationId)).willReturn(Optional.empty());
-            List<WidgetsListResponse> widgetsList = List.of();
 
             // when & then
             assertThatThrownBy(() -> dashboardService.getDashboard(locationId, emptyWidgets))
