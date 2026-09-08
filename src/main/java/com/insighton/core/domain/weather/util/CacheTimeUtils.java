@@ -5,6 +5,8 @@ import java.time.OffsetDateTime;
 
 public class CacheTimeUtils {
 
+    private CacheTimeUtils() {}
+
     public static Duration getDurationUtilNextHour() {
         /**
          * 현재 시각부터 다음 정각(00분 00초)까지 남은 초/분 시간을 계산합니다.

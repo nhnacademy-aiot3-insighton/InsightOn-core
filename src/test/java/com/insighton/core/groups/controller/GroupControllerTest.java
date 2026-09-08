@@ -111,7 +111,7 @@ class GroupControllerTest {
 
         @Test
         @DisplayName("시스템 관리자용 그룹 리스트 조회 성공")
-        void getGroupList_success() throws Exception { // ⭕ 테스트 메서드 파라미터는 비워둡니다.
+        void getGroupList_success() throws Exception {
             List<GroupAdminResponse> content = List.of(new GroupAdminResponse(1L, "testName", "testDescription", "testLocation"));
             Page<GroupAdminResponse> mockPage = new PageImpl<>(content);
 
