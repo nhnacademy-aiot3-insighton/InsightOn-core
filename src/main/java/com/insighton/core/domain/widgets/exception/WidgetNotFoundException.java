@@ -7,13 +7,13 @@ public class WidgetNotFoundException extends RuntimeException {
 
     public static WidgetNotFoundException notFoundWidgetByDashboardId(Long dashboardId) {
         return new WidgetNotFoundException(
-                String.format("Widget not found. Dashboard ID : " + dashboardId)
+                String.format("Widget not found. Dashboard ID : %d", dashboardId)
         );
     }
 
     public static WidgetNotFoundException notFoundWidgetByWidgetId(Long widgetId) {
         return new WidgetNotFoundException(
-                String.format("Widget not found. Widget ID : " + widgetId)
+                String.format("Widget not found. Widget ID : %d", widgetId)
         );
     }
 }

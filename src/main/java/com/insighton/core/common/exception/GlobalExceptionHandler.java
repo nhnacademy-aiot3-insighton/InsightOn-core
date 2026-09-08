@@ -125,6 +125,7 @@ public class GlobalExceptionHandler {
                 message = body;
             }
         } catch (Exception ignored) {
+            /* ignore */
         }
 
         return ResponseEntity.status(status)
