@@ -1,0 +1,27 @@
+### === 변수 ===
+@baseUrl = http://localhost:8080
+@userId = 1
+@groupId = 1
+@locationId = 1
+
+
+### =========================================
+### 장소(Location) (생성/삭제만)
+### =========================================
+
+### 장소 생성
+### 응답 바디가 없음 (201, ResponseEntity.status(CREATED).build()) - 자동 캡처 불가.
+### 생성 후 아래 @locationId를 조회해서 직접 채워주세요.
+POST {{baseUrl}}/api/v1/groups/{{groupId}}/location/create
+X-USER-ID: {{userId}}
+Content-Type: application/json
+
+{
+  "locationName": "테스트 장소",
+  "autoControlMode": "SUGGESTION"
+}
+
+### 장소 삭제
+### 센서는 location_id만 null로 detach되고, 액추에이터는 실행로그와 함께 같이 삭제됨 (LocationUseCase.deleteLocation)
+DELETE {{baseUrl}}/api/v1/groups/{{groupId}}/location/{{locationId}}/delete
+X-USER-ID: {{userId}}

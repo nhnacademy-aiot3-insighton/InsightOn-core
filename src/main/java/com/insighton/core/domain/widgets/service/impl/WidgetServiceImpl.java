@@ -1,0 +1,373 @@
+package com.insighton.core.domain.widgets.service.impl;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.influxdb.query.FluxRecord;
+import com.influxdb.query.FluxTable;
+import com.insighton.core.domain.dashboards.entity.Dashboard;
+import com.insighton.core.domain.widgets.dto.chart.ChartDataResponse;
+import com.insighton.core.domain.widgets.dto.chart.ChartDataset;
+import com.insighton.core.domain.widgets.dto.request.WidgetSaveRequest;
+import com.insighton.core.domain.widgets.dto.response.WidgetsListResponse;
+import com.insighton.core.domain.widgets.entity.Widget;
+import com.insighton.core.domain.widgets.entity.WidgetConfig;
+import com.insighton.core.domain.widgets.exception.InvalidDateTimeFormatException;
+import com.insighton.core.domain.widgets.exception.WidgetConfigNotFoundException;
+import com.insighton.core.domain.widgets.exception.WidgetNotFoundException;
+import com.insighton.core.domain.widgets.repository.InfluxDbRepository;
+import com.insighton.core.domain.widgets.repository.WidgetRepository;
+import com.insighton.core.domain.widgets.service.WidgetService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+
+import java.time.Duration;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class WidgetServiceImpl implements WidgetService {
+
+    private static final Pattern DURATION_PATTERN = Pattern.compile("^-?\\d+[smhdwy]$");
+    private static final String BUCKET_NAME = "insighton-bucket";
+    private static final String MEASUREMENT_NAME = "sensor_data";
+    private static final String WIDGET_CONFIG_KEY_PREFIX = "widget:config:";
+    private static final String FLUX_QUOTE_END = "\")\n";
+    private static final Duration CACHE_TTL = Duration.ofDays(1);
+
+    private final WidgetRepository widgetRepository;
+    private final InfluxDbRepository influxDbRepository;
+    private final RedisTemplate<String, WidgetConfig> widgetRedisTemplate;
+    private final ObjectMapper objectMapper;
+
+    @Override
+    @Transactional
+    public Long createWidget(Dashboard dashboard, WidgetSaveRequest request) {
+        log.debug("위젯 생성 요청 - dashboardId: {}", dashboard.getDashboardId());
+        Widget widget = Widget.builder()
+                .dashboard(dashboard)
+                .xPos(request.xPos() != null ? request.xPos() : 0)
+                .yPos(request.yPos() != null ? request.yPos() : 0)
+                .width(request.width() != null ? request.width() : 1)
+                .height(request.height() != null ? request.height() : 1)
+                .widgetConfig(request.widgetConfig())
+                .build();
+        Widget newWidget = widgetRepository.save(widget);
+        log.info("위젯 생성 완료 - dashboardId: {}, widgetId: {}", dashboard.getDashboardId(), newWidget.getWidgetId());
+        return newWidget.getWidgetId();
+    }
+
+    @Override
+    @Transactional
+    public void updateWidget(Long dashboardId, Long targetWidgetId, WidgetSaveRequest request) {
+        // 존재하는지 확인
+        Widget widget = widgetRepository.findByWidgetIdAndDashboardDashboardId(targetWidgetId, dashboardId)
+                .orElseThrow(() -> WidgetNotFoundException.notFoundWidgetByWidgetId(targetWidgetId));
+
+        if (request.widgetConfig() != null) {
+            widget.updateWidget(request.widgetConfig());
+            evictCacheKeysAfterCommit(List.of(WIDGET_CONFIG_KEY_PREFIX + targetWidgetId));
+        }
+
+        if (request.xPos() != null && request.yPos() != null
+                && request.width() != null && request.height() != null) {
+
+            widget.updateLocationWidget(
+                    request.xPos(),
+                    request.yPos(),
+                    request.width(),
+                    request.height()
+            );
+        }
+        log.info("위젯 수정 완료 - widgetId: {}, dashboardId: {}", targetWidgetId, dashboardId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Widget getWidget(Long dashboardId, Long widgetId) {
+        log.debug("위젯 단건 조회 - dashboardId: {}, widgetId: {}", dashboardId, widgetId);
+        return widgetRepository.findByWidgetIdAndDashboardDashboardId(widgetId, dashboardId)
+                .orElseThrow(() -> WidgetNotFoundException.notFoundWidgetByWidgetId(widgetId));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<WidgetsListResponse> getWidgetList(Long dashboardId) {
+        log.debug("위젯 목록 조회 요청 - dashboardId: {}", dashboardId);
+        List<Widget> widgets = widgetRepository.findAllByDashboardDashboardId(dashboardId);
+
+        if (widgets.isEmpty()) {
+            log.info("위젯 목록 조회 완료 - dashboardId: {}, count: 0", dashboardId);
+            return List.of();
+        }
+
+        List<WidgetsListResponse> responses = new ArrayList<>();
+
+        for (Widget widget : widgets) {
+
+            WidgetsListResponse response = WidgetsListResponse.builder()
+                    .widgetId(widget.getWidgetId())
+                    .dashboardId(widget.getDashboard().getDashboardId())
+                    .xPos(widget.getXPos())
+                    .yPos(widget.getYPos())
+                    .width(widget.getWidth())
+                    .height(widget.getHeight())
+                    .widgetConfig(widget.getWidgetConfig())
+                    .build();
+
+            responses.add(response);
+        }
+
+        log.info("위젯 목록 조회 완료 - dashboardId: {}, count: {}", dashboardId, responses.size());
+        return responses;
+    }
+
+    @Override
+    @Transactional
+    public void deleteWidget(Long dashboardId, Long targetWidgetId) {
+
+        widgetRepository.deleteByWidgetIdAndDashboardDashboardId(targetWidgetId, dashboardId);
+
+        evictCacheKeysAfterCommit(List.of(WIDGET_CONFIG_KEY_PREFIX + targetWidgetId));
+        log.info("위젯 삭제 완료 - widgetId: {}, dashboardId: {}", targetWidgetId, dashboardId);
+    }
+
+    @Override
+    @Transactional
+    public void deleteAllWidget(Long dashboardId) {
+        List<Long> widgetIds = widgetRepository.findAllByDashboardDashboardId(dashboardId)
+                .stream()
+                .map(Widget::getWidgetId)
+                .toList();
+
+        evictCacheForWidgetIds(widgetIds);
+
+        widgetRepository.deleteAllByDashboardDashboardId(dashboardId);
+        log.info("대시보드 하위 전체 위젯 삭제 완료 - dashboardId: {}, count: {}", dashboardId, widgetIds.size());
+    }
+
+    @Override
+    public List<Long> getWidgetIdsByDashboardId(Long dashboardId) {
+        log.debug("대시보드 하위 위젯 ID 목록 조회 - dashboardId: {}", dashboardId);
+        return widgetRepository.findAllByDashboardDashboardId(dashboardId)
+                .stream()
+                .map(Widget::getWidgetId)
+                .toList();
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public ChartDataResponse getWidgetChartData(Long dashboardId, Long targetWidgetId) {
+        log.debug("위젯 차트 데이터 조회 요청 - dashboardId: {}, widgetId: {}", dashboardId, targetWidgetId);
+
+        WidgetConfig config = getWidgetConfigFromCache(dashboardId, targetWidgetId);
+
+        List<FluxTable> tables = getWidgetData(config);
+
+        ChartDataResponse response = convertToChartData(tables);
+        log.info("위젯 차트 데이터 조회 완료 - dashboardId: {}, widgetId: {}", dashboardId, targetWidgetId);
+        return response;
+    }
+
+    @Override
+    public void evictCacheForWidgetIds(List<Long> widgetIds) {
+        if (widgetIds != null && !widgetIds.isEmpty()) {
+            List<String> keys = widgetIds.stream()
+                    .map(id -> WIDGET_CONFIG_KEY_PREFIX + id)
+                    .toList();
+            evictCacheKeysAfterCommit(keys);
+        }
+    }
+
+    private void evictCacheKeysAfterCommit(List<String> keys) {
+        if (keys == null || keys.isEmpty()) {
+            return;
+        }
+
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            try {
+                                widgetRedisTemplate.delete(keys);
+                                log.info("위젯 Redis 캐시 파기 완료 (AFTER_COMMIT) - size: {}", keys.size());
+                            } catch (Exception e) {
+                                log.error("위젯 Redis 캐시 파기 실패 (AFTER_COMMIT) - keys: {}", keys, e);
+                            }
+                        }
+                    }
+            );
+        } else {
+            try {
+                widgetRedisTemplate.delete(keys);
+                log.info("위젯 Redis 캐시 파기 완료 - size: {}", keys.size());
+            } catch (Exception e) {
+                log.error("위젯 Redis 캐시 파기 실패 - keys: {}", keys, e);
+            }
+        }
+    }
+
+    // ===================== private method ========================
+
+    private WidgetConfig getWidgetConfigFromCache(Long dashboardId, Long widgetId) {
+        String key = WIDGET_CONFIG_KEY_PREFIX + widgetId;
+
+        WidgetConfig cached = widgetRedisTemplate.opsForValue().get(key);
+        if (cached != null) {
+            return objectMapper.convertValue(cached, WidgetConfig.class);
+        }
+
+        Widget widget = widgetRepository.findByWidgetIdAndDashboardDashboardId(widgetId, dashboardId)
+                .orElseThrow(() -> WidgetNotFoundException.notFoundWidgetByWidgetId(widgetId));
+
+        WidgetConfig config = widget.getWidgetConfig();
+        if (config == null) {
+            throw new WidgetConfigNotFoundException(widgetId);
+        }
+
+        widgetRedisTemplate.opsForValue().set(key, config, CACHE_TTL);
+
+        return config;
+    }
+
+    /**
+     * List<FluxTable>을 DTO로 변환
+     */
+    private ChartDataResponse convertToChartData(List<FluxTable> tables) {
+        Set<String> timeLabels = new TreeSet<>(); // 중복 없이 담기 위해
+        Map<String, Map<String, Object>> fieldTimeValueMap = new HashMap<>();
+
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd HH:mm")
+                .withZone(ZoneId.systemDefault());
+
+        if (tables != null) {
+            for (FluxTable table : tables) {
+                for (FluxRecord fluxRecord : table.getRecords()) {
+                    // X축 시간 라벨 모으기 (중복 제거 & 순서 보장)
+                    if (fluxRecord.getTime() != null) {
+                        timeLabels.add(formatter.format(fluxRecord.getTime()));
+                    }
+                    String timeStr = formatter.format(fluxRecord.getTime());
+                    String fieldName = fluxRecord.getField();
+                    Object value = fluxRecord.getValue();
+
+                    // y축 값 가져오기 (예시 : co2, temperature(?))
+                    fieldTimeValueMap
+                            .computeIfAbsent(fieldName, k -> new HashMap<>())
+                            .put(timeStr, value);
+                }
+            }
+        }
+        log.info("widget x축 시간 라벨과 y축 값 가져오기 완료");
+
+        // map에 모인 데이터를 chartDataset 객체 리스트로 변환
+        List<ChartDataset> datasets = new ArrayList<>();
+
+        for (Map.Entry<String, Map<String, Object>> entry : fieldTimeValueMap.entrySet()) {
+            String fieldName = entry.getKey(); // co2 등의 센서 이름
+            Map<String, Object> timeValueMap = entry.getValue(); // 센서의 측정 시간별로 담아둔 센서 값 상자
+
+            List<Object> values = new ArrayList<>();
+
+            // 전체 시간 라벨["10:00", "10:05", "10:10"]을 순서대로 순회
+            for (String time : timeLabels) {
+                // 해당 시간에 값이 있으면 넣고, 없으면 null을 넣어서 자리를 추기 위해 getOrDefault 사용
+                values.add(timeValueMap.getOrDefault(time, null));
+            }
+            datasets.add(new ChartDataset(fieldName, values));
+        }
+
+
+        return new ChartDataResponse(new ArrayList<>(timeLabels), datasets);
+    }
+
+    /**
+     * influxDB에서 정보 받아오기
+     */
+    private List<FluxTable> getWidgetData(WidgetConfig widgetConfig) {
+
+        String fluxQuery = buildFluxQuery(widgetConfig);
+
+        return influxDbRepository.query(fluxQuery);
+    }
+
+    /**
+     * influxDB query 작성
+     */
+    private String buildFluxQuery(WidgetConfig config) {
+        // 문자열 합치기 작업을 메모리 낭비 없이 빠르게 처리하기 때문에 사용
+        StringBuilder flux = new StringBuilder();
+
+        // 입력 값 검증.
+        validateDuration(config.range());
+
+        flux.append("from(bucket: \"").append(BUCKET_NAME).append(FLUX_QUOTE_END)
+                .append("   |> range(start: ").append(config.range()).append(")\n")
+                .append("   |> filter(fn: (r) => r._measurement == \"").append(MEASUREMENT_NAME).append(FLUX_QUOTE_END);
+
+        // null이나 빈 값 체크
+        if (Objects.nonNull(config.sensorEui()) && !config.sensorEui().isBlank()) {
+            // 이스케이프 처리
+            flux.append("   |> filter(fn: (r) => r.sensor_eui == \"").append(sanitize(config.sensorEui())).append(FLUX_QUOTE_END);
+        }
+
+        if (Objects.nonNull(config.fields()) && !config.fields().isEmpty()) {
+            String fieldFilter = config.fields().stream()
+                    .map(f -> "r._field == \"" + sanitize(f) + "\"") // << 이스케이프 처리
+                    .collect(Collectors.joining(" or ")); // list에 담긴 만큼 꺼내서 쿼리문을 작성하도록 코드 구성 (그래서 1개를 보고 싶던 여러개를 보고 싶던 상관이 없음)
+            flux.append("   |> filter(fn: (r) => ").append(fieldFilter).append(")\n");
+        }
+
+        if (Objects.nonNull(config.type())) {
+            switch (config.type()) {
+                case SINGLE_STAT:
+                    // 가장 최근 데이터 1개만 조회
+                    flux.append("   |> last()\n");
+                    break;
+                case BAR, GRAPH:
+                default:
+                    // 시계열 그래프는 설정한 주기(aggregateWindow)마다 평균(mean) 값으로 묶어서 가져옴 & 입력 값 검증
+                    if (Objects.nonNull(config.aggregateWindow())) {
+                        validateDuration(config.aggregateWindow());
+                        flux.append("   |> aggregateWindow(every: ").append(config.aggregateWindow())
+                                .append(", fn: mean, timeSrc: \"_start\", createEmpty: false)\n");
+                    }
+                    break;
+            }
+        }
+
+        flux.append("   |> yield(name: \"result\")");
+
+        return flux.toString();
+    }
+
+    /**
+     * 기간 / 시간 단위 유효성 검증 (Allowlist 방식)
+     */
+    private void validateDuration(String duration) {
+        if (duration != null && !DURATION_PATTERN.matcher(duration.trim()).matches()) {
+            throw new InvalidDateTimeFormatException(duration);
+        }
+    }
+
+    /**
+     * Flux 문자열 이스케이프 처리 (큰 따옴표 및 역슬래시 탈출 방지)
+     */
+    private String sanitize(String input) {
+        if (input == null) {
+            return "";
+        }
+        return input.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+}
