@@ -119,21 +119,6 @@ class DashboardServiceTest {
             // then
             assertThat(result).isEqualTo(mockDashboard);
         }
-
-        @Test
-        @DisplayName("getDashboardEntity 메서드 조회 성공")
-        void getDashboardEntity_success() {
-            // given
-            Long locationId = 1L;
-            Dashboard mockDashboard = mock(Dashboard.class);
-            given(dashboardRepository.findByLocationLocationId(locationId)).willReturn(Optional.of(mockDashboard));
-
-            // when
-            Dashboard result = dashboardService.getDashboardEntity(locationId);
-
-            // then
-            assertThat(result).isEqualTo(mockDashboard);
-        }
     }
 
     @Nested
@@ -146,9 +131,10 @@ class DashboardServiceTest {
             // given
             Long locationId = 999L;
             given(dashboardRepository.findByLocationLocationId(locationId)).willReturn(Optional.empty());
+            List<WidgetsListResponse> widgetsList = List.of();
 
             // when & then
-            assertThatThrownBy(() -> dashboardService.getDashboard(locationId, List.of()))
+            assertThatThrownBy(() -> dashboardService.getDashboard(locationId, widgetsList))
                     .isInstanceOf(DashboardNotFoundException.class);
         }
 

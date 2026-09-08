@@ -28,9 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 // 권한 체크(그룹 멤버십 검증)는 usecase.sensorattribute 패키지로 이동해서, 이 클래스는
 // 순수 영속성 로직만 검증함. isValidSensorAttribute는 실사용처가 없어 서비스에서 제거됐으므로
@@ -102,8 +100,10 @@ class SensorAttributeServiceTest {
         given(metricDefinitionRepository.findByMetricKeyIgnoreCase("co2"))
                 .willReturn(Optional.of(MetricDefinition.builder().metricKey("co2").metricName("이산화탄소").build()));
 
+        MetricDefinitionCreateRequest metricDefinitionCreateRequest = new MetricDefinitionCreateRequest("co2", "이산화탄소", "ppm");
+
         assertThrows(MetricKeyAlreadyExistsException.class,
-                () -> attributeService.createMetricDefinition(new MetricDefinitionCreateRequest("co2", "이산화탄소", "ppm")));
+                () -> attributeService.createMetricDefinition(metricDefinitionCreateRequest));
 
         verify(metricDefinitionRepository, never()).save(any());
     }

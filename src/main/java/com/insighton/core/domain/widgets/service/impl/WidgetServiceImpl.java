@@ -252,14 +252,14 @@ public class WidgetServiceImpl implements WidgetService {
 
         if (tables != null) {
             for (FluxTable table : tables) {
-                for (FluxRecord record : table.getRecords()) {
+                for (FluxRecord fluxRecord : table.getRecords()) {
                     // X축 시간 라벨 모으기 (중복 제거 & 순서 보장)
-                    if (record.getTime() != null) {
-                        timeLabels.add(formatter.format(record.getTime()));
+                    if (fluxRecord.getTime() != null) {
+                        timeLabels.add(formatter.format(fluxRecord.getTime()));
                     }
-                    String timeStr = formatter.format(record.getTime());
-                    String fieldName = record.getField();
-                    Object value = record.getValue();
+                    String timeStr = formatter.format(fluxRecord.getTime());
+                    String fieldName = fluxRecord.getField();
+                    Object value = fluxRecord.getValue();
 
                     // y축 값 가져오기 (예시 : co2, temperature(?))
                     fieldTimeValueMap

@@ -1,24 +1,24 @@
 package com.insighton.core.usecase;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
-
 import com.insighton.core.domain.region.dto.GroupRegionDto;
 import com.insighton.core.domain.region.dto.RegionGridDto;
 import com.insighton.core.domain.region.service.RegionService;
 import com.insighton.core.domain.weather.exception.WeatherApiException;
 import com.insighton.core.domain.weather.service.WeatherCacheService;
 import com.insighton.core.usecase.weather.WeatherRecoveryUseCase;
-import java.time.OffsetDateTime;
-import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.OffsetDateTime;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class WeatherRecoveryUseCaseTest {
@@ -46,7 +46,7 @@ class WeatherRecoveryUseCaseTest {
         weatherRecoveryUseCase.recoveryWeather(groupId, "20260601", "1200");
 
         // then
-        verify(weatherCacheService).getWeatherDate(eq(60), eq(127), eq("서울특별시"), eq("강남구"), eq("20260601"), eq("1200"));
+        verify(weatherCacheService).getWeatherDate(60, 127, "서울특별시", "강남구", "20260601", "1200");
     }
 
     @Test

@@ -46,7 +46,9 @@ class GatewayMqttEventListenerTest {
     void 연결_해제_도중_예외가_나도_캐시_정리는_보장된다() {
         doThrow(new RuntimeException("disconnect 실패")).when(gatewayManager).unregisterGateway(GATEWAY_ID);
 
-        assertThatThrownBy(() -> listener.onGatewayDeleted(new GatewayDeletedEvent(GATEWAY_ID)))
+        GatewayDeletedEvent gatewayDeletedEvent = new GatewayDeletedEvent(GATEWAY_ID);
+
+        assertThatThrownBy(() -> listener.onGatewayDeleted(gatewayDeletedEvent))
                 .isInstanceOf(RuntimeException.class);
 
         verify(groupMappingCache).evict(GATEWAY_ID);
