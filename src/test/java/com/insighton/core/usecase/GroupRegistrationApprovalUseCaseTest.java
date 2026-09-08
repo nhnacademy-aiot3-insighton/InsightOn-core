@@ -24,7 +24,6 @@ import java.time.OffsetDateTime;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.*;
@@ -64,7 +63,7 @@ class GroupRegistrationApprovalUseCaseTest {
 
             given(groupRegistrationService.approveGroupRegistration("ADMIN", GROUP_REGISTRATION_ID, APPROVER_ID))
                     .willReturn(approvedResponse());
-            given(groupCreateUseCase.createGroup(eq(new GroupRequest("Test Group", "Desc", "Seoul")), eq(REQUESTER_ID)))
+            given(groupCreateUseCase.createGroup(new GroupRequest("Test Group", "Desc", "Seoul"), REQUESTER_ID))
                     .willReturn(mockGroup);
 
             // when
@@ -72,8 +71,8 @@ class GroupRegistrationApprovalUseCaseTest {
 
             // then
             verify(groupCreateUseCase).createGroup(
-                    eq(new GroupRequest("Test Group", "Desc", "Seoul")),
-                    eq(REQUESTER_ID));
+                    new GroupRequest("Test Group", "Desc", "Seoul"),
+                    REQUESTER_ID);
             verify(regionService).cacheGroupRegion(createdGroupId, "Seoul");
         }
     }
@@ -132,7 +131,7 @@ class GroupRegistrationApprovalUseCaseTest {
 
             given(groupRegistrationService.approveGroupRegistration("ADMIN", GROUP_REGISTRATION_ID, APPROVER_ID))
                     .willReturn(approvedResponse());
-            given(groupCreateUseCase.createGroup(eq(new GroupRequest("Test Group", "Desc", "Seoul")), eq(REQUESTER_ID)))
+            given(groupCreateUseCase.createGroup(new GroupRequest("Test Group", "Desc", "Seoul"), REQUESTER_ID))
                     .willReturn(mockGroup);
             willThrow(new RegionNotFoundException("올바르지 않은 지역 형식입니다: Seoul"))
                     .given(regionService).cacheGroupRegion(createdGroupId, "Seoul");
