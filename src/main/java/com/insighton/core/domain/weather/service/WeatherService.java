@@ -29,6 +29,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class WeatherService {
 
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
+
     private final KmaWeatherApiClient kmaWeatherApiClient;
     private final AirQualityApiClient airQualityApiClient;
     private final SidoNameParser sidoNameParser;
@@ -138,6 +140,7 @@ public class WeatherService {
                     sum += Double.parseDouble(value);
                     count++;
                 } catch (NumberFormatException ignored) {
+                    log.trace("수치형으로 변환할 수 없는 값 무시: {}", value);
                 }
             }
         }
@@ -170,8 +173,7 @@ public class WeatherService {
      * 생성됩니다. - 시스템 반영 시간을 고려해 각 발표 시각보다 10분 뒤를 기준으로 삼습니다.
      */
     private ForecastBaseDateTime getRecentVilageFcstBaseTime(String baseDate, String baseTime) {
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-        LocalDate date = LocalDate.parse(baseDate, dateFormatter);
+        LocalDate date = LocalDate.parse(baseDate, DATE_FORMATTER);
 
         int hour = Integer.parseInt(baseTime.substring(0, 2));
         int minute = Integer.parseInt(baseTime.substring(2, 4));
@@ -201,7 +203,7 @@ public class WeatherService {
         }
 
         return new ForecastBaseDateTime(
-                targetDate.format(dateFormatter),
+                targetDate.format(DATE_FORMATTER),
                 String.format("%02d00", targetHour)
         );
     }
@@ -210,20 +212,19 @@ public class WeatherService {
      * 기상청 초단기예보(/getUltraSrtFcst) 기준 시각 계산 로직 - 초단기예보는 매시 30분에 발표되므로, 시스템 반영 시간을 고려해 30분 전 시간을 기준으로 삼습니다.
      */
     private ForecastBaseDateTime getRecentUltraSrtFcstBaseTime(String baseDate, String baseTime) {
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-        LocalDate date = LocalDate.parse(baseDate, dateFormatter);
+        LocalDate date = LocalDate.parse(baseDate, DATE_FORMATTER);
 
         int hour = Integer.parseInt(baseTime.substring(0, 2));
         int minute = Integer.parseInt(baseTime.substring(2, 4));
 
         LocalTime time = LocalTime.of(hour, minute).minusMinutes(30);
 
-        String targetDate = date.format(dateFormatter);
+        String targetDate = date.format(DATE_FORMATTER);
         String targetTime = String.format("%02d30", time.getHour());
 
         // 자정 이전(00시 30분 이전) 요청 시 전날 23시 30분 데이터로 보정
         if (time.getHour() == 23 && hour == 0) {
-            targetDate = date.minusDays(1).format(dateFormatter);
+            targetDate = date.minusDays(1).format(DATE_FORMATTER);
         }
 
         return new ForecastBaseDateTime(targetDate, targetTime);
@@ -234,8 +235,7 @@ public class WeatherService {
      * 시스템 반영 시간을 고려해 각 발표 시각보다 10분 뒤를 기준으로 최근 발표분을 찾습니다.
      */
     private String getRecentMidFcstTmFc(String baseDate, String baseTime) {
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-        LocalDate date = LocalDate.parse(baseDate, dateFormatter);
+        LocalDate date = LocalDate.parse(baseDate, DATE_FORMATTER);
 
         int hour = Integer.parseInt(baseTime.substring(0, 2));
         int minute = Integer.parseInt(baseTime.substring(2, 4));
@@ -253,6 +253,6 @@ public class WeatherService {
             targetHour = 18;
         }
 
-        return targetDate.format(dateFormatter) + String.format("%02d00", targetHour);
+        return targetDate.format(DATE_FORMATTER) + String.format("%02d00", targetHour);
     }
 }

@@ -12,10 +12,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class AirQualityApiClient {
@@ -29,6 +31,7 @@ public class AirQualityApiClient {
     private String airApiKey;
 
     public Map<String, String> fetchAirQualityData(String sidoName, String cityName) {
+        log.debug("대기질 데이터 조회 요청 - sidoName: {}, cityName: {}", sidoName, cityName);
         String encodedSidoName = URLEncoder.encode(sidoName, StandardCharsets.UTF_8);
         String fullUrl = String.format(
                 "%s/getCtprvnRltmMesureDnsty?serviceKey=%s&sidoName=%s&pageNo=1&numOfRows=100&ver=1.3&returnType=json",
