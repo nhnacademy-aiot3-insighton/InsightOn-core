@@ -25,25 +25,20 @@ import static org.mockito.Mockito.verify;
 @ExtendWith(MockitoExtension.class)
 class GroupMemberInviteUserCaseTest {
 
-    @Mock
-    private GroupMemberService groupMemberService;
-
-    @Mock
-    private GroupMemberRepository repository;
-
-    @Mock
-    private AuthClient authClient;
-
-    @Mock
-    private GroupService groupService;
-
-    @InjectMocks
-    private GroupMemberInviteUserCase groupMemberInviteUserCase;
-
     private static final Long INVITER_ID = 1L;
     private static final Long INVITEE_ID = 2L;
     private static final Long GROUP_ID = 10L;
     private static final String TARGET_EMAIL = "testuser@insighton.io";
+    @Mock
+    private GroupMemberService groupMemberService;
+    @Mock
+    private GroupMemberRepository repository;
+    @Mock
+    private AuthClient authClient;
+    @Mock
+    private GroupService groupService;
+    @InjectMocks
+    private GroupMemberInviteUserCase groupMemberInviteUserCase;
 
     @Nested
     @DisplayName("성공 케이스")

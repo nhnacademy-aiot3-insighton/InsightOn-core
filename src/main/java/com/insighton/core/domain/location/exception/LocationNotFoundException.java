@@ -17,7 +17,6 @@ public class LocationNotFoundException extends RuntimeException {
         );
     }
 
-    // 사용자가 locationId를 모르고 이름으로 요청할 때(ActuatorRequest, SensorUpdateRequest 등) 못 찾으면 사용
     public static LocationNotFoundException notFoundLocationByName(String locationName) {
         return new LocationNotFoundException(
                 String.format("location not found. Location Name : %s", locationName)
