@@ -3,7 +3,6 @@ package com.insighton.core.groups.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.insighton.core.controller.api.GroupController;
 import com.insighton.core.domain.groupmember.service.GroupMemberService;
-import com.insighton.core.domain.groupmember.dto.request.GroupMemberJoinRequest;
 import com.insighton.core.domain.groups.dto.request.GroupRequest;
 import com.insighton.core.domain.groups.dto.response.GroupAdminResponse;
 import com.insighton.core.domain.groups.dto.response.GroupResponse;
@@ -24,9 +23,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.OffsetDateTime;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -78,7 +75,7 @@ class GroupControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated());
 
-            verify(groupsUseCase).createGroup(eq(request), eq(1L));
+            verify(groupsUseCase).createGroup(request, 1L);
         }
 
         @Test
@@ -114,7 +111,7 @@ class GroupControllerTest {
 
         @Test
         @DisplayName("시스템 관리자용 그룹 리스트 조회 성공")
-        void getGroupList_success() throws Exception { // ⭕ 테스트 메서드 파라미터는 비워둡니다.
+        void getGroupList_success() throws Exception {
             List<GroupAdminResponse> content = List.of(new GroupAdminResponse(1L, "testName", "testDescription", "testLocation"));
             Page<GroupAdminResponse> mockPage = new PageImpl<>(content);
 
@@ -151,7 +148,7 @@ class GroupControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk());
 
-            verify(groupUpdateUseCase).updateGroup(eq(request), eq(1L), eq(1L));
+            verify(groupUpdateUseCase).updateGroup(request, 1L, 1L);
         }
 
         @Test

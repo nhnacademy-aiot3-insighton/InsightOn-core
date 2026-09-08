@@ -71,8 +71,9 @@ class LgThinQControlAssemblerTest {
     void 부분상태() {
         Map<String, Object> payload = assembler.assemble(aircon(Map.of("power", "ON")));
 
-        assertThat(payload).containsKey("operation");
-        assertThat(payload).doesNotContainKeys("airConJobMode", "temperature");
+        assertThat(payload)
+                .containsKey("operation")
+                .doesNotContainKeys("airConJobMode", "temperature");
     }
 
     @Test
