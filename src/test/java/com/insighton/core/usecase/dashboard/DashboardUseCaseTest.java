@@ -61,15 +61,10 @@ class DashboardUseCaseTest {
             WidgetsListResponse widget1 = mock(WidgetsListResponse.class);
             List<WidgetsListResponse> mockWidgetList = List.of(widget1);
 
-            DashboardResponse expectedResponse = DashboardResponse.builder()
-                    .dashboardId(dashboardId)
-                    .title("거실 - dashboard")
-                    .widgetsList(mockWidgetList)
-                    .build();
+//
 
             given(dashboardService.getDashboardEntity(locationId)).willReturn(mockDashboard);
             given(widgetService.getWidgetList(dashboardId)).willReturn(mockWidgetList);
-            given(dashboardService.getDashboard(locationId, mockWidgetList)).willReturn(expectedResponse);
 
             // when
             DashboardResponse response = dashboardUseCase.getDashboard(userId, groupId, locationId);
@@ -83,7 +78,6 @@ class DashboardUseCaseTest {
             verify(locationService, times(1)).getLocationByGroupId(locationId, groupId);
             verify(dashboardService, times(1)).getDashboardEntity(locationId);
             verify(widgetService, times(1)).getWidgetList(dashboardId);
-            verify(dashboardService, times(1)).getDashboard(locationId, mockWidgetList);
         }
 
         @Test

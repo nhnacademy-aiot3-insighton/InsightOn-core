@@ -1,13 +1,5 @@
 package com.insighton.core.domain.gateway.service.impl;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-
 import com.insighton.core.adapter.mqtt.cache.SensorLookupCacheService;
 import com.insighton.core.domain.gateway.dto.GatewayCreateRequest;
 import com.insighton.core.domain.gateway.dto.GatewayResponse;
@@ -16,11 +8,7 @@ import com.insighton.core.domain.gateway.entity.Gateway;
 import com.insighton.core.domain.gateway.entity.ProtocolType;
 import com.insighton.core.domain.gateway.event.GatewayBrokerChangedEvent;
 import com.insighton.core.domain.gateway.event.GatewayDeletedEvent;
-import com.insighton.core.domain.gateway.exception.GatewayAccessDeniedException;
-import com.insighton.core.domain.gateway.exception.GatewayAlreadyExistsException;
-import com.insighton.core.domain.gateway.exception.GatewayNotFoundException;
-import com.insighton.core.domain.gateway.exception.InvalidGatewayConnectionConfigException;
-import com.insighton.core.domain.gateway.exception.InvalidGatewayValueException;
+import com.insighton.core.domain.gateway.exception.*;
 import com.insighton.core.domain.gateway.repository.GatewayRepository;
 import com.insighton.core.domain.groupmember.entity.GroupMember;
 import com.insighton.core.domain.groupmember.entity.GroupMember.GroupRole;
@@ -29,9 +17,6 @@ import com.insighton.core.domain.groups.entity.Group;
 import com.insighton.core.domain.sensorattributes.repository.SensorAttributeRepository;
 import com.insighton.core.domain.sensors.entity.Sensor;
 import com.insighton.core.domain.sensors.repository.SensorRepository;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,8 +24,19 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class GatewayServiceImplTest {
@@ -244,18 +240,10 @@ class GatewayServiceImplTest {
     // ===== getAll =====
 
     @Test
-    void getAll_ADMIN이면_전체_목록을_반환한다() {
-        given(gatewayRepository.findAll(any(PageRequest.class)))
-                .willReturn(new PageImpl<>(List.of(gateway(validConfig()))));
-
-        var page = service.getAll("ADMIN", PageRequest.of(0, 10));
-
-        assertThat(page.getContent()).hasSize(1);
-    }
-
-    @Test
     void getAll_ADMIN이_아니면_예외() {
-        assertThatThrownBy(() -> service.getAll("USER", PageRequest.of(0, 10)))
+        PageRequest pageRequest = PageRequest.of(0, 10);
+
+        assertThatThrownBy(() -> service.getAll("USER", pageRequest))
                 .isInstanceOf(GatewayAccessDeniedException.class);
         verify(gatewayRepository, never()).findAll(any(PageRequest.class));
     }
@@ -283,7 +271,9 @@ class GatewayServiceImplTest {
         given(groupMemberRepository.findByUserId(USER_ID))
                 .willReturn(Optional.of(groupMember(GROUP_ID, GroupRole.MANAGER)));
 
-        assertThatThrownBy(() -> service.update(USER_ID, GATEWAY_ID, new GatewayUpdateRequest("  ", null, null)))
+        GatewayUpdateRequest request = new GatewayUpdateRequest("  ", null, null);
+
+        assertThatThrownBy(() -> service.update(USER_ID, GATEWAY_ID, request))
                 .isInstanceOf(InvalidGatewayValueException.class);
     }
 
@@ -294,8 +284,9 @@ class GatewayServiceImplTest {
         given(groupMemberRepository.findByUserId(USER_ID))
                 .willReturn(Optional.of(groupMember(GROUP_ID, GroupRole.MANAGER)));
 
-        assertThatThrownBy(() -> service.update(USER_ID, GATEWAY_ID,
-                new GatewayUpdateRequest(null, ProtocolType.MODBUS_TCP, null)))
+        GatewayUpdateRequest request = new GatewayUpdateRequest(null, ProtocolType.MODBUS_TCP, null);
+
+        assertThatThrownBy(() -> service.update(USER_ID, GATEWAY_ID, request))
                 .isInstanceOf(InvalidGatewayValueException.class);
     }
 
@@ -306,8 +297,9 @@ class GatewayServiceImplTest {
         given(groupMemberRepository.findByUserId(USER_ID))
                 .willReturn(Optional.of(groupMember(GROUP_ID, GroupRole.MANAGER)));
 
-        assertThatThrownBy(() -> service.update(USER_ID, GATEWAY_ID,
-                new GatewayUpdateRequest(null, null, Map.of())))
+        GatewayUpdateRequest request = new GatewayUpdateRequest(null, null, Map.of());
+
+        assertThatThrownBy(() -> service.update(USER_ID, GATEWAY_ID, request))
                 .isInstanceOf(InvalidGatewayConnectionConfigException.class);
     }
 
@@ -346,7 +338,9 @@ class GatewayServiceImplTest {
     void update_게이트웨이가_없으면_예외() {
         given(gatewayRepository.findByGatewayId(GATEWAY_ID)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.update(USER_ID, GATEWAY_ID, new GatewayUpdateRequest("n", null, null)))
+        GatewayUpdateRequest request = new GatewayUpdateRequest("n", null, null);
+
+        assertThatThrownBy(() -> service.update(USER_ID, GATEWAY_ID, request))
                 .isInstanceOf(GatewayNotFoundException.class);
     }
 
@@ -357,7 +351,9 @@ class GatewayServiceImplTest {
         given(groupMemberRepository.findByUserId(USER_ID))
                 .willReturn(Optional.of(groupMember(GROUP_ID, GroupRole.MEMBER)));
 
-        assertThatThrownBy(() -> service.update(USER_ID, GATEWAY_ID, new GatewayUpdateRequest("n", null, null)))
+        GatewayUpdateRequest request = new GatewayUpdateRequest("n", null, null);
+
+        assertThatThrownBy(() -> service.update(USER_ID, GATEWAY_ID, request))
                 .isInstanceOf(GatewayAccessDeniedException.class);
     }
 

@@ -11,8 +11,10 @@ import static org.mockito.Mockito.verify;
 
 import com.insighton.core.adapter.mqtt.listener.dto.TelemetryEventMessage;
 import com.insighton.core.common.config.RabbitConfig;
+
 import java.time.Instant;
 import java.util.Map;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -59,7 +61,7 @@ class TelemetryPublisherTest {
         assertThat(message.getMessageProperties().getHeaders())
                 .containsEntry(RabbitConfig.TELEMETRY_HASH_HEADER, "2");
 
-        verify(telemetryRedisTemplate).convertAndSend(eq("telemetry:sensor:3"), eq(event));
+        verify(telemetryRedisTemplate).convertAndSend("telemetry:sensor:3", event);
     }
 
     @Test

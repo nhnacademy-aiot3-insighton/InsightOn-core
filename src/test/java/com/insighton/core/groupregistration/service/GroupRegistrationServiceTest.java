@@ -1,6 +1,5 @@
 package com.insighton.core.groupregistration.service;
 
-import com.insighton.core.domain.groupregistration.dto.CreateGroupRegistrationRequest;
 import com.insighton.core.domain.groupregistration.dto.GroupRegistrationResponse;
 import com.insighton.core.domain.groupregistration.entity.GroupRegistration;
 import com.insighton.core.domain.groupregistration.entity.GroupRegistrationStatus;

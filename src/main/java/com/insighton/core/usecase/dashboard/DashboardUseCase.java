@@ -42,6 +42,10 @@ public class DashboardUseCase {
 
         List<WidgetsListResponse> widgetsList = widgetService.getWidgetList(dashboard.getDashboardId());
 
-        return dashboardService.getDashboard(locationId, widgetsList);
+        return DashboardResponse.builder()
+                .title(dashboard.getTitle())
+                .dashboardId(dashboard.getDashboardId())
+                .widgetsList(widgetsList)
+                .build();
     }
 }

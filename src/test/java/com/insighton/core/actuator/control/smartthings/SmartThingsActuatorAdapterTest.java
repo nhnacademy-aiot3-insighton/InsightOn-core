@@ -73,7 +73,8 @@ class SmartThingsActuatorAdapterTest {
         given(apiClient.sendCommands(any(), any()))
                 .willReturn(new SmartThingsCommandResponse(List.of()));
 
-        assertThatThrownBy(() -> adapter.control(command()))
+        ActuatorControlCommand cmd = command();
+        assertThatThrownBy(() -> adapter.control(cmd))
                 .isInstanceOf(SmartThingsApiException.class);
     }
 
@@ -86,7 +87,8 @@ class SmartThingsActuatorAdapterTest {
                         new SmartThingsCommandResponse.Result("id-1", "ACCEPTED"),
                         new SmartThingsCommandResponse.Result("id-2", "FAILED"))));
 
-        assertThatThrownBy(() -> adapter.control(command()))
+        ActuatorControlCommand cmd = command();
+        assertThatThrownBy(() -> adapter.control(cmd))
                 .isInstanceOf(SmartThingsApiException.class);
     }
 
@@ -97,7 +99,8 @@ class SmartThingsActuatorAdapterTest {
         given(apiClient.sendCommands(any(), any()))
                 .willThrow(new SmartThingsApiException("공급자 500"));
 
-        assertThatThrownBy(() -> adapter.control(command()))
+        ActuatorControlCommand cmd = command();
+        assertThatThrownBy(() -> adapter.control(cmd))
                 .isInstanceOf(SmartThingsApiException.class)
                 .hasMessageContaining("공급자 500");
     }

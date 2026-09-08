@@ -5,7 +5,6 @@ import com.insighton.core.domain.dashboards.entity.Dashboard;
 import com.insighton.core.domain.dashboards.service.DashboardService;
 import com.insighton.core.domain.groupmember.service.GroupMemberService;
 import com.insighton.core.domain.widgets.dto.chart.ChartDataResponse;
-import com.insighton.core.domain.widgets.entity.Widget;
 import com.insighton.core.domain.widgets.service.WidgetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,8 +25,6 @@ public class ChartDataUseCase {
 
         Long dashboardId = dashboard.getDashboardId();
 
-        Widget widget = widgetService.getWidget(dashboardId, widgetId);
-
-        return widgetService.getWidgetChartData(dashboardId, widget.getWidgetId());
+        return widgetService.getWidgetChartData(dashboardId, widgetId);
     }
 }
