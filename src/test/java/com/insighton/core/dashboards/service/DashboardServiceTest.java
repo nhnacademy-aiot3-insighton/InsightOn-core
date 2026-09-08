@@ -105,10 +105,9 @@ class DashboardServiceTest {
             verify(dashboardRepository, times(1)).delete(mockDashboard);
         }
 
-
         @Test
-        @DisplayName("getDashboardEntity 메서드 조회 성공")
-        void getDashboardEntity_success() {
+        @DisplayName("LocationId로 대시보드 엔티티 조회 성공")
+        void getDashboardByLocationId_success() {
             // given
             Long locationId = 1L;
             Dashboard mockDashboard = mock(Dashboard.class);
@@ -134,6 +133,7 @@ class DashboardServiceTest {
             List<WidgetsListResponse> emptyWidgets = List.of();
 
             given(dashboardRepository.findByLocationLocationId(locationId)).willReturn(Optional.empty());
+            List<WidgetsListResponse> widgetsList = List.of();
 
             // when & then
             assertThatThrownBy(() -> dashboardService.getDashboard(locationId, emptyWidgets))
