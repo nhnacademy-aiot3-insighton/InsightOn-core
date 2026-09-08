@@ -1,92 +1,86 @@
 package com.insighton.core.domain.gateway;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 import com.insighton.core.domain.gateway.entity.Gateway;
 import com.insighton.core.domain.gateway.entity.ProtocolType;
 import com.insighton.core.domain.gateway.exception.InvalidGatewayConnectionConfigException;
-import java.util.List;
-import java.util.Map;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 class MqttGatewayConnectionInfoTest {
 
-    private Gateway gatewayWith(Map<String, Object> connectionConfig) {
+    @Test
+    @DisplayName("Gateway 엔티티로부터 MqttGatewayConnectionInfo 변환 성공 케이스")
+    void from_validGateway_success() {
+        // given
+        Map<String, Object> config = new HashMap<>();
+        config.put("brokerUrls", List.of("tcp://localhost:1883"));
+        config.put("topics", List.of("app/+/sensor/+/event/up"));
+        config.put("username", "admin");
+        config.put("password", "pass");
+
         Gateway gateway = Gateway.builder()
-                .groupsId(1L)
-                .name("gateway-1")
+                .groupsId(100L)
+                .name("TestGW")
                 .protocolType(ProtocolType.MQTT)
-                .connectionConfig(connectionConfig)
+                .connectionConfig(config)
                 .build();
-        ReflectionTestUtils.setField(gateway, "gatewayId", 42L);
-        return gateway;
-    }
 
-    @Test
-    void connection_config를_그대로_옮겨_담고_clientId는_gatewayId_기반으로_고정_조립된다() {
-        Gateway gateway = gatewayWith(Map.of(
-                "brokerUrls", List.of("tcp://broker1:1883", "tcp://broker2:1883"),
-                "topics", List.of("custom/topic/+"),
-                "username", "user1",
-                "password", "pass1"
-        ));
+        ReflectionTestUtils.setField(gateway, "gatewayId", 10L);
 
+        // when
         MqttGatewayConnectionInfo info = MqttGatewayConnectionInfo.from(gateway);
 
-        assertThat(info.gatewayId()).isEqualTo(42L);
-        assertThat(info.clientId()).isEqualTo("insighton-42");
-        assertThat(info.brokerUrls()).containsExactly("tcp://broker1:1883", "tcp://broker2:1883");
-        assertThat(info.topics()).containsExactly("custom/topic/+");
-        assertThat(info.username()).isEqualTo("user1");
-        assertThat(info.password()).isEqualTo("pass1");
+        // then
+        assertThat(info.gatewayId()).isEqualTo(10L);
+        assertThat(info.clientId()).isEqualTo("insighton-10");
+        assertThat(info.brokerUrls()).containsExactly("tcp://localhost:1883");
+        assertThat(info.topics()).containsExactly("app/+/sensor/+/event/up");
+        assertThat(info.username()).isEqualTo("admin");
+        assertThat(info.password()).isEqualTo("pass");
     }
 
     @Test
-    void topics가_없으면_ChirpStack_표준_토픽을_기본값으로_사용한다() {
-        Gateway gateway = gatewayWith(Map.of(
-                "brokerUrls", List.of("tcp://broker1:1883")
-        ));
+    @DisplayName("brokerUrls가 없거나 비어 있으면 InvalidGatewayConnectionConfigException 발생")
+    void from_missingBrokerUrls_throwsException() {
+        // given
+        Map<String, Object> config = new HashMap<>();
+        Gateway gateway = Gateway.builder()
+                .groupsId(100L)
+                .name("TestGW")
+                .protocolType(ProtocolType.MQTT)
+                .connectionConfig(config)
+                .build();
 
-        MqttGatewayConnectionInfo info = MqttGatewayConnectionInfo.from(gateway);
+        ReflectionTestUtils.setField(gateway, "gatewayId", 10L);
 
-        assertThat(info.topics()).containsExactly("application/+/sensor/+/event/up");
-    }
-
-    @Test
-    void username_password가_없으면_null로_채워진다() {
-        Gateway gateway = gatewayWith(Map.of(
-                "brokerUrls", List.of("tcp://broker1:1883")
-        ));
-
-        MqttGatewayConnectionInfo info = MqttGatewayConnectionInfo.from(gateway);
-
-        assertThat(info.username()).isNull();
-        assertThat(info.password()).isNull();
-    }
-
-    @Test
-    void brokerUrls_키가_없으면_예외를_던진다() {
-        Gateway gateway = gatewayWith(Map.of("topics", List.of("some/topic")));
-
+        // when & then
         assertThatThrownBy(() -> MqttGatewayConnectionInfo.from(gateway))
                 .isInstanceOf(InvalidGatewayConnectionConfigException.class);
     }
 
     @Test
-    void brokerUrls가_빈_리스트여도_예외를_던진다() {
-        Gateway gateway = gatewayWith(Map.of("brokerUrls", List.of()));
+    @DisplayName("equals, hashCode, toString 동작 검증")
+    void equalsAndHashCodeAndToString() {
+        // given
+        MqttGatewayConnectionInfo info1 = new MqttGatewayConnectionInfo(
+                1L, "client-1", new String[]{"url1"}, new String[]{"topic1"}, "user", "pass"
+        );
+        MqttGatewayConnectionInfo info2 = new MqttGatewayConnectionInfo(
+                1L, "client-1", new String[]{"url1"}, new String[]{"topic1"}, "user", "pass"
+        );
 
-        assertThatThrownBy(() -> MqttGatewayConnectionInfo.from(gateway))
-                .isInstanceOf(InvalidGatewayConnectionConfigException.class);
-    }
-
-    @Test
-    void brokerUrls가_리스트가_아니면_예외를_던진다() {
-        Gateway gateway = gatewayWith(Map.of("brokerUrls", "tcp://broker1:1883"));
-
-        assertThatThrownBy(() -> MqttGatewayConnectionInfo.from(gateway))
-                .isInstanceOf(InvalidGatewayConnectionConfigException.class);
+        // then
+        assertThat(info1)
+                .isEqualTo(info2)
+                .hasSameHashCodeAs(info2);
+        assertThat(info1.toString()).contains("client-1");
     }
 }

@@ -1,6 +1,5 @@
 package com.insighton.core.groupmember.repository;
 
-import com.insighton.core.domain.groupmember.dto.response.GroupMemberListResponse;
 import com.insighton.core.domain.groupmember.entity.GroupMember;
 import com.insighton.core.domain.groupmember.repository.GroupMemberRepository;
 import com.insighton.core.domain.groups.entity.Group;

@@ -2,6 +2,8 @@ package com.insighton.core.domain.weather.util;
 
 public class WeatherCodeMapper {
 
+    private WeatherCodeMapper() {}
+
     // 하늘상태 변환
     public static String parseSky(String code) {
         if (code == null) {

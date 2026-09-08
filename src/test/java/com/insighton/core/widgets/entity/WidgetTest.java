@@ -28,8 +28,8 @@ class WidgetTest {
                 .widgetConfig(initialConfig)
                 .build();
 
-        assertThat(widget.getXPos()).isEqualTo(0);
-        assertThat(widget.getYPos()).isEqualTo(0);
+        assertThat(widget.getXPos()).isZero();
+        assertThat(widget.getYPos()).isZero();
         assertThat(widget.getWidth()).isEqualTo(2);
         assertThat(widget.getHeight()).isEqualTo(2);
 
@@ -47,13 +47,13 @@ class WidgetTest {
     @DisplayName("xPos가 음수일 때 IllegalArgumentException 발생")
     void validatePosition_invalidXPos_throwsException() {
         Dashboard mockDashboard = mock(Dashboard.class);
-        assertThatThrownBy(() -> Widget.builder()
+        Widget.WidgetBuilder builder = Widget.builder()
                 .dashboard(mockDashboard)
                 .xPos(-1)
                 .yPos(0)
                 .width(2)
-                .height(2)
-                .build())
+                .height(2);
+        assertThatThrownBy(builder::build)
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -61,13 +61,14 @@ class WidgetTest {
     @DisplayName("yPos가 음수일 때 IllegalArgumentException 발생")
     void validatePosition_invalidYPos_throwsException() {
         Dashboard mockDashboard = mock(Dashboard.class);
-        assertThatThrownBy(() -> Widget.builder()
+        Widget.WidgetBuilder builder = Widget.builder()
                 .dashboard(mockDashboard)
                 .xPos(0)
                 .yPos(-1)
                 .width(2)
-                .height(2)
-                .build())
+                .height(2);
+
+        assertThatThrownBy(builder::build)
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -75,13 +76,14 @@ class WidgetTest {
     @DisplayName("width가 1 미만일 때 IllegalArgumentException 발생")
     void validateSize_invalidWidth_throwsException() {
         Dashboard mockDashboard = mock(Dashboard.class);
-        assertThatThrownBy(() -> Widget.builder()
+        Widget.WidgetBuilder builder = Widget.builder()
                 .dashboard(mockDashboard)
                 .xPos(0)
                 .yPos(0)
                 .width(0)
-                .height(2)
-                .build())
+                .height(2);
+
+        assertThatThrownBy(builder::build)
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -89,13 +91,14 @@ class WidgetTest {
     @DisplayName("height가 1 미만일 때 IllegalArgumentException 발생")
     void validateSize_invalidHeight_throwsException() {
         Dashboard mockDashboard = mock(Dashboard.class);
-        assertThatThrownBy(() -> Widget.builder()
+        Widget.WidgetBuilder builder = Widget.builder()
                 .dashboard(mockDashboard)
                 .xPos(0)
                 .yPos(0)
                 .width(2)
-                .height(0)
-                .build())
+                .height(0);
+
+        assertThatThrownBy(builder::build)
                 .isInstanceOf(IllegalArgumentException.class);
     }
 }

@@ -108,8 +108,9 @@ class SensorServiceTest {
         Sensor existing = Sensor.builder().sensorId(1L).sensorEui("EUI-001").group(otherGroup).build();
         given(sensorRepository.findBySensorEui("EUI-001")).willReturn(Optional.of(existing));
 
+        Set<String> metricKeys = Set.of("co2");
         assertThrows(InvalidSensorValueException.class,
-                () -> sensorService.autoProvision(10L, 5L, "EUI-001", "센서", Set.of("co2")));
+                () -> sensorService.autoProvision(10L, 5L, "EUI-001", "센서", metricKeys));
 
         verify(sensorLookupCacheService, never()).populate(any());
     }
@@ -120,8 +121,9 @@ class SensorServiceTest {
         given(sensorRepository.findBySensorEui(anyString())).willReturn(Optional.empty());
         given(gatewayRepository.findById(999L)).willReturn(Optional.empty());
 
+        Set<String> metricKeys = Set.of();
         assertThrows(GatewayNotFoundException.class,
-                () -> sensorService.autoProvision(999L, 5L, "EUI-001", "센서", Set.of()));
+                () -> sensorService.autoProvision(999L, 5L, "EUI-001", "센서", metricKeys));
     }
 
     @Test
@@ -235,8 +237,9 @@ class SensorServiceTest {
     @Test
     @DisplayName("updateSensor - 이름과 위치 둘 다 비어있으면(공백 포함) InvalidSensorValueException, 센서 조회도 안 함")
     void 업데이트_둘다빈값_거부() {
+        SensorUpdateRequest request = new SensorUpdateRequest(null, "   ");
         assertThrows(InvalidSensorValueException.class,
-                () -> sensorService.updateSensor(1L, new SensorUpdateRequest(null, "   ")));
+                () -> sensorService.updateSensor(1L, request));
         verify(sensorRepository, never()).findById(anyLong());
     }
 
@@ -278,8 +281,9 @@ class SensorServiceTest {
     void 업데이트_없는센서() {
         given(sensorRepository.findById(999L)).willReturn(Optional.empty());
 
+        SensorUpdateRequest request = new SensorUpdateRequest(20L, null);
         assertThrows(SensorNotFoundException.class,
-                () -> sensorService.updateSensor(999L, new SensorUpdateRequest(20L, null)));
+                () -> sensorService.updateSensor(999L, request));
     }
 
     @Test
@@ -292,8 +296,9 @@ class SensorServiceTest {
         given(sensorRepository.findById(1L)).willReturn(Optional.of(sensor));
         given(locationRepository.findByLocationIdAndGroupGroupId(999L, 5L)).willReturn(Optional.empty());
 
+        SensorUpdateRequest request = new SensorUpdateRequest(999L, null);
         assertThrows(LocationNotFoundException.class,
-                () -> sensorService.updateSensor(1L, new SensorUpdateRequest(999L, null)));
+                () -> sensorService.updateSensor(1L, request));
     }
 
     @Test
@@ -328,8 +333,9 @@ class SensorServiceTest {
         given(gatewayRepository.findById(10L)).willReturn(Optional.of(mock(Gateway.class)));
         given(groupRepository.findById(999L)).willReturn(Optional.empty());
 
+        Set<String> metricKeys = Set.of();
         assertThrows(GroupNotFoundException.class,
-                () -> sensorService.autoProvision(10L, 999L, "EUI-001", "센서", Set.of()));
+                () -> sensorService.autoProvision(10L, 999L, "EUI-001", "센서", metricKeys));
     }
 
     @Test

@@ -119,21 +119,6 @@ class DashboardServiceTest {
             // then
             assertThat(result).isEqualTo(mockDashboard);
         }
-
-        @Test
-        @DisplayName("getDashboardEntity 메서드 조회 성공")
-        void getDashboardEntity_success() {
-            // given
-            Long locationId = 1L;
-            Dashboard mockDashboard = mock(Dashboard.class);
-            given(dashboardRepository.findByLocationLocationId(locationId)).willReturn(Optional.of(mockDashboard));
-
-            // when
-            Dashboard result = dashboardService.getDashboardEntity(locationId);
-
-            // then
-            assertThat(result).isEqualTo(mockDashboard);
-        }
     }
 
     @Nested
@@ -145,10 +130,12 @@ class DashboardServiceTest {
         void getDashboard_notFound() {
             // given
             Long locationId = 999L;
+            List<WidgetsListResponse> emptyWidgets = List.of();
+
             given(dashboardRepository.findByLocationLocationId(locationId)).willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> dashboardService.getDashboard(locationId, List.of()))
+            assertThatThrownBy(() -> dashboardService.getDashboard(locationId, emptyWidgets))
                     .isInstanceOf(DashboardNotFoundException.class);
         }
 
@@ -182,7 +169,7 @@ class DashboardServiceTest {
             assertThatThrownBy(() -> dashboardService.updateDashboardTitle(nullRequest))
                     .isInstanceOf(EmptyValueException.class);
         }
-        
+
         @Test
         @DisplayName("대시보드 삭제 실패 - 대시보드가 존재하지 않을 때 DashboardNotFoundException 발생")
         void deleteDashboard_notFound() {

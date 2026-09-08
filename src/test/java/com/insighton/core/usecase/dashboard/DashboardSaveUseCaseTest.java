@@ -116,10 +116,12 @@ class DashboardSaveUseCaseTest {
             Long groupId = 1L;
             Long locationId = 10L;
 
+            List<WidgetSaveRequest> emptyRequests = List.of(); // 람다 외부로 추출
+
             given(groupMemberService.validateGroupAdmin(groupId, userId)).willThrow(NoPermissionException.forAdmin(200L));
 
             // when & then
-            assertThatThrownBy(() -> dashboardSaveUseCase.saveDashboard(userId, groupId, locationId, List.of()))
+            assertThatThrownBy(() -> dashboardSaveUseCase.saveDashboard(userId, groupId, locationId, emptyRequests))
                     .isInstanceOf(NoPermissionException.class);
 
             verify(groupMemberService, times(1)).validateGroupAdmin(groupId, userId);
@@ -185,9 +187,10 @@ class DashboardSaveUseCaseTest {
             Map<Long, ChartDataResponse> result = dashboardSaveUseCase.saveDashboardInfluxDB(locationId, widgetIds);
 
             // then
-            assertThat(result).hasSize(2);
-            assertThat(result.get(1L)).isEqualTo(mockChartData1);
-            assertThat(result.get(2L)).isEqualTo(mockChartData2);
+            assertThat(result)
+                    .hasSize(2)
+                    .containsEntry(1L, mockChartData1)
+                    .containsEntry(2L, mockChartData2);
 
             verify(widgetService, times(1)).getWidgetChartData(dashboardId, 1L);
             verify(widgetService, times(1)).getWidgetChartData(dashboardId, 2L);

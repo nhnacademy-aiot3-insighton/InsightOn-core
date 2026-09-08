@@ -75,8 +75,9 @@ class ActuatorCommandPresetTest {
     @Test
     @DisplayName("validateCommandValues - 알 수 없는 커맨드 키면 InvalidActuatorValueException")
     void 일괄검증_모르는키_예외() {
+        Map<String, Object> newState = Map.of("unknown_key", "ON");
         assertThatThrownBy(() ->
-                ActuatorCommandPreset.validateCommandValues(ActuatorType.AIRCON, Map.of("unknown_key", "ON")))
+                ActuatorCommandPreset.validateCommandValues(ActuatorType.AIRCON, newState))
                 .isInstanceOf(InvalidActuatorValueException.class);
     }
 
@@ -93,8 +94,9 @@ class ActuatorCommandPresetTest {
     @Test
     @DisplayName("validateCommandValues - 허용 안 된 값이면 InvalidActuatorValueException")
     void 일괄검증_비허용값_예외() {
+        Map<String, Object> newState = Map.of("power", "EXPLODE");
         assertThatThrownBy(() ->
-                ActuatorCommandPreset.validateCommandValues(ActuatorType.AIRCON, Map.of("power", "EXPLODE")))
+                ActuatorCommandPreset.validateCommandValues(ActuatorType.AIRCON, newState))
                 .isInstanceOf(InvalidActuatorValueException.class);
     }
 }

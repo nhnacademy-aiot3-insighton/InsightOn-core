@@ -27,7 +27,6 @@ public class RabbitConfig {
     public static final String ACTUATOR_DELETED_ROUTING_KEY = "actuator.deleted";
     public static final String SENSOR_DELETED_ROUTING_KEY = "sensor.deleted";
 
-    //    public static final String TELEMETRY_EXCHANGE = "insighton.core.telemetry.exchange";
     public static final String TELEMETRY_EXCHANGE = "insighton.core.telemetry.exchange-v2";
     public static final String TELEMETRY_HASH_HEADER = "locationId";
 
